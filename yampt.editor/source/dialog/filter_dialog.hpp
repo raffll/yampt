@@ -1,5 +1,6 @@
 #pragma once
 
+#include <scanner/conflict_detector.hpp>
 #include <conflict_types.hpp>
 #include <set>
 #include <string>
@@ -8,8 +9,8 @@
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QGroupBox>
-#include <QLineEdit>
 #include <QListWidget>
+#include <QVBoxLayout>
 
 class filter_dialog_t : public QDialog
 {
@@ -29,17 +30,18 @@ public:
 		bool filter_by_type = false;
 		std::set<std::string> type_set;
 
-		bool filter_by_id = false;
-		std::string id_text;
-
-		bool filter_by_name = false;
-		std::string name_text;
-
 		bool filter_deleted = false;
+
+		bool filter_lua_severity = false;
+		std::set<conflict_severity_t> lua_severity_set;
+
+		bool filter_lua_interface = false;
+		std::set<std::string> lua_interface_set;
 	};
 
 	filter_state_t state() const;
 	void set_state(const filter_state_t & state);
+	void set_lua_interface_names(const std::vector<std::string> & names);
 
 private:
 	QGroupBox * m_grp_conflict_all = nullptr;
@@ -57,8 +59,17 @@ private:
 
 	QListWidget * m_lst_types = nullptr;
 
-	QLineEdit * m_edt_id = nullptr;
-	QLineEdit * m_edt_name = nullptr;
-
 	QCheckBox * m_chk_deleted = nullptr;
+
+	QGroupBox * m_grp_lua = nullptr;
+	QCheckBox * m_chk_lua_blocking = nullptr;
+	QCheckBox * m_chk_lua_mutating = nullptr;
+	QCheckBox * m_chk_lua_overlapping = nullptr;
+	QListWidget * m_lst_lua_interfaces = nullptr;
+
+	void setup_lua_group(QVBoxLayout * parent_layout);
+	std::set<conflict_severity_t> read_lua_severity_state() const;
+	std::set<std::string> read_lua_interface_state() const;
+	void apply_lua_severity_state(const std::set<conflict_severity_t> & severities);
+	void apply_lua_interface_state(const std::set<std::string> & interfaces);
 };

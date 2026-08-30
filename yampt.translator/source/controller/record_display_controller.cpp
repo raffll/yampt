@@ -6,6 +6,7 @@
 #include "../view/history_view.hpp"
 #include "../view/translation_suggestion_view.hpp"
 #include "../view/validation_view.hpp"
+#include <utility/string_utils.hpp>
 #include <QString>
 #include <QTextCursor>
 
@@ -136,8 +137,10 @@ void record_display_controller_t::apply_initial_highlights(
     const editor_load_result_t & load_result)
 {
 	const auto & annotations = load_result.annotations;
-	const auto original_lower = m_deps.editor_view.original_view()->toPlainText().toLower().toStdString();
-	const auto translation_lower = m_deps.editor_view.translation_editor()->toPlainText().toLower().toStdString();
+	const auto original_lower =
+	    string_utils::to_lower_utf8(m_deps.editor_view.original_view()->toPlainText().toStdString());
+	const auto translation_lower =
+	    string_utils::to_lower_utf8(m_deps.editor_view.translation_editor()->toPlainText().toStdString());
 
 	const highlight_request_t orig_request { &annotations, true, highlight_sort_policy_t::length_first };
 	auto orig_highlights = highlight_coordinator_t::find_annotation_highlights(original_lower, orig_request);
@@ -225,7 +228,8 @@ void record_display_controller_t::load_record_plain(const table_row_t * row_data
 void record_display_controller_t::apply_translation_highlights(const table_row_t * row_data)
 {
 	const auto annotations = m_deps.glossary.annotate(row_data->old_text, row_data->type);
-	const auto current_text = m_deps.editor_view.translation_editor()->toPlainText().toLower().toStdString();
+	const auto current_text =
+	    string_utils::to_lower_utf8(m_deps.editor_view.translation_editor()->toPlainText().toStdString());
 
 	const highlight_request_t request { &annotations, false, highlight_sort_policy_t::hyperlink_first };
 	auto highlights = highlight_coordinator_t::find_annotation_highlights(current_text, request);

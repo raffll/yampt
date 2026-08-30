@@ -1,5 +1,6 @@
 #pragma once
 
+#include "translation_example.hpp"
 #include <utility/theme_enums.hpp>
 #include <string>
 #include <vector>
@@ -10,6 +11,8 @@ class settings_store_t
 {
 public:
 	explicit settings_store_t(const QString & filename);
+
+	static QString settings_dir();
 
 	int encoding_index() const;
 	void set_encoding_index(int index);
@@ -47,8 +50,8 @@ public:
 	std::string web_api_key(const std::string & provider_id) const;
 	void set_web_api_key(const std::string & provider_id, const std::string & value);
 
-	int translation_source_index() const;
-	void set_translation_source_index(int index);
+	std::string web_provider_setting(const std::string & provider_id, const std::string & key) const;
+	void set_web_provider_setting(const std::string & provider_id, const std::string & key, const std::string & value);
 
 	int translation_language_index() const;
 	void set_translation_language_index(int index);
@@ -61,6 +64,9 @@ public:
 
 	std::vector<std::string> last_merge_order() const;
 	void set_last_merge_order(const std::vector<std::string> & paths);
+
+	std::vector<translation_example_t> translation_examples() const;
+	void set_translation_examples(const std::vector<translation_example_t> & examples);
 
 	std::string active_dict_path() const;
 	void set_active_dict_path(const std::string & value);
@@ -122,9 +128,6 @@ public:
 	theme_t theme() const;
 	void set_theme(theme_t value);
 
-	bool merge_type_enabled(const std::string & rec_type) const;
-	void set_merge_type_enabled(const std::string & rec_type, bool enabled);
-
 	std::string merge_exclusion_pattern() const;
 	void set_merge_exclusion_pattern(const std::string & pattern);
 
@@ -135,17 +138,8 @@ public:
 	bool merge_cell_name_fix_enabled() const;
 	void set_merge_cell_name_fix_enabled(bool value);
 
-	bool merge_column_visible() const;
-	void set_merge_column_visible(bool value);
-
 	std::string sub_record_ignore_conflict() const;
 	void set_sub_record_ignore_conflict(const std::string & value);
-
-	std::string sub_record_exclude_from_merge() const;
-	void set_sub_record_exclude_from_merge(const std::string & value);
-
-	std::string sub_record_skip_if_missing() const;
-	void set_sub_record_skip_if_missing(const std::string & value);
 
 	int display_codepage() const;
 	void set_display_codepage(int value);

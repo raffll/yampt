@@ -16,6 +16,22 @@ static std::string parent_directory(const std::string & path)
 	return path.substr(0, pos);
 }
 
+std::string derive_root_label(const std::string & root_path)
+{
+	std::string_view trimmed = root_path;
+	while (!trimmed.empty() && (trimmed.back() == '/' || trimmed.back() == '\\'))
+		trimmed.remove_suffix(1);
+
+	auto label = std::string(string_utils::extract_filename(trimmed));
+	if (label == "workspace")
+		return workspace_label;
+
+	if (label.empty())
+		return std::string(trimmed);
+
+	return label;
+}
+
 std::string derive_display_name(const file_entry_t & entry, bool is_loaded, bool is_dirty)
 {
 	display_name_t name(entry.filename);
@@ -200,12 +216,8 @@ static void assemble_root_nodes(std::map<std::string, tree_builder_t> & roots_ma
 {
 	for (auto & [root_path, root_builder] : roots_map)
 	{
-		auto label = std::string(string_utils::extract_filename(root_path));
-		if (label == "workspace")
-			label = workspace_label;
-
 		sidebar_render_node_t root_node;
-		root_node.label = label;
+		root_node.label = derive_root_label(root_path);
 		root_node.root_path = root_path;
 		root_node.folder_path = root_path;
 

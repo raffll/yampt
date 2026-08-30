@@ -8,8 +8,8 @@ Open File → Add Folder and point it to a directory containing your plugins and
 
 ## Main Layout
 
-- **Left top** — Files tab (sidebar with loaded files), Filters tab (record type list), and Statuses tab (status filter with counters).
-- **Left bottom** — Annotations tab (glossary matches for the current entry), History tab (edit history), and Auto Translate tab (translation providers).
+- **Left top** — Files tab (sidebar with loaded files), Filters tab (record type list), Statuses tab (status filter with counters), and Find/Replace tab (batch find and replace in translations).
+- **Left bottom** — Annotations tab (glossary matches for the current entry), Auto Translate tab (translation providers), and History tab (edit history).
 - **Right top** — Records table showing all entries in the active dictionary. Preview tab renders book HTML for TEXT records and full script source for SCTX/BNAM records. Log tab shows operation output.
 - **Right bottom** — Editor with three panels: Original (read-only source text), Details (adaptation info when available), and Translation (editable).
 - **Toolbar** — Search field with toggle buttons: Aa for case-sensitive, .* for regex, and column selectors (Key, Original, Translation) to control which fields are searched.
@@ -24,7 +24,7 @@ Right-click a file or folder to access its context menu. Plugins offer Make Dict
 
 ### Import Archive
 
-File → Import Archive opens a file dialog for zip or rar archives. The contents are extracted into the workspace folder. Requires 7za.exe in the same directory as the application. After extraction the workspace auto-scans and shows new files in the sidebar.
+File → Import Archive opens a file dialog for zip or rar archives. The contents are extracted into the workspace folder. On Windows, 7za.exe must be in the same directory as the application. On Linux, the 7z command must be available in PATH (install p7zip from your distribution's package manager). After extraction the workspace auto-scans and shows new files in the sidebar.
 
 ### Make Dictionary
 
@@ -69,17 +69,13 @@ Only entries with status Translated and where the original differs from the tran
 
 ### Find/Replace
 
-Open via Tools → Find/Replace. This dialog searches and replaces text in the translation field across all entries in the active dictionary, regardless of the current table filter.
+Find/Replace is a dedicated tab in the left panel, alongside Files, Filters, and Statuses. Type the text to find in the Search field and the replacement in the Replace field below it. Use the Aa button for case-sensitive matching or the .* button for regular expression mode. Replacement always operates on the translation field.
 
-Type a search term in the Find field and a replacement in the Replace field. Use the checkboxes to enable case-sensitive matching or regular expression mode. Three actions are available:
+Replace All replaces the search term in all currently visible entries. Only entries shown in the table after filtering are affected — entries hidden by type, status, or text filters are left untouched.
 
-- **Find Next** — selects the next entry whose translation contains the search term.
-- **Replace** — replaces the match in the current entry and advances to the next match.
-- **Replace All** — replaces all occurrences in every entry of the dictionary at once.
+Entries modified by Replace All receive the status Replaced. This makes it easy to filter and review all changes after a batch operation.
 
-Entries modified by Replace or Replace All receive the status Replaced. This makes it easy to filter and review all changes after a batch operation.
-
-The Undo button reverts the last Replace All operation, restoring the original text and status for every entry that was modified. Undo is available until the next Replace All is performed or the dictionary is closed.
+Each replacement is recorded individually in the edit history. To undo a replacement, select the affected entries in the Records table, right-click, and choose Revert. This restores the text and status each entry had before the replacement. You can also view and revert individual entries from the History panel.
 
 ### EET Import
 
@@ -136,12 +132,24 @@ The Filters tab shows record types present in the current dictionary (CELL, DIAL
 - `Ctrl+Up` — select the previous row.
 - `Escape` — clear the search field.
 
+## Annotations
+
+The Annotations tab shows contextual information about the currently selected entry. It updates automatically when you select a row in the Records table.
+
+For INFO entries, the panel shows the speaker's NPC name and gender when available. For FNAM entries belonging to weapons, armor, clothing, or books, it shows the enchantment ID if the item is enchanted. These metadata fields help translators choose correct grammatical forms in languages where gender or item properties affect the translation.
+
+The Original and Translation panels also highlight recognized terms inline: dialog topic names appear in blue (matching known DIAL entries), and glossary terms from loaded base dictionaries appear in green.
+
 ## Auto Translate
 
 The Auto Translate tab at the bottom-left provides machine translation. Select a provider from the combo box, then click Translate to fill the translation field with a suggestion.
 
 - **CTranslate2** — an offline translation model that runs locally. Supports Polish, German, French, Russian, Italian, and Hungarian. Does not require an internet connection. The model must be present in the `models/` folder next to the application.
-- **Web providers** — online services like DeepL, Google Translate, and Claude. Each requires an API key configured in Settings → Translation. The source language is read from your Language settings automatically.
+- **Web providers** — online services like DeepL, Google Translate, and Claude. Each requires an API key configured in Settings → Auto Translation. The source language is read from your Language settings automatically.
+
+When the selected provider is an AI service that offers a choice of models, a model combo box appears on the row below the provider selector. It lets you pick which model performs the translation from the list the provider offers. The chosen model is remembered separately for each provider and restored the next time you select that provider. Providers without a model choice (CTranslate2 and simple translation services) do not show this control.
+
+Next to the model combo is a Refresh control. When the provider can report its own model list, clicking Refresh contacts the service and replaces the choices with the models currently available on your account. Your previously selected model stays selected if it is still offered; otherwise the provider's default is chosen. If the refresh cannot complete — for example when no API key is set or the service is unreachable — the existing list is kept and the reason is reported in the panel's output area.
 
 After a successful translation, the entry status is set to Generated. Review the result and set to Translated when satisfied.
 
@@ -149,7 +157,9 @@ Additional providers can be added by placing a configuration file in the `provid
 
 ## Entry Statuses
 
-Each dictionary entry has a status. Only **Translated** entries are applied during Convert Plugin/Create Patch Plugin — all others are skipped. You can manually set **Translated**, **In Progress**, **Untranslated**, or **Error** via right-click context menu on selected rows in the Records table.
+Each dictionary entry has a status. Only **Translated** entries are applied during Convert Plugin/Create Patch Plugin — all others are skipped. You can manually set **Translated**, **In Progress**, **Untranslated**, or **Error** via right-click context menu on selected rows in the Records table. The same menu offers **Revert**, which restores each selected entry to its previous text and status from the edit history.
+
+The context menu also lets you teach an AI provider your preferred style. Right-click one or more records and choose **Mark as Example** to store their original and current translation as reference pairs. When a selected record is already stored, the same entry reads **Unmark Example** and removes it. You can keep up to twenty examples at once; if you try to mark more, the extra selection is skipped and a message explains that the limit was reached. Examples apply to any record regardless of its status, and every stored example is sent to AI providers alongside your translation. They are managed in Settings → Auto Translation → Examples.
 
 - **Translated** — the translation is approved. This is the only status that produces output when running Convert Plugin or Create Patch Plugin.
 - **Untranslated** — no translation exists. The original and translation fields contain the same text.
@@ -162,8 +172,9 @@ Each dictionary entry has a status. Only **Translated** entries are applied duri
 - **Ambiguous** — multiple entries in the base dictionary offer different translations for the same original text. The Details panel lists all candidates. Pick the correct one and set to Translated.
 - **Reused** — the base dictionary contained a matching original text under a different key. The translation was copied from that entry.
 - **Propagated** — after you committed a translation, all entries sharing the same original text (including the committed entry itself) were updated to match. Both the source and all targets receive this status.
-- **Replaced** — the translation was modified by a Find/Replace operation. Review the result and set to Translated when satisfied.
+- **Replaced** — the translation was modified by a Replace All operation. Review the result and set to Translated when satisfied.
 - **Missing** — during Make Base Dictionary, this record existed in the foreign file but no corresponding record was found in the native file. Requires manual translation.
+- **Heuristic** — during Make Base Dictionary, this cell or topic was matched by the translation engine heuristic rather than by exact record pairing. The match may be incorrect. Verify the translation and set to Translated if correct.
 - **Duplicate** — the same key appeared more than once in the source plugin. Only the first occurrence is stored.
 - **Mismatch** — during Make Base Dictionary, a record existed in the native file with no corresponding record in the foreign file. Informational; no action needed.
 - **Error** — the translation exceeds the maximum byte length allowed for this sub-record type and cannot be written to the plugin. Shorten the translation.
@@ -174,5 +185,5 @@ Open Settings via Ctrl+, or the Tools menu. Four pages are available:
 
 - **Appearance** — choose between light and dark theme.
 - **Shortcuts** — customize keyboard shortcuts for all actions. Conflicts are highlighted in red.
-- **Language** — set the foreign language (source) and native language (target). Choose a spell check dictionary for the Translation panel. Configure the English dictionary used for partial mode in Make Base Dictionary.
-- **Translation** — shows a table of all discovered web translation providers. Enter your API key for each service you want to use. The Status column shows whether a key is configured.
+- **Language** — set the foreign language (source) and native language (target). Choose a spell check dictionary for the Translation panel. Configure the English dictionary used for partial mode in Make Base Dictionary. The Encoding line shows which byte encoding the selected native language uses for reading and writing plugin text (Polish and Hungarian use Windows-1250, Russian uses Windows-1251, the others use Windows-1252). This is determined by the language and is shown for reference.
+- **Auto Translation** — three tabs. Local Models shows installed offline translation models and their supported languages. Web Providers shows all discovered online services with a field for each API key and an indicator of whether the provider is configured and ready to use; model selection lives in the Auto Translate panel, not here. Examples lists the translation pairs you have marked as AI style references, each with its original and translation and a Remove control to delete it. When you have not marked any examples the tab shows a message saying so, and the list holds at most twenty examples.

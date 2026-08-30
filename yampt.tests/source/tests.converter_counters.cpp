@@ -2,7 +2,8 @@
 #include <converter/esm_converter.hpp>
 #include <io/dict_writer.hpp>
 #include <utility/app_logger.hpp>
-#include <utility/includes.hpp>
+#include <filesystem>
+#include <fstream>
 
 static std::string get_temp_path(const std::string & filename)
 {

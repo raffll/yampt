@@ -231,6 +231,8 @@ void cell_matcher_t::match_exterior_cells()
 		m_esm_foreign.set_value("DATA");
 		if (!m_esm_foreign.get_value().exist)
 		{
+			app_logger_t::add_log(
+			    "[warning] missing CELL \"" + ref_cell_name + "\": no DATA sub-record in foreign cell\r\n");
 			missing_cells.push_back({ i, ref_cell_name });
 			m_counters.missing++;
 			continue;
@@ -242,7 +244,8 @@ void cell_matcher_t::match_exterior_cells()
 		auto coord_key = make_exterior_coord_key(m_esm_foreign.get_value().content);
 		if (coord_key.empty())
 		{
-			app_logger_t::add_log("[warning] malformed DATA in exterior cell: \"" + ref_cell_name + "\"\r\n", true);
+			app_logger_t::add_log(
+			    "[warning] missing CELL \"" + ref_cell_name + "\": malformed exterior coordinates\r\n");
 			missing_cells.push_back({ i, ref_cell_name });
 			m_counters.missing++;
 			continue;
@@ -251,6 +254,8 @@ void cell_matcher_t::match_exterior_cells()
 		auto it_match = native_coord_index.find(coord_key);
 		if (it_match == native_coord_index.end())
 		{
+			app_logger_t::add_log(
+			    "[warning] missing CELL \"" + ref_cell_name + "\": no native exterior cell at " + coord_key + "\r\n");
 			missing_cells.push_back({ i, ref_cell_name });
 			m_counters.missing++;
 			continue;
@@ -327,6 +332,19 @@ void cell_matcher_t::match_interior_cells()
 	}
 
 	match_interior_cells_heuristic(missing_cells, matched_native_records);
+
+	for (const auto & [rec_index, cell_name] : missing_cells)
+	{
+		if (m_native_candidates_str.empty())
+			app_logger_t::add_log(
+			    "[warning] missing CELL \"" + cell_name + "\": no interior cell with matching contents found\r\n");
+		else
+			app_logger_t::add_log(
+			    "[warning] missing CELL \"" + cell_name +
+			    "\": no interior cell with matching contents; unmatched native candidates: " +
+			    m_native_candidates_str + "\r\n");
+	}
+
 	add_missing_cells(missing_cells, m_native_candidates_str);
 }
 
@@ -524,7 +542,6 @@ void cell_matcher_t::add_missing_cells(
 	for (const auto & [rec_index, cell_name] : missing_cells)
 	{
 		insert_entry(cell_name, cell_name, cell_name, status_t::missing);
-		app_logger_t::add_log("[warning] missing CELL: " + cell_name + "\r\n");
 
 		if (!native_candidates_str.empty())
 		{

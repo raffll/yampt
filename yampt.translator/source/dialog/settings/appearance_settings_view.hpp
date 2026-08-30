@@ -6,12 +6,12 @@
 class QComboBox;
 class settings_store_t;
 
-class appearance_settings_view_t : public QWidget
+class translator_appearance_settings_view_t : public QWidget
 {
 	Q_OBJECT
 
 public:
-	explicit appearance_settings_view_t(QWidget * parent = nullptr);
+	explicit translator_appearance_settings_view_t(QWidget * parent = nullptr);
 
 	void load(const settings_store_t & settings);
 	void save(settings_store_t & settings) const;

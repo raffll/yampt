@@ -17,6 +17,19 @@ TEST_CASE("string_utils::normalize_path, backslash to forward slash", "[u]")
 	REQUIRE(string_utils::normalize_path("\\\\server\\share") == "//server/share");
 }
 
+TEST_CASE("string_utils::normalize_path, trailing slash stripping", "[u]")
+{
+	REQUIRE(string_utils::normalize_path("C:/Users/workspace/") == "C:/Users/workspace");
+	REQUIRE(string_utils::normalize_path("C:\\Users\\workspace\\") == "C:/Users/workspace");
+	REQUIRE(string_utils::normalize_path("/home/user/") == "/home/user");
+	REQUIRE(string_utils::normalize_path("/home/user///") == "/home/user");
+	REQUIRE(string_utils::normalize_path("//server/share/") == "//server/share");
+	REQUIRE(string_utils::normalize_path("//server/share/folder/") == "//server/share/folder");
+	REQUIRE(string_utils::normalize_path("/") == "/");
+	REQUIRE(string_utils::normalize_path("C:/") == "C:/");
+	REQUIRE(string_utils::normalize_path("D:\\") == "D:/");
+}
+
 TEST_CASE("string_utils::extract_filename, various paths", "[u]")
 {
 	REQUIRE(string_utils::extract_filename("C:/Users/test/file.txt") == "file.txt");
@@ -42,6 +55,37 @@ TEST_CASE("string_utils::case_insensitive_equal, various inputs", "[u]")
 	REQUIRE(string_utils::case_insensitive_equal("", "") == true);
 	REQUIRE(string_utils::case_insensitive_equal("Hello", "World") == false);
 	REQUIRE(string_utils::case_insensitive_equal("short", "longer") == false);
+}
+
+TEST_CASE("string_utils::to_lower, ascii behavior preserved as regression guard", "[u]")
+{
+	REQUIRE(string_utils::to_lower("BALMORA") == "balmora");
+	REQUIRE(string_utils::to_lower("Vivec City") == "vivec city");
+	REQUIRE(string_utils::to_lower("Mix3d C4se!") == "mix3d c4se!");
+	REQUIRE(string_utils::to_lower("digits 123 stay") == "digits 123 stay");
+}
+
+TEST_CASE("string_utils::to_lower, preserves byte length on accented input", "[u]")
+{
+	const std::string upper = "B\xc4\x84lmora";
+	const auto lowered = string_utils::to_lower(upper);
+	REQUIRE(lowered.size() == upper.size());
+}
+
+TEST_CASE("string_utils::paths_equivalent, same directory different spelling", "[u]")
+{
+	REQUIRE(string_utils::paths_equivalent("C:\\OMEN\\workspace", "C:/OMEN/workspace") == true);
+	REQUIRE(string_utils::paths_equivalent("C:/OMEN/workspace", "c:/omen/workspace") == true);
+	REQUIRE(string_utils::paths_equivalent("C:\\OMEN\\workspace\\", "C:/OMEN/workspace") == true);
+	REQUIRE(string_utils::paths_equivalent("C:\\OMEN\\Workspace\\", "c:/omen/workspace") == true);
+	REQUIRE(string_utils::paths_equivalent("", "") == true);
+}
+
+TEST_CASE("string_utils::paths_equivalent, different directories", "[u]")
+{
+	REQUIRE(string_utils::paths_equivalent("C:/OMEN/workspace", "C:/OMEN/other") == false);
+	REQUIRE(string_utils::paths_equivalent("C:/OMEN/workspace", "C:/OMEN/workspace/sub") == false);
+	REQUIRE(string_utils::paths_equivalent("D:/workspace", "C:/workspace") == false);
 }
 
 TEST_CASE("string_utils::erase_null_chars, removes from first null", "[u]")

@@ -1,5 +1,6 @@
 #include "record_table_view.hpp"
 #include "../model/record_table_model.hpp"
+#include <translation_example.hpp>
 #include <optional>
 #include <QContextMenuEvent>
 #include <QHeaderView>
@@ -29,21 +30,7 @@ void record_table_view_t::setModel(QAbstractItemModel * model)
 	if (!model)
 		return;
 
-	auto * header = horizontalHeader();
-	if (header->count() >= col_count)
-	{
-		header->setSectionResizeMode(col_id, QHeaderView::Interactive);
-		header->setSectionResizeMode(col_key, QHeaderView::Interactive);
-		header->setSectionResizeMode(col_original, QHeaderView::Interactive);
-		header->setSectionResizeMode(col_translation, QHeaderView::Stretch);
-		header->setSectionResizeMode(col_status, QHeaderView::Interactive);
-		header->setStretchLastSection(false);
-
-		header->resizeSection(col_id, 50);
-		header->resizeSection(col_key, 200);
-		header->resizeSection(col_original, 250);
-		header->resizeSection(col_status, 90);
-	}
+	apply_column_layout();
 
 	connect(
 	    selectionModel(),
@@ -59,9 +46,70 @@ void record_table_view_t::setModel(QAbstractItemModel * model)
 	});
 }
 
+void record_table_view_t::apply_column_layout()
+{
+	const auto * record_model = qobject_cast<record_table_model_t *>(model());
+	if (!record_model)
+		return;
+
+	const auto & columns = record_model->columns();
+	auto * header = horizontalHeader();
+	header->setStretchLastSection(false);
+
+	for (int position = 0; position < columns.count(); ++position)
+	{
+		const auto logical = columns.at(position);
+		if (logical == col_translation)
+		{
+			header->setSectionResizeMode(position, QHeaderView::Stretch);
+			continue;
+		}
+
+		header->setSectionResizeMode(position, QHeaderView::Interactive);
+		header->resizeSection(position, default_column_width(logical));
+	}
+}
+
+int record_table_view_t::default_column_width(table_col_t logical_column)
+{
+	switch (logical_column)
+	{
+	case col_id:
+		return 50;
+	case col_key:
+		return 200;
+	case col_original:
+		return 250;
+	case col_status:
+		return 90;
+	default:
+		return 100;
+	}
+}
+
+void record_table_view_t::refresh_column_layout()
+{
+	apply_column_layout();
+}
+
 void record_table_view_t::set_context_menu_enabled(bool enabled)
 {
 	m_context_menu_enabled = enabled;
+}
+
+void record_table_view_t::set_example_state_fn(std::function<bool(int row)> fn)
+{
+	m_example_state_fn = std::move(fn);
+}
+
+void record_table_view_t::set_example_count_fn(std::function<int()> fn)
+{
+	m_example_count_fn = std::move(fn);
+}
+
+void record_table_view_t::set_can_revert_fn(std::function<bool(int row)> fn)
+{
+	m_can_revert_fn = std::move(fn);
 }
 
 void record_table_view_t::contextMenuEvent(QContextMenuEvent * event)
@@ -79,6 +127,34 @@ void record_table_view_t::contextMenuEvent(QContextMenuEvent * event)
 	auto * act_in_progress = menu->addAction(tr("Set In Progress"));
 	auto * act_untranslated = menu->addAction(tr("Set Untranslated"));
 	auto * act_error = menu->addAction(tr("Set Error"));
+
+	menu->addSeparator();
+	auto * act_revert = menu->addAction(tr("Revert"));
+	act_revert->setToolTip(tr("Revert selected entries to previous state from history"));
+
+	if (m_can_revert_fn)
+	{
+		bool any_can_revert = false;
+		for (const auto & idx : selected)
+		{
+			if (!m_can_revert_fn(idx.row()))
+				continue;
+
+			any_can_revert = true;
+			break;
+		}
+
+		act_revert->setEnabled(any_can_revert);
+	}
+
+	menu->addSeparator();
+	const auto first_row = selected.first().row();
+	const auto already_example = m_example_state_fn && m_example_state_fn(first_row);
+	auto * act_example = menu->addAction(already_example ? tr("Unmark Example") : tr("Mark as Example"));
+	act_example->setToolTip(tr("Use this entry as an AI translation style example"));
+
+	if (!already_example && m_example_count_fn && m_example_count_fn() >= max_examples)
+		act_example->setEnabled(false);
 
 	auto * chosen = menu->exec(event->globalPos());
 	std::optional<status_t> new_status;
@@ -98,6 +174,22 @@ void record_table_view_t::contextMenuEvent(QContextMenuEvent * event)
 			rows.append(idx.row());
 
 		emit batch_status_change_requested(rows, new_status.value());
+	}
+	else if (chosen == act_revert)
+	{
+		QList<int> rows;
+		for (const auto & idx : selected)
+			rows.append(idx.row());
+
+		emit batch_revert_requested(rows);
+	}
+	else if (chosen == act_example)
+	{
+		QList<int> rows;
+		for (const auto & idx : selected)
+			rows.append(idx.row());
+
+		emit toggle_example_requested(rows);
 	}
 
 	delete menu;

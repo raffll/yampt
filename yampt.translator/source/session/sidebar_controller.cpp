@@ -1,3 +1,4 @@
+#include <resource_paths.hpp>
 #include "sidebar_controller.hpp"
 #include "../model/dict_document.hpp"
 #include "../model/eet_document.hpp"
@@ -144,14 +145,13 @@ void sidebar_controller_t::on_delete_requested(const std::string & path)
 
 void sidebar_controller_t::scan_workspace()
 {
-	const auto workspace = (QCoreApplication::applicationDirPath() + "/workspace").toStdString();
-	QDir().mkpath(QString::fromStdString(workspace));
+	const auto workspace = resource_paths::workspace_dir();
 
 	std::vector<std::string> roots;
 	roots.push_back(workspace);
 	for (const auto & root : m_deps.file_list.get_roots())
 	{
-		if (root != workspace)
+		if (!string_utils::paths_equivalent(root, workspace))
 			roots.push_back(root);
 	}
 
@@ -187,11 +187,16 @@ void sidebar_controller_t::update_watcher_roots()
 {
 	QStringList roots;
 
-	const auto workspace = QCoreApplication::applicationDirPath() + "/workspace";
-	roots.append(workspace);
+	const auto workspace = resource_paths::workspace_dir();
+	roots.append(QString::fromStdString(workspace));
 
 	for (const auto & root : m_deps.file_list.get_roots())
+	{
+		if (string_utils::paths_equivalent(root, workspace))
+			continue;
+
 		roots.append(QString::fromStdString(root));
+	}
 
 	m_deps.workspace_watcher.set_watch_roots(roots);
 }
@@ -330,8 +335,6 @@ void sidebar_controller_t::on_export_eet_requested(const std::string & path)
 	auto * eet_doc = dynamic_cast<eet_document_t *>(doc);
 	if (!eet_doc)
 		return;
-
-	const auto sep = path.find_last_of("/\\");
 	const auto stem = path.substr(0, path.rfind('.'));
 	const auto output_path = stem + ".json";
 
@@ -370,7 +373,7 @@ void sidebar_controller_t::on_generate_loc_requested(const std::string & path)
 	const auto locale = resolve_hunspell_locale(language);
 	if (!locale.empty())
 	{
-		const auto dict_dir = QCoreApplication::applicationDirPath().toStdString() + "/dictionaries/";
+		const auto dict_dir = resource_paths::dictionaries_dir();
 		hunspell_aff = dict_dir + locale + ".aff";
 		hunspell_dic = dict_dir + locale + ".dic";
 	}

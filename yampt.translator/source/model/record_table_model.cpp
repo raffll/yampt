@@ -27,7 +27,19 @@ int record_table_model_t::columnCount(const QModelIndex & parent) const
 	if (parent.isValid())
 		return 0;
 
-	return col_count;
+	return m_columns.count();
+}
+
+void record_table_model_t::set_columns(document_kind_t kind)
+{
+	beginResetModel();
+	m_columns.set_for_kind(kind);
+	endResetModel();
+}
+
+const table_columns_t & record_table_model_t::columns() const
+{
+	return m_columns;
 }
 
 static QString strip_leading_whitespace(QString text)
@@ -87,7 +99,7 @@ QVariant record_table_model_t::data(const QModelIndex & index, int role) const
 
 	if (role == Qt::DisplayRole || role == Qt::EditRole)
 	{
-		switch (index.column())
+		switch (m_columns.at(index.column()))
 		{
 		case col_id:
 			return QString::fromStdString(domain_types::type_to_str(row.type));
@@ -139,7 +151,7 @@ QVariant record_table_model_t::headerData(int section, Qt::Orientation orientati
 	if (orientation != Qt::Horizontal || role != Qt::DisplayRole)
 		return {};
 
-	switch (section)
+	switch (m_columns.at(section))
 	{
 	case col_id:
 		return tr("ID");
@@ -160,11 +172,13 @@ void record_table_model_t::sort(int column, Qt::SortOrder order)
 {
 	beginResetModel();
 
-	auto cmp = [column, order](const table_row_t & a, const table_row_t & b)
+	const auto logical_column = m_columns.at(column);
+
+	auto cmp = [logical_column, order](const table_row_t & a, const table_row_t & b)
 	{
 		int result = 0;
 
-		switch (column)
+		switch (logical_column)
 		{
 		case col_id:
 			result = static_cast<int>(a.type) - static_cast<int>(b.type);
@@ -247,7 +261,7 @@ void record_table_model_t::update_row(int row, const std::string & new_text, sta
 
 	m_rows[row].new_text = new_text;
 	m_rows[row].status = status;
-	emit dataChanged(index(row, col_id), index(row, col_status));
+	emit dataChanged(index(row, 0), index(row, m_columns.count() - 1));
 }
 
 Qt::ItemFlags record_table_model_t::flags(const QModelIndex & index) const
@@ -260,7 +274,7 @@ Qt::ItemFlags record_table_model_t::flags(const QModelIndex & index) const
 	if (!m_editable)
 		return base_flags;
 
-	if (index.column() != col_translation)
+	if (m_columns.at(index.column()) != col_translation)
 		return base_flags;
 
 	const auto row_idx = index.row();
@@ -286,7 +300,7 @@ bool record_table_model_t::setData(const QModelIndex & index, const QVariant & v
 	if (!index.isValid() || role != Qt::EditRole)
 		return false;
 
-	if (index.column() != col_translation)
+	if (m_columns.at(index.column()) != col_translation)
 		return false;
 
 	const auto row_idx = index.row();

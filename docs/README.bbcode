@@ -6,15 +6,35 @@ A suite of tools for working with Morrowind plugins. Includes a plugin conflict 
 
 Qt6 GUI for viewing, comparing, and patching plugins. Similar to TES5Edit/xEdit.
 
+[b]Viewing[/b]
 [list]
+[*][b]Load and compare any number of plugins simultaneously — no hardcoded limits[/b]
 [*]Load plugins from folder, Mod Organizer 2 profiles, or OpenMW cfg
 [*]Navigation tree with xEdit-style conflict coloring inherited up to file level
-[*]Record comparison with decoded fields aligned by content identity across plugins
+[*][b]Lua handler tab: scans OpenMW Lua scripts and highlights conflicting handler registrations[/b]
+[*][b]Record comparison with decoded fields aligned by content identity across plugins[/b]
 [*]Side-by-side text comparison panel
+[*]Composable filters: Conflicts Only, search by ID/name, and advanced criteria combine as AND
+[/list]
+
+[b]Editing[/b]
+[list]
+[*][b]Direct field editing of source plugins — toggle Enable Editing on the toolbar, change values in the Edit panel[/b]
+[*]Applying a field edit updates the plugin in memory; save on demand with Save / Save All or the plugin right-click menu — unsaved plugins are marked with an asterisk in the plugin list and window title
+[/list]
+
+[b]Merging[/b]
+[list]
 [*]Automatic merged patch: leveled lists, dialogues, three-way field-level merge for packed sub-records
 [*]Automatic fixes: fog density, summon persistence, cell name reversion
+[*][b]Guard patch: plugins before the guard are excluded from merge for records the guard overrides[/b]
+[*][b]Dialogue INFO chain resolved using OpenMW ordering algorithm[/b]
 [*]Copy or remove records, groups, or individual fields to/from merged patch
 [*]Configurable merge: exclude plugins or records by pattern, toggle record types and fixes
+[/list]
+
+[b]Maintenance[/b]
+[list]
 [*]Plugin cleaning: batch-remove evil GMSTs and junk cells
 [*]Header repair: update master file sizes to match actual files on disk, update plugin version to 1.3
 [/list]
@@ -23,30 +43,67 @@ Qt6 GUI for viewing, comparing, and patching plugins. Similar to TES5Edit/xEdit.
 
 Qt6 GUI for interactive plugin translation.
 
+[b]Editing[/b]
 [list]
 [*]Sidebar with workspace folders, auto-refresh on filesystem changes
 [*]Record table filtered by type, sub-type, and translation status
 [*]Three-panel editor: original text, adapted text, editable translation
+[*]Inline table editing: double-click to edit single-line entries directly
 [*]Entry validation, status tracking, history with undo/revert
+[*]Find/Replace in a dedicated left-panel tab
+[/list]
+
+[b]Analysis[/b]
+[list]
 [*]Multi-layer syntax highlighting: MWScript keywords, hyperlinks, glossary terms, forbidden characters
 [*]Spell checking with per-language Hunspell dictionaries
 [*]Annotation system: hyperlinks, gender info, glossary matches from loaded base dicts
+[*]Full script preview with sync scrolling between original and translation
 [*]Book content preview with live update
-[*]Offline machine translation via CTranslate2 (NLLB-600M)
-[*]Supported languages defined in [font=Courier New]languages.json[/font] — add new languages without recompiling
-[*]All CLI operations accessible from the GUI
+[/list]
+
+[b]Translation[/b]
+[list]
+[*][b]Built-in offline translation engine — no API key required[/b]
+[*]Web translation providers: DeepL, Google Translate, ChatGPT, Claude — add more via config files
+[*]Pick the AI model right in the Auto Translate panel, or refresh the list from the provider
+[*][b]Curated AI examples: mark up to twenty records to guide the AI's translation style[/b]
+[/list]
+
+[b]Workflows[/b]
+[list]
+[*][b]Lua l10n workflow: edit YAML localization files with auto-pairing and scaffold generation[/b]
+[*][b]EET file import: convert ESP-ESM Translator dictionaries to JSON[/b]
+[*][b]Generate localization files (.cel, .mrk, .top) from dictionary[/b]
+[*][b]Hyperlink insertion during plugin conversion[/b]
 [/list]
 
 [size=4][b]yampt.exe — Command Line[/b][/size]
 
 Batch tool for automated dictionary and conversion workflows.
 
+[b]Dictionary[/b]
 [list]
 [*]Create base dictionaries by pairing two language versions of a master file
 [*]Create dictionaries from plugins using a base dictionary
 [*]Merge multiple dictionaries with priority ordering
+[*][b]JSON dictionary format with status tracking[/b]
+[/list]
+
+[b]Conversion[/b]
+[list]
 [*]Convert plugins by applying translations from dictionaries
 [*]Create patch plugins containing only modified records
-[*]Converts compiled script data without recompiling in TES CS
-[*]JSON dictionary format with status tracking
+[*][b]Converts compiled script data without recompiling in TES CS[/b]
 [/list]
+
+[size=4][b]General[/b][/size]
+[list]
+[*]Cross-platform: Windows and Linux
+[*]Dark mode
+[*]Session persistence: remembers window state between runs
+[/list]
+
+[size=4][b]Bug Reports[/b][/size]
+
+Report bugs and feature requests on [url=https://github.com/raffll/yampt/issues]GitHub[/url] or in the Nexus Mods comments section.

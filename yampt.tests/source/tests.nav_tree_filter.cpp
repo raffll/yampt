@@ -69,6 +69,7 @@ conflict_entry_t make_random_entry()
 
 nav_tree_filter_t::filter_state_t make_random_filter(const conflict_entry_t & entry)
 {
+	(void)entry;
 	nav_tree_filter_t::filter_state_t state;
 
 	state.filter_conflict_all = *rc::gen::arbitrary<bool>();

@@ -241,6 +241,8 @@ void view_tree_model_t::decode_schema_children_ref(
 
 				view_node_t frow;
 				frow.label = fdef.flag_names[bit];
+				frow.schema_field_index = static_cast<int>(field_idx);
+				frow.bit_index = bit;
 				frow.values.resize(col_count);
 
 				for (size_t col = 0; col < col_count; ++col)
@@ -262,6 +264,7 @@ void view_tree_model_t::decode_schema_children_ref(
 
 		view_node_t frow;
 		frow.label = fdef.name;
+		frow.schema_field_index = static_cast<int>(field_idx);
 		frow.values.resize(col_count);
 
 		for (size_t col = 0; col < col_count; ++col)

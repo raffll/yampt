@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=yEditor
+GenericName=Morrowind Plugin Editor
+Comment=Plugin conflict viewer and merged patch editor for Morrowind
+Exec=yampt-editor
+Icon=yampt-editor
+Terminal=false
+Categories=Utility;TextEditor;
+MimeType=application/octet-stream;

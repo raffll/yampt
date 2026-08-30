@@ -1,13 +1,39 @@
 ﻿#include "view_tree_model.hpp"
 #include <decoder/conflict_slots.hpp>
 #include <decoder/content_alignment.hpp>
+#include <decoder/scvr_condition.hpp>
 #include <decoder/view_tree_format.hpp>
 #include <scanner/dial_info_align.hpp>
 #include <scanner/record_conflict.hpp>
 #include <algorithm>
 
+namespace
+{
+	const sub_record_view_t * find_slot_view(
+	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
+	    const std::unordered_map<std::string, std::vector<size_t>> & type_index,
+	    const sub_slot_t & slot,
+	    size_t column)
+	{
+		if (column >= all_subs.size())
+			return nullptr;
+
+		auto it_type = type_index.find(slot.type);
+		if (it_type == type_index.end() || slot.occurrence < 0 ||
+		    slot.occurrence >= static_cast<int>(it_type->second.size()))
+			return nullptr;
+
+		const size_t idx = it_type->second[slot.occurrence];
+		if (idx == SIZE_MAX || idx >= all_subs[column].size())
+			return nullptr;
+
+		return &all_subs[column][idx];
+	}
+}
+
 void view_tree_model_t::set_record_leveled(record_context_t & context, const conflict_entry_t & entry)
 {
+	(void)entry;
 	const auto col_count = context.col_count;
 
 	std::vector<sub_slot_t> unified_slots;
@@ -20,6 +46,7 @@ void view_tree_model_t::set_record_leveled(record_context_t & context, const con
 
 void view_tree_model_t::set_record_faction(record_context_t & context, const conflict_entry_t & entry)
 {
+	(void)entry;
 	const auto col_count = context.col_count;
 
 	std::vector<sub_slot_t> unified_slots;
@@ -32,6 +59,7 @@ void view_tree_model_t::set_record_faction(record_context_t & context, const con
 
 void view_tree_model_t::set_record_container(record_context_t & context, const conflict_entry_t & entry)
 {
+	(void)entry;
 	const auto col_count = context.col_count;
 
 	std::vector<sub_slot_t> unified_slots;
@@ -44,6 +72,7 @@ void view_tree_model_t::set_record_container(record_context_t & context, const c
 
 void view_tree_model_t::set_record_armor(record_context_t & context, const conflict_entry_t & entry)
 {
+	(void)entry;
 	const auto col_count = context.col_count;
 	auto & all_subs = context.all_sub_records;
 
@@ -56,7 +85,8 @@ void view_tree_model_t::set_record_armor(record_context_t & context, const confl
 	rule.trailing_types = { "BNAM", "CNAM" };
 	rule.key_source = alignment_rule_t::key_from_t::anchor;
 
-	content_alignment_t::align(all_subs, col_count, { rule }, unified_slots, col_type_indices);
+	alignment_context_t align_ctx { all_subs, col_count, unified_slots, col_type_indices };
+	content_alignment_t::align(align_ctx, { rule });
 
 	auto is_body_part_type = [](const std::string & slot_type)
 	{ return slot_type == "INDX" || slot_type == "BNAM" || slot_type == "CNAM"; };
@@ -153,6 +183,7 @@ void view_tree_model_t::set_record_dial(
 
 	view_node_t separator_row;
 	separator_row.label = "--- INFO Chain ---";
+	separator_row.is_info_chain = true;
 	separator_row.values.resize(col_count);
 	separator_row.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
 	m_rows.push_back(std::move(separator_row));
@@ -161,6 +192,7 @@ void view_tree_model_t::set_record_dial(
 	{
 		view_node_t info_row;
 		info_row.label = info_entry.inam;
+		info_row.is_info_chain = true;
 		info_row.values.resize(col_count);
 		info_row.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
 
@@ -190,8 +222,12 @@ void view_tree_model_t::set_record_dial(
 		}
 
 		info_row.all_identical = all_same;
-		info_row.row_conflict_all =
-		    (any_present && !all_same) ? conflict_all_t::override_benign : conflict_all_t::no_conflict;
+
+		if (col_count <= 1)
+			info_row.row_conflict_all = conflict_all_t::only_one;
+		else
+			info_row.row_conflict_all =
+			    (any_present && !all_same) ? conflict_all_t::override_benign : conflict_all_t::no_conflict;
 
 		m_rows.push_back(std::move(info_row));
 	}
@@ -206,9 +242,15 @@ void view_tree_model_t::set_record_generic(record_context_t & context, const con
 	std::vector<std::unordered_map<std::string, std::vector<size_t>>> col_type_indices(col_count);
 
 	if (entry.slot_result)
-		content_alignment_t::build_from_slot_result(*entry.slot_result, col_count, unified_slots, col_type_indices);
+	{
+		alignment_context_t align_ctx { all_subs, col_count, unified_slots, col_type_indices };
+		content_alignment_t::build_from_slot_result(*entry.slot_result, align_ctx);
+	}
 	else
-		content_alignment_t::build_occurrence_based(all_subs, col_count, unified_slots, col_type_indices);
+	{
+		alignment_context_t align_ctx { all_subs, col_count, unified_slots, col_type_indices };
+		content_alignment_t::build_occurrence_based(align_ctx);
+	}
 
 	for (const auto & slot : unified_slots)
 		m_rows.push_back(build_slot_row(col_count, all_subs, col_type_indices, slot));
@@ -216,6 +258,7 @@ void view_tree_model_t::set_record_generic(record_context_t & context, const con
 
 void view_tree_model_t::set_record_info(record_context_t & context, const conflict_entry_t & entry)
 {
+	(void)entry;
 	const auto col_count = context.col_count;
 	auto & all_subs = context.all_sub_records;
 
@@ -228,16 +271,8 @@ void view_tree_model_t::set_record_info(record_context_t & context, const confli
 	rule.trailing_types = { "INTV", "FLTV" };
 	rule.key_source = alignment_rule_t::key_from_t::anchor;
 
-	content_alignment_t::align(all_subs, col_count, { rule }, unified_slots, col_type_indices);
-
-	auto is_condition_type = [](const std::string & slot_type)
-	{ return slot_type == "SCVR" || slot_type == "INTV" || slot_type == "FLTV"; };
-
-	std::stable_sort(
-	    unified_slots.begin(),
-	    unified_slots.end(),
-	    [&](const sub_slot_t & left, const sub_slot_t & right)
-	{ return !is_condition_type(left.type) && is_condition_type(right.type); });
+	alignment_context_t align_ctx { all_subs, col_count, unified_slots, col_type_indices };
+	content_alignment_t::align(align_ctx, { rule });
 
 	int condition_index = 0;
 	for (size_t i = 0; i < unified_slots.size(); ++i)
@@ -248,27 +283,22 @@ void view_tree_model_t::set_record_info(record_context_t & context, const confli
 			continue;
 		}
 
-		auto scvr_row = build_slot_row(col_count, all_subs, col_type_indices, unified_slots[i]);
+		auto scvr_field = build_slot_row(col_count, all_subs, col_type_indices, unified_slots[i]);
+		scvr_field.label = "SCVR - Script Variable";
 
 		view_node_t group_row;
 		group_row.type = "SCVR";
 		group_row.size = 0;
 		group_row.label = "Condition #" + std::to_string(condition_index);
-		group_row.values = scvr_row.values;
-		group_row.all_identical = scvr_row.all_identical;
+		group_row.values.resize(col_count);
+		group_row.show_group_value = true;
+		group_row.all_identical = scvr_field.all_identical;
 
-		view_node_t scvr_field;
-		scvr_field.label = "SCVR - Script Variable";
-		scvr_field.type = scvr_row.type;
-		scvr_field.size = scvr_row.size;
-		scvr_field.binary_ranges = scvr_row.binary_ranges;
-		scvr_field.values = scvr_row.children.empty() ? scvr_row.values : scvr_row.children[0].values;
-		scvr_field.all_identical = scvr_row.all_identical;
-		scvr_field.row_conflict_all = scvr_row.row_conflict_all;
-		scvr_field.cell_conflict_this = scvr_row.cell_conflict_this;
-		group_row.children.push_back(std::move(scvr_field));
+		std::vector<std::string> value_text(col_count);
+		std::vector<view_node_t> value_fields;
 
 		size_t next = i + 1;
+		bool has_value = false;
 		while (next < unified_slots.size() &&
 		       (unified_slots[next].type == "INTV" || unified_slots[next].type == "FLTV"))
 		{
@@ -280,13 +310,39 @@ void view_tree_model_t::set_record_info(record_context_t & context, const confli
 			value_field.type = value_row.type;
 			value_field.size = value_row.size;
 			value_field.binary_ranges = value_row.binary_ranges;
-			value_field.values = value_row.values;
+			value_field.values = value_row.children.empty() ? value_row.values : value_row.children[0].values;
 			value_field.all_identical = value_row.all_identical;
 			value_field.row_conflict_all = value_row.row_conflict_all;
 			value_field.cell_conflict_this = value_row.cell_conflict_this;
-			group_row.children.push_back(std::move(value_field));
+
+			if (!has_value)
+			{
+				for (size_t col = 0; col < col_count && col < value_field.values.size(); ++col)
+					value_text[col] = value_field.values[col];
+
+				has_value = true;
+			}
+
+			value_fields.push_back(std::move(value_field));
 			++next;
 		}
+
+		for (size_t col = 0; col < col_count; ++col)
+		{
+			const auto * scvr_view = find_slot_view(all_subs, col_type_indices[col], unified_slots[i], col);
+			const auto condition =
+			    scvr_view ? parse_scvr_condition(scvr_view->data, scvr_view->size) : scvr_condition_t {};
+			const auto sentence = format_scvr_condition(condition, value_text[col]);
+
+			if (!sentence.empty())
+				group_row.values[col] = sentence;
+			else
+				group_row.values[col] = scvr_field.values.size() > col ? scvr_field.values[col] : non_existent_value;
+		}
+
+		group_row.children.push_back(std::move(scvr_field));
+		for (auto & value_field : value_fields)
+			group_row.children.push_back(std::move(value_field));
 
 		group_row.row_conflict_all = conflict_all_t::only_one;
 		group_row.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
@@ -320,8 +376,8 @@ void view_tree_model_t::collect_leveled_entries(record_context_t & context, slot
 	rule.trailing_types = { "INTV" };
 	rule.key_source = alignment_rule_t::key_from_t::anchor;
 
-	content_alignment_t::align(
-	    context.all_sub_records, context.col_count, { rule }, build_ctx.unified_slots, build_ctx.col_type_indices);
+	alignment_context_t align_ctx { context.all_sub_records, context.col_count, build_ctx.unified_slots, build_ctx.col_type_indices };
+	content_alignment_t::align(align_ctx, { rule });
 }
 
 void view_tree_model_t::collect_faction_entries(record_context_t & context, slot_build_context_t & build_ctx)
@@ -333,8 +389,8 @@ void view_tree_model_t::collect_faction_entries(record_context_t & context, slot
 	rule.key_source = alignment_rule_t::key_from_t::next;
 	rule.key_neighbor_type = "ANAM";
 
-	content_alignment_t::align(
-	    context.all_sub_records, context.col_count, { rule }, build_ctx.unified_slots, build_ctx.col_type_indices);
+	alignment_context_t align_ctx { context.all_sub_records, context.col_count, build_ctx.unified_slots, build_ctx.col_type_indices };
+	content_alignment_t::align(align_ctx, { rule });
 }
 
 void view_tree_model_t::collect_container_entries(record_context_t & context, slot_build_context_t & build_ctx)
@@ -351,12 +407,8 @@ void view_tree_model_t::collect_container_entries(record_context_t & context, sl
 	npcs_rule.anchor_size = 32;
 	npcs_rule.key_source = alignment_rule_t::key_from_t::anchor;
 
-	content_alignment_t::align(
-	    context.all_sub_records,
-	    context.col_count,
-	    { npco_rule, npcs_rule },
-	    build_ctx.unified_slots,
-	    build_ctx.col_type_indices);
+	alignment_context_t align_ctx { context.all_sub_records, context.col_count, build_ctx.unified_slots, build_ctx.col_type_indices };
+	content_alignment_t::align(align_ctx, { npco_rule, npcs_rule });
 }
 
 void view_tree_model_t::emit_slot_rows(record_context_t & context, slot_build_context_t & build_ctx)

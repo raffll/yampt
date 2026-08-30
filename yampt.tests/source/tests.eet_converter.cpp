@@ -135,11 +135,11 @@ TEST_CASE("eet_converter_t::map_type, exhaustive type mapping", "[u]")
 		{ "CELL", "FNAM", rec_type_t::cell }, { "REGN", "FNAM", rec_type_t::cell },
 		{ "CELL", "DNAM", rec_type_t::cell }, { "NPC_", "DNAM", rec_type_t::fnam },
 		{ "NPC_", "CNDT", rec_type_t::fnam }, { "BOOK", "TEXT", rec_type_t::text },
-		{ "SCPT", "MSGB", rec_type_t::bnam },
-		{ "SCPT", "CELL", rec_type_t::bnam }, { "SCPT", "SAY_", rec_type_t::bnam },
-		{ "SCPT", "DIAL", rec_type_t::bnam }, { "MGEF", "DESC", rec_type_t::desc },
-		{ "CLAS", "DESC", rec_type_t::desc }, { "FACT", "RNAM", rec_type_t::rnam },
-		{ "GMST", "STRV", rec_type_t::gmst }, { "DIAL", "NAME", rec_type_t::dial },
+		{ "SCPT", "MSGB", rec_type_t::bnam }, { "SCPT", "CELL", rec_type_t::bnam },
+		{ "SCPT", "SAY_", rec_type_t::bnam }, { "SCPT", "DIAL", rec_type_t::bnam },
+		{ "MGEF", "DESC", rec_type_t::desc }, { "CLAS", "DESC", rec_type_t::desc },
+		{ "FACT", "RNAM", rec_type_t::rnam }, { "GMST", "STRV", rec_type_t::gmst },
+		{ "DIAL", "NAME", rec_type_t::dial },
 	};
 
 	REQUIRE(known_mappings.size() == 35);

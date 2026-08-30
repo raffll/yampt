@@ -1,12 +1,65 @@
 # Changelog
 
+## [0.1054] - 2026-08-30
+
+### yTranslator
+- [NEW] Enchantment annotation: FNAM entries for weapons, armor, clothing, and books now show the enchantment ID in the Annotations panel when the item is enchanted
+- [NEW] Revert from record table context menu: right-click selected entries → Revert restores previous text and status from history
+- [NEW] Encoding line in Language settings: shows which codepage the selected native language uses for plugin text
+- [NEW] Mark records as AI translation examples: right-click records to mark up to twenty as style examples sent to the AI provider
+- [NEW] Fetch available models from the provider: a Refresh control in the Auto Translate panel pulls the current model list from the provider
+- [CHANGE] Settings: "Providers" page renamed to "Auto Translation" with three tabs — Local Models, Web Providers, and Examples
+- [CHANGE] Model selection moved from Settings into the Auto Translate panel
+- [CHANGE] Find & Replace moved from the filter toolbar into its own tab in the left panel, after Statuses
+- [CHANGE] History tab moved to the end of the bottom-left tabs; each history entry now shows its status and timestamp
+- [CHANGE] Find & Replace no longer has a batch Undo button — each replacement is recorded in edit history and revertable per-entry
+- [CHANGE] Localization documents (.top, .mrk, .yaml) no longer show the ID and Key columns, since those entries have no record type or key — only Original, Translation, and Status are shown
+- [FIX] Web translation providers that send form-encoded requests now work — the request was previously rejected for a missing content type
+- [FIX] Numeric web provider settings (such as a temperature value) are now sent as numbers, so providers that require a numeric field no longer reject the request
+- [FIX] Quoted values in localization YAML files now decode \n and \t escapes into real line breaks and tabs instead of showing them as literal characters
+- [FIX] Localization YAML block scalars written with the keep indicator (|+) are now read correctly instead of being treated as broken entries
+
+### yEditor
+- [NEW] Enable Editing: a single toolbar toggle makes decoded fields editable in the Edit panel for all plugins (combobox for flags and enums); starts disabled each time the app opens
+- [NEW] View menu: Toggle Sidebar and Toggle Bottom Panel hide or show the navigation and edit/log panels; state persists across sessions
+- [NEW] Lua handler conflict detection in a separate Lua tab: scans OpenMW Lua scripts and highlights conflicting handler registrations between mods
+- [NEW] Exclude Sub-Record from context menu: right-click any sub-record row to add it to the exclusion list
+- [NEW] Toolbar search: filter the navigation tree by record ID or display name with case-sensitive and regex support
+- [NEW] No Filters button on the toolbar: clears Conflicts Only, the search field, and the advanced filter in one click
+- [NEW] Save edited plugins on demand: right-click a plugin to save it, or use Save / Save All in the File menu; plugins with unsaved changes are marked with an asterisk in the plugin list and the window title
+- [CHANGE] Filter dialog moved from View menu to toolbar button
+- [CHANGE] Settings reorganized: Sub-Record Rules merged into Merged Patch page, Paths renamed to Output Paths, record type checkboxes replaced by TYPE:* syntax
+- [CHANGE] File Header shown as flat entry at the top of each plugin (no nesting)
+- [CHANGE] Unknown/binary sub-records now display hex bytes instead of placeholder
+- [CHANGE] View menu: "Hide Duplicate Columns" renamed to "Show Only One Column Per Plugin", "Show Deleted Strikeout" renamed to "Strike Out Deleted Records" (disabled by default)
+- [CHANGE] Conflicts Only, Advanced Filters, and search now compose: all active filters combine as a logical AND instead of overwriting each other
+- [FIX] Record view context menu now works when right-clicking the label column
+- [FIX] A plugin can no longer be both a guard patch and excluded from the merged patch — setting one clears the other
+- [FIX] Edit panel now shows the full multi-line content of text sub-records (book TEXT, script SCTX/BNAM) instead of only the first line
+- [FIX] Decoded fields inside CELL reference groups (X/Y/Z Position, rotations, door destinations) can now be edited when Enable Editing is active
+- [FIX] Decoded fields grouped under a heading (creature stats attributes, stats, skills and attacks, and similar grouped fields) can now be edited when Enable Editing is active
+- [FIX] Empty sub-records (e.g. FNAM with no display name) can now be edited — previously the empty value blocked the edit panel
+- [FIX] Exclude Sub-Record context menu no longer adds duplicates if the rule already exists
+- [FIX] Excluding a sub-record from context menu now immediately greys out the row in the record view
+- [FIX] Excluded sub-records now grey out their decoded children (fields, flags) as well
+- [FIX] Dialogue conditions (INFO records) now read as a single line such as `Journal "IL_TalosTreason" >= 10`, grouped under a numbered Condition entry; the condition type and comparison operator show as words (Journal, Dead, Local, `==`, `>=`), function conditions show the function name, variable conditions show the variable storage type, and the comparison value appears as a sub-record, instead of raw hex bytes
+
+### Both Apps
+- [NEW] Linux support: builds with CMake and system libraries, AUR package available
+- [NEW] Cross-platform resource paths: shared data in `/usr/share/yampt/`, user data in `~/.yampt/`
+- [FIX] Disabled widgets now show greyed-out text on all platforms
+- [FIX] Workspace sidebar no longer shows a duplicate "Workspace" node when paths differ only by trailing slash
+- [FIX] Converting a plugin whose master reference or file name has no extension no longer crashes
+- [FIX] Converting a malformed plugin where a dialogue response appears before its topic no longer produces corrupted output
+- [FIX] Cell names with accented or Cyrillic letters referenced in scripts are now translated correctly instead of being cut off at the first non-ASCII character
+- [FIX] Case-insensitive search, glossary matching, and text highlighting now work for accented and Cyrillic letters, so a word matches regardless of the case of its non-ASCII letters
+
 ## [0.940] - 2026-07-29
 
 ### yTranslator
 - [NEW] Find/Replace dialog (Tools menu) with regex, case sensitivity, and batch undo
 - [NEW] "Replaced" status assigned to entries modified by Find/Replace
 - [NEW] EET file import: export ESP-ESM Translator dictionaries to JSON (partial support)
-- [FIX] EET import: raw SCTX script bodies no longer imported — only extracted translatable strings (MSGB, CELL, SAY, DIAL) are converted
 - [NEW] Generate localization files (.cel, .mrk, .top) from dictionary with Hunspell inflection
 - [NEW] Full script preview: selecting a script entry shows the entire script source in Preview tab
 - [NEW] Script source stored as reference data in dictionaries for context lookup
@@ -40,8 +93,7 @@
 - [CHANGE] Translation button commits immediately and advances to the next row
 - [CHANGE] Translation button works for YAML documents (not just dict)
 - [CHANGE] Inline table editing advances to the next row after commit
-- [CHANGE] Polymorphic document commit: unified commit flow for all document types
-- [CHANGE] Document permissions control context menu and shortcut availability
+- [CHANGE] Read-only documents disable editing actions in menus and shortcuts
 - [CHANGE] Make Dict and Make Dict with Base merged into single "Make Dictionary" menu item
 - [CHANGE] Make Base dialog: removed dictionary combo box (uses language settings)
 - [CHANGE] Language settings: encoding and translation target auto-derived from language selection
@@ -52,6 +104,7 @@
 - [CHANGE] "Convert" renamed to "Convert Plugin"
 - [CHANGE] "Create" renamed to "Create Patch Plugin"
 - [FIX] Annotation highlight misalignment
+- [FIX] EET import: raw SCTX script bodies no longer imported — only extracted translatable strings (MSGB, CELL, SAY, DIAL) are converted
 - [FIX] Dictionary marked dirty on row click without editing
 - [FIX] SCTX/BNAM validation: quotes no longer flagged as forbidden characters
 - [FIX] Whitespace markers: newline indicator now visible at line breaks
@@ -78,6 +131,13 @@
 
 ## [0.842] - 2026-07-05
 
+### yTranslator
+- [NEW] Settings dialog (appearance, shortcuts, language, translation engine)
+- [NEW] Workspace folder watches for file changes and refreshes automatically
+- [NEW] Multi-layer highlighting (MWScript, hyperlinks, glossary, forbidden characters)
+- [NEW] Merge dialog for combining dictionaries
+- [CHANGE] Consistent syntax coloring across all editor panels
+
 ### yEditor
 - [NEW] Automatic merged patch creation (leveled lists, dialogues, three-way object merge)
 - [NEW] Fog fix, summon fix, and cell name fix applied automatically to merged patches
@@ -92,13 +152,6 @@
 - [CHANGE] Conflict coloring now works at the individual field level (not just whole records)
 - [CHANGE] Navigation tree inherits worst-case conflict color from children up to file level
 - [CHANGE] Entries from different plugins aligned by content identity (item ID, object index, rank) instead of file order
-
-### yTranslator
-- [NEW] Settings dialog (appearance, shortcuts, language, translation engine)
-- [NEW] Workspace folder watches for file changes and refreshes automatically
-- [NEW] Multi-layer highlighting (MWScript, hyperlinks, glossary, forbidden characters)
-- [NEW] Merge dialog for combining dictionaries
-- [CHANGE] Consistent syntax coloring across all editor panels
 
 ### Both Apps
 - [NEW] Dark mode

@@ -4,9 +4,12 @@
 #include <decoder/sub_record_iter.hpp>
 #include <decoder/sub_record_schema.hpp>
 #include <io/codepage.hpp>
+#include <scanner/conflict_detector.hpp>
+#include <scanner/handler_parser.hpp>
 #include <scanner/plugin_scan.hpp>
 #include <scanner/record_conflict.hpp>
 #include <conflict_types.hpp>
+#include <map>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -14,14 +17,31 @@
 #include <QAbstractItemModel>
 #include <QMimeData>
 
+class editable_column_set_t;
+
 class view_tree_model_t : public QAbstractItemModel
 {
 	Q_OBJECT
 
 public:
+	enum custom_role_t
+	{
+		field_def_role = Qt::UserRole + 1,
+		sub_record_occurrence_role = Qt::UserRole + 2,
+	};
+
+	struct sub_record_occurrence_t
+	{
+		std::string sub_type;
+		int occurrence = 0;
+		int object_ref_index = -1;
+	};
+
 	explicit view_tree_model_t(QObject * parent = nullptr);
 
 	void set_record(plugin_scan_t & scan, const conflict_entry_t & entry);
+	void set_lua_conflict(const handler_conflict_t & conflict);
+	void set_lua_registration(const handler_registration_t & registration);
 	void clear();
 	void set_hide_no_conflict(bool hide);
 
@@ -49,6 +69,7 @@ public:
 
 	void set_excluded_plugins(const std::set<std::string> * excluded);
 	void set_patch_plugins(const std::set<std::string> * patch);
+	void set_editable_columns(const editable_column_set_t * editable);
 	bool is_merge_column(int section) const;
 	int merge_column() const;
 
@@ -88,6 +109,7 @@ public:
 		size_t size = 0;
 		int schema_field_index = -1;
 		bool start_collapsed = false;
+		bool show_group_value = false;
 		std::vector<std::string> values;
 		std::vector<binary_range_t> binary_ranges;
 		std::vector<conflict_this_t> cell_conflict_this;
@@ -95,6 +117,9 @@ public:
 		bool all_identical = true;
 		bool is_ignored = false;
 		bool is_deleted = false;
+		bool is_info_chain = false;
+		int occurrence = 0;
+		int bit_index = -1;
 		std::vector<view_node_t> children;
 	};
 
@@ -105,16 +130,20 @@ public:
 		return m_column_plugin_indices;
 	}
 
+	size_t record_index_for_column(int visual_column) const;
+
 	const std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_type_indices() const
 	{
 		return m_col_type_indices;
 	}
 
 	const view_node_t * node_from_index(const QModelIndex & index) const;
+	std::string full_value_at(const QModelIndex & index) const;
 
 private:
 	static void compute_group_ranges(view_node_t & group_node, size_t col_count);
 	static void mark_deleted_recursive(view_node_t & node);
+	void reset_lua_state();
 
 	struct record_context_t
 	{
@@ -214,6 +243,7 @@ private:
 	std::string m_record_type;
 	std::string m_record_id;
 	std::vector<int> m_column_plugin_indices;
+	std::vector<record_version_t> m_record_versions;
 	std::vector<std::unordered_map<std::string, std::vector<size_t>>> m_col_type_indices;
 
 	const std::vector<view_node_t> & visible_rows() const;
@@ -221,10 +251,15 @@ private:
 	mutable bool m_filter_dirty = true;
 	const std::set<std::string> * m_excluded_plugins = nullptr;
 	const std::set<std::string> * m_patch_plugins = nullptr;
+	const editable_column_set_t * m_editable_columns = nullptr;
 	plugin_scan_t * m_scan_for_header = nullptr;
 	codepage_t m_display_codepage = codepage_t::windows_1252;
-	bool m_show_deleted_strikeout = true;
+	bool m_show_deleted_strikeout = false;
+	mutable std::map<std::string, field_def_t> m_synthetic_fields;
+	mutable field_def_t m_bool_bit_field {};
 };
+
+Q_DECLARE_METATYPE(view_tree_model_t::sub_record_occurrence_t)
 
 struct cell_ref_view_t
 {

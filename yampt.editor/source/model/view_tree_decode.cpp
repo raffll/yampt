@@ -1,8 +1,18 @@
 #include "view_tree_model.hpp"
+#include <decoder/scvr_condition.hpp>
 #include <decoder/view_tree_format.hpp>
 #include <scanner/record_conflict.hpp>
 #include <cstdio>
 #include <cstring>
+
+static void mark_children_ignored(view_tree_model_t::view_node_t & parent)
+{
+	for (auto & child : parent.children)
+	{
+		child.is_ignored = true;
+		mark_children_ignored(child);
+	}
+}
 
 static bool check_all_identical(const std::vector<std::string> & values)
 {
@@ -147,6 +157,9 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 		row.start_collapsed = true;
 	}
 
+	if (!row.children.empty() && row.is_ignored)
+		mark_children_ignored(row);
+
 	if (!row.children.empty() && !policy.ignore_conflict)
 	{
 		row.row_conflict_all = conflict_all_t::unknown;
@@ -197,6 +210,8 @@ void view_tree_model_t::decode_schema_children(
 
 			view_node_t flags_group;
 			flags_group.label = fdef.name;
+			flags_group.type = slot.type;
+			flags_group.size = schema->expected_size;
 			flags_group.values.resize(col_count);
 			flags_group.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
 			flags_group.row_conflict_all = conflict_all_t::only_one;
@@ -208,6 +223,8 @@ void view_tree_model_t::decode_schema_children(
 
 				view_node_t frow;
 				frow.label = fdef.flag_names[bit];
+				frow.schema_field_index = static_cast<int>(field_idx);
+				frow.bit_index = bit;
 				frow.values.resize(col_count);
 
 				for (size_t col = 0; col < col_count; ++col)
@@ -280,6 +297,9 @@ void view_tree_model_t::decode_schema_children(
 
 			const auto & sv = all_subs[col][idx];
 			frow.values[col] = decode_field(fdef, sv.data, sv.size);
+
+			if (fdef.type == field_type_t::scvr_subject && frow.label == fdef.name)
+				frow.label = scvr_subject_label(sv.data, sv.size);
 		}
 
 		frow.all_identical = check_all_identical(frow.values);
@@ -300,6 +320,8 @@ void view_tree_model_t::decode_schema_children(
 		{
 			view_node_t group_node;
 			group_node.label = fdef.group;
+			group_node.type = slot.type;
+			group_node.size = schema->expected_size;
 			group_node.values.resize(col_count);
 			group_node.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
 			group_node.row_conflict_all = conflict_all_t::only_one;

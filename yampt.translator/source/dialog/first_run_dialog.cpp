@@ -1,3 +1,4 @@
+#include <resource_paths.hpp>
 #include "first_run_dialog.hpp"
 #include <utility/language_config.hpp>
 #include <QComboBox>
@@ -17,8 +18,8 @@ first_run_dialog_t::first_run_dialog_t(QWidget * parent)
 
 	auto * combo_layout = new QHBoxLayout;
 
-	const auto languages = language_config::load(
-	    (QCoreApplication::applicationDirPath() + "/languages.json").toStdString());
+	const auto languages =
+	    language_config::load(resource_paths::languages_file());
 
 	combo_layout->addWidget(new QLabel(tr("From:")));
 	m_from_combo = new QComboBox(this);

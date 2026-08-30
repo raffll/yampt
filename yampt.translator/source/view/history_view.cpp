@@ -1,5 +1,6 @@
 #include "history_view.hpp"
 #include "../editor/edit_history.hpp"
+#include "status_display.hpp"
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
@@ -42,11 +43,12 @@ void history_view_t::update_history(const std::vector<history_entry_t> & entries
 		row_layout->setSpacing(2);
 
 		auto timestamp_str = QString::fromStdString(entry.timestamp);
+		auto status_str = status_display_name(entry.status);
 		auto value_str = QString::fromStdString(entry.value);
 		if (value_str.length() > 80)
 			value_str = value_str.left(80) + "...";
 
-		auto * label = new QLabel(QString("[%1] %2").arg(timestamp_str, value_str), row);
+		auto * label = new QLabel(QString("[%1] (%2) %3").arg(timestamp_str, status_str, value_str), row);
 		label->setWordWrap(true);
 		row_layout->addWidget(label);
 

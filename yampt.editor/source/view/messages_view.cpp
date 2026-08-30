@@ -27,7 +27,7 @@ void messages_view_t::log(const std::string & message)
 	int minutes = static_cast<int>(elapsed.count()) / 60;
 	int seconds = static_cast<int>(elapsed.count()) % 60;
 
-	char timestamp[16];
+	char timestamp[32];
 	std::snprintf(timestamp, sizeof(timestamp), "[%02d:%02d] ", minutes, seconds);
 
 	m_text->appendPlainText(QString::fromStdString(std::string(timestamp) + message));

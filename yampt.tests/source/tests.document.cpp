@@ -154,6 +154,7 @@ std::string create_temp_yaml_native(const std::vector<std::pair<std::string, std
 
 void cleanup_temp_yaml(const std::string & path)
 {
+	(void)path;
 	namespace fs = std::filesystem;
 	std::error_code ec;
 	const auto temp_dir = fs::temp_directory_path() / "yampt_yaml_doc_test";

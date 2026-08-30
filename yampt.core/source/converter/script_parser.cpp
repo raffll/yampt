@@ -2,6 +2,7 @@
 #include "../utility/app_logger.hpp"
 #include "../utility/string_utils.hpp"
 #include <regex>
+#include <sstream>
 
 namespace {
 
@@ -31,35 +32,6 @@ size_t find_whole_word(const std::string & text_line, const std::string & keywor
 
 		return found_pos;
 	}
-}
-
-struct token_result_t
-{
-	std::string value;
-	size_t offset = 0;
-	bool found = false;
-};
-
-token_result_t extract_token_at(const std::string & text_input, const int position)
-{
-	static const std::regex token_regex("([\\w\\.\\-\\xD1]+|\".*?\")", std::regex::optimize);
-
-	std::sregex_iterator it_current(text_input.begin(), text_input.end(), token_regex);
-	std::sregex_iterator it_end;
-	std::smatch match_result;
-
-	int counter = -1;
-	while (it_current != it_end && counter != position)
-	{
-		match_result = *it_current;
-		++it_current;
-		++counter;
-	}
-
-	if (counter != position || match_result.empty())
-		return {};
-
-	return { match_result[1].str(), static_cast<size_t>(match_result.position(1)), true };
 }
 
 std::string strip_quotes(const std::string & text_input)
@@ -158,6 +130,32 @@ std::string extract_cell_name_after_numerics(const std::string & text_after_keyw
 
 } // namespace
 
+namespace script_token {
+
+token_result_t extract_token_at(const std::string & text_input, const int position)
+{
+	static const std::regex token_regex("([\\w\\.\\-\\x80-\\xFF]+|\".*?\")", std::regex::optimize);
+
+	std::sregex_iterator it_current(text_input.begin(), text_input.end(), token_regex);
+	std::sregex_iterator it_end;
+	std::smatch match_result;
+
+	int counter = -1;
+	while (it_current != it_end && counter != position)
+	{
+		match_result = *it_current;
+		++it_current;
+		++counter;
+	}
+
+	if (counter != position || match_result.empty())
+		return {};
+
+	return { match_result[1].str(), static_cast<size_t>(match_result.position(1)), true };
+}
+
+} // namespace script_token
+
 script_parser_t::script_parser_t(
     const rec_type_t type,
     const dict_merger_t & merger,
@@ -165,15 +163,15 @@ script_parser_t::script_parser_t(
     const std::string & source_path,
     const std::string & old_script,
     const std::string & old_scdt)
-    : type(type)
-    , merger(&merger)
-    , record_key(record_key)
-    , source_path(source_path)
-    , old_script(old_script)
-    , old_scdt(old_scdt)
+    : m_type(type)
+    , m_merger(&merger)
+    , m_record_key(record_key)
+    , m_source_path(source_path)
+    , m_old_script(old_script)
+    , m_old_scdt(old_scdt)
 {
-	if (type == rec_type_t::sctx && !old_scdt.empty())
-		m_patcher = std::make_unique<scdt_patcher_t>(old_scdt);
+	if (m_type == rec_type_t::sctx && !m_old_scdt.empty())
+		m_patcher = std::make_unique<scdt_patcher_t>(m_old_scdt);
 
 	convert_script();
 	trim_last_new_line_chars();
@@ -181,99 +179,100 @@ script_parser_t::script_parser_t(
 
 void script_parser_t::convert_script()
 {
-	std::istringstream ss(old_script);
+	std::istringstream ss(m_old_script);
 	bool is_end = false;
 
-	while (std::getline(ss, line))
+	while (std::getline(ss, m_line))
 	{
-		is_done = false;
-		line = string_utils::trim_cr(line);
-		line_lc = string_utils::to_lower(line);
-		new_line = line;
-		new_text.erase();
-		pos = 0;
-		keyword_pos = 0;
-		keyword.erase();
-		error = false;
+		m_is_done = false;
+		m_line = string_utils::trim_cr(m_line);
+		m_line_lc = string_utils::to_lower(m_line);
+		m_new_line = m_line;
+		m_new_text.erase();
+		m_pos = 0;
+		m_keyword_pos = 0;
+		m_keyword.erase();
+		m_error = false;
 
-		if (line_lc == "end" || (line_lc.size() > 3 && line_lc.substr(0, 4) == "end "))
-		{
+		if (m_line_lc == "end" || (m_line_lc.size() > 3 && m_line_lc.substr(0, 4) == "end "))
 			is_end = true;
-		}
 
 		if (!is_end)
-		{
-			try
-			{
-				if (!is_done)
-					convert_line("addtopic", 0, rec_type_t::dial);
+			convert_current_line();
 
-				if (!is_done)
-					convert_line_unquoted("showmap", rec_type_t::cell);
-				if (!is_done)
-					convert_line("showmap", 0, rec_type_t::cell);
-
-				if (!is_done)
-					convert_line_unquoted("centeroncell", rec_type_t::cell);
-				if (!is_done)
-					convert_line("centeroncell", 0, rec_type_t::cell);
-
-				if (!is_done)
-					convert_line("getpccell", 0, rec_type_t::cell);
-
-				if (!is_done)
-					convert_line_unquoted("aifollowcell", rec_type_t::cell);
-				if (!is_done)
-					convert_line("aifollowcell", 1, rec_type_t::cell);
-
-				if (!is_done)
-					convert_line_unquoted("aiescortcell", rec_type_t::cell);
-				if (!is_done)
-					convert_line("aiescortcell", 1, rec_type_t::cell);
-
-				if (!is_done)
-					convert_line_unquoted("placeitemcell", rec_type_t::cell);
-				if (!is_done)
-					convert_line("placeitemcell", 1, rec_type_t::cell);
-
-				if (!is_done)
-					convert_line_unquoted("positioncell", rec_type_t::cell);
-				if (!is_done)
-					convert_line("positioncell", 4, rec_type_t::cell);
-
-				if (!is_done)
-					convert_line();
-			}
-			catch (...)
-			{
-				app_logger_t::add_log("[error] unknown error in script parser\r\n");
-				app_logger_t::add_log("line: " + line + "\r\n");
-				error = true;
-			}
-		}
-
-		if (error)
+		if (m_error)
 			dump_error();
 
-		new_script += new_line + "\r\n";
+		m_new_script += m_new_line + "\r\n";
+	}
+}
+
+void script_parser_t::convert_current_line()
+{
+	try
+	{
+		if (!m_is_done)
+			convert_line("addtopic", 0, rec_type_t::dial);
+
+		if (!m_is_done)
+			convert_line_unquoted("showmap", rec_type_t::cell);
+		if (!m_is_done)
+			convert_line("showmap", 0, rec_type_t::cell);
+
+		if (!m_is_done)
+			convert_line_unquoted("centeroncell", rec_type_t::cell);
+		if (!m_is_done)
+			convert_line("centeroncell", 0, rec_type_t::cell);
+
+		if (!m_is_done)
+			convert_line("getpccell", 0, rec_type_t::cell);
+
+		if (!m_is_done)
+			convert_line_unquoted("aifollowcell", rec_type_t::cell);
+		if (!m_is_done)
+			convert_line("aifollowcell", 1, rec_type_t::cell);
+
+		if (!m_is_done)
+			convert_line_unquoted("aiescortcell", rec_type_t::cell);
+		if (!m_is_done)
+			convert_line("aiescortcell", 1, rec_type_t::cell);
+
+		if (!m_is_done)
+			convert_line_unquoted("placeitemcell", rec_type_t::cell);
+		if (!m_is_done)
+			convert_line("placeitemcell", 1, rec_type_t::cell);
+
+		if (!m_is_done)
+			convert_line_unquoted("positioncell", rec_type_t::cell);
+		if (!m_is_done)
+			convert_line("positioncell", 4, rec_type_t::cell);
+
+		if (!m_is_done)
+			convert_line();
+	}
+	catch (...)
+	{
+		app_logger_t::add_log("[error] unknown error in script parser\r\n");
+		app_logger_t::add_log("line: " + m_line + "\r\n");
+		m_error = true;
 	}
 }
 
 void script_parser_t::convert_line(const std::string & keyword, const int pos_in_expression, const rec_type_t text_type)
 {
-	pos = find_whole_word(line_lc, keyword);
-	if (pos == std::string::npos)
+	m_pos = find_whole_word(m_line_lc, keyword);
+	if (m_pos == std::string::npos)
 		return;
 
-	if (line.size() == keyword.size())
+	if (m_line.size() == keyword.size())
 		return;
 
-	if (line.rfind(";", pos) != std::string::npos)
+	if (m_line.rfind(";", m_pos) != std::string::npos)
 		return;
 
-	pos = line.find_first_of(" \t,\"", pos);
-	pos = line.find_first_not_of(" \t,", pos);
-	if (pos == std::string::npos)
+	m_pos = m_line.find_first_of(" \t,\"", m_pos);
+	m_pos = m_line.find_first_not_of(" \t,", m_pos);
+	if (m_pos == std::string::npos)
 		return;
 
 	trim_line();
@@ -285,36 +284,36 @@ void script_parser_t::convert_line(const std::string & keyword, const int pos_in
 	const auto is_getpccell = keyword == "getpccell" ? true : false;
 	convert_text_in_compiled(is_getpccell);
 
-	is_done = true;
+	m_is_done = true;
 }
 
 void script_parser_t::convert_line_unquoted(const std::string & keyword, const rec_type_t text_type)
 {
-	pos = find_whole_word(line_lc, keyword);
-	if (pos == std::string::npos)
+	m_pos = find_whole_word(m_line_lc, keyword);
+	if (m_pos == std::string::npos)
 		return;
 
-	if (line.size() == keyword.size())
+	if (m_line.size() == keyword.size())
 		return;
 
-	if (line.rfind(";", pos) != std::string::npos)
+	if (m_line.rfind(";", m_pos) != std::string::npos)
 		return;
 
-	const auto after_keyword = line.find_first_of(" \t", pos);
+	const auto after_keyword = m_line.find_first_of(" \t", m_pos);
 	if (after_keyword == std::string::npos)
 		return;
 
-	const auto content_start = line.find_first_not_of(" \t", after_keyword);
+	const auto content_start = m_line.find_first_not_of(" \t", after_keyword);
 	if (content_start == std::string::npos)
 		return;
 
-	const auto comment_pos = line.find(';', content_start);
-	const auto search_end = (comment_pos != std::string::npos) ? comment_pos : line.size();
+	const auto comment_pos = m_line.find(';', content_start);
+	const auto search_end = (comment_pos != std::string::npos) ? comment_pos : m_line.size();
 
-	if (line.find('"', content_start) < search_end)
+	if (m_line.find('"', content_start) < search_end)
 		return;
 
-	const auto text_after_keyword = line.substr(content_start);
+	const auto text_after_keyword = m_line.substr(content_start);
 
 	const auto is_showmap_family = (keyword == "showmap" || keyword == "centeroncell");
 	const auto cell_name = is_showmap_family ? extract_cell_name_to_eol(text_after_keyword)
@@ -323,150 +322,150 @@ void script_parser_t::convert_line_unquoted(const std::string & keyword, const r
 	if (cell_name.empty())
 		return;
 
-	pos = content_start + (line.substr(content_start).find(cell_name));
-	old_text = cell_name;
+	m_pos = content_start + (m_line.substr(content_start).find(cell_name));
+	m_old_text = cell_name;
 
-	app_logger_t::add_log("\r\n\r\n" + source_path + "\r\n" + record_key + "\r\n", true);
-	app_logger_t::add_log("<<< " + line + "\r\n", true);
-	app_logger_t::add_log("unquoted: " + old_text + "\r\n", true);
+	app_logger_t::add_log("\r\n\r\n" + m_source_path + "\r\n" + m_record_key + "\r\n", true);
+	app_logger_t::add_log("<<< " + m_line + "\r\n", true);
+	app_logger_t::add_log("unquoted: " + m_old_text + "\r\n", true);
 
 	find_new_text(text_type);
 	insert_new_text();
 	convert_text_in_compiled(false);
 
-	is_done = true;
+	m_is_done = true;
 }
 
 void script_parser_t::trim_line()
 {
 	app_logger_t::add_log("\r\n\r\n", true);
-	app_logger_t::add_log(source_path + "\r\n", true);
-	app_logger_t::add_log(record_key + "\r\n", true);
-	app_logger_t::add_log("<<< " + line + "\r\n", true);
+	app_logger_t::add_log(m_source_path + "\r\n", true);
+	app_logger_t::add_log(m_record_key + "\r\n", true);
+	app_logger_t::add_log("<<< " + m_line + "\r\n", true);
 
-	old_text = line.substr(pos);
+	m_old_text = m_line.substr(m_pos);
 
-	app_logger_t::add_log("1: " + old_text + "\r\n", true);
+	app_logger_t::add_log("1: " + m_old_text + "\r\n", true);
 }
 
 void script_parser_t::extract_text(const int pos_in_expression)
 {
-	const auto result = extract_token_at(old_text, pos_in_expression);
+	const auto result = script_token::extract_token_at(m_old_text, pos_in_expression);
 	if (!result.found)
 	{
 		app_logger_t::add_log(
 		    "[warning] extract_text: expected parameter at position " + std::to_string(pos_in_expression) +
-		        " in: " + old_text + "\r\n",
+		        " in: " + m_old_text + "\r\n",
 		    true);
-		error = true;
+		m_error = true;
 		return;
 	}
 
-	old_text = result.value;
-	pos += result.offset;
+	m_old_text = result.value;
+	m_pos += result.offset;
 
-	app_logger_t::add_log("2: " + old_text + "\r\n", true);
+	app_logger_t::add_log("2: " + m_old_text + "\r\n", true);
 }
 
 void script_parser_t::remove_quotes()
 {
-	const auto stripped = strip_quotes(old_text);
-	if (stripped != old_text)
+	const auto stripped = strip_quotes(m_old_text);
+	if (stripped != m_old_text)
 	{
-		old_text = stripped;
-		pos += 1;
+		m_old_text = stripped;
+		m_pos += 1;
 	}
 
-	app_logger_t::add_log("3: " + old_text + "\r\n", true);
+	app_logger_t::add_log("3: " + m_old_text + "\r\n", true);
 }
 
 void script_parser_t::find_new_text(const rec_type_t text_type)
 {
-	new_text = old_text;
+	m_new_text = m_old_text;
 
-	const auto * search = merger->get_dict().at(text_type).find(old_text);
+	const auto * search = m_merger->get_dict().at(text_type).find(m_old_text);
 
 	if (search && is_approved_status(search->status))
 	{
-		new_text = search->new_text;
+		m_new_text = search->new_text;
 	}
 	else if (text_type != rec_type_t::cell)
 	{
-		for (const auto & elem : merger->get_dict().at(text_type).records)
+		for (const auto & elem : m_merger->get_dict().at(text_type).records)
 		{
 			if (!is_approved_status(elem.status))
 				continue;
 
-			if (string_utils::case_insensitive_equal(old_text, elem.key_text))
+			if (string_utils::case_insensitive_equal(m_old_text, elem.key_text))
 			{
-				new_text = elem.new_text;
+				m_new_text = elem.new_text;
 				break;
 			}
 		}
 	}
 	else
 	{
-		for (const auto & elem : merger->get_dict().at(text_type).records)
+		for (const auto & elem : m_merger->get_dict().at(text_type).records)
 		{
 			if (!is_approved_status(elem.status))
 				continue;
 
-			if (string_utils::case_insensitive_equal(old_text, elem.old_text))
+			if (string_utils::case_insensitive_equal(m_old_text, elem.old_text))
 			{
-				new_text = elem.new_text;
+				m_new_text = elem.new_text;
 				break;
 			}
 		}
 	}
 
-	app_logger_t::add_log("4: " + new_text + "\r\n", true);
-	if (new_text.size() < 2)
+	app_logger_t::add_log("4: " + m_new_text + "\r\n", true);
+	if (m_new_text.size() < 2)
 	{
 		app_logger_t::add_log("[error] result is too short\r\n", true);
-		error = true;
+		m_error = true;
 	}
 }
 
 void script_parser_t::insert_new_text()
 {
-	if (new_text == old_text)
+	if (m_new_text == m_old_text)
 	{
-		pos += old_text.size();
+		m_pos += m_old_text.size();
 		return;
 	}
 
-	new_line.erase(pos, old_text.size());
-	new_line.insert(pos, new_text);
+	m_new_line.erase(m_pos, m_old_text.size());
+	m_new_line.insert(m_pos, m_new_text);
 
-	app_logger_t::add_log(">>> " + new_line + "\r\n", true);
+	app_logger_t::add_log(">>> " + m_new_line + "\r\n", true);
 }
 
 void script_parser_t::convert_text_in_compiled(const bool is_getpccell)
 {
-	if (new_text == old_text)
+	if (m_new_text == m_old_text)
 		return;
 
-	if (type != rec_type_t::sctx)
+	if (m_type != rec_type_t::sctx)
 		return;
 
 	if (!m_patcher || m_patcher->is_empty())
 	{
 		app_logger_t::add_log("[error] SCDT is empty\r\n", true);
-		error = true;
+		m_error = true;
 		return;
 	}
 
-	const auto result = m_patcher->apply_text_patch(old_text, new_text, is_getpccell);
+	const auto result = m_patcher->apply_text_patch(m_old_text, m_new_text, is_getpccell);
 
 	if (result.had_false_positive)
 	{
-		app_logger_t::add_log("[warning] false positive in " + record_key + " for: " + old_text + "\r\n", true);
+		app_logger_t::add_log("[warning] false positive in " + m_record_key + " for: " + m_old_text + "\r\n", true);
 	}
 
 	if (!result.success)
 	{
 		app_logger_t::add_log("[error] not found in SCDT\r\n", true);
-		error = true;
+		m_error = true;
 	}
 }
 
@@ -474,72 +473,80 @@ void script_parser_t::convert_line()
 {
 	find_keyword();
 
-	if (keyword_pos == std::string::npos)
+	if (m_keyword_pos == std::string::npos)
 		return;
 
-	if (line.rfind(";", keyword_pos) != std::string::npos)
+	if (m_line.rfind(";", m_keyword_pos) != std::string::npos)
 		return;
 
-	if (line.find("\"", keyword_pos) == std::string::npos)
+	if (m_line.find("\"", m_keyword_pos) == std::string::npos)
 		return;
 
 	find_new_message();
 	convert_message_in_compiled();
 
-	is_done = true;
+	m_is_done = true;
 }
 
 void script_parser_t::find_keyword()
 {
 	std::map<size_t, std::string> keyword_pos_coll;
-	for (const auto & keyword : domain_types::script_keywords)
+	for (const auto & kw : domain_types::script_keywords)
 	{
-		keyword_pos = line_lc.find(keyword);
-		keyword_pos_coll.insert({ keyword_pos, keyword });
+		m_keyword_pos = find_whole_word(m_line_lc, kw);
+		if (m_keyword_pos != std::string::npos)
+			keyword_pos_coll.insert({ m_keyword_pos, kw });
 	}
 
-	keyword_pos = keyword_pos_coll.begin()->first;
-	keyword = keyword_pos_coll.begin()->second;
+	if (keyword_pos_coll.empty())
+	{
+		m_keyword_pos = std::string::npos;
+		m_keyword.clear();
+		return;
+	}
+
+	m_keyword_pos = keyword_pos_coll.begin()->first;
+	m_keyword = keyword_pos_coll.begin()->second;
 }
 
 void script_parser_t::find_new_message()
 {
 	app_logger_t::add_log("\r\n\r\n", true);
-	app_logger_t::add_log(source_path + "\r\n", true);
-	app_logger_t::add_log(record_key + "\r\n", true);
-	app_logger_t::add_log("<<< " + line + "\r\n", true);
+	app_logger_t::add_log(m_source_path + "\r\n", true);
+	app_logger_t::add_log(m_record_key + "\r\n", true);
+	app_logger_t::add_log("<<< " + m_line + "\r\n", true);
 
-	auto * search = merger->get_dict().at(type).find(record_key + "^" + line);
+	auto * search = m_merger->get_dict().at(m_type).find(m_record_key + "^" + m_line);
 	if (search && is_approved_status(search->status))
 	{
-		if (line != search->new_text)
+		if (m_line != search->new_text)
 		{
-			new_line = search->new_text;
+			m_new_line = search->new_text;
 		}
 	}
 
-	app_logger_t::add_log(">>> " + new_line + "\r\n", true);
+	app_logger_t::add_log(">>> " + m_new_line + "\r\n", true);
 }
 
 void script_parser_t::convert_message_in_compiled()
 {
-	if (type != rec_type_t::sctx)
+	if (m_type != rec_type_t::sctx)
 		return;
 
 	if (!m_patcher || m_patcher->is_empty())
 	{
 		app_logger_t::add_log("[error] SCDT is empty\r\n", true);
-		error = true;
+		m_error = true;
 		return;
 	}
 
-	std::vector<std::string> splitted_line = split_line(line);
-	std::vector<std::string> splitted_new_line = split_line(new_line);
+	std::vector<std::string> splitted_line = split_line(m_line);
+	std::vector<std::string> splitted_new_line = split_line(m_new_line);
 
 	if (splitted_line.size() != splitted_new_line.size())
 	{
 		app_logger_t::add_log("[error] incompatible messages\r\n", true);
-		error = true;
+		m_error = true;
 		return;
 	}
 
@@ -553,13 +560,13 @@ void script_parser_t::convert_message_in_compiled()
 	if (!result.success)
 	{
 		app_logger_t::add_log("[error] message not found in SCDT\r\n", true);
-		error = true;
+		m_error = true;
 	}
 }
 
 std::vector<std::string> script_parser_t::split_line(const std::string & cur_line) const
 {
-	std::string cur_line_tr = cur_line.substr(keyword_pos);
+	std::string cur_line_tr = cur_line.substr(m_keyword_pos);
 	if (cur_line_tr.find(";") != std::string::npos)
 	{
 		cur_line_tr = cur_line_tr.substr(0, cur_line_tr.find(";"));
@@ -577,7 +584,7 @@ std::vector<std::string> script_parser_t::split_line(const std::string & cur_lin
 		next++;
 	}
 
-	if (keyword == "say" && splitted_line.size() > 0)
+	if (m_keyword == "say" && splitted_line.size() > 0)
 	{
 		splitted_line.erase(splitted_line.begin());
 	}
@@ -587,22 +594,22 @@ std::vector<std::string> script_parser_t::split_line(const std::string & cur_lin
 
 void script_parser_t::trim_last_new_line_chars()
 {
-	if (new_script.size() < 2)
+	if (m_new_script.size() < 2)
 		return;
 
-	size_t last_nl_pos = old_script.rfind("\r\n");
-	if (last_nl_pos != old_script.size() - 2 || last_nl_pos == std::string::npos)
+	size_t last_nl_pos = m_old_script.rfind("\r\n");
+	if (last_nl_pos != m_old_script.size() - 2 || last_nl_pos == std::string::npos)
 	{
-		new_script.resize(new_script.size() - 2);
+		m_new_script.resize(m_new_script.size() - 2);
 	}
 }
 
 void script_parser_t::dump_error()
 {
-	if (type == rec_type_t::sctx)
+	if (m_type == rec_type_t::sctx)
 	{
 		app_logger_t::add_log("----------------------------------------------------------\r\n", true);
-		app_logger_t::add_log(string_utils::replace_non_printable_with_dot(old_scdt), true);
+		app_logger_t::add_log(string_utils::replace_non_printable_with_dot(m_old_scdt), true);
 		app_logger_t::add_log(
 		    "\r\n----------------------------------------------------------"
 		    "\r\n",
@@ -611,7 +618,7 @@ void script_parser_t::dump_error()
 			app_logger_t::add_log(string_utils::replace_non_printable_with_dot(m_patcher->get_scdt()), true);
 	}
 	app_logger_t::add_log("\r\n----------------------------------------------------------\r\n", true);
-	app_logger_t::add_log(old_script, true);
+	app_logger_t::add_log(m_old_script, true);
 	app_logger_t::add_log("\r\n----------------------------------------------------------\r\n", true);
 }
 

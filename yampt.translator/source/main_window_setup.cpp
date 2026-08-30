@@ -1,5 +1,5 @@
+#include <resource_paths.hpp>
 #include "dialog/dict_selection_dialog.hpp"
-#include "dialog/find_replace_dialog.hpp"
 #include "dialog/first_run_dialog.hpp"
 #include "dialog/spell_context_menu.hpp"
 #include "highlighter/editor_highlighter.hpp"
@@ -35,6 +35,7 @@
 #include <QProcess>
 #include <QPushButton>
 #include <QSplitter>
+#include <QStandardPaths>
 #include <QStatusBar>
 #include <QTabWidget>
 #include <QToolBar>
@@ -127,10 +128,6 @@ void main_window_t::setup_menu_bar()
 			m_dict_ops_controller->on_merge();
 	});
 
-	auto * find_replace_action = tools_menu->addAction(tr("&Find/Replace..."));
-	find_replace_action->setToolTip(tr("Find and replace text in translations"));
-	connect(find_replace_action, &QAction::triggered, this, [this]() { m_find_replace_dialog->show(); });
-
 	tools_menu->addSeparator();
 	m_settings_action = tools_menu->addAction(tr("&Preferences..."));
 	m_settings_action->setShortcut(QKeySequence("Ctrl+,"));
@@ -140,15 +137,14 @@ void main_window_t::setup_menu_bar()
 
 void main_window_t::setup_toolbar()
 {
-	m_toolbar = new QToolBar(this);
+	m_toolbar = addToolBar("Main");
 	m_toolbar->setMovable(false);
 
-	m_search_label = new QLabel(tr("Filter by: "), this);
-	m_search_label->setStyleSheet("QLabel:disabled { color: rgb(180,180,180); }");
-	m_toolbar->addWidget(m_search_label);
+	setContextMenuPolicy(Qt::PreventContextMenu);
 
 	m_search_field = new QLineEdit(this);
-	m_search_field->setPlaceholderText(tr("Search..."));
+	m_search_field->setPlaceholderText(tr("Filter by..."));
+	m_search_field->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 	m_toolbar->addWidget(m_search_field);
 
 	m_case_sensitive_check = new QToolButton(this);
@@ -191,14 +187,65 @@ void main_window_t::setup_toolbar()
 	addAction(m_escape_action);
 }
 
+void main_window_t::setup_replace_toolbar()
+{
+	m_replace_toolbar = new QWidget(this);
+
+	auto * layout = new QVBoxLayout(m_replace_toolbar);
+	layout->setContentsMargins(4, 4, 4, 4);
+	layout->setSpacing(4);
+
+	m_find_field = new QLineEdit(this);
+	m_find_field->setPlaceholderText(tr("Search in translations..."));
+	m_find_field->setToolTip(tr("Text to find in the translation column"));
+	layout->addWidget(m_find_field);
+
+	m_replace_field = new QLineEdit(this);
+	m_replace_field->setPlaceholderText(tr("Replace with..."));
+	m_replace_field->setToolTip(tr("Replacement text"));
+	layout->addWidget(m_replace_field);
+
+	auto * options_row = new QHBoxLayout;
+	options_row->setSpacing(4);
+
+	m_replace_case_check = new QPushButton(tr("Aa"), this);
+	m_replace_case_check->setCheckable(true);
+	m_replace_case_check->setToolTip(tr("Case-sensitive find and replace"));
+	options_row->addWidget(m_replace_case_check);
+
+	m_replace_regex_check = new QPushButton(tr(".*"), this);
+	m_replace_regex_check->setCheckable(true);
+	m_replace_regex_check->setToolTip(tr("Regular expression find and replace"));
+	options_row->addWidget(m_replace_regex_check);
+
+	options_row->addStretch();
+	layout->addLayout(options_row);
+
+	auto * buttons_row = new QHBoxLayout;
+	buttons_row->setSpacing(4);
+
+	m_replace_one_btn = new QPushButton(tr("Replace"), this);
+	m_replace_one_btn->setToolTip(tr("Replace in the selected entry and advance to next"));
+	buttons_row->addWidget(m_replace_one_btn);
+
+	m_replace_all_btn = new QPushButton(tr("Replace All"), this);
+	m_replace_all_btn->setToolTip(tr("Replace in all currently visible entries"));
+	buttons_row->addWidget(m_replace_all_btn);
+
+	buttons_row->addStretch();
+	layout->addLayout(buttons_row);
+
+	layout->addStretch();
+}
+
 void main_window_t::setup_central_widget()
 {
 	auto * central_widget = new QWidget(this);
 	auto * central_layout = new QVBoxLayout(central_widget);
-	central_layout->setContentsMargins(0, 0, 0, 0);
+	central_layout->setContentsMargins(4, 4, 4, 4);
 	central_layout->setSpacing(4);
 
-	central_layout->addWidget(m_toolbar);
+	setup_replace_toolbar();
 
 	m_filter_tree_view = new filter_tree_view_t(this);
 	m_status_filter_view = new status_filter_view_t(this);
@@ -218,22 +265,20 @@ void main_window_t::setup_sidebar()
 	m_left_tabs->addTab(m_sidebar, tr("Files"));
 	m_left_tabs->addTab(m_filter_tree_view, tr("Filters"));
 	m_left_tabs->addTab(m_status_filter_view, tr("Statuses"));
+	m_left_tabs->addTab(m_replace_toolbar, tr("Find && Replace"));
 	m_left_splitter->addWidget(m_left_tabs);
 
 	m_info_tabs = new QTabWidget(m_left_splitter);
 	m_annotations_view = new annotations_view_t(m_info_tabs);
 	m_history_view = new history_view_t(m_info_tabs);
 	m_translation_tab = new translation_suggestion_view_t(m_info_tabs);
-	m_translation_tab->set_models_dir((QCoreApplication::applicationDirPath() + "/models").toStdString());
-	m_translation_tab->set_providers_dir((QCoreApplication::applicationDirPath() + "/providers").toStdString());
+	m_translation_tab->set_models_dir(resource_paths::models_dir());
+	m_translation_tab->set_providers_dir(resource_paths::providers_dir());
 	m_translation_tab->set_glossary_fn([this](const std::string & text) { return m_glossary.apply_glossary(text); });
-	m_find_replace_dialog = new find_replace_dialog_t(this);
-	m_find_replace_dialog->setWindowTitle(tr("Find/Replace"));
-	m_find_replace_dialog->setWindowFlags(Qt::Dialog);
-	m_find_replace_dialog->setVisible(false);
+	m_translation_tab->set_settings_store(m_settings);
 	m_info_tabs->addTab(m_annotations_view, tr("Annotations"));
-	m_info_tabs->addTab(m_history_view, tr("History"));
 	m_info_tabs->addTab(m_translation_tab, tr("Auto Translate"));
+	m_info_tabs->addTab(m_history_view, tr("History"));
 	m_left_splitter->addWidget(m_info_tabs);
 }
 
@@ -296,7 +341,6 @@ void main_window_t::setup_table_display()
 	    *m_table_model,
 	    *m_progress_label,
 	    *m_active_file_label,
-	    *m_search_label,
 	    *m_search_field,
 	    *m_case_sensitive_check,
 	    *m_regex_check,
@@ -305,7 +349,7 @@ void main_window_t::setup_table_display()
 	    *m_search_col_translation);
 
 	if (!m_find_replace)
-		m_find_replace = new find_replace_t(*m_table_model, m_active_doc);
+		m_find_replace = new find_replace_t(*m_table_model, m_active_doc, m_edit_history);
 }
 
 void main_window_t::connect_menu_signals()
@@ -394,15 +438,25 @@ void main_window_t::connect_menu_signals()
 			return;
 
 		const auto app_dir = QCoreApplication::applicationDirPath();
+#ifdef Q_OS_WIN
 		const QString sevenzip = app_dir + "/7za.exe";
 		if (!QFile::exists(sevenzip))
 		{
 			QMessageBox::critical(this, tr("Error"), tr("7za.exe not found next to the application"));
 			return;
 		}
+#else
+		const QString sevenzip = QStandardPaths::findExecutable("7z");
+		if (sevenzip.isEmpty())
+		{
+			QMessageBox::critical(this, tr("Error"), tr("7z not found in PATH"));
+			return;
+		}
+#endif
 
 		const auto archive_name = QFileInfo(archive_path).completeBaseName();
-		const auto target_dir = app_dir + "/workspace/" + archive_name;
+		const auto target_dir =
+		    QString::fromStdString(resource_paths::workspace_dir()) + archive_name;
 		QDir().mkpath(target_dir);
 
 		QProcess proc;
@@ -440,51 +494,20 @@ void main_window_t::connect_menu_signals()
 	});
 
 	connect(
-	    m_find_replace_dialog,
-	    &find_replace_dialog_t::find_next_requested,
+	    m_replace_all_btn,
+	    &QPushButton::clicked,
 	    this,
-	    [this](const QString & query, bool case_sensitive, bool regex_mode)
+	    [this]()
 	{
-		auto result = m_find_replace->find_next(
-		    query.toStdString(), case_sensitive, regex_mode, m_editor_controller.current_row());
-
-		if (result.found)
-			on_row_selected(result.row);
-		else
-			statusBar()->showMessage(tr("No match found"), 3000);
-	});
-
-	connect(
-	    m_find_replace_dialog,
-	    &find_replace_dialog_t::replace_requested,
-	    this,
-	    [this](const QString & query, const QString & replacement, bool case_sensitive, bool regex_mode)
-	{
-		auto result = m_find_replace->replace_current(
-		    query.toStdString(),
-		    replacement.toStdString(),
-		    case_sensitive,
-		    regex_mode,
-		    m_editor_controller.current_row());
-
-		if (!result.replaced)
+		if (!m_find_replace)
 			return;
 
-		set_unsaved_changes(true);
-		m_table_model->update_row(m_editor_controller.current_row(), result.new_text, result.status);
-		load_record(m_editor_controller.current_row());
+		const auto & query = m_find_field->text().toStdString();
+		const auto & replacement = m_replace_field->text().toStdString();
+		const bool case_sensitive = m_replace_case_check->isChecked();
+		const bool regex_mode = m_replace_regex_check->isChecked();
 
-		emit m_find_replace_dialog->find_next_requested(query, case_sensitive, regex_mode);
-	});
-
-	connect(
-	    m_find_replace_dialog,
-	    &find_replace_dialog_t::replace_all_requested,
-	    this,
-	    [this](const QString & query, const QString & replacement, bool case_sensitive, bool regex_mode)
-	{
-		auto result =
-		    m_find_replace->replace_all(query.toStdString(), replacement.toStdString(), case_sensitive, regex_mode);
+		auto result = m_find_replace->replace_all(query, replacement, case_sensitive, regex_mode);
 
 		if (result.count > 0)
 		{
@@ -495,28 +518,34 @@ void main_window_t::connect_menu_signals()
 		}
 
 		statusBar()->showMessage(tr("Replaced in %1 entries").arg(result.count), 5000);
-		m_find_replace_dialog->set_undo_enabled(m_find_replace->has_undo());
 	});
 
 	connect(
-	    m_find_replace_dialog,
-	    &find_replace_dialog_t::undo_requested,
+	    m_replace_one_btn,
+	    &QPushButton::clicked,
 	    this,
 	    [this]()
 	{
-		auto result = m_find_replace->undo_last_replace_all();
+		if (!m_find_replace)
+			return;
 
-		if (result.count > 0)
-		{
-			set_unsaved_changes(true);
-			rebuild_table();
-			if (m_editor_controller.current_row() >= 0)
-				load_record(m_editor_controller.current_row());
-		}
+		const int current_row = m_editor_controller.current_row();
+		if (current_row < 0)
+			return;
 
-		statusBar()->showMessage(tr("Undid %1 replacements").arg(result.count), 5000);
-		m_find_replace_dialog->set_undo_enabled(m_find_replace->has_undo());
+		const auto & query = m_find_field->text().toStdString();
+		const auto & replacement = m_replace_field->text().toStdString();
+		const bool case_sensitive = m_replace_case_check->isChecked();
+		const bool regex_mode = m_replace_regex_check->isChecked();
+
+		if (!m_find_replace->replace_one(current_row, query, replacement, case_sensitive, regex_mode))
+			return;
+
+		set_unsaved_changes(true);
+		rebuild_table();
+		advance_to_next_row();
 	});
+
 }
 
 void main_window_t::connect_sidebar_signals()
@@ -611,6 +640,18 @@ void main_window_t::connect_editor_signals()
 {
 	connect(m_table_view, &record_table_view_t::row_selected, this, &main_window_t::on_row_selected);
 
+	m_table_view->set_example_state_fn([this](int row) { return is_row_example(row); });
+
+	m_table_view->set_example_count_fn([this]() { return static_cast<int>(m_settings.translation_examples().size()); });
+
+	m_table_view->set_can_revert_fn([this](int row) { return can_revert_row(row); });
+
+	connect(
+	    m_table_view,
+	    &record_table_view_t::toggle_example_requested,
+	    this,
+	    &main_window_t::on_toggle_example_requested);
+
 	connect(
 	    m_table_model,
 	    &record_table_model_t::inline_edit_committed,
@@ -696,13 +737,65 @@ void main_window_t::connect_editor_signals()
 		update_status_counts();
 	});
 
+	connect(
+	    m_table_view,
+	    &record_table_view_t::batch_revert_requested,
+	    this,
+	    [this](const QList<int> & rows)
+	{
+		if (!m_active_doc)
+			return;
+
+		auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
+		if (!dict_doc)
+			return;
+
+		int reverted_count = 0;
+
+		for (int row : rows)
+		{
+			const auto * row_data = m_table_model->row_at(row);
+			if (!row_data)
+				continue;
+
+			const auto history = m_edit_history.get_history(row_data->type, row_data->key_text);
+			if (history.empty())
+				continue;
+
+			const auto revert = m_edit_history.revert(row_data->type, row_data->key_text, history.size() - 1);
+			if (!revert.success)
+				continue;
+
+			auto & data = dict_doc->data_mut();
+			auto type_it = data.find(row_data->type);
+			if (type_it == data.end() || row_data->record_index >= type_it->second.records.size())
+				continue;
+
+			auto & entry = type_it->second.records[row_data->record_index];
+			entry.new_text = revert.reverted_text;
+			entry.status = revert.reverted_status;
+			dict_doc->modified_records_insert(row_data->type, row_data->record_index);
+
+			m_table_model->update_row(row, revert.reverted_text, revert.reverted_status);
+			++reverted_count;
+		}
+
+		if (reverted_count > 0)
+		{
+			dict_doc->set_dirty(true);
+			set_unsaved_changes(true);
+			update_status_counts();
+
+			if (m_editor_controller.current_row() >= 0)
+				load_record(m_editor_controller.current_row());
+		}
+
+		statusBar()->showMessage(tr("Reverted %1 entries").arg(reverted_count), 5000);
+	});
+
 	connect(m_editor_view, &editor_view_t::text_changed, this, &main_window_t::on_translation_changed);
 
-	connect(
-	    m_editor_view,
-	    &editor_view_t::apply_clicked,
-	    this,
-	    [this]() { advance_to_next_row(); });
+	connect(m_editor_view, &editor_view_t::apply_clicked, this, [this]() { advance_to_next_row(); });
 
 	connect(
 	    m_editor_view->translation_editor(),

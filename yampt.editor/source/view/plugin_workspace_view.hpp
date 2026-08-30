@@ -2,8 +2,11 @@
 
 #include "../controller/merge_controller.hpp"
 #include "../controller/view_context_menu.hpp"
+#include "../model/editable_column_set.hpp"
+#include "../model/lua_tree_model.hpp"
 #include "../model/nav_tree_model.hpp"
 #include "../session/plugin_session.hpp"
+#include "lua_tree_view.hpp"
 #include "messages_view.hpp"
 #include "nav_tree_view.hpp"
 #include "preview_view.hpp"
@@ -11,11 +14,11 @@
 #include <scanner/lua_scanner.hpp>
 #include <scanner/plugin_scan.hpp>
 #include <QLabel>
+#include <QMessageBox>
 #include <QSplitter>
 #include <QTabWidget>
 #include <QWidget>
 
-class lua_conflicts_view_t;
 class lua_scan_worker_t;
 class settings_store_t;
 
@@ -31,6 +34,7 @@ public:
 
 	void set_conflicts_only(bool value);
 	void set_show_deleted_strikeout(bool value);
+	void set_editing_enabled(bool value);
 
 	bool is_conflicts_only() const
 	{
@@ -55,25 +59,44 @@ public:
 	}
 
 	void refresh_views();
+	void reset_all_filters();
+
+	bool confirm_discard_or_save_unsaved();
+
+	QWidget * sidebar_widget() const { return m_nav_tabs; }
+	QWidget * bottom_panel_widget() const { return m_bottom_tabs; }
 
 public slots:
 	void on_load_data_files();
 	void on_load_mo2_profile();
 	void on_load_openmw_cfg();
 	void on_unload_all();
+	void on_save();
+	void on_save_all();
 	void on_create_merged_patch();
 	void on_clean_all();
 	void on_advanced_filter();
 	void on_settings_changed();
 	void set_hide_duplicates(bool hide);
+	void apply_search(
+	    const std::string & query,
+	    bool search_in_id,
+	    bool search_in_name,
+	    bool case_sensitive,
+	    bool regex_mode);
 
 private slots:
 	void on_nav_selection_changed(const nav_tree_model_t::node_info_t & info);
+	void on_lua_selection_changed(const lua_tree_model_t::node_info_t & info);
 	void on_nav_context_menu(const QPoint & global_pos, const nav_tree_model_t::node_info_t & info);
 	void on_filter_changed();
 	void on_view_context_menu(const QPoint & global_pos, const QModelIndex & index);
 	void on_view_copy();
 	void on_view_selection_changed(const QModelIndex & current);
+
+signals:
+	void filters_active_changed(bool active);
+	void unsaved_changes_changed(bool dirty);
 
 private:
 	void setup_views();
@@ -88,32 +111,36 @@ private:
 	QString build_mode_prefix() const;
 	void start_lua_scan();
 	void on_lua_scan_complete(const lua_scan_result_t & result);
+	nav_tree_model_t::filter_state_t build_effective_filter() const;
+	void apply_effective_filter();
+	QMessageBox::StandardButton prompt_unsaved(bool allow_discard);
 
 	settings_store_t & m_settings;
 	plugin_session_t * m_session = nullptr;
 	merge_controller_t * m_merge_controller = nullptr;
 	view_context_menu_t * m_context_menu = nullptr;
+	field_edit_controller_t * m_edit_controller = nullptr;
+	editable_column_set_t m_editable_columns;
 
 	bool m_conflicts_only = false;
 	QLabel * m_lbl_count = nullptr;
 
 	QSplitter * m_main_splitter = nullptr;
 	QSplitter * m_content_splitter = nullptr;
+	QTabWidget * m_nav_tabs = nullptr;
 	nav_tree_view_t * m_nav_view = nullptr;
+	lua_tree_view_t * m_lua_view = nullptr;
 	record_view_t * m_record_view = nullptr;
 	messages_view_t * m_messages = nullptr;
 	preview_view_t * m_preview = nullptr;
 	QTabWidget * m_bottom_tabs = nullptr;
 
-	lua_conflicts_view_t * m_lua_conflicts_view = nullptr;
 	lua_scan_worker_t * m_lua_scan_worker = nullptr;
+	lua_scan_result_t m_lua_scan_result;
 
 	QLabel * m_status_label = nullptr;
 
-	bool m_filter_active = false;
-	nav_tree_model_t::filter_state_t m_last_filter_state;
-
-	bool m_has_filter_active = false;
-	nav_tree_model_t::filter_state_t m_last_quick_filter;
+	nav_tree_model_t::filter_state_t m_advanced_filter;
+	nav_tree_model_t::filter_state_t m_search_filter;
 	bool m_hide_duplicates = false;
 };

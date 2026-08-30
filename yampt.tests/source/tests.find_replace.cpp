@@ -1,5 +1,6 @@
 #include <catch2/catch_all.hpp>
 #include <editor/find_replace.hpp>
+#include <editor/edit_history.hpp>
 #include <io/dict_writer.hpp>
 #include <model/dict_document.hpp>
 #include <utility/app_logger.hpp>
@@ -47,179 +48,6 @@ void cleanup_service_dict(const std::string & path)
 }
 
 } // anonymous namespace
-
-TEST_CASE("find_replace_t::find_next, finds matching row", "[i][qt]")
-{
-	mock_row_source_t source;
-
-	table_row_t row_first;
-	row_first.type = rec_type_t::cell;
-	row_first.key_text = "key_a";
-	row_first.old_text = "alpha";
-	row_first.new_text = "hello world";
-	row_first.status = status_t::untranslated;
-	row_first.record_index = 0;
-
-	table_row_t row_second;
-	row_second.type = rec_type_t::cell;
-	row_second.key_text = "key_b";
-	row_second.old_text = "beta";
-	row_second.new_text = "goodbye";
-	row_second.status = status_t::untranslated;
-	row_second.record_index = 1;
-
-	source.rows = { row_first, row_second };
-
-	dict_t data;
-	auto & chapter = data[rec_type_t::cell];
-	record_entry_t entry_a;
-	entry_a.key_text = "key_a";
-	entry_a.old_text = "alpha";
-	entry_a.new_text = "hello world";
-	entry_a.status = status_t::untranslated;
-	chapter.records.push_back(std::move(entry_a));
-
-	record_entry_t entry_b;
-	entry_b.key_text = "key_b";
-	entry_b.old_text = "beta";
-	entry_b.new_text = "goodbye";
-	entry_b.status = status_t::untranslated;
-	chapter.records.push_back(std::move(entry_b));
-
-	const auto path = create_service_dict(data);
-	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
-	document_t * active_doc = &doc;
-
-	find_replace_t service(source, active_doc);
-	const auto result = service.find_next("goodbye", false, false, 0);
-
-	REQUIRE(result.found);
-	REQUIRE(result.row == 1);
-
-	cleanup_service_dict(path);
-}
-
-TEST_CASE("find_replace_t::find_next, wraps around to first row", "[i][qt]")
-{
-	mock_row_source_t source;
-
-	table_row_t row_first;
-	row_first.type = rec_type_t::cell;
-	row_first.key_text = "key_a";
-	row_first.old_text = "alpha";
-	row_first.new_text = "target text";
-	row_first.status = status_t::untranslated;
-	row_first.record_index = 0;
-
-	table_row_t row_second;
-	row_second.type = rec_type_t::cell;
-	row_second.key_text = "key_b";
-	row_second.old_text = "beta";
-	row_second.new_text = "other";
-	row_second.status = status_t::untranslated;
-	row_second.record_index = 1;
-
-	source.rows = { row_first, row_second };
-
-	dict_t data;
-	auto & chapter = data[rec_type_t::cell];
-	record_entry_t entry_a;
-	entry_a.key_text = "key_a";
-	entry_a.old_text = "alpha";
-	entry_a.new_text = "target text";
-	entry_a.status = status_t::untranslated;
-	chapter.records.push_back(std::move(entry_a));
-
-	record_entry_t entry_b;
-	entry_b.key_text = "key_b";
-	entry_b.old_text = "beta";
-	entry_b.new_text = "other";
-	entry_b.status = status_t::untranslated;
-	chapter.records.push_back(std::move(entry_b));
-
-	const auto path = create_service_dict(data);
-	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
-	document_t * active_doc = &doc;
-
-	find_replace_t service(source, active_doc);
-	const auto result = service.find_next("target", false, false, 1);
-
-	REQUIRE(result.found);
-	REQUIRE(result.row == 0);
-
-	cleanup_service_dict(path);
-}
-
-TEST_CASE("find_replace_t::find_next, not found returns empty", "[i][qt]")
-{
-	mock_row_source_t source;
-
-	table_row_t row_first;
-	row_first.type = rec_type_t::cell;
-	row_first.key_text = "key_a";
-	row_first.old_text = "alpha";
-	row_first.new_text = "hello";
-	row_first.status = status_t::untranslated;
-	row_first.record_index = 0;
-
-	source.rows = { row_first };
-
-	dict_t data;
-	auto & chapter = data[rec_type_t::cell];
-	record_entry_t entry_a;
-	entry_a.key_text = "key_a";
-	entry_a.old_text = "alpha";
-	entry_a.new_text = "hello";
-	entry_a.status = status_t::untranslated;
-	chapter.records.push_back(std::move(entry_a));
-
-	const auto path = create_service_dict(data);
-	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
-	document_t * active_doc = &doc;
-
-	find_replace_t service(source, active_doc);
-	const auto result = service.find_next("nonexistent", false, false, 0);
-
-	REQUIRE_FALSE(result.found);
-
-	cleanup_service_dict(path);
-}
-
-TEST_CASE("find_replace_t::find_next, case insensitive", "[i][qt]")
-{
-	mock_row_source_t source;
-
-	table_row_t row_first;
-	row_first.type = rec_type_t::cell;
-	row_first.key_text = "key_a";
-	row_first.old_text = "alpha";
-	row_first.new_text = "Hello World";
-	row_first.status = status_t::untranslated;
-	row_first.record_index = 0;
-
-	source.rows = { row_first };
-
-	dict_t data;
-	auto & chapter = data[rec_type_t::cell];
-	record_entry_t entry_a;
-	entry_a.key_text = "key_a";
-	entry_a.old_text = "alpha";
-	entry_a.new_text = "Hello World";
-	entry_a.status = status_t::untranslated;
-	chapter.records.push_back(std::move(entry_a));
-
-	const auto path = create_service_dict(data);
-	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
-	document_t * active_doc = &doc;
-
-	find_replace_t service(source, active_doc);
-	const auto result = service.find_next("hello world", false, false, -1);
-
-	REQUIRE(result.found);
-	REQUIRE(result.row == 0);
-
-	cleanup_service_dict(path);
-}
 
 TEST_CASE("find_replace_t::replace_all, replaces all matching", "[i][qt]")
 {
@@ -277,8 +105,9 @@ TEST_CASE("find_replace_t::replace_all, replaces all matching", "[i][qt]")
 	const auto path = create_service_dict(data);
 	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
 	document_t * active_doc = &doc;
+	edit_history_t history;
 
-	find_replace_t service(source, active_doc);
+	find_replace_t service(source, active_doc, history);
 	const auto result = service.replace_all("old value", "new value", false, false);
 
 	REQUIRE(result.count == 2);
@@ -317,8 +146,9 @@ TEST_CASE("find_replace_t::replace_all, sets status replaced", "[i][qt]")
 	const auto path = create_service_dict(data);
 	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
 	document_t * active_doc = &doc;
+	edit_history_t history;
 
-	find_replace_t service(source, active_doc);
+	find_replace_t service(source, active_doc, history);
 	service.replace_all("replaceable", "replaced", false, false);
 
 	const auto & records = doc.data().at(rec_type_t::cell).records;
@@ -327,7 +157,7 @@ TEST_CASE("find_replace_t::replace_all, sets status replaced", "[i][qt]")
 	cleanup_service_dict(path);
 }
 
-TEST_CASE("find_replace_t::undo_last_replace_all, restores text and status", "[i][qt]")
+TEST_CASE("find_replace_t::replace_all, records changes in edit history", "[i][qt]")
 {
 	mock_row_source_t source;
 
@@ -353,35 +183,15 @@ TEST_CASE("find_replace_t::undo_last_replace_all, restores text and status", "[i
 	const auto path = create_service_dict(data);
 	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
 	document_t * active_doc = &doc;
+	edit_history_t history;
 
-	find_replace_t service(source, active_doc);
+	find_replace_t service(source, active_doc, history);
 	service.replace_all("original", "modified", false, false);
 
-	REQUIRE(service.has_undo());
-
-	const auto undo_result = service.undo_last_replace_all();
-	REQUIRE(undo_result.count == 1);
-
-	const auto & records = doc.data().at(rec_type_t::cell).records;
-	REQUIRE(records[0].new_text == "original text");
-	REQUIRE(records[0].status == status_t::translated);
-	REQUIRE_FALSE(service.has_undo());
-
-	cleanup_service_dict(path);
-}
-
-TEST_CASE("find_replace_t::has_undo, false before any replace", "[i][qt]")
-{
-	mock_row_source_t source;
-	source.rows = {};
-
-	dict_t data;
-	const auto path = create_service_dict(data);
-	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
-	document_t * active_doc = &doc;
-
-	find_replace_t service(source, active_doc);
-	REQUIRE_FALSE(service.has_undo());
+	const auto entries = history.get_history(rec_type_t::cell, "key_a");
+	REQUIRE(entries.size() == 1);
+	REQUIRE(entries[0].value == "original text");
+	REQUIRE(entries[0].status == status_t::translated);
 
 	cleanup_service_dict(path);
 }

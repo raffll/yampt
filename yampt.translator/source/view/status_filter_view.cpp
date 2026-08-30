@@ -132,7 +132,7 @@ static const char * get_status_tooltip(status_t status)
 	case status_t::propagated:
 		return "Translation propagated from another record";
 	case status_t::replaced:
-		return "Translation modified by Find/Replace";
+		return "Translation modified by Find & Replace";
 	case status_t::model:
 		return "Translated by the AI translation engine";
 	case status_t::error:

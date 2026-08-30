@@ -4,7 +4,6 @@
 #include <utility/domain_types.hpp>
 #include <utility/keyword_trie.hpp>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 struct annotation_t
@@ -48,22 +47,7 @@ public:
 	std::vector<annotation_t> annotate(const std::string & text, rec_type_t type) const;
 	std::vector<annotation_t> annotate_translated(const std::string & text) const;
 
-	void load_enchantments(const std::string & path);
-
-	const std::string & get_enchantment(const std::string & key) const;
-	bool has_enchantment(const std::string & key) const;
-
 	std::string apply_glossary(const std::string & translated_text) const;
-
-	void set_use_trie_matching(bool enabled)
-	{
-		m_use_trie_matching = enabled;
-	}
-
-	bool get_use_trie_matching() const
-	{
-		return m_use_trie_matching;
-	}
 
 	struct glossary_match_t
 	{
@@ -82,12 +66,10 @@ private:
 		std::string source;
 	};
 
-	bool m_use_trie_matching = true;
 	keyword_trie_t m_dial_trie;
 
 	std::vector<topic_entry_t> m_dial_topics;
 	std::vector<topic_entry_t> m_glossary_terms;
-	std::unordered_map<std::string, std::string> m_enchantments;
 	std::vector<loc_types::loc_entry_t> m_loc_cel;
 	std::vector<loc_types::loc_entry_t> m_loc_top;
 	std::vector<loc_types::loc_entry_t> m_loc_mrk;

@@ -13,7 +13,7 @@ QList<QTextEdit::ExtraSelection> highlight_applier_t::build_selections(
 {
 	QList<QTextEdit::ExtraSelection> selections;
 	auto * plain_edit = static_cast<QPlainTextEdit *>(editor);
-	const auto text_utf8 = plain_edit->toPlainText().toLower().toStdString();
+	const auto text_utf8 = string_utils::to_lower_utf8(plain_edit->toPlainText().toStdString());
 
 	for (const auto & highlight : highlights)
 	{

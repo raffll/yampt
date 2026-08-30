@@ -3,6 +3,7 @@
 #include "../session/plugin_session.hpp"
 #include "../view/nav_tree_view.hpp"
 #include "../view/record_view.hpp"
+#include <io/binary_file_io.hpp>
 #include <scanner/auto_merge.hpp>
 #include <scanner/merge_patch_ops.hpp>
 #include <scanner/sub_record_merge.hpp>
@@ -59,12 +60,27 @@ merge_controller_t::merge_controller_t(
     , m_log(std::move(log_fn))
 {}
 
-void merge_controller_t::create_merged_patch()
+bool merge_controller_t::create_merged_patch()
 {
+	if (m_session.has_any_unsaved())
+	{
+		const auto answer = QMessageBox::question(
+		    nullptr,
+		    QCoreApplication::translate("yEditor", "Unsaved Changes"),
+		    QCoreApplication::translate("yEditor", "Save unsaved plugins before creating the merged patch?"),
+		    QMessageBox::Save | QMessageBox::Cancel,
+		    QMessageBox::Save);
+
+		if (answer == QMessageBox::Cancel)
+			return false;
+
+		save_all_dirty();
+	}
+
 	if (m_session.scan().plugin_count() < 2)
 	{
-		m_log("Need at least 2 plugins loaded to create a merged patch");
-		return;
+		m_log("[error] need at least 2 plugins loaded to create a merged patch");
+		return false;
 	}
 
 	if (m_session.scan().has_merge() && m_session.scan().merge_record_count() > 0)
@@ -78,7 +94,7 @@ void merge_controller_t::create_merged_patch()
 		    QMessageBox::No);
 
 		if (answer != QMessageBox::Yes)
-			return;
+			return false;
 	}
 
 	if (!m_session.scan().has_merge())
@@ -90,6 +106,7 @@ void merge_controller_t::create_merged_patch()
 
 	m_log("[info] merge record count: " + std::to_string(m_session.scan().merge_record_count()));
 	save_merged_patch();
+	return true;
 }
 
 void merge_controller_t::load_existing_merged_patch()
@@ -140,12 +157,12 @@ void merge_controller_t::copy_whole_record(int plugin_idx, const std::string & r
 	if (!entry)
 		return;
 
-	for (const auto & ver : entry->versions)
+	for (const auto & version : entry->versions)
 	{
-		if (ver.plugin_idx != plugin_idx)
+		if (version.plugin_idx != plugin_idx)
 			continue;
 
-		m_session.scan().copy_record_to_merge(plugin_idx, ver.record_index);
+		m_session.scan().copy_record_to_merge(plugin_idx, version.record_index);
 		break;
 	}
 
@@ -179,8 +196,15 @@ void merge_controller_t::copy_cell_record(
 			if (clicked_col >= 0 && clicked_col < static_cast<int>(walk_node->values.size()) &&
 			    !walk_node->values[clicked_col].empty())
 			{
-				selected_frmr = static_cast<uint32_t>(std::stoul(walk_node->values[clicked_col]));
-				found_frmr = true;
+				try
+				{
+					selected_frmr = static_cast<uint32_t>(std::stoul(walk_node->values[clicked_col]));
+					found_frmr = true;
+				}
+				catch (const std::exception & error)
+				{
+					m_log("[error] invalid FRMR index: " + std::string(error.what()));
+				}
 			}
 
 			break;
@@ -253,20 +277,20 @@ void merge_controller_t::copy_group(
 	if (merge_content.empty())
 		return;
 
-	const int col = find_plugin_column(plugin_idx);
+	const int column = find_plugin_column(plugin_idx);
 	const auto & visible = m_record_view.model()->rows();
 	if (group_row_idx < 0 || group_row_idx >= static_cast<int>(visible.size()))
 		return;
 
 	const auto & group_row = visible[group_row_idx];
 
-	if (col < 0 || col >= static_cast<int>(group_row.binary_ranges.size()))
+	if (column < 0 || column >= static_cast<int>(group_row.binary_ranges.size()))
 		return;
 
-	const auto & source_range = group_row.binary_ranges[col];
+	const auto & source_range = group_row.binary_ranges[column];
 	if (source_range.start < 0)
 	{
-		m_log("[error] copy_group: no binary range for column " + std::to_string(col));
+		m_log("[error] copy_group: no binary range for column " + std::to_string(column));
 		return;
 	}
 
@@ -336,12 +360,12 @@ void merge_controller_t::remove_sub_record(
 		return;
 
 	std::string merge_content;
-	for (const auto & ver : entry->versions)
+	for (const auto & version : entry->versions)
 	{
-		if (!m_session.scan().is_merge_plugin(ver.plugin_idx))
+		if (!m_session.scan().is_merge_plugin(version.plugin_idx))
 			continue;
 
-		merge_content = m_session.scan().read_record_content(ver.plugin_idx, ver.record_index);
+		merge_content = m_session.scan().read_record_content(version.plugin_idx, version.record_index);
 		break;
 	}
 
@@ -372,12 +396,12 @@ void merge_controller_t::remove_group(
 		return;
 
 	std::string merge_content;
-	for (const auto & ver : entry->versions)
+	for (const auto & version : entry->versions)
 	{
-		if (!m_session.scan().is_merge_plugin(ver.plugin_idx))
+		if (!m_session.scan().is_merge_plugin(version.plugin_idx))
 			continue;
 
-		merge_content = m_session.scan().read_record_content(ver.plugin_idx, ver.record_index);
+		merge_content = m_session.scan().read_record_content(version.plugin_idx, version.record_index);
 		break;
 	}
 
@@ -418,9 +442,7 @@ int merge_controller_t::create_merge_records()
 	config.fog_fix_enabled = m_settings.merge_fog_fix_enabled();
 	config.summon_fix_enabled = m_settings.merge_summon_fix_enabled();
 	config.cell_name_fix_enabled = m_settings.merge_cell_name_fix_enabled();
-	config.ignore_conflict_subs = parse_sub_record_rules(m_settings.sub_record_ignore_conflict());
-	config.exclude_from_merge_subs = parse_sub_record_rules(m_settings.sub_record_exclude_from_merge());
-	config.skip_if_missing_subs = parse_sub_record_rules(m_settings.sub_record_skip_if_missing());
+	config.ignored_sub_records = parse_sub_record_rules(m_settings.sub_record_ignore_conflict());
 
 	auto_merge_t merge(m_session.scan());
 	merge.set_config(config);
@@ -496,6 +518,35 @@ void merge_controller_t::save_merged_patch()
 		m_log("[error] failed to save " + output_path);
 }
 
+bool merge_controller_t::save_plugin(int plugin_idx)
+{
+	auto & plugin = m_session.scan().mutable_plugin(plugin_idx);
+	const auto & path = m_session.scan().plugin_path(plugin_idx);
+	const bool written = binary_file_io::write_file(plugin.get_records(), path);
+	if (!written)
+	{
+		m_log("[error] failed to save " + path);
+		return false;
+	}
+
+	m_session.clear_plugin_dirty(plugin_idx);
+	m_log("[info] saved " + path);
+	return true;
+}
+
+void merge_controller_t::save_all_dirty()
+{
+	const auto dirty_copy = m_session.dirty_plugins();
+
+	for (int plugin_idx = 0; plugin_idx < static_cast<int>(m_session.scan().plugin_count()); ++plugin_idx)
+	{
+		if (dirty_copy.count(m_session.scan().plugin_filename(plugin_idx)) == 0)
+			continue;
+
+		save_plugin(plugin_idx);
+	}
+}
+
 bool merge_controller_t::save_merge_to_file(
     const std::string & output_path,
     const std::string & author,
@@ -519,53 +570,8 @@ bool merge_controller_t::save_merge_to_file(
 		builder.add_record_raw(scan.merge_record_type(i), scan.merge_record_id(i), scan.merge_record_content(i));
 	}
 
-	std::set<int> contributing_plugins;
-	for (const auto & entry : scan.entries())
-	{
-		bool in_merge = false;
-		for (const auto & ver : entry.versions)
-		{
-			if (scan.is_merge_plugin(ver.plugin_idx))
-			{
-				in_merge = true;
-				break;
-			}
-		}
-
-		if (!in_merge)
-			continue;
-
-		for (const auto & ver : entry.versions)
-		{
-			if (!scan.is_merge_plugin(ver.plugin_idx))
-				contributing_plugins.insert(ver.plugin_idx);
-		}
-	}
-
-	std::vector<patch_builder_t::master_entry_t> masters;
-	for (int i = 0; i < static_cast<int>(scan.plugin_count()); ++i)
-	{
-		if (scan.is_merge_plugin(i))
-			continue;
-
-		if (contributing_plugins.find(i) == contributing_plugins.end())
-			continue;
-
-		patch_builder_t::master_entry_t master;
-		master.filename = scan.plugin_filename(i);
-
-		try
-		{
-			master.file_size = std::filesystem::file_size(scan.plugin_path(i));
-		}
-		catch (...)
-		{
-			master.file_size = 0;
-		}
-
-		masters.push_back(std::move(master));
-	}
-
+	const auto contributing = collect_contributing_plugins();
+	const auto masters = build_master_list(contributing);
 	const auto merge_filename = std::filesystem::path(output_path).filename().string();
 	const bool tes3_is_new = (scan.find_merge_content("TES3", merge_filename) == nullptr);
 
@@ -583,6 +589,68 @@ bool merge_controller_t::save_merge_to_file(
 	}
 
 	return saved;
+}
+
+std::set<int> merge_controller_t::collect_contributing_plugins() const
+{
+	auto & scan = m_session.scan();
+	std::set<int> contributing;
+
+	for (const auto & entry : scan.entries())
+	{
+		bool in_merge = false;
+		for (const auto & version : entry.versions)
+		{
+			if (scan.is_merge_plugin(version.plugin_idx))
+			{
+				in_merge = true;
+				break;
+			}
+		}
+
+		if (!in_merge)
+			continue;
+
+		for (const auto & version : entry.versions)
+		{
+			if (!scan.is_merge_plugin(version.plugin_idx))
+				contributing.insert(version.plugin_idx);
+		}
+	}
+
+	return contributing;
+}
+
+std::vector<patch_builder_t::master_entry_t> merge_controller_t::build_master_list(
+    const std::set<int> & contributing) const
+{
+	auto & scan = m_session.scan();
+	std::vector<patch_builder_t::master_entry_t> masters;
+
+	for (int i = 0; i < static_cast<int>(scan.plugin_count()); ++i)
+	{
+		if (scan.is_merge_plugin(i))
+			continue;
+
+		if (contributing.find(i) == contributing.end())
+			continue;
+
+		patch_builder_t::master_entry_t master;
+		master.filename = scan.plugin_filename(i);
+
+		try
+		{
+			master.file_size = std::filesystem::file_size(scan.plugin_path(i));
+		}
+		catch (...)
+		{
+			master.file_size = 0;
+		}
+
+		masters.push_back(std::move(master));
+	}
+
+	return masters;
 }
 
 void merge_controller_t::refresh_after_merge(const std::string & rec_type, const std::string & record_id)
@@ -606,10 +674,10 @@ std::string merge_controller_t::read_source_content(
 	if (!entry)
 		return {};
 
-	for (const auto & ver : entry->versions)
+	for (const auto & version : entry->versions)
 	{
-		if (ver.plugin_idx == plugin_idx)
-			return m_session.scan().read_record_content(plugin_idx, ver.record_index);
+		if (version.plugin_idx == plugin_idx)
+			return m_session.scan().read_record_content(plugin_idx, version.record_index);
 	}
 
 	return {};
@@ -621,6 +689,7 @@ std::string merge_controller_t::ensure_merge_record(
     const std::string & record_id,
     const std::string & source_content)
 {
+	(void)plugin_idx;
 	const auto * merge_content_ptr = m_session.scan().find_merge_content(rec_type, record_id);
 	if (merge_content_ptr)
 		return *merge_content_ptr;
@@ -633,10 +702,10 @@ std::string merge_controller_t::ensure_merge_record(
 int merge_controller_t::find_plugin_column(int plugin_idx) const
 {
 	const auto & indices = m_record_view.model()->column_plugin_indices();
-	for (int col = 0; col < static_cast<int>(indices.size()); ++col)
+	for (int column = 0; column < static_cast<int>(indices.size()); ++column)
 	{
-		if (indices[col] == plugin_idx)
-			return col;
+		if (indices[column] == plugin_idx)
+			return column;
 	}
 
 	return -1;

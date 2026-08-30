@@ -4,7 +4,10 @@
 #include "web_translator_config.hpp"
 #include <functional>
 #include <string>
+#include <unordered_map>
+#include <vector>
 #include <QObject>
+#include <translation_example.hpp>
 
 class QNetworkAccessManager;
 class QNetworkReply;
@@ -27,6 +30,11 @@ public:
 	void set_api_key(const std::string & key);
 	std::string api_key() const;
 
+	void set_provider_settings(const std::unordered_map<std::string, std::string> & settings);
+	void set_setting(const std::string & key, const std::string & value);
+
+	void fetch_models();
+
 	void set_source_language(const std::string & language);
 	std::string source_language() const;
 
@@ -34,8 +42,12 @@ public:
 
 	void set_glossary_fn(std::function<std::string(const std::string &)> glossary_fn);
 
+	void set_examples(const std::vector<translation_example_t> & examples);
+
 signals:
 	void translation_finished(translation_suggestion_t result);
+	void models_fetched(std::vector<std::string> models);
+	void models_fetch_failed(std::string error);
 
 private:
 	void send_simple_request(const std::string & text, const std::string & target_lang);
@@ -44,11 +56,13 @@ private:
 	std::string expand_template(const std::string & tmpl, const std::string & text, const std::string & target_lang)
 	    const;
 	std::string extract_response(const QByteArray & data) const;
+	std::vector<std::string> extract_model_list(const QByteArray & data) const;
 
 	web_translator_config_t m_config;
 	QNetworkAccessManager * m_network = nullptr;
-	std::string m_api_key;
+	std::unordered_map<std::string, std::string> m_settings;
 	std::string m_source_language = "en";
 	int m_chars_used = 0;
 	std::function<std::string(const std::string &)> m_glossary_fn;
+	std::vector<translation_example_t> m_examples;
 };

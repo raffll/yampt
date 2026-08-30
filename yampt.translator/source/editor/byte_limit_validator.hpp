@@ -16,6 +16,7 @@ struct validation_result_t
 	validation_level_t level;
 	size_t byte_count;
 	size_t limit;
+	std::string reason;
 };
 
 class byte_limit_validator_t

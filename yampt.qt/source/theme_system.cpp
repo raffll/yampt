@@ -157,6 +157,7 @@ void theme_system_t::apply_palette() const
 		palette.setColor(QPalette::Base, Qt::white);
 		palette.setColor(QPalette::AlternateBase, QColor(245, 245, 245));
 		palette.setColor(QPalette::Text, Qt::black);
+		palette.setColor(QPalette::PlaceholderText, QColor(130, 130, 130));
 		palette.setColor(QPalette::Button, QColor(240, 240, 240));
 		palette.setColor(QPalette::ButtonText, Qt::black);
 		palette.setColor(QPalette::Mid, QColor(160, 160, 160));
@@ -164,6 +165,9 @@ void theme_system_t::apply_palette() const
 		palette.setColor(QPalette::Shadow, QColor(80, 80, 80));
 		palette.setColor(QPalette::Highlight, QColor(70, 130, 200));
 		palette.setColor(QPalette::HighlightedText, Qt::white);
+		palette.setColor(QPalette::Disabled, QPalette::Text, get_color(color_name_t::disabled_text));
+		palette.setColor(QPalette::Disabled, QPalette::WindowText, get_color(color_name_t::disabled_text));
+		palette.setColor(QPalette::Disabled, QPalette::ButtonText, get_color(color_name_t::disabled_text));
 	}
 	else
 	{
@@ -172,12 +176,14 @@ void theme_system_t::apply_palette() const
 		palette.setColor(QPalette::Base, get_color(color_name_t::editor_background));
 		palette.setColor(QPalette::AlternateBase, QColor(40, 40, 45));
 		palette.setColor(QPalette::Text, get_color(color_name_t::editor_text));
+		palette.setColor(QPalette::PlaceholderText, QColor(140, 140, 150));
 		palette.setColor(QPalette::Button, QColor(45, 45, 50));
 		palette.setColor(QPalette::ButtonText, QColor(220, 220, 220));
 		palette.setColor(QPalette::Highlight, get_color(color_name_t::selection_background));
 		palette.setColor(QPalette::HighlightedText, get_color(color_name_t::selection_text));
 		palette.setColor(QPalette::Disabled, QPalette::Text, get_color(color_name_t::disabled_text));
 		palette.setColor(QPalette::Disabled, QPalette::WindowText, get_color(color_name_t::disabled_text));
+		palette.setColor(QPalette::Disabled, QPalette::ButtonText, get_color(color_name_t::disabled_text));
 		palette.setColor(QPalette::Inactive, QPalette::Text, get_color(color_name_t::editor_text));
 		palette.setColor(QPalette::Inactive, QPalette::Base, get_color(color_name_t::editor_background));
 		palette.setColor(QPalette::Inactive, QPalette::Window, get_color(color_name_t::window_background));

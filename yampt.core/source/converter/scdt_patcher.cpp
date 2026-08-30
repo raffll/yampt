@@ -1,4 +1,5 @@
 #include "scdt_patcher.hpp"
+#include "../utility/app_logger.hpp"
 
 scdt_patcher_t::scdt_patcher_t(const std::string & original_scdt)
     : m_scdt(original_scdt)
@@ -67,7 +68,17 @@ text_patch_result_t scdt_patcher_t::apply_message_patch(
 		if (index == 0)
 			patch_first_message_segment(segments_old[index], segments_new[index]);
 		else
+		{
+			const auto new_size_with_null = segments_new[index].size() + message_other_null_terminator;
+			if (new_size_with_null > 255)
+			{
+				app_logger_t::add_log(
+				    "[error] message segment exceeds 255 byte limit, skipping SCDT patch\r\n");
+				return result;
+			}
+
 			patch_later_message_segment(segments_old[index], segments_new[index]);
+		}
 	}
 
 	result.success = true;

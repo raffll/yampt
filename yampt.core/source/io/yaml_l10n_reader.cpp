@@ -1,4 +1,5 @@
 #include "yaml_l10n_reader.hpp"
+#include "yaml_scalar.hpp"
 #include <fstream>
 #include <sstream>
 
@@ -33,18 +34,8 @@ const std::vector<std::string> & yaml_l10n_reader_t::key_order() const
 	return m_key_order;
 }
 
-std::string yaml_l10n_reader_t::parse_quoted_value(const std::string & raw_value) const
-{
-	auto close_pos = raw_value.find('"', 1);
-	if (close_pos != std::string::npos)
-		return raw_value.substr(1, close_pos - 1);
-
-	return raw_value.substr(1);
-}
-
 std::string yaml_l10n_reader_t::read_block_scalar(
     std::ifstream & file,
-    bool strip_trailing,
     std::string & lookahead_line,
     bool & has_lookahead) const
 {
@@ -75,11 +66,7 @@ std::string yaml_l10n_reader_t::read_block_scalar(
 		first_line = false;
 	}
 
-	auto assembled = block.str();
-	if (strip_trailing && !assembled.empty() && assembled.back() == '\n')
-		assembled.pop_back();
-
-	return assembled;
+	return block.str();
 }
 
 std::vector<l10n_entry_t> yaml_l10n_reader_t::parse_yaml(const std::string & path)
@@ -117,15 +104,15 @@ std::vector<l10n_entry_t> yaml_l10n_reader_t::parse_yaml(const std::string & pat
 
 		if (!raw_value.empty() && raw_value[0] == '"')
 		{
-			entries.push_back({ key, parse_quoted_value(raw_value) });
+			entries.push_back({ key, yaml_scalar_t::decode_quoted(raw_value) });
 			continue;
 		}
 
-		if (raw_value == "|-" || raw_value == "|")
+		const auto chomp_mode = yaml_scalar_t::parse_block_indicator(raw_value);
+		if (chomp_mode.has_value())
 		{
-			bool strip_trailing = (raw_value == "|-");
-			auto value = read_block_scalar(file, strip_trailing, lookahead_line, has_lookahead);
-			entries.push_back({ key, value });
+			auto body = read_block_scalar(file, lookahead_line, has_lookahead);
+			entries.push_back({ key, yaml_scalar_t::apply_chomp(std::move(body), chomp_mode.value()) });
 			continue;
 		}
 

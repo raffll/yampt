@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=yTranslator
+GenericName=Morrowind Translation Workbench
+Comment=Dictionary editor and translation tool for Morrowind plugins
+Exec=yampt-translator
+Icon=yampt-translator
+Terminal=false
+Categories=Utility;TextEditor;
+MimeType=application/json;

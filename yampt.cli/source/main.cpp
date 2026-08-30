@@ -1,7 +1,8 @@
 #include "interface/user_interface.hpp"
 #include <io/binary_file_io.hpp>
 #include <utility/app_logger.hpp>
-#include <utility/includes.hpp>
+#include <cstdlib>
+#include <filesystem>
 
 int main(int argc, char * argv[])
 {
@@ -9,7 +10,16 @@ int main(int argc, char * argv[])
 	if (exe_path.empty())
 		exe_path = std::filesystem::current_path();
 
-	app_logger_t::set_exe_dir(exe_path.string());
+	std::string base_dir;
+#ifndef _WIN32
+	const auto home_env = std::getenv("HOME");
+	if (home_env)
+		base_dir = (std::filesystem::path(home_env) / ".yampt").string();
+	else
+		base_dir = exe_path.string();
+#else
+	base_dir = exe_path.string();
+#endif
 
 	try
 	{
@@ -18,7 +28,7 @@ int main(int argc, char * argv[])
 		{
 			arg.push_back(argv[i]);
 		}
-		user_interface_t ui(arg);
+		user_interface_t ui(arg, base_dir);
 	}
 	catch (const std::exception & e)
 	{
@@ -29,9 +39,8 @@ int main(int argc, char * argv[])
 		app_logger_t::add_log("[error] unknown error\r\n");
 	}
 
-	auto exe_dir = std::filesystem::path(argv[0]).parent_path();
-	if (exe_dir.empty())
-		exe_dir = std::filesystem::current_path();
+	auto log_dir = std::filesystem::path(base_dir);
+	std::filesystem::create_directories(log_dir);
 
 	auto now = std::chrono::system_clock::now();
 	auto time = std::chrono::system_clock::to_time_t(now);
@@ -43,7 +52,7 @@ int main(int argc, char * argv[])
 #endif
 	char time_str[32];
 	std::strftime(time_str, sizeof(time_str), "%Y%m%d_%H%M%S", &tm);
-	auto log_path = exe_dir / (std::string("yampt_") + time_str + ".log");
+	auto log_path = log_dir / (std::string("yampt_") + time_str + ".log");
 
 	binary_file_io::write_text(app_logger_t::get_log(), log_path.string());
 	return app_logger_t::has_error() ? 1 : 0;

@@ -1,3 +1,4 @@
+#include <resource_paths.hpp>
 #include "translator_settings_dialog.hpp"
 #include "appearance_settings_view.hpp"
 #include "language_settings_view.hpp"
@@ -9,6 +10,7 @@
 #include <QHBoxLayout>
 #include <QListWidget>
 #include <QPushButton>
+#include <QScrollArea>
 #include <QStackedWidget>
 #include <QVBoxLayout>
 
@@ -28,22 +30,23 @@ translator_settings_dialog_t::translator_settings_dialog_t(
 
 	m_content_stack = new QStackedWidget(this);
 
-	m_appearance_view = new appearance_settings_view_t(this);
+	m_appearance_view = new translator_appearance_settings_view_t(this);
 	m_language_view = new language_settings_view_t(dictionaries_dir, this);
 
-	auto providers_dir = QCoreApplication::applicationDirPath().toStdString() + "/providers";
-	m_translation_view = new translation_settings_view_t(providers_dir, this);
+	auto providers_dir = resource_paths::providers_dir();
+	auto models_dir = resource_paths::models_dir();
+	m_translation_view = new translation_settings_view_t(providers_dir, models_dir, this);
 	m_shortcuts_view = new shortcuts_settings_view_t(this);
 
 	m_category_list->addItem(tr("Appearance"));
 	m_category_list->addItem(tr("Shortcuts"));
 	m_category_list->addItem(tr("Language"));
-	m_category_list->addItem(tr("Translation"));
+	m_category_list->addItem(tr("Auto Translation"));
 
-	m_content_stack->addWidget(m_appearance_view);
-	m_content_stack->addWidget(m_shortcuts_view);
-	m_content_stack->addWidget(m_language_view);
-	m_content_stack->addWidget(m_translation_view);
+	m_content_stack->addWidget(wrap_in_scroll_area(m_appearance_view));
+	m_content_stack->addWidget(wrap_in_scroll_area(m_shortcuts_view));
+	m_content_stack->addWidget(wrap_in_scroll_area(m_language_view));
+	m_content_stack->addWidget(wrap_in_scroll_area(m_translation_view));
 
 	connect(m_category_list, &QListWidget::currentRowChanged, m_content_stack, &QStackedWidget::setCurrentIndex);
 
@@ -109,4 +112,13 @@ void translator_settings_dialog_t::update_ok_button_state()
 	const bool has_conflicts = m_shortcuts_view->has_conflicts();
 	m_button_box->button(QDialogButtonBox::Ok)->setEnabled(!has_conflicts);
 	m_apply_button->setEnabled(!has_conflicts);
+}
+
+QScrollArea * translator_settings_dialog_t::wrap_in_scroll_area(QWidget * content)
+{
+	auto * scroll = new QScrollArea(this);
+	scroll->setWidget(content);
+	scroll->setWidgetResizable(true);
+	scroll->setFrameShape(QFrame::NoFrame);
+	return scroll;
 }

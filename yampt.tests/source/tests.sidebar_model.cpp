@@ -4,6 +4,27 @@
 #include <filesystem>
 #include <fstream>
 
+TEST_CASE("sidebar_model::derive_root_label, plain path uses final segment", "[u]")
+{
+	REQUIRE(derive_root_label("c:/games/Morrowind Rebirth PL") == "Morrowind Rebirth PL");
+}
+
+TEST_CASE("sidebar_model::derive_root_label, trailing slash still yields name", "[u]")
+{
+	REQUIRE(derive_root_label("c:/games/Morrowind Rebirth PL/") == "Morrowind Rebirth PL");
+}
+
+TEST_CASE("sidebar_model::derive_root_label, trailing backslash still yields name", "[u]")
+{
+	REQUIRE(derive_root_label("c:\\games\\Morrowind Rebirth PL\\") == "Morrowind Rebirth PL");
+}
+
+TEST_CASE("sidebar_model::derive_root_label, workspace remapped to label", "[u]")
+{
+	REQUIRE(derive_root_label("c:/data/workspace") == workspace_label);
+	REQUIRE(derive_root_label("c:/data/workspace/") == workspace_label);
+}
+
 TEST_CASE("sidebar_model::derive_display_name, plugin with language tag", "[u]")
 {
 	file_entry_t entry;

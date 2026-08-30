@@ -41,6 +41,23 @@ TEST_CASE("row_filter_t::matches, case sensitive substring", "[u]")
 	REQUIRE(filter.matches(make_row("cell_balmora", "balmora", "balmora")) == false);
 }
 
+TEST_CASE("row_filter_t::matches, ascii case-insensitive unchanged after unicode fold", "[u]")
+{
+	row_filter_t filter;
+	filter.set_config({ .query = "VIVEC", .case_sensitive = false });
+
+	REQUIRE(filter.matches(make_row("cell_Vivec", "Vivec", "Vivec")) == true);
+	REQUIRE(filter.matches(make_row("cell_Balmora", "Balmora", "Balmora")) == false);
+}
+
+TEST_CASE("row_filter_t::matches, accented query matches differing case", "[u]")
+{
+	row_filter_t filter;
+	filter.set_config({ .query = "b\xc4\x84lmora", .case_sensitive = false });
+
+	REQUIRE(filter.matches(make_row("key", "B\xc4\x85lmora", "B\xc4\x85lmora")) == true);
+}
+
 TEST_CASE("row_filter_t::matches, column restriction to original", "[u]")
 {
 	row_filter_t filter;

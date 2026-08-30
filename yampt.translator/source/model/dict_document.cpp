@@ -1,4 +1,5 @@
 #include "dict_document.hpp"
+#include "../editor/byte_limit_validator.hpp"
 #include <io/dict_reader.hpp>
 #include <io/dict_writer.hpp>
 #include <utility/string_utils.hpp>
@@ -16,6 +17,9 @@ dict_document_t::dict_document_t(const std::string & path, codepage_t codepage, 
 
 	m_data = reader.get_dict();
 
+	byte_limit_validator_t validator;
+	validator.set_codepage(m_codepage);
+
 	for (auto & [type, chapter] : m_data)
 	{
 		for (auto & entry : chapter.records)
@@ -26,6 +30,13 @@ dict_document_t::dict_document_t(const std::string & path, codepage_t codepage, 
 
 			if (!entry.details.empty())
 				entry.details = decode_to_utf8(entry.details, m_codepage);
+
+			if (entry.status == status_t::error)
+			{
+				const auto result = validator.validate(type, entry.new_text);
+				if (result.level != validation_level_t::error)
+					entry.status = status_t::in_progress;
+			}
 		}
 	}
 }
@@ -234,7 +245,7 @@ int dict_document_t::translated_count() const
 	{
 		for (const auto & rec : chapter.records)
 		{
-			if (!rec.new_text.empty())
+			if (rec.status != status_t::untranslated)
 				++count;
 		}
 	}

@@ -1,4 +1,5 @@
 #include "view_tree_model.hpp"
+#include "editable_column_set.hpp"
 #include <decoder/view_tree_format.hpp>
 #include <scanner/record_conflict.hpp>
 #include <utility/record_behavior.hpp>
@@ -8,8 +9,11 @@
 #include <map>
 #include <theme_system.hpp>
 #include <QBrush>
+#include <QCoreApplication>
 #include <QFont>
 #include <QMimeData>
+
+Q_DECLARE_METATYPE(const field_def_t *)
 
 view_tree_model_t::view_tree_model_t(QObject * parent)
     : QAbstractItemModel(parent)
@@ -28,6 +32,7 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 
 	m_scan_for_header = &scan;
 	m_rows.clear();
+	m_synthetic_fields.clear();
 	m_column_names.clear();
 	m_plugin_conflict_this.clear();
 	m_record_type = entry.rec_type;
@@ -39,6 +44,7 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 	m_is_merge_pinned = scan.is_merge_pinned(entry.rec_type, entry.record_id);
 
 	size_t col_count = setup_columns(scan, entry);
+	m_record_versions = entry.versions;
 	if (col_count == 0)
 	{
 		endResetModel();
@@ -343,19 +349,164 @@ void view_tree_model_t::set_patch_plugins(const std::set<std::string> * patch)
 	m_patch_plugins = patch;
 }
 
+void view_tree_model_t::set_editable_columns(const editable_column_set_t * editable)
+{
+	m_editable_columns = editable;
+}
+
 void view_tree_model_t::clear()
 {
 	beginResetModel();
 	m_rows.clear();
+	m_synthetic_fields.clear();
 	m_column_names.clear();
 	m_plugin_conflict_this.clear();
 	m_column_plugin_indices.clear();
+	m_record_versions.clear();
 	m_record_type.clear();
 	m_record_id.clear();
 	m_has_merge_column = false;
 	m_merge_col_index = -1;
 	m_filter_dirty = true;
 	endResetModel();
+}
+
+static QString lua_classification_text(handler_class_t classification)
+{
+	switch (classification)
+	{
+	case handler_class_t::blocking:
+		return QCoreApplication::translate("yEditor", "Blocking");
+
+	case handler_class_t::mutating:
+		return QCoreApplication::translate("yEditor", "Mutating");
+
+	case handler_class_t::passive:
+		return QCoreApplication::translate("yEditor", "Passive");
+	}
+
+	return {};
+}
+
+void view_tree_model_t::reset_lua_state()
+{
+	m_scan_for_header = nullptr;
+	m_rows.clear();
+	m_synthetic_fields.clear();
+	m_column_names.clear();
+	m_plugin_conflict_this.clear();
+	m_column_plugin_indices.clear();
+	m_record_versions.clear();
+	m_record_type.clear();
+	m_record_id.clear();
+	m_col_type_indices.clear();
+	m_has_merge_column = false;
+	m_merge_col_index = -1;
+	m_filter_dirty = true;
+}
+
+void view_tree_model_t::set_lua_conflict(const handler_conflict_t & conflict)
+{
+	beginResetModel();
+	reset_lua_state();
+
+	if (conflict.registrations.empty())
+	{
+		endResetModel();
+		return;
+	}
+
+	for (const auto & reg : conflict.registrations)
+	{
+		m_column_names.push_back(reg.mod_name);
+
+		switch (reg.classification)
+		{
+		case handler_class_t::blocking:
+			m_plugin_conflict_this.push_back(conflict_this_t::conflict_wins);
+			break;
+
+		case handler_class_t::mutating:
+			m_plugin_conflict_this.push_back(conflict_this_t::override_wins);
+			break;
+
+		case handler_class_t::passive:
+			m_plugin_conflict_this.push_back(conflict_this_t::master);
+			break;
+		}
+	}
+
+	const auto col_count = conflict.registrations.size();
+
+	auto build_row = [&](const std::string & label, auto field_getter) -> view_node_t
+	{
+		view_node_t row;
+		row.label = label;
+		row.values.resize(col_count);
+
+		for (size_t col = 0; col < col_count; ++col)
+			row.values[col] = field_getter(conflict.registrations[col]);
+
+		row.all_identical = check_all_identical(row.values);
+		row.row_conflict_all = record_conflict::compute_conflict_all(row.values);
+		row.cell_conflict_this = record_conflict::compute_conflict_this(row.values);
+		return row;
+	};
+
+	m_rows.push_back(build_row("Interface", [](const handler_registration_t & r) { return r.interface_name; }));
+	m_rows.push_back(build_row("Method", [](const handler_registration_t & r) { return r.method_name; }));
+	m_rows.push_back(build_row("Type Argument", [](const handler_registration_t & r) { return r.type_argument; }));
+
+	m_rows.push_back(build_row(
+	    "Classification",
+	    [](const handler_registration_t & r) { return lua_classification_text(r.classification).toStdString(); }));
+
+	m_rows.push_back(build_row("Script Path", [](const handler_registration_t & r) { return r.script_path; }));
+	m_rows.push_back(build_row("Callback", [](const handler_registration_t & r) { return r.callback_expression; }));
+	m_rows.push_back(build_row("Handler Body", [](const handler_registration_t & r) { return r.handler_body; }));
+
+	endResetModel();
+}
+
+void view_tree_model_t::set_lua_registration(const handler_registration_t & registration)
+{
+	beginResetModel();
+	reset_lua_state();
+
+	m_column_names.push_back(registration.mod_name);
+
+	auto make_row = [](const std::string & label, const std::string & value) -> view_node_t
+	{
+		view_node_t row;
+		row.label = label;
+		row.values = { value };
+		row.row_conflict_all = conflict_all_t::only_one;
+		row.all_identical = false;
+		return row;
+	};
+
+	m_rows.push_back(make_row("Interface", registration.interface_name));
+	m_rows.push_back(make_row("Method", registration.method_name));
+	m_rows.push_back(make_row("Type Argument", registration.type_argument));
+	m_rows.push_back(make_row("Script Path", registration.script_path));
+	m_rows.push_back(make_row("Line", std::to_string(registration.line_number)));
+
+	const auto class_text = lua_classification_text(registration.classification);
+	m_rows.push_back(make_row("Classification", class_text.toStdString()));
+
+	m_rows.push_back(make_row("Callback", registration.callback_expression));
+	m_rows.push_back(make_row("Handler Body", registration.handler_body));
+
+	endResetModel();
+}
+
+size_t view_tree_model_t::record_index_for_column(int visual_column) const
+{
+	const int col = visual_column - 1;
+	if (col < 0 || col >= static_cast<int>(m_record_versions.size()))
+		return 0;
+
+	return m_record_versions[col].record_index;
 }
 
 bool view_tree_model_t::is_merge_column(int section) const
@@ -426,6 +577,38 @@ const view_tree_model_t::view_node_t * view_tree_model_t::node_from_index(const 
 		return nullptr;
 
 	return &parent_ptr->children[index.row()];
+}
+
+std::string view_tree_model_t::full_value_at(const QModelIndex & index) const
+{
+	const auto * node = node_from_index(index);
+	if (!node)
+		return {};
+
+	const int column = index.column();
+	if (column < 1)
+		return {};
+
+	const bool is_group = !node->type.empty() && node->size == 0 && !node->children.empty();
+	const bool single_leaf_child = node->children.size() == 1 && node->children[0].children.empty();
+
+	if (single_leaf_child && !is_group)
+	{
+		const int col = column - 1;
+		if (col < 0 || col >= static_cast<int>(node->children[0].values.size()))
+			return {};
+
+		return node->children[0].values[col];
+	}
+
+	if (!node->children.empty())
+		return {};
+
+	const int col = column - 1;
+	if (col < 0 || col >= static_cast<int>(node->values.size()))
+		return {};
+
+	return node->values[col];
 }
 
 QModelIndex view_tree_model_t::index(int row, int column, const QModelIndex & parent) const
@@ -549,7 +732,7 @@ static QVariant sub_record_display(const view_tree_model_t::view_node_t & row, i
 		return truncate_for_display(row.children[0].values[col]);
 	}
 
-	if (!row.children.empty())
+	if (!row.children.empty() && !row.show_group_value)
 		return {};
 
 	const int col = column - 1;
@@ -664,6 +847,146 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 		return {};
 	}
 
+	case field_def_role:
+	{
+		const view_node_t * target = node;
+		std::string lookup_type = node->type;
+		size_t lookup_size = node->size;
+
+		if (node->children.size() == 1 && node->children[0].children.empty())
+			target = &node->children[0];
+
+		if (target->schema_field_index >= 0 && !target->type.empty())
+		{
+			lookup_type = target->type;
+			lookup_size = target->size;
+		}
+		else if (lookup_type.empty())
+		{
+			auto * parent_ptr = static_cast<view_node_t *>(index.internalPointer());
+			if (!parent_ptr)
+				return {};
+
+			lookup_type = parent_ptr->type;
+			lookup_size = parent_ptr->size;
+		}
+
+		if (lookup_type.empty() || lookup_size == 0)
+		{
+			if (lookup_type.empty())
+				return {};
+
+			if (target->schema_field_index < 0)
+				return {};
+
+			const auto & schemas = all_schemas();
+			for (const auto & s : schemas)
+			{
+				if (s.sub_type != lookup_type)
+					continue;
+
+				if (std::strcmp(s.parent_type, "*") != 0 && s.parent_type != m_record_type)
+					continue;
+
+				if (target->schema_field_index >= static_cast<int>(s.field_count))
+					continue;
+
+				const auto & candidate = s.fields[target->schema_field_index];
+				if (target->label != candidate.name)
+					continue;
+
+				if (target->bit_index >= 0)
+				{
+					auto & bit_field = m_bool_bit_field;
+					bit_field.name = candidate.name;
+					bit_field.type = field_type_t::bool_bit;
+					bit_field.offset = candidate.offset;
+					bit_field.size = target->bit_index;
+					bit_field.enum_names = nullptr;
+					bit_field.flag_names = nullptr;
+					bit_field.flag_count = 0;
+					bit_field.group = nullptr;
+					return QVariant::fromValue(static_cast<const field_def_t *>(&bit_field));
+				}
+
+				return QVariant::fromValue(&s.fields[target->schema_field_index]);
+			}
+
+			return {};
+		}
+
+		if (target->schema_field_index >= 0)
+		{
+			const auto * schema = find_schema(m_record_type, lookup_type, lookup_size);
+			if (schema && target->schema_field_index < static_cast<int>(schema->field_count))
+			{
+				if (target->bit_index >= 0)
+				{
+					auto & bit_field = m_bool_bit_field;
+					const auto & parent_field = schema->fields[target->schema_field_index];
+					bit_field.name = parent_field.name;
+					bit_field.type = field_type_t::bool_bit;
+					bit_field.offset = parent_field.offset;
+					bit_field.size = target->bit_index;
+					bit_field.enum_names = nullptr;
+					bit_field.flag_names = nullptr;
+					bit_field.flag_count = 0;
+					bit_field.group = nullptr;
+					return QVariant::fromValue(static_cast<const field_def_t *>(&bit_field));
+				}
+
+				return QVariant::fromValue(&schema->fields[target->schema_field_index]);
+			}
+		}
+
+		auto & synthetic = m_synthetic_fields[lookup_type];
+		synthetic.name = m_synthetic_fields.find(lookup_type)->first.c_str();
+		synthetic.type = field_type_t::raw;
+		synthetic.offset = 0;
+		synthetic.size = lookup_size;
+		synthetic.enum_names = nullptr;
+		synthetic.flag_names = nullptr;
+		synthetic.flag_count = 0;
+		synthetic.group = nullptr;
+		return QVariant::fromValue(static_cast<const field_def_t *>(&synthetic));
+	}
+
+	case sub_record_occurrence_role:
+	{
+		auto * parent_ptr = static_cast<view_node_t *>(index.internalPointer());
+
+		const view_node_t * sub_record_node = node;
+		if (node->schema_field_index >= 0 && parent_ptr)
+			sub_record_node = parent_ptr;
+
+		if (sub_record_node->type.empty())
+			return {};
+
+		int ref_index = -1;
+		auto parent_idx = parent(index);
+
+		while (parent_idx.isValid())
+		{
+			const auto * ancestor = node_from_index(parent_idx);
+			if (!ancestor)
+				break;
+
+			if (ancestor->type == "FRMR" && !ancestor->label.empty() && ancestor->label[0] == '#')
+			{
+				ref_index = std::stoi(ancestor->label.substr(1));
+				break;
+			}
+
+			parent_idx = parent(parent_idx);
+		}
+
+		sub_record_occurrence_t result;
+		result.sub_type = sub_record_node->type;
+		result.occurrence = sub_record_node->occurrence;
+		result.object_ref_index = ref_index;
+		return QVariant::fromValue(result);
+	}
+
 	default:
 		return {};
 	}
@@ -696,10 +1019,31 @@ QVariant view_tree_model_t::headerData(int section, Qt::Orientation orientation,
 				prefix = QString::fromUtf8("\xF0\x9F\x9B\xA1 ");
 			else if (m_scan_for_header && m_scan_for_header->is_merge_plugin(pi))
 				prefix = QString::fromUtf8("\xE2\x9A\x99 ");
+			else if (m_scan_for_header)
+			{
+				const auto & full_path = m_scan_for_header->plugin_path(pi);
+				const bool is_overridden = full_path.find("/overwrite/") != std::string::npos ||
+				                           full_path.find("\\overwrite\\") != std::string::npos;
+				const bool is_master = name.size() > 4 && (name.compare(name.size() - 4, 4, ".esm") == 0 ||
+				                                           name.compare(name.size() - 4, 4, ".ESM") == 0);
+
+				if (is_master)
+					prefix = QString::fromUtf8("\xF0\x9F\x93\x9C ");
+				else if (is_overridden)
+					prefix = QString::fromUtf8("\xE2\x9A\xA1 ");
+				else
+					prefix = QString::fromUtf8("\xF0\x9F\x93\x84 ");
+			}
 			else if (
 			    name.size() > 4 &&
 			    (name.compare(name.size() - 4, 4, ".esm") == 0 || name.compare(name.size() - 4, 4, ".ESM") == 0))
+			{
 				prefix = QString::fromUtf8("\xF0\x9F\x93\x9C ");
+			}
+			else
+			{
+				prefix = QString::fromUtf8("\xF0\x9F\x93\x84 ");
+			}
 		}
 
 		return prefix + QString::fromStdString(name);

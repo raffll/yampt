@@ -22,6 +22,15 @@ inline std::string normalize_path(std::string_view input)
 {
 	std::string result(input);
 	std::replace(result.begin(), result.end(), '\\', '/');
+
+	while (result.size() > 1 && result.back() == '/')
+	{
+		if (result.size() == 3 && result[1] == ':')
+			break;
+
+		result.pop_back();
+	}
+
 	return result;
 }
 
@@ -72,6 +81,15 @@ inline int utf8_byte_to_char_offset(const std::string & utf8_text, int byte_offs
 inline bool case_insensitive_equal(std::string_view lhs, std::string_view rhs)
 {
 	return to_lower(lhs) == to_lower(rhs);
+}
+
+std::string to_lower_utf8(std::string_view input);
+
+bool case_insensitive_equal_utf8(std::string_view lhs, std::string_view rhs);
+
+inline bool paths_equivalent(std::string_view lhs, std::string_view rhs)
+{
+	return case_insensitive_equal(normalize_path(lhs), normalize_path(rhs));
 }
 
 inline std::string erase_null_chars(std::string str)

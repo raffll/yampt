@@ -115,43 +115,12 @@ void auto_merge_t::process_groups(merge_counters_t & counters)
 
 	for (const auto & group : m_groups)
 	{
-		if (group.versions.size() < 2)
+		if (should_skip_group(group, exclusion_regex, has_exclusion))
 			continue;
-
-		if (!is_type_enabled(group.rec_type))
-			continue;
-
-		if (group.rec_type == "INFO")
-			continue;
-
-		if (has_exclusion && std::regex_search(group.record_id, exclusion_regex))
-			continue;
-
-		const bool is_leveled = (group.rec_type == "LEVI" || group.rec_type == "LEVC");
-		const bool is_dialogue = (group.rec_type == "DIAL");
-
-		if (!is_leveled && !is_dialogue && group.versions.size() < 3)
-			continue;
-
-		if (is_leveled || is_dialogue)
-		{
-			const auto & first_ver = group.versions.front();
-			const auto & last_ver = group.versions.back();
-			const auto first_content = m_scan.read_record_content(first_ver.plugin_idx, first_ver.record_index);
-			const auto last_content = m_scan.read_record_content(last_ver.plugin_idx, last_ver.record_index);
-
-			if (first_content == last_content)
-				continue;
-		}
 
 		try
 		{
-			if (is_leveled)
-				process_leveled_list(group, counters);
-			else if (is_dialogue)
-				process_dialogue(group, counters);
-			else
-				process_three_way(group, counters);
+			dispatch_group(group, counters);
 		}
 		catch (const std::exception & error)
 		{
@@ -162,6 +131,56 @@ void auto_merge_t::process_groups(merge_counters_t & counters)
 			add_log("[error] merge " + group.rec_type + " \"" + group.record_id + "\"");
 		}
 	}
+}
+
+bool auto_merge_t::should_skip_group(
+    const record_group_t & group,
+    const std::regex & exclusion_regex,
+    bool has_exclusion) const
+{
+	if (group.versions.size() < 2)
+		return true;
+
+	if (!is_type_enabled(group.rec_type))
+		return true;
+
+	if (group.rec_type == "INFO")
+		return true;
+
+	if (has_exclusion && std::regex_search(group.record_id, exclusion_regex))
+		return true;
+
+	const bool is_leveled = (group.rec_type == "LEVI" || group.rec_type == "LEVC");
+	const bool is_dialogue = (group.rec_type == "DIAL");
+
+	if (!is_leveled && !is_dialogue && group.versions.size() < 3)
+		return true;
+
+	if (is_leveled || is_dialogue)
+	{
+		const auto & first_ver = group.versions.front();
+		const auto & last_ver = group.versions.back();
+		const auto first_content = m_scan.read_record_content(first_ver.plugin_idx, first_ver.record_index);
+		const auto last_content = m_scan.read_record_content(last_ver.plugin_idx, last_ver.record_index);
+
+		if (first_content == last_content)
+			return true;
+	}
+
+	return false;
+}
+
+void auto_merge_t::dispatch_group(const record_group_t & group, merge_counters_t & counters)
+{
+	const bool is_leveled = (group.rec_type == "LEVI" || group.rec_type == "LEVC");
+	const bool is_dialogue = (group.rec_type == "DIAL");
+
+	if (is_leveled)
+		process_leveled_list(group, counters);
+	else if (is_dialogue)
+		process_dialogue(group, counters);
+	else
+		process_three_way(group, counters);
 }
 
 void auto_merge_t::process_leveled_list(const record_group_t & group, merge_counters_t & counters)
@@ -275,7 +294,8 @@ void auto_merge_t::process_three_way(const record_group_t & group, merge_counter
 	if (!result.changed)
 		return;
 
-	m_scan.copy_record_to_merge_raw(group.rec_type, group.record_id, result.content);
+	const auto filtered = filter_ignored_sub_records(group.rec_type, result.content);
+	m_scan.copy_record_to_merge_raw(group.rec_type, group.record_id, filtered);
 	++counters.three_way;
 
 	std::string plugins;
@@ -442,23 +462,35 @@ bool auto_merge_t::is_type_enabled(const std::string & rec_type) const
 	return m_config.disabled_types.count(rec_type) == 0;
 }
 
-bool auto_merge_t::matches_exclusion(const std::string & record_id) const
-{
-	if (m_config.exclusion_pattern.empty())
-		return false;
-
-	try
-	{
-		std::regex pattern(m_config.exclusion_pattern, std::regex::icase);
-		return std::regex_search(record_id, pattern);
-	}
-	catch (...)
-	{
-		return false;
-	}
-}
-
 void auto_merge_t::add_log(const std::string & message)
 {
 	m_log.push_back({ message });
+}
+
+std::string auto_merge_t::filter_ignored_sub_records(const std::string & rec_type, const std::string & content) const
+{
+	if (m_config.ignored_sub_records.empty())
+		return content;
+
+	const auto subs = sub_record_merge_t::parse_sub_records(content);
+	sub_record_sequence_t filtered;
+
+	for (const auto & entry : subs)
+	{
+		const auto specific_key = rec_type + ":" + entry.type;
+		const auto wildcard_key = rec_type + ":*";
+
+		if (m_config.ignored_sub_records.count(specific_key) > 0)
+			continue;
+
+		if (m_config.ignored_sub_records.count(wildcard_key) > 0)
+			continue;
+
+		filtered.push_back(entry);
+	}
+
+	if (filtered.size() == subs.size())
+		return content;
+
+	return sub_record_merge_t::reconstruct_record(content, filtered);
 }

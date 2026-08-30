@@ -1,4 +1,6 @@
 #include "conflict_slots.hpp"
+#include <algorithm>
+#include <cstdint>
 #include <cstring>
 #include <set>
 #include <unordered_map>
@@ -8,6 +10,23 @@ struct sub_slot_t
 	std::string type;
 	int occurrence;
 };
+
+static bool has_slot(const std::vector<sub_slot_t> & slots, const std::string & slot_type, int slot_occurrence)
+{
+	return std::any_of(
+	    slots.begin(),
+	    slots.end(),
+	    [&](const sub_slot_t & slot) { return slot.type == slot_type && slot.occurrence == slot_occurrence; });
+}
+
+template<typename slot_container_t>
+static bool has_slot_in(const slot_container_t & slots, const std::string & slot_type, int slot_occurrence)
+{
+	return std::any_of(
+	    slots.begin(),
+	    slots.end(),
+	    [&](const auto & slot) { return slot.type == slot_type && slot.occurrence == slot_occurrence; });
+}
 
 static void collect_unified_slots(
     const std::vector<std::vector<sub_record_view_t>> & parsed,
@@ -23,20 +42,11 @@ static void collect_unified_slots(
 			if (!excluded.empty() && excluded[i].count(j))
 				continue;
 
-			const auto & sv = parsed[i][j];
-			int occ = type_count[sv.type]++;
-			bool found = false;
-			for (const auto & slot : slots)
-			{
-				if (slot.type == sv.type && slot.occurrence == occ)
-				{
-					found = true;
-					break;
-				}
-			}
+			const auto & sub_view = parsed[i][j];
+			int occurrence = type_count[sub_view.type]++;
 
-			if (!found)
-				slots.push_back({ sv.type, occ });
+			if (!has_slot(slots, sub_view.type, occurrence))
+				slots.push_back({ sub_view.type, occurrence });
 		}
 	}
 }
@@ -63,7 +73,7 @@ static void align_slots_to_result(
 
 	for (const auto & slot : slots)
 	{
-		aligned_slot_t aligned;
+		aligned_slot_t aligned{};
 		aligned.key.type = slot.type;
 		aligned.key.occurrence = slot.occurrence;
 		aligned.indices.resize(ver_count);
@@ -124,17 +134,10 @@ static void collect_unique_ids(
 	{
 		for (const auto & entry : entries)
 		{
-			bool found = false;
-			for (const auto & id : all_ids)
-			{
-				if (id == entry.ident)
-				{
-					found = true;
-					break;
-				}
-			}
+			const bool exists =
+			    std::any_of(all_ids.begin(), all_ids.end(), [&](const std::string & id) { return id == entry.ident; });
 
-			if (!found)
+			if (!exists)
 				all_ids.push_back(entry.ident);
 		}
 	}
@@ -330,17 +333,10 @@ static void extract_npco_entries(
 
 			ver_items[i].push_back({ item_id, j, j });
 
-			bool found = false;
-			for (const auto & id : all_item_ids)
-			{
-				if (id == item_id)
-				{
-					found = true;
-					break;
-				}
-			}
+			const bool exists = std::any_of(
+			    all_item_ids.begin(), all_item_ids.end(), [&](const std::string & id) { return id == item_id; });
 
-			if (!found)
+			if (!exists)
 				all_item_ids.push_back(item_id);
 		}
 	}
@@ -368,17 +364,10 @@ static void extract_npcs_entries(
 
 			ver_spells[i].push_back({ spell_id, j, j });
 
-			bool found = false;
-			for (const auto & id : all_spell_ids)
-			{
-				if (id == spell_id)
-				{
-					found = true;
-					break;
-				}
-			}
+			const bool exists = std::any_of(
+			    all_spell_ids.begin(), all_spell_ids.end(), [&](const std::string & id) { return id == spell_id; });
 
-			if (!found)
+			if (!exists)
 				all_spell_ids.push_back(spell_id);
 		}
 	}
@@ -392,13 +381,13 @@ static void align_single_entries(
     slot_result_t & result)
 {
 	const size_t ver_count = ver_entries.size();
-	int occ = occ_start;
+	int occurrence = occ_start;
 
 	for (const auto & target_id : all_ids)
 	{
-		aligned_slot_t aligned;
+		aligned_slot_t aligned{};
 		aligned.key.type = slot_type;
-		aligned.key.occurrence = occ++;
+		aligned.key.occurrence = occurrence++;
 		aligned.indices.resize(ver_count);
 
 		for (size_t i = 0; i < ver_count; ++i)
@@ -463,10 +452,10 @@ static void parse_versions(slot_result_t & result)
 	for (size_t i = 0; i < count; ++i)
 	{
 		sub_record_iter_t iter(result.contents[i]);
-		sub_record_view_t sv;
+		sub_record_view_t sub_view;
 
-		while (iter.next(sv))
-			result.parsed[i].push_back(sv);
+		while (iter.next(sub_view))
+			result.parsed[i].push_back(sub_view);
 	}
 }
 
@@ -520,17 +509,10 @@ static void extract_armor_groups(
 
 			ver_groups[i].push_back({ indx_key, j, bnam_idx, cnam_idx });
 
-			bool found = false;
-			for (const auto & key : all_indx_keys)
-			{
-				if (key == indx_key)
-				{
-					found = true;
-					break;
-				}
-			}
+			const bool exists = std::any_of(
+			    all_indx_keys.begin(), all_indx_keys.end(), [&](const std::string & key) { return key == indx_key; });
 
-			if (!found)
+			if (!exists)
 				all_indx_keys.push_back(indx_key);
 		}
 	}
@@ -588,20 +570,18 @@ static void build_armor_slots(slot_result_t & result)
 
 		for (size_t i = 0; i < ver_count; ++i)
 		{
-			bool matched = false;
-			for (const auto & group : ver_groups[i])
-			{
-				if (group.indx_key == target_key)
-				{
-					indx_slot.indices[i] = group.indx_idx;
-					bnam_slot.indices[i] = group.bnam_idx;
-					cnam_slot.indices[i] = group.cnam_idx;
-					matched = true;
-					break;
-				}
-			}
+			const auto it_group = std::find_if(
+			    ver_groups[i].begin(),
+			    ver_groups[i].end(),
+			    [&](const armor_group_entry_t & group) { return group.indx_key == target_key; });
 
-			if (!matched)
+			if (it_group != ver_groups[i].end())
+			{
+				indx_slot.indices[i] = it_group->indx_idx;
+				bnam_slot.indices[i] = it_group->bnam_idx;
+				cnam_slot.indices[i] = it_group->cnam_idx;
+			}
+			else
 			{
 				indx_slot.indices[i] = SIZE_MAX;
 				bnam_slot.indices[i] = SIZE_MAX;
@@ -715,17 +695,10 @@ static void extract_cell_refs(
 
 			ver_refs[i].push_back({ obj_idx, j, end_pos });
 
-			bool found = false;
-			for (const auto & oi : all_object_indices)
-			{
-				if (oi == obj_idx)
-				{
-					found = true;
-					break;
-				}
-			}
+			const bool exists = std::any_of(
+			    all_object_indices.begin(), all_object_indices.end(), [&](uint32_t index) { return index == obj_idx; });
 
-			if (!found)
+			if (!exists)
 				all_object_indices.push_back(obj_idx);
 		}
 
@@ -747,20 +720,11 @@ static void align_cell_header(
 		std::unordered_map<std::string, int> type_count;
 		for (size_t j = 0; j < ver_header_end[i]; ++j)
 		{
-			const auto & sv = parsed[i][j];
-			int occ = type_count[sv.type]++;
-			bool found = false;
-			for (const auto & slot : header_slots)
-			{
-				if (slot.type == sv.type && slot.occurrence == occ)
-				{
-					found = true;
-					break;
-				}
-			}
+			const auto & sub_view = parsed[i][j];
+			int occurrence = type_count[sub_view.type]++;
 
-			if (!found)
-				header_slots.push_back({ sv.type, occ });
+			if (!has_slot_in(header_slots, sub_view.type, occurrence))
+				header_slots.push_back({ sub_view.type, occurrence });
 		}
 	}
 
@@ -773,7 +737,7 @@ static void align_cell_header(
 
 	for (const auto & slot : header_slots)
 	{
-		aligned_slot_t aligned;
+		aligned_slot_t aligned{};
 		aligned.key.type = slot.type;
 		aligned.key.occurrence = slot.occurrence;
 		aligned.indices.resize(ver_count);
@@ -809,20 +773,11 @@ static void collect_ref_group_slots(
 			const size_t safe_end = std::min(ref.end_idx, parsed[i].size());
 			for (size_t j = ref.start_idx; j < safe_end; ++j)
 			{
-				const auto & sv = parsed[i][j];
-				int occ = type_count[sv.type]++;
-				bool found = false;
-				for (const auto & slot : ref_slots)
-				{
-					if (slot.type == sv.type && slot.occurrence == occ)
-					{
-						found = true;
-						break;
-					}
-				}
+				const auto & sub_view = parsed[i][j];
+				int occurrence = type_count[sub_view.type]++;
 
-				if (!found)
-					ref_slots.push_back({ sv.type, occ });
+				if (!has_slot_in(ref_slots, sub_view.type, occurrence))
+					ref_slots.push_back({ sub_view.type, occurrence });
 			}
 
 			break;
@@ -857,7 +812,7 @@ static void align_ref_group_slots(
 
 	for (const auto & slot : ref_slots)
 	{
-		aligned_slot_t aligned;
+		aligned_slot_t aligned{};
 		aligned.key.type = slot.type;
 		aligned.key.occurrence = slot.occurrence;
 		aligned.indices.resize(ver_count);

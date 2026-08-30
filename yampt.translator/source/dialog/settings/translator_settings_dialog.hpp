@@ -6,9 +6,10 @@
 class QDialogButtonBox;
 class QListWidget;
 class QPushButton;
+class QScrollArea;
 class QStackedWidget;
 class settings_store_t;
-class appearance_settings_view_t;
+class translator_appearance_settings_view_t;
 class language_settings_view_t;
 class translation_settings_view_t;
 class shortcuts_settings_view_t;
@@ -29,6 +30,7 @@ signals:
 private:
 	void apply_all();
 	void update_ok_button_state();
+	QScrollArea * wrap_in_scroll_area(QWidget * content);
 
 	settings_store_t & m_settings;
 
@@ -37,7 +39,7 @@ private:
 	QDialogButtonBox * m_button_box = nullptr;
 	QPushButton * m_apply_button = nullptr;
 
-	appearance_settings_view_t * m_appearance_view = nullptr;
+	translator_appearance_settings_view_t * m_appearance_view = nullptr;
 	language_settings_view_t * m_language_view = nullptr;
 	translation_settings_view_t * m_translation_view = nullptr;
 	shortcuts_settings_view_t * m_shortcuts_view = nullptr;

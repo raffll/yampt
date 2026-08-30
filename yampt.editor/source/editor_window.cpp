@@ -4,12 +4,15 @@
 #include <settings_store.hpp>
 #include <theme_system.hpp>
 #include <QAction>
-#include <QCheckBox>
 #include <QCloseEvent>
+#include <QHBoxLayout>
+#include <QLineEdit>
 #include <QMenuBar>
 #include <QSettings>
+#include <QShortcut>
 #include <QStatusBar>
 #include <QToolBar>
+#include <QToolButton>
 #include <QVBoxLayout>
 
 static const QString config_path = "yEditor.ini";
@@ -32,6 +35,7 @@ editor_window_t::editor_window_t(QWidget * parent)
 	load_config();
 	setup_menu_bar();
 	setup_toolbar();
+	restore_panel_state();
 
 	connect(
 	    &theme_system_t::instance(),
@@ -75,6 +79,18 @@ void editor_window_t::setup_menu_bar()
 
 	file_menu->addSeparator();
 
+	auto * save_action = new QAction(tr("&Save"), this);
+	save_action->setToolTip(tr("Save the selected plugin to disk"));
+	file_menu->addAction(save_action);
+	connect(save_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_save);
+
+	auto * save_all_action = new QAction(tr("Save &All"), this);
+	save_all_action->setToolTip(tr("Save all modified plugins to disk"));
+	file_menu->addAction(save_all_action);
+	connect(save_all_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_save_all);
+
+	file_menu->addSeparator();
+
 	auto * quit_action = new QAction(tr("&Quit"), this);
 	quit_action->setShortcut(QKeySequence("Alt+F4"));
 	quit_action->setToolTip(tr("Exit the application"));
@@ -83,37 +99,39 @@ void editor_window_t::setup_menu_bar()
 
 	auto * view_menu = menuBar()->addMenu(tr("&View"));
 
-	auto * conflicts_action = new QAction(tr("&Conflicts Only"), this);
-	conflicts_action->setCheckable(true);
-	conflicts_action->setChecked(m_plugin_workspace_view->is_conflicts_only());
-	conflicts_action->setToolTip(tr("Show only conflicting records"));
-	view_menu->addAction(conflicts_action);
-	connect(conflicts_action, &QAction::toggled, m_plugin_workspace_view, &plugin_workspace_view_t::set_conflicts_only);
+	m_sidebar_toggle = new QAction(tr("Toggle &Sidebar"), this);
+	m_sidebar_toggle->setCheckable(true);
+	m_sidebar_toggle->setChecked(true);
+	m_sidebar_toggle->setToolTip(tr("Show or hide the navigation panel"));
+	view_menu->addAction(m_sidebar_toggle);
+	connect(m_sidebar_toggle, &QAction::toggled, m_plugin_workspace_view->sidebar_widget(), &QWidget::setVisible);
 
-	auto * hide_dup_action = new QAction(tr("&Hide Duplicate Columns"), this);
+	m_bottom_toggle = new QAction(tr("Toggle &Bottom Panel"), this);
+	m_bottom_toggle->setCheckable(true);
+	m_bottom_toggle->setChecked(true);
+	m_bottom_toggle->setToolTip(tr("Show or hide the edit and log panel"));
+	view_menu->addAction(m_bottom_toggle);
+	connect(m_bottom_toggle, &QAction::toggled, m_plugin_workspace_view->bottom_panel_widget(), &QWidget::setVisible);
+
+	view_menu->addSeparator();
+
+	auto * hide_dup_action = new QAction(tr("Show &Only One Column Per Plugin"), this);
 	hide_dup_action->setCheckable(true);
 	hide_dup_action->setChecked(m_plugin_workspace_view->is_hide_duplicates());
-	hide_dup_action->setToolTip(tr("Hide duplicate columns from the same plugin"));
+	hide_dup_action->setToolTip(tr("Keep only each plugin's last version of a record"));
 	view_menu->addAction(hide_dup_action);
 	connect(hide_dup_action, &QAction::toggled, m_plugin_workspace_view, &plugin_workspace_view_t::set_hide_duplicates);
 
-	auto * show_deleted_action = new QAction(tr("Show &Deleted Strikeout"), this);
+	auto * show_deleted_action = new QAction(tr("Strike Out &Deleted Records"), this);
 	show_deleted_action->setCheckable(true);
 	show_deleted_action->setChecked(m_plugin_workspace_view->is_show_deleted_strikeout());
-	show_deleted_action->setToolTip(tr("Strikeout deleted records and cell references"));
+	show_deleted_action->setToolTip(tr("Strike out deleted records and cell references"));
 	view_menu->addAction(show_deleted_action);
 	connect(
 	    show_deleted_action,
 	    &QAction::toggled,
 	    m_plugin_workspace_view,
 	    &plugin_workspace_view_t::set_show_deleted_strikeout);
-
-	view_menu->addSeparator();
-
-	auto * filter_action = new QAction(tr("&Filter..."), this);
-	filter_action->setToolTip(tr("Open the advanced filter dialog"));
-	view_menu->addAction(filter_action);
-	connect(filter_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_advanced_filter);
 
 	auto * tools_menu = menuBar()->addMenu(tr("&Tools"));
 	auto * settings_action = new QAction(tr("&Preferences..."), this);
@@ -130,18 +148,116 @@ void editor_window_t::setup_toolbar()
 
 	setContextMenuPolicy(Qt::PreventContextMenu);
 
-	auto * merge_action = new QAction(tr("Create Merged Patch"), this);
-	merge_action->setToolTip(tr("Create a merged patch from loaded plugins"));
-	toolbar->addAction(merge_action);
-	connect(
-	    merge_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_create_merged_patch);
+	auto * merge_btn = new QToolButton(this);
+	merge_btn->setText(tr("Create Merged Patch"));
+	merge_btn->setToolTip(tr("Create a merged patch from loaded plugins"));
+	toolbar->addWidget(merge_btn);
+	connect(merge_btn, &QToolButton::clicked, m_plugin_workspace_view, &plugin_workspace_view_t::on_create_merged_patch);
 
-	auto * clean_action = new QAction(tr("Clean All"), this);
-	clean_action->setToolTip(tr("Remove evil GMSTs and junk cells from all plugins"));
-	toolbar->addAction(clean_action);
-	connect(clean_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_clean_all);
+	auto * clean_btn = new QToolButton(this);
+	clean_btn->setText(tr("Clean All"));
+	clean_btn->setToolTip(tr("Remove evil GMSTs and junk cells from all plugins"));
+	toolbar->addWidget(clean_btn);
+	connect(clean_btn, &QToolButton::clicked, m_plugin_workspace_view, &plugin_workspace_view_t::on_clean_all);
 
 	toolbar->addSeparator();
+
+	m_editing_btn = new QToolButton(this);
+	m_editing_btn->setText(tr("Enable Editing"));
+	m_editing_btn->setToolTip(tr("Allow editing decoded fields directly in all plugins"));
+	m_editing_btn->setCheckable(true);
+	m_editing_btn->setChecked(false);
+	toolbar->addWidget(m_editing_btn);
+	connect(
+	    m_editing_btn,
+	    &QToolButton::toggled,
+	    this,
+	    [this](bool checked) { m_plugin_workspace_view->set_editing_enabled(checked); });
+
+	toolbar->addSeparator();
+
+	m_no_filters_btn = new QToolButton(this);
+	m_no_filters_btn->setText(tr("No Filters"));
+	m_no_filters_btn->setToolTip(tr("Clear all filters and search"));
+	m_no_filters_btn->setCheckable(true);
+	m_no_filters_btn->setChecked(true);
+	toolbar->addWidget(m_no_filters_btn);
+
+	m_conflicts_action = new QAction(tr("Conflicts Only"), this);
+	m_conflicts_action->setCheckable(true);
+	m_conflicts_action->setChecked(m_plugin_workspace_view->is_conflicts_only());
+	m_conflicts_action->setToolTip(tr("Show only conflicting records"));
+	connect(
+	    m_conflicts_action,
+	    &QAction::toggled,
+	    m_plugin_workspace_view,
+	    &plugin_workspace_view_t::set_conflicts_only);
+
+	auto * conflicts_btn = new QToolButton(this);
+	conflicts_btn->setDefaultAction(m_conflicts_action);
+	toolbar->addWidget(conflicts_btn);
+
+	toolbar->addSeparator();
+
+	m_search_field = new QLineEdit(this);
+	m_search_field->setPlaceholderText(tr("Filter by..."));
+	m_search_field->setToolTip(tr("Search by record ID or display name"));
+	toolbar->addWidget(m_search_field);
+
+	m_case_sensitive_btn = new QToolButton(this);
+	m_case_sensitive_btn->setText(tr("Aa"));
+	m_case_sensitive_btn->setCheckable(true);
+	m_case_sensitive_btn->setToolTip(tr("Case-sensitive search"));
+	toolbar->addWidget(m_case_sensitive_btn);
+
+	m_regex_btn = new QToolButton(this);
+	m_regex_btn->setText(tr(".*"));
+	m_regex_btn->setCheckable(true);
+	m_regex_btn->setToolTip(tr("Regular expression search"));
+	toolbar->addWidget(m_regex_btn);
+
+	m_search_id_btn = new QToolButton(this);
+	m_search_id_btn->setText(tr("ID"));
+	m_search_id_btn->setCheckable(true);
+	m_search_id_btn->setChecked(true);
+	m_search_id_btn->setToolTip(tr("Search in record ID"));
+	toolbar->addWidget(m_search_id_btn);
+
+	m_search_name_btn = new QToolButton(this);
+	m_search_name_btn->setText(tr("Name"));
+	m_search_name_btn->setCheckable(true);
+	m_search_name_btn->setChecked(true);
+	m_search_name_btn->setToolTip(tr("Search in display name"));
+	toolbar->addWidget(m_search_name_btn);
+
+	toolbar->addSeparator();
+
+	auto * filter_btn = new QToolButton(this);
+	filter_btn->setText(tr("Advanced Filters..."));
+	filter_btn->setToolTip(tr("Open the advanced filter dialog"));
+	toolbar->addWidget(filter_btn);
+
+	connect(m_search_field, &QLineEdit::returnPressed, this, &editor_window_t::on_search_apply);
+	connect(filter_btn, &QToolButton::clicked, m_plugin_workspace_view, &plugin_workspace_view_t::on_advanced_filter);
+	connect(m_no_filters_btn, &QToolButton::clicked, this, [this](bool checked) {
+		if (checked)
+			on_reset_filters();
+		else
+			m_no_filters_btn->setChecked(true);
+	});
+	connect(
+	    m_plugin_workspace_view,
+	    &plugin_workspace_view_t::filters_active_changed,
+	    this,
+	    [this](bool active) { m_no_filters_btn->setChecked(!active); });
+	connect(
+	    m_plugin_workspace_view,
+	    &plugin_workspace_view_t::unsaved_changes_changed,
+	    this,
+	    &editor_window_t::set_unsaved_changes);
+
+	auto * escape_shortcut = new QShortcut(QKeySequence("Escape"), this);
+	connect(escape_shortcut, &QShortcut::activated, this, &editor_window_t::on_search_clear);
 
 	statusBar()->addWidget(m_plugin_workspace_view->status_label());
 	statusBar()->addPermanentWidget(m_plugin_workspace_view->count_label());
@@ -167,11 +283,63 @@ void editor_window_t::save_config()
 	settings.setValue("window/geometry", saveGeometry());
 	settings.setValue("window/state", saveState());
 
+	m_settings.set_sidebar_visible(m_sidebar_toggle->isChecked());
+	m_settings.set_bottom_visible(m_bottom_toggle->isChecked());
+
 	m_plugin_workspace_view->save_session_state();
+}
+
+void editor_window_t::restore_panel_state()
+{
+	m_sidebar_toggle->setChecked(m_settings.sidebar_visible());
+	m_bottom_toggle->setChecked(m_settings.bottom_visible());
+}
+
+void editor_window_t::on_search_apply()
+{
+	const auto query = m_search_field->text().toStdString();
+	const bool search_in_id = m_search_id_btn->isChecked();
+	const bool search_in_name = m_search_name_btn->isChecked();
+	const bool case_sensitive = m_case_sensitive_btn->isChecked();
+	const bool regex_mode = m_regex_btn->isChecked();
+
+	m_plugin_workspace_view->apply_search(query, search_in_id, search_in_name, case_sensitive, regex_mode);
+}
+
+void editor_window_t::on_search_clear()
+{
+	if (m_search_field->text().isEmpty())
+		return;
+
+	m_search_field->clear();
+	on_search_apply();
+}
+
+void editor_window_t::on_reset_filters()
+{
+	m_conflicts_action->setChecked(false);
+	m_search_field->clear();
+
+	m_plugin_workspace_view->reset_all_filters();
+}
+
+void editor_window_t::set_unsaved_changes(bool dirty)
+{
+	if (m_has_unsaved_changes == dirty)
+		return;
+
+	m_has_unsaved_changes = dirty;
+	setWindowTitle(m_has_unsaved_changes ? tr("yEditor *") : tr("yEditor"));
 }
 
 void editor_window_t::closeEvent(QCloseEvent * event)
 {
+	if (!m_plugin_workspace_view->confirm_discard_or_save_unsaved())
+	{
+		event->ignore();
+		return;
+	}
+
 	save_config();
 	event->accept();
 }

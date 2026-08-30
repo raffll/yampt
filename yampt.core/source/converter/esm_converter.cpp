@@ -121,10 +121,10 @@ void esm_converter_t::convert_record_content(const std::string & new_text)
 	esm.replace_record(rec_content);
 }
 
-void esm_converter_t::print_log_line(const rec_type_t type)
+void esm_converter_t::print_log_line(const rec_type_t record_type)
 {
 	std::string line =
-	    domain_types::type_to_str(type) + ": converted=" + std::to_string(counter_converted) +
+	    domain_types::type_to_str(record_type) + ": converted=" + std::to_string(counter_converted) +
 	    ", identical=" + std::to_string(counter_identical) + ", unchanged=" + std::to_string(counter_unchanged) +
 	    ", hyperlinks=" + std::to_string(counter_added) + ", total=" + std::to_string(counter_all) + "\r\n";
 
@@ -181,8 +181,19 @@ void esm_converter_t::convert_mast()
 	esm.set_value("MAST");
 	while (esm.get_value().exist)
 	{
-		const auto & prefix = esm.get_value().text.substr(0, esm.get_value().text.find_last_of("."));
-		const auto & suffix = esm.get_value().text.substr(esm.get_value().text.rfind("."));
+		const auto & mast_text = esm.get_value().text;
+		const auto dot_pos = mast_text.find_last_of(".");
+
+		if (dot_pos == std::string::npos)
+		{
+			const auto & new_text = mast_text + file_suffix + '\0';
+			convert_record_content(new_text);
+			esm.set_next_value("MAST");
+			continue;
+		}
+
+		const auto & prefix = mast_text.substr(0, dot_pos);
+		const auto & suffix = mast_text.substr(dot_pos);
 		const auto & new_text = prefix + file_suffix + suffix + '\0';
 		convert_record_content(new_text);
 		esm.set_next_value("MAST");
@@ -198,7 +209,7 @@ void esm_converter_t::make_header()
 	esm.set_value("HEDR");
 	std::string hedr = esm.get_value().content;
 	std::string version = hedr.substr(0, 4);
-	std::string type = hedr.substr(4, 4);
+	std::string hedr_type = hedr.substr(4, 4);
 	std::string author = hedr.substr(8, 32);
 	std::string description = hedr.substr(40, 256);
 	std::string rec_num = hedr.substr(296, 4);
@@ -211,7 +222,7 @@ void esm_converter_t::make_header()
 	size_t num = esm.get_modified_count();
 	rec_num = domain_types::convert_uint_to_string_byte_array(num);
 
-	hedr = version + type + author + description + rec_num;
+	hedr = version + hedr_type + author + description + rec_num;
 	convert_record_content(hedr);
 
 	std::string rec_content = esm.get_record().content;
@@ -232,7 +243,7 @@ void esm_converter_t::make_header()
 void esm_converter_t::convert_cell()
 {
 	reset_counters();
-	const auto & type = rec_type_t::cell;
+	const auto & record_type = rec_type_t::cell;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -245,7 +256,7 @@ void esm_converter_t::convert_cell()
 			const auto & key_text = esm.get_value().text;
 			const auto & old_text = esm.get_value().text;
 			std::string new_text;
-			if (!make_new_text({ key_text, old_text, type }, new_text))
+			if (!make_new_text({ key_text, old_text, record_type }, new_text))
 				continue;
 
 			new_text += '\0';
@@ -258,7 +269,7 @@ void esm_converter_t::convert_cell()
 void esm_converter_t::convert_pgrd()
 {
 	reset_counters();
-	const auto & type = rec_type_t::cell;
+	const auto & record_type = rec_type_t::cell;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -271,7 +282,7 @@ void esm_converter_t::convert_pgrd()
 			const auto & key_text = esm.get_value().text;
 			const auto & old_text = esm.get_value().text;
 			std::string new_text;
-			if (!make_new_text({ key_text, old_text, type }, new_text))
+			if (!make_new_text({ key_text, old_text, record_type }, new_text))
 				continue;
 
 			new_text += '\0';
@@ -284,7 +295,7 @@ void esm_converter_t::convert_pgrd()
 void esm_converter_t::convert_anam()
 {
 	reset_counters();
-	const auto & type = rec_type_t::cell;
+	const auto & record_type = rec_type_t::cell;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -297,7 +308,7 @@ void esm_converter_t::convert_anam()
 			const auto & key_text = esm.get_value().text;
 			const auto & old_text = esm.get_value().text;
 			std::string new_text;
-			if (!make_new_text({ key_text, old_text, type }, new_text))
+			if (!make_new_text({ key_text, old_text, record_type }, new_text))
 				continue;
 
 			new_text += '\0';
@@ -310,7 +321,7 @@ void esm_converter_t::convert_anam()
 void esm_converter_t::convert_scvr()
 {
 	reset_counters();
-	const auto & type = rec_type_t::cell;
+	const auto & record_type = rec_type_t::cell;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -329,7 +340,7 @@ void esm_converter_t::convert_scvr()
 
 			const auto & key_text = scvr_text.substr(5);
 			std::string new_text;
-			if (make_new_text({ key_text, key_text, type }, new_text))
+			if (make_new_text({ key_text, key_text, record_type }, new_text))
 				convert_record_content(scvr_text.substr(0, 5) + new_text);
 
 			esm.set_next_value("SCVR");
@@ -341,7 +352,7 @@ void esm_converter_t::convert_scvr()
 void esm_converter_t::convert_dnam()
 {
 	reset_counters();
-	const auto & type = rec_type_t::cell;
+	const auto & record_type = rec_type_t::cell;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -354,7 +365,7 @@ void esm_converter_t::convert_dnam()
 			const auto & key_text = esm.get_value().text;
 			const auto & old_text = esm.get_value().text;
 			std::string new_text;
-			if (make_new_text({ key_text, old_text, type }, new_text))
+			if (make_new_text({ key_text, old_text, record_type }, new_text))
 			{
 				new_text += '\0';
 				convert_record_content(new_text);
@@ -368,7 +379,7 @@ void esm_converter_t::convert_dnam()
 void esm_converter_t::convert_cndt()
 {
 	reset_counters();
-	const auto & type = rec_type_t::cell;
+	const auto & record_type = rec_type_t::cell;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -381,7 +392,7 @@ void esm_converter_t::convert_cndt()
 			const auto & key_text = esm.get_value().text;
 			const auto & old_text = esm.get_value().text;
 			std::string new_text;
-			if (make_new_text({ key_text, old_text, type }, new_text))
+			if (make_new_text({ key_text, old_text, record_type }, new_text))
 			{
 				new_text += '\0';
 				convert_record_content(new_text);
@@ -395,7 +406,7 @@ void esm_converter_t::convert_cndt()
 void esm_converter_t::convert_gmst()
 {
 	reset_counters();
-	const auto & type = rec_type_t::gmst;
+	const auto & record_type = rec_type_t::gmst;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -409,7 +420,7 @@ void esm_converter_t::convert_gmst()
 			const auto & key_text = esm.get_key().text;
 			const auto & old_text = esm.get_value().text;
 			std::string new_text;
-			if (!make_new_text({ key_text, old_text, type }, new_text))
+			if (!make_new_text({ key_text, old_text, record_type }, new_text))
 				continue;
 
 			add_null_terminator_if_empty(new_text);
@@ -422,7 +433,7 @@ void esm_converter_t::convert_gmst()
 void esm_converter_t::convert_fnam()
 {
 	reset_counters();
-	const auto & type = rec_type_t::fnam;
+	const auto & record_type = rec_type_t::fnam;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -436,7 +447,7 @@ void esm_converter_t::convert_fnam()
 			const auto & key_text = esm.get_record().id + "^" + esm.get_key().text;
 			const auto & old_text = esm.get_value().text;
 			std::string new_text;
-			if (!make_new_text({ key_text, old_text, type }, new_text))
+			if (!make_new_text({ key_text, old_text, record_type }, new_text))
 				continue;
 
 			new_text += '\0';
@@ -449,7 +460,7 @@ void esm_converter_t::convert_fnam()
 void esm_converter_t::convert_desc()
 {
 	reset_counters();
-	const auto & type = rec_type_t::desc;
+	const auto & record_type = rec_type_t::desc;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -465,7 +476,7 @@ void esm_converter_t::convert_desc()
 		const auto & key_text = record_id + "^" + esm.get_key().text;
 		const auto & old_text = esm.get_value().text;
 		std::string new_text;
-		if (!make_new_text({ key_text, old_text, type }, new_text))
+		if (!make_new_text({ key_text, old_text, record_type }, new_text))
 			continue;
 
 		if (record_id == "BSGN")
@@ -481,7 +492,7 @@ void esm_converter_t::convert_desc()
 void esm_converter_t::convert_text()
 {
 	reset_counters();
-	const auto & type = rec_type_t::text;
+	const auto & record_type = rec_type_t::text;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -495,7 +506,7 @@ void esm_converter_t::convert_text()
 			const auto & key_text = esm.get_key().text;
 			const auto & old_text = esm.get_value().text;
 			std::string new_text;
-			if (!make_new_text({ key_text, old_text, type }, new_text))
+			if (!make_new_text({ key_text, old_text, record_type }, new_text))
 				continue;
 
 			add_null_terminator_if_empty(new_text);
@@ -508,7 +519,7 @@ void esm_converter_t::convert_text()
 void esm_converter_t::convert_rnam()
 {
 	reset_counters();
-	const auto & type = rec_type_t::rnam;
+	const auto & record_type = rec_type_t::rnam;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -525,7 +536,7 @@ void esm_converter_t::convert_rnam()
 			const auto & key_text = esm.get_key().text + "^" + std::to_string(esm.get_value().counter);
 			const auto & old_text = esm.get_value().text;
 			std::string new_text;
-			if (make_new_text({ key_text, old_text, type }, new_text))
+			if (make_new_text({ key_text, old_text, record_type }, new_text))
 			{
 				new_text.resize(32);
 				convert_record_content(new_text);
@@ -539,7 +550,7 @@ void esm_converter_t::convert_rnam()
 void esm_converter_t::convert_indx()
 {
 	reset_counters();
-	const auto & type = rec_type_t::indx;
+	const auto & record_type = rec_type_t::indx;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -554,7 +565,7 @@ void esm_converter_t::convert_indx()
 		const auto & key_text = esm.get_record().id + "^" + domain_types::get_indx(esm.get_key().content);
 		const auto & old_text = esm.get_value().text;
 		std::string new_text;
-		if (!make_new_text({ key_text, old_text, type }, new_text))
+		if (!make_new_text({ key_text, old_text, record_type }, new_text))
 			continue;
 
 		add_null_terminator_if_empty(new_text);
@@ -566,7 +577,7 @@ void esm_converter_t::convert_indx()
 void esm_converter_t::convert_dial()
 {
 	reset_counters();
-	const auto & type = rec_type_t::dial;
+	const auto & record_type = rec_type_t::dial;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -580,7 +591,7 @@ void esm_converter_t::convert_dial()
 			const auto & key_text = esm.get_value().text;
 			const auto & old_text = esm.get_value().text;
 			std::string new_text;
-			if (!make_new_text({ key_text, old_text, type }, new_text))
+			if (!make_new_text({ key_text, old_text, record_type }, new_text))
 				continue;
 
 			new_text += '\0';
@@ -594,9 +605,10 @@ void esm_converter_t::convert_info()
 {
 	std::string key_prefix;
 	size_t dial_index = 0;
+	bool dial_found = false;
 
 	reset_counters();
-	const auto & type = rec_type_t::info;
+	const auto & record_type = rec_type_t::info;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -608,11 +620,15 @@ void esm_converter_t::convert_info()
 			{
 				key_prefix = domain_types::get_dialog_type(esm.get_key().content) + "^" + esm.get_value().text;
 				dial_index = i;
+				dial_found = true;
 			}
 			continue;
 		}
 
 		if (esm.get_record().id != "INFO")
+			continue;
+
+		if (!dial_found)
 			continue;
 
 		esm.set_key("INAM");
@@ -623,7 +639,7 @@ void esm_converter_t::convert_info()
 		const auto & key_text = key_prefix + "^" + esm.get_key().text;
 		const auto & old_text = esm.get_value().text;
 		std::string new_text;
-		if (!make_new_text({ key_text, old_text, type }, new_text))
+		if (!make_new_text({ key_text, old_text, record_type }, new_text))
 			continue;
 
 		if (add_hyperlinks)
@@ -648,9 +664,10 @@ void esm_converter_t::convert_bnam()
 	size_t dial_index = 0;
 	std::string dial_type;
 	std::string dial_name;
+	bool dial_found = false;
 
 	reset_counters();
-	const auto & type = rec_type_t::bnam;
+	const auto & record_type = rec_type_t::bnam;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -663,12 +680,16 @@ void esm_converter_t::convert_bnam()
 				dial_index = i;
 				dial_type = domain_types::get_dialog_type(esm.get_key().content);
 				dial_name = esm.get_value().text;
+				dial_found = true;
 			}
 
 			continue;
 		}
 
 		if (esm.get_record().id != "INFO")
+			continue;
+
+		if (!dial_found)
 			continue;
 
 		esm.set_key("INAM");
@@ -681,7 +702,7 @@ void esm_converter_t::convert_bnam()
 		const auto & old_script = esm.get_value().text;
 
 		counter_all++;
-		script_parser_t parser(type, merger, key_text, get_name().full, old_script);
+		script_parser_t parser(record_type, merger, key_text, get_name().full, old_script);
 
 		std::string new_script = parser.get_new_script();
 		if (is_identical(old_script, new_script))
@@ -698,7 +719,7 @@ void esm_converter_t::convert_scpt()
 {
 	std::string old_scdt;
 	reset_counters();
-	const auto & type = rec_type_t::sctx;
+	const auto & record_type = rec_type_t::sctx;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -717,7 +738,7 @@ void esm_converter_t::convert_scpt()
 		const auto & old_script = esm.get_value().text;
 
 		counter_all++;
-		script_parser_t parser(type, merger, key_text, get_name().full, old_script, old_scdt);
+		script_parser_t parser(record_type, merger, key_text, get_name().full, old_script, old_scdt);
 
 		const auto & new_script = parser.get_new_script();
 		if (is_identical(old_script, new_script))

@@ -1,0 +1,17 @@
+{
+    "name": "Google Free",
+    "kind": "simple",
+    "endpoint": "https://translate.googleapis.com/translate_a/single",
+    "body_format": "query",
+    "headers": {},
+    "body": {
+        "client": "gtx",
+        "sl": "{{source_lang}}",
+        "tl": "{{target_lang}}",
+        "dt": "t",
+        "q": "{{text}}"
+    },
+    "response_path": "[0].[0].[0]",
+    "quota_limit": 0,
+    "settings": []
+}

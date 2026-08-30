@@ -11,11 +11,6 @@
 #include <QTreeWidget>
 #include <QVBoxLayout>
 
-static std::string normalize_and_lower(std::string_view input)
-{
-	return string_utils::to_lower(string_utils::normalize_path(input));
-}
-
 dict_selection_dialog_t::dict_selection_dialog_t(
     const std::vector<dict_entry_t> & entries,
     const std::vector<std::string> & saved_order,
@@ -69,10 +64,7 @@ void dict_selection_dialog_t::populate_tree(const std::vector<dict_entry_t> & en
 
 void dict_selection_dialog_t::add_tree_root_node(const std::string & root_path, const root_content_t & content)
 {
-	auto root_label = std::string(string_utils::extract_filename(root_path));
-
-	if (root_label == "workspace")
-		root_label = workspace_label;
+	const auto root_label = derive_root_label(root_path);
 
 	auto * root_node = new QTreeWidgetItem(m_tree);
 	root_node->setText(0, QString::fromStdString(root_label));
@@ -188,6 +180,12 @@ std::vector<std::string> dict_selection_dialog_t::get_selected_paths() const
 	return result;
 }
 
+void dict_selection_dialog_t::set_allow_empty_selection(bool allowed)
+{
+	m_allow_empty_selection = allowed;
+	update_ok_button();
+}
+
 void dict_selection_dialog_t::on_tree_item_changed(QTreeWidgetItem * item, int)
 {
 	const auto & path_data = item->data(0, Qt::UserRole).toString();
@@ -245,5 +243,5 @@ void dict_selection_dialog_t::on_move_down()
 
 void dict_selection_dialog_t::update_ok_button()
 {
-	m_button_box->button(QDialogButtonBox::Ok)->setEnabled(m_order_list->count() > 0);
+	m_button_box->button(QDialogButtonBox::Ok)->setEnabled(m_allow_empty_selection || m_order_list->count() > 0);
 }

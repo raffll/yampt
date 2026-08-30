@@ -64,9 +64,17 @@ std::string path_resolver_t::resolve_game_data_path() const
 			return data_files.toStdString();
 	}
 
-	const QStringList standard_paths = { "C:/Program Files (x86)/Steam/steamapps/common/Morrowind/Data Files",
-		                                 "C:/Program Files/Steam/steamapps/common/Morrowind/Data Files",
-		                                 "C:/GOG Games/Morrowind/Data Files" };
+	const QStringList standard_paths = {
+#ifdef Q_OS_WIN
+		"C:/Program Files (x86)/Steam/steamapps/common/Morrowind/Data Files",
+		"C:/Program Files/Steam/steamapps/common/Morrowind/Data Files",
+		"C:/GOG Games/Morrowind/Data Files"
+#else
+		QDir::homePath() + "/.steam/steam/steamapps/common/Morrowind/Data Files",
+		QDir::homePath() + "/.local/share/Steam/steamapps/common/Morrowind/Data Files",
+		QDir::homePath() + "/.local/share/openmw/data"
+#endif
+	};
 
 	for (const auto & path : standard_paths)
 	{

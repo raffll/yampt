@@ -1,16 +1,19 @@
-﻿#include "nav_tree_model.hpp"
+#include "nav_tree_model.hpp"
+#include "editable_column_set.hpp"
 #include <io/codepage.hpp>
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
 #include <cstring>
+#include <map>
 #include <set>
 #include <theme_system.hpp>
+#include <QBrush>
 #include <QFont>
 
-static int conflict_this_priority(conflict_this_t ct)
+static int conflict_this_priority(conflict_this_t conflict)
 {
-	switch (ct)
+	switch (conflict)
 	{
 	case conflict_this_t::unknown:
 		return 0;
@@ -34,8 +37,8 @@ static int conflict_this_priority(conflict_this_t ct)
 static size_t unique_plugin_count(const conflict_entry_t & entry)
 {
 	std::set<int> plugins;
-	for (const auto & v : entry.versions)
-		plugins.insert(v.plugin_idx);
+	for (const auto & version : entry.versions)
+		plugins.insert(version.plugin_idx);
 	return plugins.size();
 }
 
@@ -47,19 +50,16 @@ conflict_this_t nav_tree_model_t::record_foreground_for_plugin(const conflict_en
 	if (m_filter.hide_duplicates() && unique_plugin_count(entry) <= 1)
 		return conflict_this_t::unknown;
 
-	for (const auto & v : entry.versions)
+	for (const auto & version : entry.versions)
 	{
-		if (v.plugin_idx != plugin_idx)
+		if (version.plugin_idx != plugin_idx)
 			continue;
 
-		return v.status;
+		return version.status;
 	}
 
 	return conflict_this_t::unknown;
 }
-
-#include <map>
-#include <QBrush>
 
 static int natural_compare(const std::string & a, const std::string & b)
 {
@@ -227,6 +227,16 @@ void nav_tree_model_t::set_patch_plugins(const std::set<std::string> * patch)
 	m_filter.set_patch_plugins(patch);
 }
 
+void nav_tree_model_t::set_dirty_plugins(const std::set<std::string> * dirty)
+{
+	m_filter.set_dirty_plugins(dirty);
+}
+
+void nav_tree_model_t::set_editable_columns(const editable_column_set_t * editable)
+{
+	m_editable_columns = editable;
+}
+
 void nav_tree_model_t::build_tree()
 {
 	m_tree.clear();
@@ -244,15 +254,10 @@ void nav_tree_model_t::build_tree()
 		{
 			const auto & entry = entries[ei];
 
-			bool has_version = false;
-			for (const auto & v : entry.versions)
-			{
-				if (v.plugin_idx == p)
-				{
-					has_version = true;
-					break;
-				}
-			}
+			const bool has_version = std::any_of(
+			    entry.versions.begin(),
+			    entry.versions.end(),
+			    [p](const auto & version) { return version.plugin_idx == p; });
 
 			if (!has_version)
 				continue;
@@ -279,11 +284,17 @@ void nav_tree_model_t::build_tree()
 		    file_node.groups.end(),
 		    [](const type_group_t & a, const type_group_t & b)
 		{
-			const char * na = type_to_display_name(a.type);
-			const char * nb = type_to_display_name(b.type);
-			const char * sa = na ? na : a.type.c_str();
-			const char * sb = nb ? nb : b.type.c_str();
-			return std::strcmp(sa, sb) < 0;
+			if (a.type == "TES3")
+				return true;
+
+			if (b.type == "TES3")
+				return false;
+
+			const char * name_a = type_to_display_name(a.type);
+			const char * name_b = type_to_display_name(b.type);
+			const char * sort_a = name_a ? name_a : a.type.c_str();
+			const char * sort_b = name_b ? name_b : b.type.c_str();
+			return std::strcmp(sort_a, sort_b) < 0;
 		});
 
 		m_tree.push_back(std::move(file_node));
@@ -298,46 +309,24 @@ QModelIndex nav_tree_model_t::index(int row, int column, const QModelIndex & par
 		return {};
 
 	if (!parent.isValid())
-	{
-		if (row < 0 || row >= static_cast<int>(m_tree.size()))
-			return {};
-
-		return createIndex(row, column, nullptr);
-	}
+		return index_for_root_level(row, column);
 
 	void * ptr = parent.internalPointer();
 
 	if (ptr == nullptr)
 	{
-		int file_idx = parent.row();
-		if (file_idx < 0 || file_idx >= static_cast<int>(m_tree.size()))
+		int parent_row = parent.row();
+		if (parent_row < 0 || parent_row >= static_cast<int>(m_tree.size()))
 			return {};
 
-		const auto & file_node = m_tree[static_cast<size_t>(file_idx)];
+		const auto & file_node = m_tree[static_cast<size_t>(parent_row)];
 		if (row < 0 || row >= static_cast<int>(file_node.groups.size()))
 			return {};
 
 		return createIndex(row, column, const_cast<file_node_t *>(&file_node));
 	}
 
-	const auto * file_ptr = static_cast<const file_node_t *>(ptr);
-	for (size_t fi = 0; fi < m_tree.size(); ++fi)
-	{
-		if (&m_tree[fi] == file_ptr)
-		{
-			int group_idx = parent.row();
-			if (group_idx < 0 || group_idx >= static_cast<int>(file_ptr->groups.size()))
-				return {};
-
-			const auto & group = file_ptr->groups[static_cast<size_t>(group_idx)];
-			if (row < 0 || row >= static_cast<int>(group.records.size()))
-				return {};
-
-			return createIndex(row, column, const_cast<type_group_t *>(&group));
-		}
-	}
-
-	return {};
+	return index_for_esm_group(ptr, parent.row(), row, column);
 }
 
 QModelIndex nav_tree_model_t::parent(const QModelIndex & child) const
@@ -350,15 +339,15 @@ QModelIndex nav_tree_model_t::parent(const QModelIndex & child) const
 	if (ptr == nullptr)
 		return {};
 
-	for (size_t fi = 0; fi < m_tree.size(); ++fi)
+	for (size_t file_idx = 0; file_idx < m_tree.size(); ++file_idx)
 	{
-		if (ptr == &m_tree[fi])
-			return createIndex(static_cast<int>(fi), 0, nullptr);
+		if (ptr == &m_tree[file_idx])
+			return createIndex(static_cast<int>(file_idx), 0, nullptr);
 
-		for (size_t gi = 0; gi < m_tree[fi].groups.size(); ++gi)
+		for (size_t group_idx = 0; group_idx < m_tree[file_idx].groups.size(); ++group_idx)
 		{
-			if (ptr == &m_tree[fi].groups[gi])
-				return createIndex(static_cast<int>(gi), 0, const_cast<file_node_t *>(&m_tree[fi]));
+			if (ptr == &m_tree[file_idx].groups[group_idx])
+				return createIndex(static_cast<int>(group_idx), 0, const_cast<file_node_t *>(&m_tree[file_idx]));
 		}
 	}
 
@@ -384,16 +373,20 @@ int nav_tree_model_t::rowCount(const QModelIndex & parent) const
 		return static_cast<int>(m_tree[static_cast<size_t>(file_idx)].groups.size());
 	}
 
-	for (size_t fi = 0; fi < m_tree.size(); ++fi)
+	for (size_t file_idx = 0; file_idx < m_tree.size(); ++file_idx)
 	{
-		if (ptr == &m_tree[fi])
-		{
-			int group_idx = parent.row();
-			if (group_idx < 0 || group_idx >= static_cast<int>(m_tree[fi].groups.size()))
-				return 0;
+		if (ptr != &m_tree[file_idx])
+			continue;
 
-			return static_cast<int>(m_tree[fi].groups[static_cast<size_t>(group_idx)].records.size());
-		}
+		int group_idx = parent.row();
+		if (group_idx < 0 || group_idx >= static_cast<int>(m_tree[file_idx].groups.size()))
+			return 0;
+
+		const auto & group = m_tree[file_idx].groups[static_cast<size_t>(group_idx)];
+		if (group.type == "TES3")
+			return 0;
+
+		return static_cast<int>(group.records.size());
 	}
 
 	return 0;
@@ -426,249 +419,12 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 		return {};
 
 	void * ptr = index.internalPointer();
-	const auto & entries = m_scan.entries();
-	int col = index.column();
+	int column = index.column();
 
 	if (ptr == nullptr)
-	{
-		int file_idx = index.row();
-		if (file_idx < 0 || file_idx >= static_cast<int>(m_tree.size()))
-			return {};
+		return data_for_root_level(index.row(), column, role);
 
-		const auto & file_node = m_tree[static_cast<size_t>(file_idx)];
-
-		if (role == Qt::DisplayRole && col == 0)
-		{
-			char buf[64];
-			std::snprintf(
-			    buf,
-			    sizeof(buf),
-			    "[%03d] %s",
-			    file_node.plugin_idx,
-			    m_scan.plugin_filename(file_node.plugin_idx).c_str());
-
-			const auto & filename = m_scan.plugin_filename(file_node.plugin_idx);
-			if (m_filter.excluded_plugins() && m_filter.excluded_plugins()->count(filename))
-				return QString::fromUtf8("\xF0\x9F\x94\x92 ") + QString::fromUtf8(buf);
-
-			if (m_filter.patch_plugins() && m_filter.patch_plugins()->count(filename))
-				return QString::fromUtf8("\xF0\x9F\x9B\xA1 ") + QString::fromUtf8(buf);
-
-			if (m_scan.is_merge_plugin(file_node.plugin_idx))
-				return QString::fromUtf8("\xE2\x9A\x99 ") + QString::fromUtf8(buf);
-
-			const auto & full_path = m_scan.plugin_path(file_node.plugin_idx);
-			const bool is_overridden = full_path.find("/overwrite/") != std::string::npos ||
-			                           full_path.find("\\overwrite\\") != std::string::npos;
-
-			const bool is_master = filename.size() > 4 && (filename.compare(filename.size() - 4, 4, ".esm") == 0 ||
-			                                               filename.compare(filename.size() - 4, 4, ".ESM") == 0);
-			if (is_master)
-				return QString::fromUtf8("\xF0\x9F\x93\x9C ") + QString::fromUtf8(buf);
-
-			if (is_overridden)
-				return QString::fromUtf8("\xE2\x9A\xA1 ") + QString::fromUtf8(buf);
-
-			return QString::fromUtf8("\xF0\x9F\x93\x84 ") + QString::fromUtf8(buf);
-		}
-
-		if (role == Qt::BackgroundRole || role == Qt::ForegroundRole || role == Qt::FontRole)
-		{
-			conflict_all_t worst_all = conflict_all_t::only_one;
-			conflict_this_t worst_this = conflict_this_t::unknown;
-
-			for (const auto & group : file_node.groups)
-			{
-				for (const auto & rec : group.records)
-				{
-					const auto & e = entries[rec.entry_idx];
-					const auto ct = record_foreground_for_plugin(e, file_node.plugin_idx);
-
-					if (conflict_this_priority(ct) > conflict_this_priority(worst_this))
-						worst_this = ct;
-
-					if (e.conflict_all > worst_all)
-						worst_all = e.conflict_all;
-				}
-			}
-
-			if (role == Qt::BackgroundRole)
-			{
-				if (worst_all < conflict_all_t::no_conflict)
-					return {};
-
-				return QBrush(theme_system_t::instance().conflict_all_background(worst_all));
-			}
-
-			if (role == Qt::ForegroundRole)
-			{
-				if (worst_this == conflict_this_t::unknown)
-					return {};
-
-				return QBrush(theme_system_t::instance().conflict_this_foreground(worst_this));
-			}
-
-			if (role == Qt::FontRole && m_show_deleted_strikeout)
-			{
-				for (const auto & group : file_node.groups)
-				{
-					for (const auto & rec : group.records)
-					{
-						if (entries[rec.entry_idx].has_dele)
-						{
-							QFont font;
-							font.setStrikeOut(true);
-							return font;
-						}
-					}
-				}
-			}
-		}
-
-		if (role == Qt::ToolTipRole)
-		{
-			size_t itm = m_scan.itm_count(file_node.plugin_idx);
-			if (itm > 0)
-				return QString("%1 ITM records").arg(itm);
-		}
-
-		return {};
-	}
-
-	for (size_t fi = 0; fi < m_tree.size(); ++fi)
-	{
-		if (ptr == &m_tree[fi])
-		{
-			int group_idx = index.row();
-			if (group_idx < 0 || group_idx >= static_cast<int>(m_tree[fi].groups.size()))
-				return {};
-
-			const auto & group = m_tree[fi].groups[static_cast<size_t>(group_idx)];
-
-			if (role == Qt::DisplayRole && col == 0)
-			{
-				const char * display_name = type_to_display_name(group.type);
-				if (display_name)
-					return QString("%1 [%2]").arg(display_name).arg(group.records.size());
-
-				return QString("%1 (%2)").arg(QString::fromStdString(group.type)).arg(group.records.size());
-			}
-
-			if (role == Qt::BackgroundRole || role == Qt::ForegroundRole || role == Qt::FontRole)
-			{
-				conflict_all_t worst_all = conflict_all_t::only_one;
-				conflict_this_t worst_this = conflict_this_t::unknown;
-
-				for (const auto & rec : group.records)
-				{
-					const auto & e = entries[rec.entry_idx];
-					const auto ct = record_foreground_for_plugin(e, m_tree[fi].plugin_idx);
-
-					if (conflict_this_priority(ct) > conflict_this_priority(worst_this))
-						worst_this = ct;
-
-					if (e.conflict_all > worst_all)
-						worst_all = e.conflict_all;
-				}
-
-				if (role == Qt::BackgroundRole)
-				{
-					if (worst_all < conflict_all_t::no_conflict)
-						return {};
-
-					return QBrush(theme_system_t::instance().conflict_all_background(worst_all));
-				}
-
-				if (role == Qt::ForegroundRole)
-				{
-					if (worst_this == conflict_this_t::unknown)
-						return {};
-
-					return QBrush(theme_system_t::instance().conflict_this_foreground(worst_this));
-				}
-
-				if (role == Qt::FontRole && m_show_deleted_strikeout)
-				{
-					for (const auto & rec : group.records)
-					{
-						if (entries[rec.entry_idx].has_dele)
-						{
-							QFont font;
-							font.setStrikeOut(true);
-							return font;
-						}
-					}
-				}
-			}
-
-			return {};
-		}
-
-		for (size_t gi = 0; gi < m_tree[fi].groups.size(); ++gi)
-		{
-			if (ptr != &m_tree[fi].groups[gi])
-				continue;
-
-			int rec_idx = index.row();
-			if (rec_idx < 0 || rec_idx >= static_cast<int>(m_tree[fi].groups[gi].records.size()))
-				return {};
-
-			const auto & vis = m_tree[fi].groups[gi].records[static_cast<size_t>(rec_idx)];
-			const auto & entry = entries[vis.entry_idx];
-			const auto record_color = record_foreground_for_plugin(entry, m_tree[fi].plugin_idx);
-
-			if (role == Qt::DisplayRole)
-			{
-				if (col == 0)
-				{
-					auto display_id = QString::fromUtf8(decode_to_utf8(entry.record_id, m_display_codepage));
-					display_id.replace('|', " #");
-					return display_id;
-				}
-
-				if (col == 1)
-				{
-					if (!entry.display_name.empty())
-						return QString::fromUtf8(decode_to_utf8(entry.display_name, m_display_codepage));
-
-					if (entry.rec_type == "INFO")
-						return {};
-
-					return QString::fromUtf8(decode_to_utf8(entry.dial_name, m_display_codepage));
-				}
-			}
-
-			if (role == Qt::BackgroundRole)
-			{
-				if (entry.conflict_all < conflict_all_t::no_conflict)
-					return {};
-
-				if (m_filter.hide_duplicates() && unique_plugin_count(entry) <= 1)
-					return {};
-
-				return QBrush(theme_system_t::instance().conflict_all_background(entry.conflict_all));
-			}
-
-			if (role == Qt::ForegroundRole)
-			{
-				if (record_color == conflict_this_t::unknown)
-					return {};
-
-				return QBrush(theme_system_t::instance().conflict_this_foreground(record_color));
-			}
-
-			if (role == Qt::FontRole && m_show_deleted_strikeout && entry.has_dele)
-			{
-				QFont font;
-				font.setStrikeOut(true);
-				return font;
-			}
-
-			return {};
-		}
-	}
-
-	return {};
+	return data_for_esm_nodes(ptr, index.row(), column, role);
 }
 
 Qt::ItemFlags nav_tree_model_t::flags(const QModelIndex & index) const
@@ -676,20 +432,20 @@ Qt::ItemFlags nav_tree_model_t::flags(const QModelIndex & index) const
 	if (!index.isValid())
 		return Qt::NoItemFlags;
 
-	Qt::ItemFlags f = Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+	Qt::ItemFlags base_flags = Qt::ItemIsEnabled | Qt::ItemIsSelectable;
 
 	void * ptr = index.internalPointer();
 
-	for (size_t fi = 0; fi < m_tree.size(); ++fi)
+	for (size_t file_idx = 0; file_idx < m_tree.size(); ++file_idx)
 	{
-		for (size_t gi = 0; gi < m_tree[fi].groups.size(); ++gi)
+		for (size_t group_idx = 0; group_idx < m_tree[file_idx].groups.size(); ++group_idx)
 		{
-			if (ptr == &m_tree[fi].groups[gi])
-				return f | Qt::ItemIsDragEnabled;
+			if (ptr == &m_tree[file_idx].groups[group_idx])
+				return base_flags | Qt::ItemIsDragEnabled;
 		}
 	}
 
-	return f;
+	return base_flags;
 }
 
 Qt::DropActions nav_tree_model_t::supportedDragActions() const
@@ -724,21 +480,21 @@ QModelIndex nav_tree_model_t::find_index(const std::string & rec_type, const std
 
 	const auto & entries = m_scan.entries();
 
-	for (size_t fi = 0; fi < m_tree.size(); ++fi)
+	for (size_t file_idx = 0; file_idx < m_tree.size(); ++file_idx)
 	{
-		for (size_t gi = 0; gi < m_tree[fi].groups.size(); ++gi)
+		for (size_t group_idx = 0; group_idx < m_tree[file_idx].groups.size(); ++group_idx)
 		{
-			const auto & group = m_tree[fi].groups[gi];
+			const auto & group = m_tree[file_idx].groups[group_idx];
 			if (group.type != rec_type)
 				continue;
 
-			for (size_t ri = 0; ri < group.records.size(); ++ri)
+			for (size_t record_idx = 0; record_idx < group.records.size(); ++record_idx)
 			{
-				const auto & entry = entries[group.records[ri].entry_idx];
+				const auto & entry = entries[group.records[record_idx].entry_idx];
 				if (entry.record_id != record_id)
 					continue;
 
-				return createIndex(static_cast<int>(ri), 0, const_cast<type_group_t *>(&group));
+				return createIndex(static_cast<int>(record_idx), 0, const_cast<type_group_t *>(&group));
 			}
 		}
 	}
@@ -763,29 +519,37 @@ nav_tree_model_t::node_info_t nav_tree_model_t::node_at(const QModelIndex & inde
 		return { m_tree[static_cast<size_t>(file_idx)].plugin_idx, {}, {} };
 	}
 
-	for (size_t fi = 0; fi < m_tree.size(); ++fi)
+	for (size_t file_idx = 0; file_idx < m_tree.size(); ++file_idx)
 	{
-		if (ptr == &m_tree[fi])
+		if (ptr == &m_tree[file_idx])
 		{
 			int group_idx = index.row();
-			if (group_idx < 0 || group_idx >= static_cast<int>(m_tree[fi].groups.size()))
-				return { m_tree[fi].plugin_idx, {}, {} };
+			if (group_idx < 0 || group_idx >= static_cast<int>(m_tree[file_idx].groups.size()))
+				return { m_tree[file_idx].plugin_idx, {}, {} };
 
-			return { m_tree[fi].plugin_idx, m_tree[fi].groups[static_cast<size_t>(group_idx)].type, {} };
+			const auto & group = m_tree[file_idx].groups[static_cast<size_t>(group_idx)];
+
+			if (group.type == "TES3" && !group.records.empty())
+			{
+				const auto & entry = entries[group.records[0].entry_idx];
+				return { m_tree[file_idx].plugin_idx, entry.rec_type, entry.record_id };
+			}
+
+			return { m_tree[file_idx].plugin_idx, group.type, {} };
 		}
 
-		for (size_t gi = 0; gi < m_tree[fi].groups.size(); ++gi)
+		for (size_t group_idx = 0; group_idx < m_tree[file_idx].groups.size(); ++group_idx)
 		{
-			if (ptr != &m_tree[fi].groups[gi])
+			if (ptr != &m_tree[file_idx].groups[group_idx])
 				continue;
 
 			int rec_idx = index.row();
-			if (rec_idx < 0 || rec_idx >= static_cast<int>(m_tree[fi].groups[gi].records.size()))
-				return { m_tree[fi].plugin_idx, m_tree[fi].groups[gi].type, {} };
+			if (rec_idx < 0 || rec_idx >= static_cast<int>(m_tree[file_idx].groups[group_idx].records.size()))
+				return { m_tree[file_idx].plugin_idx, m_tree[file_idx].groups[group_idx].type, {} };
 
-			const auto & vis = m_tree[fi].groups[gi].records[static_cast<size_t>(rec_idx)];
+			const auto & vis = m_tree[file_idx].groups[group_idx].records[static_cast<size_t>(rec_idx)];
 			const auto & entry = entries[vis.entry_idx];
-			return { m_tree[fi].plugin_idx, entry.rec_type, entry.record_id };
+			return { m_tree[file_idx].plugin_idx, entry.rec_type, entry.record_id };
 		}
 	}
 
@@ -808,7 +572,7 @@ void nav_tree_model_t::sort(int column, Qt::SortOrder order)
 void nav_tree_model_t::sort_records()
 {
 	const auto & entries = m_scan.entries();
-	const int col = m_sort_column;
+	const int column = m_sort_column;
 	const bool ascending = (m_sort_order == Qt::AscendingOrder);
 
 	for (auto & file_node : m_tree)
@@ -820,15 +584,298 @@ void nav_tree_model_t::sort_records()
 			    group.records.end(),
 			    [&](const visible_record_t & a, const visible_record_t & b)
 			{
-				const auto & ea = entries[a.entry_idx];
-				const auto & eb = entries[b.entry_idx];
+				const auto & entry_a = entries[a.entry_idx];
+				const auto & entry_b = entries[b.entry_idx];
 
-				const std::string & sa = (col == 0) ? ea.record_id : ea.display_name;
-				const std::string & sb = (col == 0) ? eb.record_id : eb.display_name;
+				const std::string & name_a = (column == 0) ? entry_a.record_id : entry_a.display_name;
+				const std::string & name_b = (column == 0) ? entry_b.record_id : entry_b.display_name;
 
-				const int cmp = natural_compare(sa, sb);
+				const int cmp = natural_compare(name_a, name_b);
 				return ascending ? (cmp < 0) : (cmp > 0);
 			});
 		}
 	}
+}
+
+QModelIndex nav_tree_model_t::index_for_root_level(int row, int column) const
+{
+	if (row < 0 || row >= static_cast<int>(m_tree.size()))
+		return {};
+
+	return createIndex(row, column, nullptr);
+}
+
+QModelIndex nav_tree_model_t::index_for_esm_group(void * ptr, int parent_row, int row, int column) const
+{
+	const auto * file_ptr = static_cast<const file_node_t *>(ptr);
+	for (size_t file_idx = 0; file_idx < m_tree.size(); ++file_idx)
+	{
+		if (&m_tree[file_idx] != file_ptr)
+			continue;
+
+		if (parent_row < 0 || parent_row >= static_cast<int>(file_ptr->groups.size()))
+			return {};
+
+		const auto & group = file_ptr->groups[static_cast<size_t>(parent_row)];
+		if (row < 0 || row >= static_cast<int>(group.records.size()))
+			return {};
+
+		return createIndex(row, column, const_cast<type_group_t *>(&group));
+	}
+
+	return {};
+}
+
+QVariant nav_tree_model_t::data_for_root_level(int row, int column, int role) const
+{
+	if (row < 0 || row >= static_cast<int>(m_tree.size()))
+		return {};
+
+	return data_for_file_node(row, column, role);
+}
+
+QVariant nav_tree_model_t::data_for_file_node(int row, int column, int role) const
+{
+	const auto & file_node = m_tree[static_cast<size_t>(row)];
+
+	if (role == Qt::DisplayRole && column == 0)
+		return file_node_display_text(file_node);
+
+	if (role == Qt::BackgroundRole || role == Qt::ForegroundRole || role == Qt::FontRole)
+		return file_node_appearance(file_node, role);
+
+	return {};
+}
+
+QVariant nav_tree_model_t::file_node_display_text(const file_node_t & file_node) const
+{
+	char display_buffer[64];
+	std::snprintf(
+	    display_buffer,
+	    sizeof(display_buffer),
+	    "[%03d] %s",
+	    file_node.plugin_idx,
+	    m_scan.plugin_filename(file_node.plugin_idx).c_str());
+
+	const auto & filename = m_scan.plugin_filename(file_node.plugin_idx);
+
+	std::string label = display_buffer;
+	if (m_filter.dirty_plugins() && m_filter.dirty_plugins()->count(filename))
+		label = "* " + label;
+
+	if (m_filter.excluded_plugins() && m_filter.excluded_plugins()->count(filename))
+		return QString::fromUtf8("\xF0\x9F\x94\x92 ") + QString::fromUtf8(label.c_str());
+
+	if (m_filter.patch_plugins() && m_filter.patch_plugins()->count(filename))
+		return QString::fromUtf8("\xF0\x9F\x9B\xA1 ") + QString::fromUtf8(label.c_str());
+
+	if (m_scan.is_merge_plugin(file_node.plugin_idx))
+		return QString::fromUtf8("\xE2\x9A\x99 ") + QString::fromUtf8(label.c_str());
+
+	const auto & full_path = m_scan.plugin_path(file_node.plugin_idx);
+	const bool is_overridden =
+	    full_path.find("/overwrite/") != std::string::npos || full_path.find("\\overwrite\\") != std::string::npos;
+
+	const bool is_master = filename.size() > 4 && (filename.compare(filename.size() - 4, 4, ".esm") == 0 ||
+	                                               filename.compare(filename.size() - 4, 4, ".ESM") == 0);
+	if (is_master)
+		return QString::fromUtf8("\xF0\x9F\x93\x9C ") + QString::fromUtf8(label.c_str());
+
+	if (is_overridden)
+		return QString::fromUtf8("\xE2\x9A\xA1 ") + QString::fromUtf8(label.c_str());
+
+	return QString::fromUtf8("\xF0\x9F\x93\x84 ") + QString::fromUtf8(label.c_str());
+}
+
+QVariant nav_tree_model_t::file_node_appearance(const file_node_t & file_node, int role) const
+{
+	const auto & entries = m_scan.entries();
+	conflict_all_t worst_all = conflict_all_t::only_one;
+	conflict_this_t worst_this = conflict_this_t::unknown;
+
+	for (const auto & group : file_node.groups)
+	{
+		for (const auto & rec : group.records)
+		{
+			const auto & entry = entries[rec.entry_idx];
+			const auto this_color = record_foreground_for_plugin(entry, file_node.plugin_idx);
+
+			if (conflict_this_priority(this_color) > conflict_this_priority(worst_this))
+				worst_this = this_color;
+
+			if (entry.conflict_all > worst_all)
+				worst_all = entry.conflict_all;
+		}
+	}
+
+	if (role == Qt::BackgroundRole)
+	{
+		if (worst_all < conflict_all_t::no_conflict)
+			return {};
+
+		return QBrush(theme_system_t::instance().conflict_all_background(worst_all));
+	}
+
+	if (role == Qt::ForegroundRole)
+	{
+		if (worst_this == conflict_this_t::unknown)
+			return {};
+
+		return QBrush(theme_system_t::instance().conflict_this_foreground(worst_this));
+	}
+
+	return {};
+}
+
+QVariant nav_tree_model_t::data_for_esm_nodes(void * ptr, int row, int column, int role) const
+{
+	(void)m_scan.entries();
+
+	for (size_t file_idx = 0; file_idx < m_tree.size(); ++file_idx)
+	{
+		if (ptr == &m_tree[file_idx])
+			return data_for_type_group(file_idx, row, column, role);
+
+		for (size_t group_idx = 0; group_idx < m_tree[file_idx].groups.size(); ++group_idx)
+		{
+			if (ptr != &m_tree[file_idx].groups[group_idx])
+				continue;
+
+			return data_for_record(file_idx, group_idx, row, column, role);
+		}
+	}
+
+	return {};
+}
+
+QVariant nav_tree_model_t::data_for_type_group(size_t file_idx, int row, int column, int role) const
+{
+	if (row < 0 || row >= static_cast<int>(m_tree[file_idx].groups.size()))
+		return {};
+
+	const auto & entries = m_scan.entries();
+	const auto & group = m_tree[file_idx].groups[static_cast<size_t>(row)];
+
+	if (role == Qt::DisplayRole && column == 0)
+	{
+		if (group.type == "TES3")
+			return tr("File Header");
+
+		const char * display_name = type_to_display_name(group.type);
+		if (display_name)
+			return QString("%1 [%2]").arg(display_name).arg(group.records.size());
+
+		return QString("%1 (%2)").arg(QString::fromStdString(group.type)).arg(group.records.size());
+	}
+
+	if (role != Qt::BackgroundRole && role != Qt::ForegroundRole && role != Qt::FontRole)
+		return {};
+
+	conflict_all_t worst_all = conflict_all_t::only_one;
+	conflict_this_t worst_this = conflict_this_t::unknown;
+
+	for (const auto & rec : group.records)
+	{
+		const auto & entry = entries[rec.entry_idx];
+		const auto this_color = record_foreground_for_plugin(entry, m_tree[file_idx].plugin_idx);
+
+		if (conflict_this_priority(this_color) > conflict_this_priority(worst_this))
+			worst_this = this_color;
+
+		if (entry.conflict_all > worst_all)
+			worst_all = entry.conflict_all;
+	}
+
+	if (role == Qt::BackgroundRole)
+	{
+		if (worst_all < conflict_all_t::no_conflict)
+			return {};
+
+		return QBrush(theme_system_t::instance().conflict_all_background(worst_all));
+	}
+
+	if (role == Qt::ForegroundRole)
+	{
+		if (worst_this == conflict_this_t::unknown)
+			return {};
+
+		return QBrush(theme_system_t::instance().conflict_this_foreground(worst_this));
+	}
+
+	if (role == Qt::FontRole && m_show_deleted_strikeout)
+	{
+		for (const auto & rec : group.records)
+		{
+			if (entries[rec.entry_idx].has_dele)
+			{
+				QFont font;
+				font.setStrikeOut(true);
+				return font;
+			}
+		}
+	}
+
+	return {};
+}
+
+QVariant nav_tree_model_t::data_for_record(size_t file_idx, size_t group_idx, int row, int column, int role) const
+{
+	const auto & entries = m_scan.entries();
+	const auto & group = m_tree[file_idx].groups[group_idx];
+
+	if (row < 0 || row >= static_cast<int>(group.records.size()))
+		return {};
+
+	const auto & vis = group.records[static_cast<size_t>(row)];
+	const auto & entry = entries[vis.entry_idx];
+	const auto record_color = record_foreground_for_plugin(entry, m_tree[file_idx].plugin_idx);
+
+	if (role == Qt::DisplayRole)
+	{
+		if (column == 0)
+		{
+			auto display_id = QString::fromUtf8(decode_to_utf8(entry.record_id, m_display_codepage));
+			display_id.replace('|', " #");
+			return display_id;
+		}
+
+		if (column == 1)
+		{
+			if (!entry.display_name.empty())
+				return QString::fromUtf8(decode_to_utf8(entry.display_name, m_display_codepage));
+
+			if (entry.rec_type == "INFO")
+				return {};
+
+			return QString::fromUtf8(decode_to_utf8(entry.dial_name, m_display_codepage));
+		}
+	}
+
+	if (role == Qt::BackgroundRole)
+	{
+		if (entry.conflict_all < conflict_all_t::no_conflict)
+			return {};
+
+		if (m_filter.hide_duplicates() && unique_plugin_count(entry) <= 1)
+			return {};
+
+		return QBrush(theme_system_t::instance().conflict_all_background(entry.conflict_all));
+	}
+
+	if (role == Qt::ForegroundRole)
+	{
+		if (record_color == conflict_this_t::unknown)
+			return {};
+
+		return QBrush(theme_system_t::instance().conflict_this_foreground(record_color));
+	}
+
+	if (role == Qt::FontRole && m_show_deleted_strikeout && entry.has_dele)
+	{
+		QFont font;
+		font.setStrikeOut(true);
+		return font;
+	}
+
+	return {};
 }

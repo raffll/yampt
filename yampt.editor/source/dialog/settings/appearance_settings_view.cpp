@@ -6,7 +6,7 @@
 #include <QLabel>
 #include <QVBoxLayout>
 
-appearance_settings_view_t::appearance_settings_view_t(QWidget * parent)
+editor_appearance_settings_view_t::editor_appearance_settings_view_t(QWidget * parent)
     : QWidget(parent)
     , m_initial_theme(theme_t::light)
 {
@@ -34,7 +34,7 @@ appearance_settings_view_t::appearance_settings_view_t(QWidget * parent)
 	layout->addStretch();
 }
 
-void appearance_settings_view_t::load(const settings_store_t & settings)
+void editor_appearance_settings_view_t::load(const settings_store_t & settings)
 {
 	m_initial_theme = settings.theme();
 	m_theme_combo->setCurrentIndex(static_cast<int>(m_initial_theme));
@@ -44,7 +44,7 @@ void appearance_settings_view_t::load(const settings_store_t & settings)
 	m_codepage_combo->setCurrentIndex(codepage_idx >= 0 ? codepage_idx : 0);
 }
 
-void appearance_settings_view_t::save(settings_store_t & settings) const
+void editor_appearance_settings_view_t::save(settings_store_t & settings) const
 {
 	const auto theme = static_cast<theme_t>(m_theme_combo->currentIndex());
 	settings.set_theme(theme);
@@ -54,7 +54,7 @@ void appearance_settings_view_t::save(settings_store_t & settings) const
 	settings.set_display_codepage(codepage);
 }
 
-bool appearance_settings_view_t::is_modified() const
+bool editor_appearance_settings_view_t::is_modified() const
 {
 	const bool theme_changed = static_cast<theme_t>(m_theme_combo->currentIndex()) != m_initial_theme;
 	const bool codepage_changed = m_codepage_combo->currentData().toInt() != m_initial_codepage;

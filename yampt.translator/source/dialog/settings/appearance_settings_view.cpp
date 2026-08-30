@@ -5,7 +5,7 @@
 #include <QLabel>
 #include <QVBoxLayout>
 
-appearance_settings_view_t::appearance_settings_view_t(QWidget * parent)
+translator_appearance_settings_view_t::translator_appearance_settings_view_t(QWidget * parent)
     : QWidget(parent)
 {
 	auto * layout = new QVBoxLayout(this);
@@ -22,20 +22,20 @@ appearance_settings_view_t::appearance_settings_view_t(QWidget * parent)
 	layout->addStretch();
 }
 
-void appearance_settings_view_t::load(const settings_store_t & settings)
+void translator_appearance_settings_view_t::load(const settings_store_t & settings)
 {
 	m_initial_theme = settings.theme();
 	m_theme_combo->setCurrentIndex(static_cast<int>(m_initial_theme));
 }
 
-void appearance_settings_view_t::save(settings_store_t & settings) const
+void translator_appearance_settings_view_t::save(settings_store_t & settings) const
 {
 	const auto theme = static_cast<theme_t>(m_theme_combo->currentIndex());
 	settings.set_theme(theme);
 	theme_system_t::instance().set_theme(theme);
 }
 
-bool appearance_settings_view_t::is_modified() const
+bool translator_appearance_settings_view_t::is_modified() const
 {
 	const auto current_theme = static_cast<theme_t>(m_theme_combo->currentIndex());
 	return current_theme != m_initial_theme;

@@ -255,9 +255,7 @@ std::string loc_generator::derive_esm_name(const std::string & filename)
 	if (dot_pos != std::string::npos)
 		stem = stem.substr(0, dot_pos);
 
-	stem = string_utils::to_lower(stem);
-
-	const std::regex pattern(R"((.+)_[a-z]{2}_[a-z]{2}$)");
+	const std::regex pattern(R"((.+)_[a-z]{2}_[a-z]{2}$)", std::regex_constants::icase);
 	std::smatch match;
 	if (std::regex_match(stem, match, pattern))
 		return match[1].str();

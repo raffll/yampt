@@ -1,6 +1,6 @@
+#include <resource_paths.hpp>
 #include "main_window.hpp"
 #include "dialog/dict_selection_dialog.hpp"
-#include "dialog/find_replace_dialog.hpp"
 #include "dialog/first_run_dialog.hpp"
 #include "dialog/make_base_dialog.hpp"
 #include "dialog/settings/translator_settings_dialog.hpp"
@@ -21,8 +21,10 @@
 #include "view/status_filter_view.hpp"
 #include "view/translation_suggestion_view.hpp"
 #include "view/validation_view.hpp"
-#include <utility/string_utils.hpp>
+#include <translation_example.hpp>
+#include <translator/translation_example_ops.hpp>
 #include <utility/language_config.hpp>
+#include <utility/string_utils.hpp>
 #include <algorithm>
 #include <filesystem>
 #include <map>
@@ -124,13 +126,13 @@ main_window_t::main_window_t(QWidget * parent)
 	                                                                          m_extra_sel_translation,
 	                                                                          *m_grammar_check });
 
-	m_shortcuts_controller = std::make_unique<shortcuts_controller_t>(
-	    shortcuts_deps_t { m_editor_controller,
-	                       *m_table_model,
-	                       [this]() -> document_t * { return m_active_doc; },
-	                       [this](bool dirty) { set_unsaved_changes(dirty); },
-	                       [this]() { update_status_counts(); },
-	                       [this](int row) { load_record(row); } });
+	m_shortcuts_controller =
+	    std::make_unique<shortcuts_controller_t>(shortcuts_deps_t { m_editor_controller,
+	                                                                *m_table_model,
+	                                                                [this]() -> document_t * { return m_active_doc; },
+	                                                                [this](bool dirty) { set_unsaved_changes(dirty); },
+	                                                                [this]() { update_status_counts(); },
+	                                                                [this](int row) { load_record(row); } });
 
 	connect_menu_signals();
 	connect_sidebar_signals();
@@ -166,15 +168,15 @@ main_window_t::main_window_t(QWidget * parent)
 			m_settings.set_native_tag(native);
 			m_settings.set_foreign_tag(foreign);
 
-			const auto languages = language_config::load(
-			    (QCoreApplication::applicationDirPath() + "/languages.json").toStdString());
+			const auto languages =
+			    language_config::load(resource_paths::languages_file());
 
 			const auto * native_lang = language_config::find_by_code(languages, native);
 			const int encoding_index = native_lang ? codepage_to_index(native_lang->codepage) : 2;
 			m_settings.set_encoding_index(encoding_index);
 			on_encoding_changed(encoding_index);
 
-			const auto dict_dir = QCoreApplication::applicationDirPath().toStdString() + "/dictionaries/";
+			const auto dict_dir = resource_paths::dictionaries_dir();
 			auto set_spell_paths = [&](const std::string & lang_code, bool is_native)
 			{
 				const auto prefix = language_config::resolve_dictionary_prefix(languages, lang_code);
@@ -276,7 +278,8 @@ void main_window_t::on_search_changed(const QString & text)
 	cfg.case_sensitive = m_case_sensitive_check && m_case_sensitive_check->isChecked();
 	cfg.regex_mode = m_regex_check && m_regex_check->isChecked();
 	cfg.columns.clear();
-	if (m_search_col_key->isChecked())
+	const bool key_column_present = !m_table_model || m_table_model->columns().contains(col_key);
+	if (m_search_col_key->isChecked() && key_column_present)
 		cfg.columns.insert(search_column_t::key);
 	if (m_search_col_original->isChecked())
 		cfg.columns.insert(search_column_t::original);
@@ -384,6 +387,10 @@ void main_window_t::rebuild_table()
 		clear_editor_panels();
 		return;
 	}
+
+	m_table_model->set_columns(m_active_doc->kind());
+	if (m_table_view)
+		m_table_view->refresh_column_layout();
 
 	auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
 	if (dict_doc)
@@ -619,7 +626,7 @@ void main_window_t::on_encoding_changed(int index)
 
 void main_window_t::on_open_settings()
 {
-	const auto dict_dir = QCoreApplication::applicationDirPath().toStdString() + "/dictionaries";
+	const auto dict_dir = resource_paths::dictionaries_dir();
 	translator_settings_dialog_t dialog(m_settings, dict_dir, this);
 
 	connect(
@@ -636,7 +643,7 @@ void main_window_t::on_settings_applied(const std::string & category)
 	if (category == "all" || category == "language")
 	{
 		on_encoding_changed(m_settings.encoding_index());
-		on_spell_lang_changed(m_settings.spell_lang_index());
+		on_spell_lang_changed();
 		m_translation_tab->apply_provider_settings(m_settings);
 	}
 
@@ -866,7 +873,7 @@ void main_window_t::update_validation()
 	m_record_display_controller->update_validation();
 }
 
-void main_window_t::on_spell_lang_changed(int)
+void main_window_t::on_spell_lang_changed()
 {
 	const auto aff_path = m_settings.spell_aff_path();
 	const auto dic_path = m_settings.spell_dic_path();
@@ -914,24 +921,24 @@ void main_window_t::load_config()
 
 	const int info_height = m_settings.info_height();
 	const int left_total = m_left_splitter->height();
-	if (info_height > 0)
+	if (info_height > 0 && left_total > 0)
 		m_left_splitter->setSizes({ left_total - info_height, info_height });
 	else
-		m_left_splitter->setSizes({ left_total / 2, left_total / 2 });
+		m_left_splitter->setStretchFactor(0, 2);
 
 	const int bottom_height = m_settings.bottom_height();
 	const int right_total = m_right_splitter->height();
-	if (bottom_height > 0)
+	if (bottom_height > 0 && right_total > 0)
 		m_right_splitter->setSizes({ right_total - bottom_height, bottom_height });
 	else
-		m_right_splitter->setSizes({ right_total / 2, right_total / 2 });
+		m_right_splitter->setStretchFactor(0, 2);
 
 	std::vector<int> col_widths;
 	for (int i = 0; i < 4; ++i)
 		col_widths.push_back(m_settings.column_width(i));
 	m_table_view->set_column_widths(col_widths);
 
-	const auto workspace = (QCoreApplication::applicationDirPath() + "/workspace").toStdString();
+	const auto workspace = resource_paths::workspace_dir();
 	std::vector<std::string> roots = { workspace };
 	for (const auto & r : m_settings.workspace_roots())
 	{
@@ -952,8 +959,7 @@ void main_window_t::load_config()
 	rebuild_sidebar();
 	rebuild_table();
 
-	const int spell_index = m_settings.spell_lang_index();
-	on_spell_lang_changed(spell_index);
+	on_spell_lang_changed();
 
 	update_watcher_roots();
 	register_shortcuts();
@@ -1083,4 +1089,72 @@ void main_window_t::closeEvent(QCloseEvent * event)
 
 	save_config();
 	QMainWindow::closeEvent(event);
+}
+
+bool main_window_t::is_row_example(int row) const
+{
+	const auto * row_data = m_table_model->row_at(row);
+	if (!row_data)
+		return false;
+
+	const auto examples = m_settings.translation_examples();
+
+	return translation_example_ops::contains_original(examples, row_data->old_text);
+}
+
+bool main_window_t::can_revert_row(int row) const
+{
+	const auto * row_data = m_table_model->row_at(row);
+	if (!row_data)
+		return false;
+
+	return !m_edit_history.get_history(row_data->type, row_data->key_text).empty();
+}
+
+void main_window_t::on_toggle_example_requested(const QList<int> & rows)
+{
+	if (rows.isEmpty())
+		return;
+
+	const auto * first_row = m_table_model->row_at(rows.first());
+	if (!first_row)
+		return;
+
+	auto examples = m_settings.translation_examples();
+	const bool unmark = translation_example_ops::contains_original(examples, first_row->old_text);
+
+	if (unmark)
+	{
+		for (const int row : rows)
+		{
+			const auto * row_data = m_table_model->row_at(row);
+			if (!row_data)
+				continue;
+
+			examples = translation_example_ops::remove_by_original(examples, row_data->old_text);
+		}
+	}
+	else
+	{
+		std::vector<translation_example_t> pairs;
+		for (const int row : rows)
+		{
+			const auto * row_data = m_table_model->row_at(row);
+			if (!row_data)
+				continue;
+
+			pairs.push_back({ row_data->old_text, row_data->new_text });
+		}
+
+		const auto before = examples.size();
+		examples = translation_example_ops::add_capped(examples, pairs);
+
+		if (examples.size() == before && !pairs.empty())
+			statusBar()->showMessage(tr("Example limit reached (maximum %1)").arg(max_examples), 5000);
+	}
+
+	m_settings.set_translation_examples(examples);
+	m_settings.sync();
+
+	m_translation_tab->set_examples(examples);
 }

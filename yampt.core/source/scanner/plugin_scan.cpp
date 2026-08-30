@@ -3,11 +3,12 @@
 #include "../decoder/sub_record_schema.hpp"
 #include "../decoder/view_tree_format.hpp"
 #include "../utility/app_logger.hpp"
-#include "../utility/includes.hpp"
 #include "../utility/string_utils.hpp"
 #include "record_conflict.hpp"
 #include <algorithm>
 #include <cstring>
+#include <filesystem>
+#include <memory>
 #include <set>
 
 void plugin_scan_t::load_plugin(const std::string & path)
@@ -273,6 +274,7 @@ static void apply_worst_this(
     const conflict_accumulator_t & accum,
     const std::vector<bool> & is_deleted)
 {
+	(void)is_deleted;
 	const size_t ver_count = entry.versions.size();
 	std::vector<conflict_this_t> worst_this(ver_count, conflict_this_t::unknown);
 	worst_this[0] = conflict_this_t::master;
@@ -387,6 +389,11 @@ std::string plugin_scan_t::plugin_filename(int idx) const
 }
 
 const esm_reader_t & plugin_scan_t::plugin(int idx) const
+{
+	return m_plugins[idx]->esm;
+}
+
+esm_reader_t & plugin_scan_t::mutable_plugin(int idx)
 {
 	return m_plugins[idx]->esm;
 }

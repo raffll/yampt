@@ -1,0 +1,39 @@
+# Maintainer: Your Name <your.email@example.com>
+pkgname=yampt
+pkgver=0.940
+pkgrel=1
+pkgdesc="Morrowind plugin translation toolkit (CLI + GUI)"
+arch=('x86_64')
+url="https://github.com/FIXME/yampt"
+license=('MIT')
+depends=(
+    'qt6-base'
+    'hunspell'
+    'ctranslate2'
+    'sentencepiece'
+    'nlohmann-json'
+    'yyjson'
+)
+makedepends=(
+    'cmake'
+    'catch2'
+    'rapidcheck'
+)
+source=("$pkgname-$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+    cmake -S "$pkgname-$pkgver" -B build \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr
+
+    cmake --build build -j$(nproc)
+}
+
+check() {
+    ./build/bin/yampt_tests
+}
+
+package() {
+    DESTDIR="$pkgdir" cmake --install build
+}

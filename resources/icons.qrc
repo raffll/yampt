@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file alias="yampt-translator.svg">yampt-translator.svg</file>
+        <file alias="yampt-editor.svg">yampt-editor.svg</file>
+    </qresource>
+</RCC>

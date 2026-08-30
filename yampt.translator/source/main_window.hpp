@@ -46,7 +46,6 @@ class editor_highlighter_t;
 class editor_view_t;
 class translation_edit_view_t;
 class filter_tree_view_t;
-class find_replace_dialog_t;
 class history_view_t;
 class log_view_t;
 class record_table_view_t;
@@ -105,6 +104,7 @@ private:
 	void setup_central_widget();
 	void setup_menu_bar();
 	void setup_toolbar();
+	void setup_replace_toolbar();
 	void setup_sidebar();
 	void setup_editor_panel();
 	void setup_status_bar();
@@ -130,13 +130,17 @@ private:
 	void update_annotations();
 	void update_validation();
 	void update_status_counts();
-	void on_spell_lang_changed(int index);
+	void on_spell_lang_changed();
 	void scan_workspace();
 	void update_watcher_roots();
 	void register_shortcuts();
 	void shortcut_copy_original();
 	void shortcut_commit_status(status_t new_status);
 	void advance_to_next_row();
+
+	void on_toggle_example_requested(const QList<int> & rows);
+	bool is_row_example(int row) const;
+	bool can_revert_row(int row) const;
 
 	void rebuild_table_yaml(document_t * target_doc);
 	void rebuild_table_dict(dict_document_t * dict_doc);
@@ -170,13 +174,19 @@ private:
 	QTabWidget * m_info_tabs = nullptr;
 	QTabWidget * m_record_tabs = nullptr;
 
-	QLabel * m_search_label = nullptr;
 	QLineEdit * m_search_field = nullptr;
 	QToolButton * m_case_sensitive_check = nullptr;
 	QToolButton * m_regex_check = nullptr;
 	QToolButton * m_search_col_key = nullptr;
 	QToolButton * m_search_col_original = nullptr;
 	QToolButton * m_search_col_translation = nullptr;
+	QWidget * m_replace_toolbar = nullptr;
+	QLineEdit * m_find_field = nullptr;
+	QLineEdit * m_replace_field = nullptr;
+	QPushButton * m_replace_case_check = nullptr;
+	QPushButton * m_replace_regex_check = nullptr;
+	QPushButton * m_replace_all_btn = nullptr;
+	QPushButton * m_replace_one_btn = nullptr;
 	QAction * m_spell_check = nullptr;
 	QAction * m_grammar_check = nullptr;
 	QAction * m_whitespace_check = nullptr;
@@ -216,11 +226,11 @@ private:
 	edit_history_t m_edit_history;
 	spell_checker_t m_spell_checker;
 	byte_limit_validator_t m_byte_limit_validator;
-	editor_controller_t m_editor_controller;
 
 	file_list_t m_file_list;
 	codepage_t m_current_codepage = codepage_t::windows_1252;
 	session_t m_session;
+	editor_controller_t m_editor_controller;
 	settings_store_t m_settings { "yTranslator.ini" };
 	std::unordered_map<std::string, filter_state_t> m_filter_states;
 	size_t m_last_annotation_version = 0;
@@ -234,7 +244,6 @@ private:
 	extra_selections_state_t m_extra_sel_adapted;
 	extra_selections_state_t m_extra_sel_translation;
 
-	find_replace_dialog_t * m_find_replace_dialog = nullptr;
 	find_replace_t * m_find_replace = nullptr;
 
 	workspace_watcher_t * m_workspace_watcher = nullptr;

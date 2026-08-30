@@ -1,9 +1,20 @@
 #include "translation_engine.hpp"
 #include "../utility/app_logger.hpp"
-#include <ctranslate2/translator.h>
 #include <filesystem>
 #include <fstream>
+
+#if __has_include(<ctranslate2/translator.h>)
+#define HAS_CTRANSLATE2 1
+#include <ctranslate2/translator.h>
 #include <sentencepiece_processor.h>
+#ifdef _WIN32
+#pragma comment(lib, "ctranslate2.lib")
+#endif
+#else
+#define HAS_CTRANSLATE2 0
+#endif
+
+#if HAS_CTRANSLATE2
 
 struct translation_engine_t::impl_t
 {
@@ -13,14 +24,26 @@ struct translation_engine_t::impl_t
 	std::string target_lang;
 };
 
+#else
+
+struct translation_engine_t::impl_t
+{
+	std::string source_lang;
+	std::string target_lang;
+};
+
+#endif
+
 translation_engine_t::translation_engine_t()
     : m_impl(std::make_unique<impl_t>())
 {}
 
 translation_engine_t::~translation_engine_t()
 {
+#if HAS_CTRANSLATE2
 	if (m_impl)
 		m_impl->translator.reset();
+#endif
 }
 
 translation_engine_t::translation_engine_t(translation_engine_t &&) noexcept = default;
@@ -28,8 +51,11 @@ translation_engine_t & translation_engine_t::operator=(translation_engine_t &&) 
 
 bool translation_engine_t::load(const std::string & model_pack_path)
 {
-	unload();
-
+#if !HAS_CTRANSLATE2
+	(void)model_pack_path;
+	app_logger_t::add_log("[warning] translation engine not available (CTranslate2 not installed)\r\n");
+	return false;
+#else
 	namespace fs = std::filesystem;
 
 	app_logger_t::add_log("[info] loading translation model \"" + model_pack_path + "\"\r\n");
@@ -58,8 +84,15 @@ bool translation_engine_t::load(const std::string & model_pack_path)
 		m_impl->translator = std::make_unique<ctranslate2::Translator>(
 		    model_dir.string(), ctranslate2::Device::CPU, ctranslate2::ComputeType::DEFAULT);
 	}
+	catch (const std::exception & error)
+	{
+		app_logger_t::add_log("[error] translation model load failed: " + std::string(error.what()) + "\r\n");
+		unload();
+		return false;
+	}
 	catch (...)
 	{
+		app_logger_t::add_log("[error] translation model load failed: unknown exception\r\n");
 		unload();
 		return false;
 	}
@@ -75,22 +108,36 @@ bool translation_engine_t::load(const std::string & model_pack_path)
 	if (m_impl->source_lang.empty())
 		m_impl->source_lang = "eng_Latn";
 
+	if (m_impl->target_lang.empty())
+	{
+		app_logger_t::add_log("[error] translation model has no target language\r\n");
+		unload();
+		return false;
+	}
+
 	app_logger_t::add_log(
 	    "[info] translation model loaded: " + m_impl->source_lang + " -> " + m_impl->target_lang + "\r\n");
 	return true;
+#endif
 }
 
 void translation_engine_t::unload()
 {
+#if HAS_CTRANSLATE2
 	m_impl->translator.reset();
 	m_impl->spm.reset();
+#endif
 	m_impl->source_lang.clear();
 	m_impl->target_lang.clear();
 }
 
 bool translation_engine_t::is_loaded() const
 {
+#if HAS_CTRANSLATE2
 	return m_impl->translator != nullptr;
+#else
+	return false;
+#endif
 }
 
 std::string translation_engine_t::source_language() const
@@ -145,6 +192,10 @@ static std::vector<std::string> split_sentences(const std::string & text)
 
 translation_result_t translation_engine_t::translate(const std::string & text) const
 {
+#if !HAS_CTRANSLATE2
+	(void)text;
+	return { "", false, "translation engine not available" };
+#else
 	if (!m_impl->translator)
 		return { "", false, "model not loaded" };
 
@@ -162,7 +213,7 @@ translation_result_t translation_engine_t::translate(const std::string & text) c
 		for (const auto & sentence : sentences)
 		{
 			std::vector<std::string> tokens;
-			m_impl->spm->Encode(sentence, &tokens);
+			(void)m_impl->spm->Encode(sentence, &tokens);
 			tokens.insert(tokens.begin(), m_impl->source_lang);
 			tokens.push_back("</s>");
 			token_batch.push_back(std::move(tokens));
@@ -215,4 +266,5 @@ translation_result_t translation_engine_t::translate(const std::string & text) c
 	{
 		return { "", false, "unknown translation error" };
 	}
+#endif
 }

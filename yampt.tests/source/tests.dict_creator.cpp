@@ -1,7 +1,10 @@
 ﻿#include <catch2/catch_all.hpp>
 #include <creator/cell_matcher.hpp>
 #include <creator/dict_creator.hpp>
+#include <utility/app_logger.hpp>
 #include <cstring>
+#include <filesystem>
+#include <fstream>
 
 TEST_CASE("dict_creator_t::differs_only_in_numbers_or_punct, identical strings", "[u]")
 {
@@ -132,4 +135,65 @@ TEST_CASE("cell_matcher_t::make_cell_key_text, different input produces differen
 	auto a = cell_matcher_t::make_cell_key_text("Balmora");
 	auto b = cell_matcher_t::make_cell_key_text("Vivec");
 	REQUIRE(a != b);
+}
+
+TEST_CASE("dict_creator_t::make_fnam, enchantment field populated for WEAP with ENAM", "[i]")
+{
+	const auto path = (std::filesystem::temp_directory_path() / "yampt_test_enchant_creator.esm").string();
+
+	auto make_sub = [](const std::string & sub_id, const std::string & content) -> std::string
+	{
+		std::string result;
+		result += sub_id;
+		result += domain_types::convert_uint_to_string_byte_array(content.size());
+		result += content;
+		return result;
+	};
+
+	auto make_record = [&](const std::string & rec_id, const std::string & sub_records) -> std::string
+	{
+		std::string header;
+		header += rec_id;
+		header += domain_types::convert_uint_to_string_byte_array(sub_records.size());
+		header += domain_types::convert_uint_to_string_byte_array(0);
+		header += domain_types::convert_uint_to_string_byte_array(0);
+		return header + sub_records;
+	};
+
+	std::string esm_content;
+	esm_content += make_record("TES3", make_sub("HEDR", std::string(300, '\0')));
+
+	const std::string weapon_name = std::string("iron_dagger") + '\0';
+	const std::string weapon_fnam = std::string("Iron Dagger") + '\0';
+	const std::string weapon_enam = std::string("fire_damage_en") + '\0';
+
+	esm_content += make_record(
+	    "WEAP", make_sub("NAME", weapon_name) + make_sub("FNAM", weapon_fnam) + make_sub("ENAM", weapon_enam));
+
+	const std::string armor_name = std::string("steel_helm") + '\0';
+	const std::string armor_fnam = std::string("Steel Helm") + '\0';
+
+	esm_content += make_record("ARMO", make_sub("NAME", armor_name) + make_sub("FNAM", armor_fnam));
+
+	{
+		std::ofstream file(path, std::ios::binary);
+		file.write(esm_content.data(), static_cast<std::streamsize>(esm_content.size()));
+	}
+
+	app_logger_t::reset_log();
+	dict_creator_t creator(path);
+	const auto & dict = creator.get_dict();
+
+	auto fnam_it = dict.find(rec_type_t::fnam);
+	REQUIRE(fnam_it != dict.end());
+
+	const auto * dagger_entry = fnam_it->second.find("WEAP^iron_dagger");
+	REQUIRE(dagger_entry != nullptr);
+	REQUIRE(dagger_entry->enchantment == "fire_damage_en");
+
+	const auto * helm_entry = fnam_it->second.find("ARMO^steel_helm");
+	REQUIRE(helm_entry != nullptr);
+	REQUIRE(helm_entry->enchantment.empty());
+
+	std::filesystem::remove(path);
 }

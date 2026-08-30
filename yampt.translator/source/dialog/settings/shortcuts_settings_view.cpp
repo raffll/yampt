@@ -176,10 +176,9 @@ void shortcuts_settings_view_t::check_conflicts()
 			found_conflict = true;
 
 			const auto & conflicting_name = m_editable_entries[static_cast<size_t>(second)].display_name;
-			conflict_message =
-			    tr("Conflict: \"%1\" and \"%2\" share the same shortcut")
-			        .arg(tr(m_editable_entries[static_cast<size_t>(first)].display_name.c_str()))
-			        .arg(tr(conflicting_name.c_str()));
+			conflict_message = tr("Conflict: \"%1\" and \"%2\" share the same shortcut")
+			                       .arg(tr(m_editable_entries[static_cast<size_t>(first)].display_name.c_str()))
+			                       .arg(tr(conflicting_name.c_str()));
 		}
 	}
 

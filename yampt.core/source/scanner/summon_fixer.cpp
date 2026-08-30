@@ -1,6 +1,7 @@
 #include "summon_fixer.hpp"
 #include "../utility/string_utils.hpp"
 #include <array>
+#include <cstdint>
 #include <string_view>
 
 static constexpr size_t flags_offset = 12;

@@ -12,11 +12,13 @@ Open File menu and choose one of three loading methods:
 
 Use **Unload All** to close everything and start fresh.
 
+If any loaded plugin has unsaved field edits, you are prompted before those edits would be lost. Loading a new set of plugins, unloading everything, cleaning, and closing the application each offer to save the pending changes, discard them, or cancel the action and keep everything as it is.
+
 ## Main Layout
 
-- **Left** — Navigation tree. Plugins are listed at the top level. Under each plugin, records are grouped by type (ACTI, ARMO, CELL, NPC_, etc.). Under each type, individual records are listed by ID.
+- **Left** — Navigation panel with two tabs. The Plugins tab shows the ESP/ESM record tree: plugins at the top level, records grouped by type under each plugin. The Lua tab shows OpenMW Lua handler registrations grouped by mod name.
 - **Right** — Record view. When you click a record in the nav tree, this area shows all sub-records in a multi-column tree. Each column represents one plugin's version of that record. The leftmost column is the master definition, subsequent columns are overrides in load order.
-- **Bottom** — Log tab (operation output) and Preview tab.
+- **Bottom** — Edit tab (field comparison and editing) and Log tab (operation output).
 
 ## Navigation Tree
 
@@ -47,6 +49,8 @@ Each plugin in the tree is prefixed with an icon indicating its role:
 - 🛡 — a guard patch that acts as a priority barrier during auto-merge.
 - 🔒 — a plugin excluded from the merged patch. Its records are ignored during merge.
 
+When a plugin has field edits that have not yet been written to disk, an asterisk appears next to its name, after the icon and before the filename. The asterisk disappears once the plugin is saved.
+
 ## Record View
 
 Clicking a record in the nav tree displays its full content in the record view. Sub-records are decoded into readable fields where the format is known (names, positions, flags, stats). Unknown or binary sub-records display as raw byte counts.
@@ -72,26 +76,61 @@ Right-click in the record view to access merge operations:
 - **Copy Field to Merged Patch** — copies a single decoded field within a sub-record from a plugin column.
 - **Copy Group to Merged Patch** — copies a group of related sub-records (e.g. all fields of a referenced object in a cell).
 - **Remove Sub-Record** / **Remove Group** — removes content from the merged patch column.
+- **Exclude Sub-Record** — adds the sub-record type to the exclusion list in settings. The sub-record will be hidden from conflict detection and excluded from the merged patch. The rule is stored as `RECORD:SUB` (e.g. `CELL:NAM0`) and can be reviewed in Settings.
 
 Right-click a record node belonging to the merged patch in the navigation tree to see the **Remove** option, which deletes that record from the merged patch entirely.
 
 Right-click a plugin node in the navigation tree for plugin-level options:
 
+- **Save** — writes the plugin's pending field edits to disk and removes its asterisk. This option is enabled only while the plugin has unsaved changes; when the plugin is already saved it appears greyed out.
 - **Exclude from Merged Patch** / **Include in Merged Patch** — excluded plugins are completely ignored during auto-merge. Their records will not appear in the merged patch regardless of conflicts.
 - **Mark as Guard Patch** — the guard patch acts as a priority barrier during auto-merge. Plugins loaded before the guard that modify the same records are ignored. Only the guard's version and later plugins are considered. If the final plugin's version matches master (reverting a change), the guard's version is used instead of letting the revert through.
 
 ## View Menu
 
-The View menu provides filtering and display options:
+The View menu provides display options:
 
-- **Conflicts Only** — when enabled, the navigation tree hides records with no conflicts. Only records touched by multiple plugins remain visible.
-- **Hide Duplicate Columns** — hides duplicate columns in the record view when the same plugin contributes identical data through multiple paths.
-- **Show Deleted Strikeout** — renders deleted records and cell references with strikethrough text, making them visually distinct from active content.
-- **Filter** — opens an advanced filter dialog where you can narrow the navigation tree by overall conflict severity, per-plugin conflict status, record type, record ID substring, display name substring, or restrict to deleted records only.
+- **Toggle Sidebar** — shows or hides the left navigation panel, giving the record view the full width of the window.
+- **Toggle Bottom Panel** — shows or hides the bottom edit and log panel, giving the record view more vertical space. Both toggles remember their state between sessions.
+- **Show Only One Column Per Plugin** — when a plugin defines the same record more than once, collapses those versions into a single column showing only that plugin's last (winning) version, instead of one column per occurrence.
+- **Strike Out Deleted Records** — renders deleted records and cell references with strikethrough text, making them visually distinct from active content.
+
+## Toolbar Search
+
+The toolbar provides three filter controls that compose together: a record is shown only if it satisfies every active control at once. Enabling Conflicts Only while an advanced filter and a search are both active narrows the tree further rather than replacing either of them.
+
+**Conflicts Only** is a quick preset that restricts the navigation tree to records touched by multiple plugins — those with a conflict or a benign override. It controls only the conflict dimension and combines with any active advanced filter or search.
+
+The toolbar search field filters the navigation tree by record ID or display name. Type a query, select which fields to search with the toggle buttons, and press Enter to apply. The search combines with Conflicts Only and any advanced filter criteria already in effect.
+
+- **Aa** — case-sensitive matching. When off, the search ignores letter case.
+- **.\*** — interpret the query as a regular expression.
+- **ID** — search in the record's internal ID (e.g. "iron_dagger", "balmora_guild").
+- **Name** — search in the record's display name (e.g. "Iron Dagger", "Balmora Mages Guild").
+- **Advanced Filters...** — opens the advanced filter dialog for filtering by conflict severity, per-plugin conflict status, record type, deleted status, and Lua handler criteria. The dialog opens pre-populated with the advanced criteria currently in effect, so adjustments build on the existing selection rather than starting from scratch.
+- **No Filters** — a checkable toggle that shows whether any filters are active. When unchecked (filters are active), clicking it clears Conflicts Only, the search field, and the advanced filter in one action, returning the navigation tree to showing every record. When already checked, clicking it does nothing.
+
+Press Escape to clear the search field and remove the text filter.
+
+## Edit Panel
+
+The Edit panel at the bottom of the window serves two purposes: text comparison and field editing.
+
+When you click a cell in the record view that has a conflict with a previous column, the Edit panel shows both values side by side with character-level diff highlighting. Deleted text appears with a red background on the left, inserted text with a green background on the right.
+
+Editing is off whenever the application starts. Turn it on with the Enable Editing button on the toolbar; the choice is not remembered, so each new session begins with editing disabled to guard against accidental changes.
+
+When editing is enabled (via the Enable Editing button on the toolbar), clicking a decoded field in any plugin's column activates the Edit panel as an editor. The right pane becomes editable and an Apply button appears. For enum fields (race, class, type), a dropdown selector shows all valid values. For flag fields (NPC flags, cell flags), the dropdown presents checkboxes for each flag bit. Free-text fields such as names and IDs accept direct text input. The panel validates the input against the field's constraints — numeric range, string length, and codepage encoding limits. The Apply button stays disabled until the value is both valid and different from the original. Clicking Apply updates the loaded plugin held in memory and refreshes the record view to reflect the new state. It does not write the plugin file at this point; the change is kept until you choose to save it.
+
+A plugin with changes that have not yet been written to disk is marked with an asterisk next to its name in the navigation panel, and the window title also shows an asterisk while any loaded plugin has unsaved changes. This gives you a clear view of which plugins have pending edits, so you can make several changes and decide when to commit them.
+
+To write a plugin's pending changes to disk, right-click that plugin in the navigation panel and choose **Save**. This option is available only while the plugin has unsaved changes. Saving writes the plugin file and removes its asterisk. The File menu offers **Save** to write the currently selected plugin and **Save All** to write every plugin with unsaved changes at once. Text you have typed into a field but not yet applied is not saved; only changes you confirmed with Apply are written.
 
 ## Creating a Merged Patch
 
-Click **Create Merged Patch** in the toolbar to run the automatic merge. The auto-merge performs several operations:
+Click **Create Merged Patch** in the toolbar to run the automatic merge. If any loaded plugin has unsaved field edits, you are first offered to save those plugins or cancel the merge. The merge uses the current on-screen state of each plugin, so saving first keeps the files on disk consistent with what goes into the merged patch. Cancelling stops the merge and changes nothing.
+
+The auto-merge performs several operations:
 
 - **Leveled list merge** — combines entries from all plugins that modify leveled item or creature lists. No entries are lost; duplicates are removed.
 - **Three-way record merge** — for object records modified by multiple plugins, compares each plugin's changes against the master. Non-conflicting field changes from different plugins are combined into one record.
@@ -103,13 +142,15 @@ You can refine the auto-merge result manually. Use the record view context menu 
 
 ## Settings
 
-Open Settings via Ctrl+, or the Tools menu. Five pages are available:
+Open Settings via Ctrl+, or the Tools menu. Four pages are available:
 
 - **Appearance** — choose between light and dark theme.
-- **Paths** — configure the merged patch output path for each loading mode (folder, MO2, OpenMW). Normally these are automatic and don't need changing.
-- **Merged Patch** — toggle which record types participate in auto-merge. Set an exclusion regex to skip specific record IDs. Enable or disable individual bug fixes (fog density fix, summon persistence fix, cell name reversion fix).
+- **Output Paths** — configure the merged patch output path for each loading mode (folder, MO2, OpenMW). Normally these are automatic and don't need changing.
+- **Merged Patch** — three sub-tabs control how auto-merge behaves:
+  - **Exclude Sub-Records** — a list of sub-records excluded from conflict detection and the merged patch. Each entry uses `RECORD:SUB` format (e.g. `CELL:NAM0`). Use `TYPE:*` to exclude an entire record type. Add entries via the input field or right-click a sub-record row in the record view and choose "Exclude Sub-Record."
+  - **Exclude by ID** — a list of regular expression patterns matched against record IDs. Records matching any pattern are skipped entirely during auto-merge.
+  - **Fixes** — toggle individual bug fixes applied during merge: fog density correction, summon persistence flag, and cell name reversion prevention.
 - **Cleaning** — toggle which cleaning operations the Clean All button performs. Evil GMSTs are Construction Set artifacts from Tribunal/Bloodmoon that can cause issues in mods that don't require those expansions. Junk cells are empty exterior cell records that only contain position data and serve no purpose. The Header Repair group provides additional fixes applied during cleaning: updating master file sizes in the plugin header to match the actual file sizes on disk, and updating the plugin version field to 1.3 (required by some engines).
-- **Sub-Record Rules** — configure how specific sub-records are handled during conflict detection and merging. Each field takes a comma-separated list of entries in `RECORD:SUB` format (e.g. `CELL:NAM0, CELL:NAM9`). Use `*` as a wildcard for the sub-record name to match all sub-records of a record type. Three rules are available: Ignore Conflict prevents the listed sub-records from being flagged as conflicts, Exclude from Merge omits them from the merged patch output, and Skip if Missing treats them as non-significant when a plugin does not include them (so their absence alone does not create a conflict). Changes apply immediately after closing the settings dialog — the conflict tree and record view are rebuilt to reflect the new rules.
 
 ## Cleaning Plugins
 
@@ -121,3 +162,15 @@ Two types of records are removed:
 - **Junk cells** — exterior cell records that contain only a NAME and DATA sub-record with no references, no region assignment, and no meaningful content. These are Construction Set artifacts from brief edits near cell borders.
 
 When loading via Open MO2 Profile, cleaned plugins are written to the MO2 overwrite folder. The overwrite folder has the highest priority in MO2's virtual filesystem, so reloading the same profile after cleaning will automatically use the cleaned copies instead of the originals. Plugins loaded from overwrite are marked with the ⚡ icon in the navigation tree. Running Clean All again on an already-cleaned profile will report "no records to clean" because the loaded files are already the cleaned versions.
+
+## Lua Handler Conflicts
+
+After plugins are loaded, the application scans all `.omwscripts` files in the data paths for OpenMW Lua handler registrations. It identifies cases where multiple mods register handlers on the same interface method (e.g. two mods both adding an `ItemUsage.addHandlerForType` for the same item type).
+
+The navigation panel has two tabs: **Plugins** (the ESP/ESM record tree) and **Lua** (handler registrations). After a scan completes, the Lua tab shows registrations grouped by mod name. Each registration shows the interface, method, and type argument. Registrations involved in a conflict are colored by severity:
+
+- **Red** — blocking conflict. One handler returns false (cancels the action) and another mod expects the action to proceed.
+- **Orange** — mutating conflict. Multiple handlers modify the same data in potentially incompatible ways.
+- **Green** — overlapping registration. Multiple mods register on the same hook but their behaviors are compatible.
+
+Clicking a conflicting registration displays all participating mods side by side in the record view, with cell-level highlighting on fields that differ between mods (same coloring style as ESP record conflicts).

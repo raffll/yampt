@@ -2,7 +2,7 @@
 #include <io/binary_file_io.hpp>
 #include <io/esm_reader.hpp>
 #include <utility/app_logger.hpp>
-#include <utility/includes.hpp>
+#include <filesystem>
 
 static std::string get_temp_path(const std::string & filename)
 {
@@ -28,7 +28,7 @@ static std::string make_record(const std::string & rec_id, const std::string & s
 	return header + sub_records;
 }
 
-static std::string make_esm_file(const std::vector<std::string> & records)
+[[maybe_unused]] static std::string make_esm_file(const std::vector<std::string> & records)
 {
 	std::string content;
 	for (const auto & record : records)

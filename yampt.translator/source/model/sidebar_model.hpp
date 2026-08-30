@@ -7,6 +7,8 @@
 
 inline constexpr const char * workspace_label = "Workspace";
 
+std::string derive_root_label(const std::string & root_path);
+
 class session_t;
 
 struct sidebar_render_item_t
@@ -33,6 +35,7 @@ struct sidebar_render_model_t
 	std::string active_path;
 };
 
+std::string derive_root_label(const std::string & root_path);
 std::string derive_display_name(const file_entry_t & entry, bool is_loaded, bool is_dirty);
 std::vector<menu_action_t> derive_context_menu(const file_entry_t & entry, bool is_loaded, bool is_dirty);
 std::string derive_output_dir(const file_entry_t & entry, const std::string & default_dir);

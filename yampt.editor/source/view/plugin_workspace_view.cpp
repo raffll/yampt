@@ -1,9 +1,10 @@
 #include "plugin_workspace_view.hpp"
 #include "../dialog/filter_dialog.hpp"
 #include "../dialog/plugin_select_dialog.hpp"
+#include "../model/filter_composer.hpp"
 #include "../session/lua_scan_worker.hpp"
+#include "count_label_format.hpp"
 #include "editor_delegates.hpp"
-#include "lua_conflicts_view.hpp"
 #include <scanner/batch_cleaner.hpp>
 #include <scanner/record_conflict.hpp>
 #include <set>
@@ -16,6 +17,7 @@
 #include <QFileInfo>
 #include <QHBoxLayout>
 #include <QHeaderView>
+#include <QMessageBox>
 #include <QSettings>
 #include <QShortcut>
 #include <QTreeView>
@@ -27,6 +29,7 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 {
 	auto * main_layout = new QVBoxLayout(this);
 	main_layout->setContentsMargins(4, 4, 4, 4);
+	main_layout->setSpacing(4);
 
 	m_lbl_count = new QLabel(this);
 
@@ -35,27 +38,51 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 
 	setup_views();
 
+	m_edit_controller = new field_edit_controller_t(*m_session, this);
+	m_preview->set_edit_controller(m_edit_controller);
+	m_preview->set_editable_columns(&m_editable_columns);
+
 	main_layout->addWidget(m_main_splitter, 1);
 
 	m_status_label = new QLabel(this);
 
-	m_nav_view = new nav_tree_view_t(m_session->scan(), this);
+	m_nav_tabs = new QTabWidget(this);
+	m_nav_tabs->setTabPosition(QTabWidget::North);
+
+	m_nav_view = new nav_tree_view_t(m_session->scan(), m_nav_tabs);
 	m_nav_view->set_excluded_plugins(&m_session->excluded_plugins());
 	m_nav_view->set_patch_plugins(&m_session->patch_plugins());
-	m_content_splitter->insertWidget(0, m_nav_view);
+	m_nav_view->set_dirty_plugins(&m_session->dirty_plugins());
+	m_nav_view->set_editable_columns(&m_editable_columns);
+
+	m_lua_view = new lua_tree_view_t(m_nav_tabs);
+
+	m_nav_tabs->addTab(m_nav_view, tr("Plugins"));
+	m_nav_tabs->addTab(m_lua_view, tr("Lua"));
+
+	m_content_splitter->insertWidget(0, m_nav_tabs);
+
 	m_record_view = new record_view_t(this);
 	m_record_view->model()->set_excluded_plugins(&m_session->excluded_plugins());
 	m_record_view->model()->set_patch_plugins(&m_session->patch_plugins());
+	m_record_view->model()->set_editable_columns(&m_editable_columns);
 	m_record_view->model()->set_display_codepage(static_cast<codepage_t>(m_settings.display_codepage()));
 	m_record_view->model()->set_user_ignore_conflict(m_session->scan().user_ignore_conflict());
 	m_nav_view->set_display_codepage(static_cast<codepage_t>(m_settings.display_codepage()));
 	m_content_splitter->insertWidget(1, m_record_view);
-	m_content_splitter->setSizes({ 200, 800 });
+	m_content_splitter->setSizes({ 300, 600 });
 
 	m_merge_controller = new merge_controller_t(
 	    *m_session, *m_record_view, *m_nav_view, m_settings, [this](const std::string & msg) { log_message(msg); });
 
-	m_context_menu = new view_context_menu_t(*m_session, *m_record_view, *m_nav_view, *m_merge_controller);
+	m_context_menu = new view_context_menu_t(
+	    *m_session,
+	    *m_record_view,
+	    *m_nav_view,
+	    *m_merge_controller,
+	    m_settings,
+	    [this]() { on_settings_changed(); },
+	    [this](bool dirty) { emit unsaved_changes_changed(dirty); });
 
 	setup_connections();
 }
@@ -65,14 +92,13 @@ void plugin_workspace_view_t::setup_views()
 	m_main_splitter = new QSplitter(Qt::Vertical, this);
 	m_content_splitter = new QSplitter(Qt::Horizontal);
 
-	m_lua_conflicts_view = new lua_conflicts_view_t();
 	m_lua_scan_worker = new lua_scan_worker_t(this);
 
 	m_bottom_tabs = new QTabWidget(m_main_splitter);
 	m_messages = new messages_view_t(m_bottom_tabs);
 	m_preview = new preview_view_t(m_bottom_tabs);
+	m_bottom_tabs->addTab(m_preview, tr("Edit"));
 	m_bottom_tabs->addTab(m_messages, tr("Log"));
-	m_bottom_tabs->addTab(m_preview, tr("Preview"));
 
 	m_main_splitter->addWidget(m_content_splitter);
 	m_main_splitter->addWidget(m_bottom_tabs);
@@ -84,6 +110,8 @@ void plugin_workspace_view_t::setup_connections()
 {
 	connect(m_nav_view, &nav_tree_view_t::selection_changed, this, &plugin_workspace_view_t::on_nav_selection_changed);
 	connect(m_nav_view, &nav_tree_view_t::context_menu_requested, this, &plugin_workspace_view_t::on_nav_context_menu);
+
+	connect(m_lua_view, &lua_tree_view_t::selection_changed, this, &plugin_workspace_view_t::on_lua_selection_changed);
 
 	connect(
 	    m_record_view, &record_view_t::context_menu_requested, this, &plugin_workspace_view_t::on_view_context_menu);
@@ -97,9 +125,12 @@ void plugin_workspace_view_t::setup_connections()
 	    this,
 	    [this]()
 	{
+		if (m_lua_scan_worker->isRunning())
+			m_lua_scan_worker->cancel_scan();
+
+		m_lua_view->clear();
 		m_record_view->clear();
 		m_nav_view->rebuild();
-		m_lua_conflicts_view->set_scan_result({});
 		update_status();
 	});
 	connect(m_session, &plugin_session_t::log_message, this, &plugin_workspace_view_t::log_message);
@@ -108,6 +139,36 @@ void plugin_workspace_view_t::setup_connections()
 
 	auto * copy_shortcut = new QShortcut(QKeySequence::Copy, m_record_view->tree());
 	connect(copy_shortcut, &QShortcut::activated, this, &plugin_workspace_view_t::on_view_copy);
+
+	connect(
+	    m_edit_controller,
+	    &field_edit_controller_t::record_modified,
+	    this,
+	    [this](bool is_merge_edit)
+	{
+		rebuild_nav_preserving_state();
+		if (is_merge_edit)
+			m_merge_controller->save_merged_patch();
+		else
+			emit unsaved_changes_changed(true);
+	});
+
+	connect(
+	    m_preview,
+	    &preview_view_t::edit_committed,
+	    this,
+	    [this]()
+	{
+		const auto * model = m_record_view->model();
+		const auto & rec_type = model->record_type();
+		const auto & record_id = model->record_id();
+
+		const auto * entry = m_session->scan().find(rec_type, record_id);
+		if (!entry)
+			return;
+
+		display_record_in_view(*entry);
+	});
 }
 
 void plugin_workspace_view_t::load_plugins_from_paths(
@@ -127,6 +188,9 @@ void plugin_workspace_view_t::load_plugins_from_paths(
 
 void plugin_workspace_view_t::on_load_data_files()
 {
+	if (!confirm_discard_or_save_unsaved())
+		return;
+
 	const auto initial_dir = QString::fromStdString(m_settings.last_directory());
 	QString dir = QFileDialog::getExistingDirectory(this, tr("Select Data Files Folder"), initial_dir);
 
@@ -165,6 +229,9 @@ void plugin_workspace_view_t::on_load_data_files()
 
 void plugin_workspace_view_t::on_load_mo2_profile()
 {
+	if (!confirm_discard_or_save_unsaved())
+		return;
+
 	const auto initial_dir = QString::fromStdString(m_settings.last_directory());
 	QString profile_dir = QFileDialog::getExistingDirectory(this, tr("Select MO2 Profile Folder"), initial_dir);
 
@@ -177,6 +244,9 @@ void plugin_workspace_view_t::on_load_mo2_profile()
 
 void plugin_workspace_view_t::on_load_openmw_cfg()
 {
+	if (!confirm_discard_or_save_unsaved())
+		return;
+
 	const auto initial_dir = QString::fromStdString(m_settings.last_directory());
 
 	QString cfg_path =
@@ -190,14 +260,74 @@ void plugin_workspace_view_t::on_load_openmw_cfg()
 	m_settings.set_last_directory(cfg_dir.toStdString());
 }
 
+QMessageBox::StandardButton plugin_workspace_view_t::prompt_unsaved(bool allow_discard)
+{
+	const auto title = QCoreApplication::translate("yEditor", "Unsaved Changes");
+	const auto text = QCoreApplication::translate(
+	    "yEditor", "Some plugins have unsaved changes. Save them before continuing?");
+
+	auto buttons = QMessageBox::Save | QMessageBox::Cancel;
+	if (allow_discard)
+		buttons |= QMessageBox::Discard;
+
+	return QMessageBox::question(this, title, text, buttons, QMessageBox::Save);
+}
+
 void plugin_workspace_view_t::on_unload_all()
 {
+	if (m_session->has_any_unsaved())
+	{
+		const auto answer = prompt_unsaved(true);
+		if (answer == QMessageBox::Cancel)
+			return;
+
+		if (answer == QMessageBox::Save)
+			m_merge_controller->save_all_dirty();
+	}
+
 	m_session->unload_all();
+}
+
+bool plugin_workspace_view_t::confirm_discard_or_save_unsaved()
+{
+	if (!m_session->has_any_unsaved())
+		return true;
+
+	const auto answer = prompt_unsaved(true);
+	if (answer == QMessageBox::Cancel)
+		return false;
+
+	if (answer == QMessageBox::Save)
+		m_merge_controller->save_all_dirty();
+
+	return true;
+}
+
+void plugin_workspace_view_t::on_save()
+{
+	const auto info = m_nav_view->current_selection();
+	if (info.plugin_idx < 0)
+		return;
+
+	if (!m_session->is_plugin_dirty(info.plugin_idx))
+		return;
+
+	m_merge_controller->save_plugin(info.plugin_idx);
+	rebuild_nav_preserving_state();
+	emit unsaved_changes_changed(m_session->has_any_unsaved());
+}
+
+void plugin_workspace_view_t::on_save_all()
+{
+	m_merge_controller->save_all_dirty();
+	rebuild_nav_preserving_state();
+	emit unsaved_changes_changed(m_session->has_any_unsaved());
 }
 
 void plugin_workspace_view_t::on_create_merged_patch()
 {
-	m_merge_controller->create_merged_patch();
+	if (!m_merge_controller->create_merged_patch())
+		return;
 
 	const auto info = m_nav_view->current_selection();
 	if (info.record_id.empty())
@@ -219,6 +349,16 @@ void plugin_workspace_view_t::on_create_merged_patch()
 
 void plugin_workspace_view_t::on_clean_all()
 {
+	if (m_session->has_any_unsaved())
+	{
+		const auto answer = prompt_unsaved(true);
+		if (answer == QMessageBox::Cancel)
+			return;
+
+		if (answer == QMessageBox::Save)
+			m_merge_controller->save_all_dirty();
+	}
+
 	if (m_session->scan().plugin_count() < 2)
 	{
 		log_message("[error] need at least 2 plugins loaded to clean");
@@ -253,6 +393,7 @@ void plugin_workspace_view_t::rebuild_after_load()
 	rebuild_nav_preserving_state();
 	on_filter_changed();
 	update_status();
+	start_lua_scan();
 }
 
 void plugin_workspace_view_t::apply_user_conflict_rules()
@@ -290,10 +431,11 @@ void plugin_workspace_view_t::on_settings_changed()
 
 	if (m_session->scan().plugin_count() > 0)
 	{
+		const auto selection = m_nav_view->current_selection();
+
 		m_session->scan().rebuild_conflicts();
 		rebuild_nav_preserving_state();
 
-		const auto selection = m_nav_view->current_selection();
 		if (!selection.rec_type.empty())
 			on_nav_selection_changed(selection);
 	}
@@ -328,6 +470,40 @@ void plugin_workspace_view_t::on_nav_selection_changed(const nav_tree_model_t::n
 	update_status();
 }
 
+void plugin_workspace_view_t::on_lua_selection_changed(const lua_tree_model_t::node_info_t & info)
+{
+	if (info.registration_idx < 0)
+	{
+		m_record_view->clear();
+		return;
+	}
+
+	const auto idx = static_cast<size_t>(info.registration_idx);
+	if (idx >= m_lua_scan_result.registrations.size())
+	{
+		m_record_view->clear();
+		return;
+	}
+
+	const auto & registration = m_lua_scan_result.registrations[idx];
+
+	for (const auto & conflict : m_lua_scan_result.conflicts)
+	{
+		for (const auto & reg : conflict.registrations)
+		{
+			if (reg.script_path == registration.script_path && reg.line_number == registration.line_number)
+			{
+				m_record_view->model()->set_lua_conflict(conflict);
+				m_record_view->resize_columns();
+				return;
+			}
+		}
+	}
+
+	m_record_view->model()->set_lua_registration(registration);
+	m_record_view->resize_columns();
+}
+
 void plugin_workspace_view_t::set_conflicts_only(bool value)
 {
 	m_conflicts_only = value;
@@ -340,6 +516,15 @@ void plugin_workspace_view_t::set_show_deleted_strikeout(bool value)
 	m_nav_view->set_show_deleted_strikeout(value);
 }
 
+void plugin_workspace_view_t::set_editing_enabled(bool value)
+{
+	m_editable_columns.set_editing_enabled(value);
+
+	const auto current = m_record_view->tree()->currentIndex();
+	if (current.isValid())
+		on_view_selection_changed(current);
+}
+
 bool plugin_workspace_view_t::is_show_deleted_strikeout() const
 {
 	return m_record_view->model()->show_deleted_strikeout();
@@ -347,37 +532,7 @@ bool plugin_workspace_view_t::is_show_deleted_strikeout() const
 
 void plugin_workspace_view_t::on_filter_changed()
 {
-	nav_tree_model_t::filter_state_t state;
-
-	if (m_conflicts_only)
-	{
-		state.filter_conflict_all = true;
-		state.conflict_all_set.insert(conflict_all_t::conflict);
-		state.conflict_all_set.insert(conflict_all_t::override_benign);
-	}
-
-	bool has_any = state.filter_conflict_all;
-
-	if (has_any)
-	{
-		if (m_has_filter_active && state == m_last_quick_filter)
-			return;
-
-		m_has_filter_active = true;
-		m_last_quick_filter = state;
-		m_nav_view->set_filter(state);
-	}
-	else
-	{
-		if (!m_has_filter_active)
-			return;
-
-		m_has_filter_active = false;
-		m_last_quick_filter = {};
-		m_nav_view->clear_filter();
-	}
-
-	update_status();
+	apply_effective_filter();
 }
 
 void plugin_workspace_view_t::set_hide_duplicates(bool hide)
@@ -399,48 +554,63 @@ void plugin_workspace_view_t::on_advanced_filter()
 	auto types = m_session->scan().all_types();
 	filter_dialog_t dlg(types, this);
 
-	if (m_filter_active)
-	{
-		filter_dialog_t::filter_state_t dlg_state;
-		dlg_state.filter_conflict_all = m_last_filter_state.filter_conflict_all;
-		dlg_state.conflict_all_set = m_last_filter_state.conflict_all_set;
-		dlg_state.filter_conflict_this = m_last_filter_state.filter_conflict_this;
-		dlg_state.conflict_this_set = m_last_filter_state.conflict_this_set;
-		dlg_state.filter_by_type = m_last_filter_state.filter_by_type;
-		dlg_state.type_set = m_last_filter_state.type_set;
-		dlg_state.filter_by_id = m_last_filter_state.filter_by_id;
-		dlg_state.id_text = m_last_filter_state.id_text;
-		dlg_state.filter_by_name = m_last_filter_state.filter_by_name;
-		dlg_state.name_text = m_last_filter_state.name_text;
-		dlg_state.filter_deleted = m_last_filter_state.filter_deleted;
-		dlg.set_state(dlg_state);
-	}
+	filter_dialog_t::filter_state_t dlg_state;
+	dlg_state.filter_conflict_all = m_advanced_filter.filter_conflict_all;
+	dlg_state.conflict_all_set = m_advanced_filter.conflict_all_set;
+	dlg_state.filter_conflict_this = m_advanced_filter.filter_conflict_this;
+	dlg_state.conflict_this_set = m_advanced_filter.conflict_this_set;
+	dlg_state.filter_by_type = m_advanced_filter.filter_by_type;
+	dlg_state.type_set = m_advanced_filter.type_set;
+	dlg_state.filter_deleted = m_advanced_filter.filter_deleted;
+	dlg_state.filter_lua_severity = m_advanced_filter.filter_lua_severity;
+	dlg_state.lua_severity_set = m_advanced_filter.lua_severity_set;
+	dlg_state.filter_lua_interface = m_advanced_filter.filter_lua_interface;
+	dlg_state.lua_interface_set = m_advanced_filter.lua_interface_set;
+	dlg.set_state(dlg_state);
 
 	if (dlg.exec() != QDialog::Accepted)
 		return;
 
-	auto state = dlg.state();
+	const auto result = dlg.state();
 
-	nav_tree_model_t::filter_state_t nav_state;
-	nav_state.filter_conflict_all = state.filter_conflict_all;
-	nav_state.conflict_all_set = state.conflict_all_set;
-	nav_state.filter_conflict_this = state.filter_conflict_this;
-	nav_state.conflict_this_set = state.conflict_this_set;
-	nav_state.filter_by_type = state.filter_by_type;
-	nav_state.type_set = state.type_set;
-	nav_state.filter_by_id = state.filter_by_id;
-	nav_state.id_text = state.id_text;
-	nav_state.filter_by_name = state.filter_by_name;
-	nav_state.name_text = state.name_text;
-	nav_state.filter_deleted = state.filter_deleted;
+	m_advanced_filter.filter_conflict_all = result.filter_conflict_all;
+	m_advanced_filter.conflict_all_set = result.conflict_all_set;
+	m_advanced_filter.filter_conflict_this = result.filter_conflict_this;
+	m_advanced_filter.conflict_this_set = result.conflict_this_set;
+	m_advanced_filter.filter_by_type = result.filter_by_type;
+	m_advanced_filter.type_set = result.type_set;
+	m_advanced_filter.filter_deleted = result.filter_deleted;
+	m_advanced_filter.filter_lua_severity = result.filter_lua_severity;
+	m_advanced_filter.lua_severity_set = result.lua_severity_set;
+	m_advanced_filter.filter_lua_interface = result.filter_lua_interface;
+	m_advanced_filter.lua_interface_set = result.lua_interface_set;
 
-	m_last_filter_state = nav_state;
-	m_filter_active = true;
-	m_has_filter_active = true;
-	m_last_quick_filter = nav_state;
+	apply_effective_filter();
+}
 
-	m_nav_view->set_filter(nav_state);
-	update_status();
+void plugin_workspace_view_t::reset_all_filters()
+{
+	m_conflicts_only = false;
+	m_advanced_filter = {};
+	m_search_filter = {};
+	apply_effective_filter();
+}
+
+void plugin_workspace_view_t::apply_search(
+    const std::string & query,
+    bool search_in_id,
+    bool search_in_name,
+    bool case_sensitive,
+    bool regex_mode)
+{
+	m_search_filter.filter_by_id = search_in_id && !query.empty();
+	m_search_filter.id_text = search_in_id ? query : std::string {};
+	m_search_filter.filter_by_name = search_in_name && !query.empty();
+	m_search_filter.name_text = search_in_name ? query : std::string {};
+	m_search_filter.search_case_sensitive = case_sensitive;
+	m_search_filter.search_regex = regex_mode;
+
+	apply_effective_filter();
 }
 
 void plugin_workspace_view_t::on_nav_context_menu(const QPoint & global_pos, const nav_tree_model_t::node_info_t & info)
@@ -479,39 +649,36 @@ void plugin_workspace_view_t::on_view_selection_changed(const QModelIndex & curr
 		return;
 	}
 
-	const int col = current.column() - 1;
-	if (col < 0 || col >= static_cast<int>(m_record_view->model()->column_plugin_indices().size()))
+	const auto * model = m_record_view->model();
+	const int clicked_col = current.column();
+	if (clicked_col < 1)
 	{
 		m_preview->clear();
 		return;
 	}
 
-	const auto * node = m_record_view->model()->node_from_index(current);
-	if (!node)
+	const auto * node = model->node_from_index(current);
+	if (node != nullptr && node->is_info_chain)
 	{
 		m_preview->clear();
 		return;
 	}
 
-	auto read_node_value = [&](int target_col) -> std::string
-	{
-		if (target_col < 0 || target_col >= static_cast<int>(node->values.size()))
-			return {};
+	m_preview->set_editing_enabled(false);
 
-		const auto & value = node->values[target_col];
-		if (value == non_existent_value)
-			return {};
+	const auto right_text = model->full_value_at(current);
 
-		return value;
-	};
+	const auto left_index = model->index(current.row(), clicked_col - 1, current.parent());
+	std::string left_text;
+	if (left_index.isValid() && left_index.column() >= 1)
+		left_text = model->full_value_at(left_index);
 
-	const auto right_text = read_node_value(col);
-	const auto left_text = (col > 0) ? read_node_value(col - 1) : std::string {};
-
-	if (right_text.empty() && left_text.empty())
+	if (right_text == non_existent_value && (left_text.empty() || left_text == non_existent_value))
 		m_preview->clear();
 	else
 		m_preview->show_comparison(left_text, right_text);
+
+	m_preview->update_selection(current, model, right_text);
 }
 
 void plugin_workspace_view_t::display_record_in_view(const conflict_entry_t & entry)
@@ -541,6 +708,11 @@ void plugin_workspace_view_t::display_record_in_view(const conflict_entry_t & en
 	{
 		m_record_view->display_record(m_session->scan(), entry);
 	}
+
+	m_editable_columns.set_merge_column(m_record_view->model()->merge_column());
+
+	if (m_preview)
+		m_preview->clear();
 }
 
 void plugin_workspace_view_t::update_status()
@@ -555,8 +727,8 @@ void plugin_workspace_view_t::update_status()
 			++conflict_count;
 	}
 
-	m_lbl_count->setText(
-	    QString("%1 plugins, %2 records, %3 conflicts").arg(plugin_count).arg(record_count).arg(conflict_count));
+	const auto lua_conflict_count = m_lua_scan_result.conflicts.size();
+	m_lbl_count->setText(count_label_format::format(plugin_count, record_count, conflict_count, lua_conflict_count));
 
 	const auto info = m_nav_view->current_selection();
 
@@ -609,7 +781,7 @@ void plugin_workspace_view_t::log_message(const std::string & msg)
 
 void plugin_workspace_view_t::save_session_state()
 {
-	const auto ini_path = QCoreApplication::applicationDirPath() + "/yEditor.ini";
+	const auto ini_path = settings_store_t::settings_dir() + "yEditor.ini";
 
 	m_session->save_session_state(ini_path);
 
@@ -637,12 +809,12 @@ void plugin_workspace_view_t::save_session_state()
 
 void plugin_workspace_view_t::restore_session_state()
 {
-	QSettings settings(QCoreApplication::applicationDirPath() + "/yEditor.ini", QSettings::IniFormat);
+	QSettings settings(settings_store_t::settings_dir() + "yEditor.ini", QSettings::IniFormat);
 
 	m_conflicts_only = settings.value("view/conflicts_only", false).toBool();
 	m_hide_duplicates = settings.value("view/hide_duplicates", false).toBool();
 
-	m_record_view->model()->set_show_deleted_strikeout(settings.value("view/show_deleted_strikeout", true).toBool());
+	m_record_view->model()->set_show_deleted_strikeout(settings.value("view/show_deleted_strikeout", false).toBool());
 	m_nav_view->set_show_deleted_strikeout(m_record_view->model()->show_deleted_strikeout());
 	m_nav_view->set_hide_duplicates(m_hide_duplicates);
 
@@ -658,7 +830,7 @@ void plugin_workspace_view_t::restore_session_state()
 	if (!content_state.isEmpty())
 		m_content_splitter->restoreState(content_state);
 
-	m_session->restore_session_state(QCoreApplication::applicationDirPath() + "/yEditor.ini");
+	m_session->restore_session_state(settings_store_t::settings_dir() + "yEditor.ini");
 
 	auto rec_type = settings.value("session/nav_rec_type").toString().toStdString();
 	auto record_id = settings.value("session/nav_record_id").toString().toStdString();
@@ -704,21 +876,43 @@ void plugin_workspace_view_t::start_lua_scan()
 	if (data_paths.empty())
 		return;
 
-	log_message("[info] starting Lua handler scan...");
+	log_message("[info] starting lua handler scan...");
+	m_status_label->setText(tr("Scanning Lua handlers..."));
 	m_lua_scan_worker->start_scan(data_paths, mod_names);
 }
 
 void plugin_workspace_view_t::on_lua_scan_complete(const lua_scan_result_t & result)
 {
-	m_lua_conflicts_view->set_scan_result(result);
+	m_lua_scan_result = result;
 
 	const auto conflict_count = result.conflicts.size();
 	const auto reg_count = result.registrations.size();
 
 	log_message(
-	    "[info] Lua scan complete: " + std::to_string(reg_count) + " registrations, " + std::to_string(conflict_count) +
+	    "[info] lua scan complete: " + std::to_string(reg_count) + " registrations, " + std::to_string(conflict_count) +
 	    " conflicts");
 
 	for (const auto & warning : result.warnings)
 		log_message("[warning] " + warning);
+
+	m_lua_view->set_scan_result(result);
+	update_status();
+}
+
+nav_tree_model_t::filter_state_t plugin_workspace_view_t::build_effective_filter() const
+{
+	return filter_composer::compose_filter(m_conflicts_only, m_advanced_filter, m_search_filter);
+}
+
+void plugin_workspace_view_t::apply_effective_filter()
+{
+	const auto state = build_effective_filter();
+
+	if (state == nav_tree_model_t::filter_state_t {})
+		m_nav_view->clear_filter();
+	else
+		m_nav_view->set_filter(state);
+
+	update_status();
+	emit filters_active_changed(state != nav_tree_model_t::filter_state_t {});
 }

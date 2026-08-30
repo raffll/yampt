@@ -1,11 +1,14 @@
+#include <resource_paths.hpp>
 #include "language_settings_view.hpp"
-#include <filesystem>
+#include <io/codepage.hpp>
 #include <utility/language_config.hpp>
+#include <filesystem>
 #include <settings_store.hpp>
 #include <QComboBox>
 #include <QCoreApplication>
 #include <QFormLayout>
 #include <QFrame>
+#include <QLabel>
 #include <QLineEdit>
 #include <QVBoxLayout>
 
@@ -13,8 +16,8 @@ namespace {
 
 const std::vector<language_entry_t> & get_languages()
 {
-	static const auto languages = language_config::load(
-	    (QCoreApplication::applicationDirPath() + "/languages.json").toStdString());
+	static const auto languages =
+	    language_config::load(resource_paths::languages_file());
 	return languages;
 }
 
@@ -63,6 +66,18 @@ language_settings_view_t::language_settings_view_t(const std::string & dictionar
 	detail_form->addRow(tr("Native Tag:"), m_native_tag_edit);
 
 	layout->addLayout(detail_form);
+
+	auto * encoding_separator = new QFrame(this);
+	encoding_separator->setFrameShape(QFrame::HLine);
+	encoding_separator->setFrameShadow(QFrame::Sunken);
+	layout->addWidget(encoding_separator);
+
+	auto * encoding_form = new QFormLayout;
+	m_encoding_note = new QLabel(this);
+	m_encoding_note->setStyleSheet("color: rgb(120, 120, 120); font-size: 11px;");
+	encoding_form->addRow(tr("Encoding:"), m_encoding_note);
+	layout->addLayout(encoding_form);
+
 	layout->addStretch();
 
 	scan_dictionaries(m_dictionaries_dir);
@@ -118,6 +133,22 @@ void language_settings_view_t::apply(settings_store_t & settings) const
 	{
 		settings.set_encoding_index(codepage_to_index(native_lang->codepage));
 		settings.set_translation_target(native_lang->nllb_code);
+
+		int language_index = 0;
+		const auto foreign = foreign_code.toStdString();
+		for (const auto & lang : get_languages())
+		{
+			if (lang.code == foreign)
+				continue;
+
+			if (lang.code == native_code.toStdString())
+			{
+				settings.set_translation_language_index(language_index);
+				break;
+			}
+
+			++language_index;
+		}
 	}
 
 	const auto native_spell_aff = m_native_spell_combo->currentData().toString().toStdString();
@@ -176,6 +207,9 @@ void language_settings_view_t::on_native_language_changed(int index)
 
 	update_spell_combo(m_native_spell_combo, lang->dictionary_prefix);
 	m_native_tag_edit->setText(code);
+
+	if (m_encoding_note)
+		m_encoding_note->setText(QString::fromStdString(codepage_name(lang->codepage)));
 }
 
 void language_settings_view_t::update_spell_combo(QComboBox * combo, const std::string & prefix)

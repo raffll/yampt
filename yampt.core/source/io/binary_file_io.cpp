@@ -14,15 +14,19 @@ std::string binary_file_io::read_file(const std::string & path)
 		char buffer[read_buffer_size];
 		file.seekg(0, std::ios::end);
 		auto file_size = file.tellg();
-		if (file_size == 0)
+		if (file_size <= 0)
 		{
-			app_logger_t::add_log("[warning] file is empty: \"" + path + "\"\r\n");
+			if (file_size == 0)
+				app_logger_t::add_log("[warning] file is empty: \"" + path + "\"\r\n");
+			else
+				app_logger_t::add_log("[error] cannot determine file size: \"" + path + "\"\r\n");
+
 			return content;
 		}
 		content.reserve(static_cast<size_t>(file_size));
 		file.seekg(0, std::ios::beg);
 		std::streamsize chars_read;
-		while (file.read(buffer, sizeof(buffer)), chars_read = file.gcount())
+		while (file.read(buffer, sizeof(buffer)), (chars_read = file.gcount()))
 		{
 			content.append(buffer, chars_read);
 		}
@@ -46,19 +50,20 @@ void binary_file_io::write_text(const std::string & text, const std::string & pa
 	app_logger_t::add_log("[info] writing \"" + path + "\"\r\n");
 }
 
-void binary_file_io::write_file(const std::vector<record_t> & records, const std::string & path)
+bool binary_file_io::write_file(const std::vector<record_t> & records, const std::string & path)
 {
 	std::ofstream file(path, std::ios::binary);
 	if (!file.is_open())
 	{
 		app_logger_t::add_log("[error] cannot open \"" + path + "\" for writing\r\n");
-		return;
+		return false;
 	}
+
 	for (const auto & record : records)
-	{
 		file << record.content;
-	}
+
 	app_logger_t::add_log("[info] writing \"" + path + "\"\r\n");
+	return file.good();
 }
 
 void binary_file_io::create_file(const std::vector<record_t> & records, const std::string & path)

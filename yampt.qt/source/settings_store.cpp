@@ -1,8 +1,16 @@
 #include "settings_store.hpp"
+#include "resource_paths.hpp"
+#include <algorithm>
 #include <QCoreApplication>
+#include <QDir>
+
+QString settings_store_t::settings_dir()
+{
+	return QString::fromStdString(resource_paths::config_dir());
+}
 
 settings_store_t::settings_store_t(const QString & filename)
-    : m_settings(QCoreApplication::applicationDirPath() + "/" + filename, QSettings::IniFormat)
+    : m_settings(settings_dir() + filename, QSettings::IniFormat)
 {}
 
 int settings_store_t::encoding_index() const
@@ -127,14 +135,29 @@ void settings_store_t::set_web_api_key(const std::string & provider_id, const st
 	m_settings.setValue(key, QString::fromStdString(value));
 }
 
-int settings_store_t::translation_source_index() const
+std::string settings_store_t::web_provider_setting(const std::string & provider_id, const std::string & key) const
 {
-	return m_settings.value("Translation/SourceIndex", 0).toInt();
+	const auto ini_key =
+	    QString("WebTranslators/") + QString::fromStdString(provider_id) + "/" + QString::fromStdString(key);
+	auto result = m_settings.value(ini_key, "").toString().toStdString();
+
+	if (result.empty() && key == "api_key")
+		result = web_api_key(provider_id);
+
+	return result;
 }
 
-void settings_store_t::set_translation_source_index(int index)
+void settings_store_t::set_web_provider_setting(
+    const std::string & provider_id,
+    const std::string & key,
+    const std::string & value)
 {
-	m_settings.setValue("Translation/SourceIndex", index);
+	const auto ini_key =
+	    QString("WebTranslators/") + QString::fromStdString(provider_id) + "/" + QString::fromStdString(key);
+	m_settings.setValue(ini_key, QString::fromStdString(value));
+
+	if (key == "api_key")
+		set_web_api_key(provider_id, value);
 }
 
 int settings_store_t::translation_language_index() const
@@ -202,6 +225,37 @@ void settings_store_t::set_last_merge_order(const std::vector<std::string> & pat
 	{
 		const auto key = QString("MergeOrder/Path%1").arg(i);
 		m_settings.setValue(key, QString::fromStdString(paths[i]));
+	}
+}
+
+std::vector<translation_example_t> settings_store_t::translation_examples() const
+{
+	const int stored_count = m_settings.value("Examples/Count", 0).toInt();
+	const int count = std::min(stored_count, max_examples);
+	std::vector<translation_example_t> examples;
+	examples.reserve(count);
+	for (int i = 0; i < count; ++i)
+	{
+		const auto original_key = QString("Examples/Original%1").arg(i);
+		const auto translation_key = QString("Examples/Translation%1").arg(i);
+		translation_example_t example;
+		example.original = m_settings.value(original_key, "").toString().toStdString();
+		example.translation = m_settings.value(translation_key, "").toString().toStdString();
+		examples.push_back(example);
+	}
+	return examples;
+}
+
+void settings_store_t::set_translation_examples(const std::vector<translation_example_t> & examples)
+{
+	const int count = std::min(static_cast<int>(examples.size()), max_examples);
+	m_settings.setValue("Examples/Count", count);
+	for (int i = 0; i < count; ++i)
+	{
+		const auto original_key = QString("Examples/Original%1").arg(i);
+		const auto translation_key = QString("Examples/Translation%1").arg(i);
+		m_settings.setValue(original_key, QString::fromStdString(examples[i].original));
+		m_settings.setValue(translation_key, QString::fromStdString(examples[i].translation));
 	}
 }
 
@@ -412,30 +466,6 @@ void settings_store_t::set_theme(theme_t value)
 	m_settings.setValue("Appearance/Theme", text);
 }
 
-bool settings_store_t::merge_type_enabled(const std::string & rec_type) const
-{
-	const auto disabled = m_settings.value("merge/disabled_types", "").toString();
-	if (disabled.isEmpty())
-		return true;
-
-	const auto types = disabled.split(',', Qt::SkipEmptyParts);
-	return !types.contains(QString::fromStdString(rec_type), Qt::CaseInsensitive);
-}
-
-void settings_store_t::set_merge_type_enabled(const std::string & rec_type, bool enabled)
-{
-	const auto disabled = m_settings.value("merge/disabled_types", "").toString();
-	auto types = disabled.split(',', Qt::SkipEmptyParts);
-	const auto qtype = QString::fromStdString(rec_type);
-
-	if (enabled)
-		types.removeAll(qtype);
-	else if (!types.contains(qtype, Qt::CaseInsensitive))
-		types.append(qtype);
-
-	m_settings.setValue("merge/disabled_types", types.join(','));
-}
-
 std::string settings_store_t::merge_exclusion_pattern() const
 {
 	return m_settings.value("merge/exclusion_pattern", "").toString().toStdString();
@@ -476,16 +506,6 @@ void settings_store_t::set_merge_cell_name_fix_enabled(bool value)
 	m_settings.setValue("merge/cell_name_fix", value);
 }
 
-bool settings_store_t::merge_column_visible() const
-{
-	return m_settings.value("merge/show_column", true).toBool();
-}
-
-void settings_store_t::set_merge_column_visible(bool value)
-{
-	m_settings.setValue("merge/show_column", value);
-}
-
 std::string settings_store_t::sub_record_ignore_conflict() const
 {
 	return m_settings.value("SubRecordRules/IgnoreConflict", "CELL:NAM0").toString().toStdString();
@@ -494,26 +514,6 @@ std::string settings_store_t::sub_record_ignore_conflict() const
 void settings_store_t::set_sub_record_ignore_conflict(const std::string & value)
 {
 	m_settings.setValue("SubRecordRules/IgnoreConflict", QString::fromStdString(value));
-}
-
-std::string settings_store_t::sub_record_exclude_from_merge() const
-{
-	return m_settings.value("SubRecordRules/ExcludeFromMerge", "CELL:NAM0").toString().toStdString();
-}
-
-void settings_store_t::set_sub_record_exclude_from_merge(const std::string & value)
-{
-	m_settings.setValue("SubRecordRules/ExcludeFromMerge", QString::fromStdString(value));
-}
-
-std::string settings_store_t::sub_record_skip_if_missing() const
-{
-	return m_settings.value("SubRecordRules/SkipIfMissing", "CELL:*").toString().toStdString();
-}
-
-void settings_store_t::set_sub_record_skip_if_missing(const std::string & value)
-{
-	m_settings.setValue("SubRecordRules/SkipIfMissing", QString::fromStdString(value));
 }
 
 int settings_store_t::display_codepage() const

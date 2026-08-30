@@ -1,4 +1,8 @@
 #include "web_translator.hpp"
+#include "model_list_utils.hpp"
+#include "translation_example_ops.hpp"
+#include "web_response_utils.hpp"
+#include <QCoreApplication>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -21,7 +25,20 @@ std::string web_translator_t::name() const
 
 bool web_translator_t::is_available() const
 {
-	return !m_api_key.empty();
+	if (m_config.settings.empty())
+		return true;
+
+	for (const auto & setting : m_config.settings)
+	{
+		if (!setting.required)
+			continue;
+
+		auto it = m_settings.find(setting.key);
+		if (it == m_settings.end() || it->second.empty())
+			return false;
+	}
+
+	return true;
 }
 
 bool web_translator_t::is_async() const
@@ -44,12 +61,23 @@ int web_translator_t::remaining_quota() const
 
 void web_translator_t::set_api_key(const std::string & key)
 {
-	m_api_key = key;
+	m_settings["api_key"] = key;
 }
 
 std::string web_translator_t::api_key() const
 {
-	return m_api_key;
+	auto it = m_settings.find("api_key");
+	return (it != m_settings.end()) ? it->second : std::string {};
+}
+
+void web_translator_t::set_provider_settings(const std::unordered_map<std::string, std::string> & settings)
+{
+	m_settings = settings;
+}
+
+void web_translator_t::set_setting(const std::string & key, const std::string & value)
+{
+	m_settings[key] = value;
 }
 
 void web_translator_t::set_source_language(const std::string & language)
@@ -72,11 +100,17 @@ void web_translator_t::set_glossary_fn(std::function<std::string(const std::stri
 	m_glossary_fn = std::move(glossary_fn);
 }
 
+void web_translator_t::set_examples(const std::vector<translation_example_t> & examples)
+{
+	m_examples = examples;
+}
+
 void web_translator_t::translate(const std::string & text, const std::string & target_lang)
 {
-	if (m_api_key.empty())
+	if (!is_available())
 	{
-		emit translation_finished({ "", false, "No API key configured" });
+		emit translation_finished(
+		    { "", false, QCoreApplication::translate("yTranslator", "provider not configured").toStdString() });
 		return;
 	}
 
@@ -84,6 +118,57 @@ void web_translator_t::translate(const std::string & text, const std::string & t
 		send_chat_request(text, target_lang);
 	else
 		send_simple_request(text, target_lang);
+}
+
+void web_translator_t::fetch_models()
+{
+	if (m_config.models_endpoint.empty())
+	{
+		emit models_fetch_failed(
+		    QCoreApplication::translate("yTranslator", "Provider has no models endpoint").toStdString());
+		return;
+	}
+
+	if (!is_available())
+	{
+		emit models_fetch_failed(
+		    QCoreApplication::translate("yTranslator", "provider not configured").toStdString());
+		return;
+	}
+
+	QNetworkRequest request(QUrl(QString::fromStdString(m_config.models_endpoint)));
+
+	for (const auto & [header_name, header_value] : m_config.headers)
+	{
+		const auto expanded = expand_template(header_value, "", "");
+		request.setRawHeader(QByteArray::fromStdString(header_name), QByteArray::fromStdString(expanded));
+	}
+
+	auto * reply = m_network->get(request);
+	connect(
+	    reply,
+	    &QNetworkReply::finished,
+	    this,
+	    [this, reply]()
+	{
+		reply->deleteLater();
+
+		if (reply->error() != QNetworkReply::NoError)
+		{
+			emit models_fetch_failed(reply->errorString().toStdString());
+			return;
+		}
+
+		const auto models = extract_model_list(reply->readAll());
+		if (models.empty())
+		{
+			emit models_fetch_failed(
+			    QCoreApplication::translate("yTranslator", "Empty or unparseable models response").toStdString());
+			return;
+		}
+
+		emit models_fetched(models);
+	});
 }
 
 std::string web_translator_t::expand_template(
@@ -103,7 +188,6 @@ std::string web_translator_t::expand_template(
 		}
 	};
 
-	replace_all("{{api_key}}", m_api_key);
 	replace_all("{{text}}", text);
 	replace_all("{{target_lang}}", target_lang);
 	replace_all("{{source_lang}}", m_source_language);
@@ -114,13 +198,16 @@ std::string web_translator_t::expand_template(
 	auto upper_source = QString::fromStdString(m_source_language).toUpper().toStdString();
 	replace_all("{{source_lang_upper}}", upper_source);
 
+	for (const auto & [setting_key, setting_value] : m_settings)
+		replace_all("{{" + setting_key + "}}", setting_value);
+
 	return result;
 }
 
 void web_translator_t::send_simple_request(const std::string & text, const std::string & target_lang)
 {
-	QUrl url(QString::fromStdString(m_config.endpoint));
-	QNetworkRequest request(url);
+	QUrl url(QString::fromStdString(expand_template(m_config.endpoint, text, target_lang)));
+	QNetworkRequest request;
 
 	for (const auto & [header_name, header_value] : m_config.headers)
 	{
@@ -128,9 +215,9 @@ void web_translator_t::send_simple_request(const std::string & text, const std::
 		request.setRawHeader(QByteArray::fromStdString(header_name), QByteArray::fromStdString(expanded));
 	}
 
-	QByteArray body_data;
+	QNetworkReply * reply = nullptr;
 
-	if (m_config.body_format == body_format_t::form)
+	if (m_config.body_format == body_format_t::query)
 	{
 		QUrlQuery params;
 		for (const auto & [field_name, field_template] : m_config.body_fields)
@@ -138,20 +225,36 @@ void web_translator_t::send_simple_request(const std::string & text, const std::
 			auto value = expand_template(field_template, text, target_lang);
 			params.addQueryItem(QString::fromStdString(field_name), QString::fromStdString(value));
 		}
-		body_data = params.query(QUrl::FullyEncoded).toUtf8();
+		url.setQuery(params);
+		request.setUrl(url);
+		reply = m_network->get(request);
+	}
+	else if (m_config.body_format == body_format_t::form)
+	{
+		request.setUrl(url);
+		if (!request.hasRawHeader("Content-Type"))
+			request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+
+		QUrlQuery params;
+		for (const auto & [field_name, field_template] : m_config.body_fields)
+		{
+			auto value = expand_template(field_template, text, target_lang);
+			params.addQueryItem(QString::fromStdString(field_name), QString::fromStdString(value));
+		}
+		reply = m_network->post(request, params.query(QUrl::FullyEncoded).toUtf8());
 	}
 	else
 	{
+		request.setUrl(url);
 		QJsonObject body_obj;
 		for (const auto & [field_name, field_template] : m_config.body_fields)
 		{
 			auto value = expand_template(field_template, text, target_lang);
-			body_obj[QString::fromStdString(field_name)] = QString::fromStdString(value);
+			body_obj[QString::fromStdString(field_name)] = web_response_utils::json_value_from_string(value);
 		}
-		body_data = QJsonDocument(body_obj).toJson(QJsonDocument::Compact);
+		reply = m_network->post(request, QJsonDocument(body_obj).toJson(QJsonDocument::Compact));
 	}
 
-	auto * reply = m_network->post(request, body_data);
 	connect(
 	    reply,
 	    &QNetworkReply::finished,
@@ -185,6 +288,9 @@ void web_translator_t::send_chat_request(const std::string & text, const std::st
 			system_prompt += "\n\nUse these established translations as reference:\n" + glossary_text;
 	}
 
+	if (!m_examples.empty())
+		system_prompt += translation_example_ops::format_examples_prompt(m_examples);
+
 	QJsonObject body_obj;
 	for (const auto & [field_name, field_template] : m_config.body_fields)
 	{
@@ -192,14 +298,31 @@ void web_translator_t::send_chat_request(const std::string & text, const std::st
 		body_obj[QString::fromStdString(field_name)] = QString::fromStdString(value);
 	}
 
-	body_obj["system"] = QString::fromStdString(system_prompt);
+	if (m_config.message_style == message_style_t::anthropic)
+	{
+		body_obj["system"] = QString::fromStdString(system_prompt);
 
-	QJsonArray messages;
-	QJsonObject user_message;
-	user_message["role"] = "user";
-	user_message["content"] = QString::fromStdString(text);
-	messages.append(user_message);
-	body_obj["messages"] = messages;
+		QJsonArray messages;
+		QJsonObject user_message;
+		user_message["role"] = "user";
+		user_message["content"] = QString::fromStdString(text);
+		messages.append(user_message);
+		body_obj["messages"] = messages;
+	}
+	else
+	{
+		QJsonArray messages;
+		QJsonObject system_message;
+		system_message["role"] = "system";
+		system_message["content"] = QString::fromStdString(system_prompt);
+		messages.append(system_message);
+
+		QJsonObject user_message;
+		user_message["role"] = "user";
+		user_message["content"] = QString::fromStdString(text);
+		messages.append(user_message);
+		body_obj["messages"] = messages;
+	}
 
 	auto body_data = QJsonDocument(body_obj).toJson(QJsonDocument::Compact);
 
@@ -232,7 +355,8 @@ void web_translator_t::on_reply_finished(QNetworkReply * reply)
 
 	if (result_text.empty())
 	{
-		emit translation_finished({ "", false, "Empty or unparseable response" });
+		emit translation_finished(
+		    { "", false, QCoreApplication::translate("yTranslator", "Empty or unparseable response").toStdString() });
 		return;
 	}
 
@@ -241,55 +365,13 @@ void web_translator_t::on_reply_finished(QNetworkReply * reply)
 
 std::string web_translator_t::extract_response(const QByteArray & data) const
 {
-	auto document = QJsonDocument::fromJson(data);
-	if (!document.isObject() && !document.isArray())
-		return {};
+	const auto document = QJsonDocument::fromJson(data);
+	return web_response_utils::extract_by_path(document, m_config.response_path);
+}
 
-	auto path = QString::fromStdString(m_config.response_path);
-	auto segments = path.split('.');
-
-	QJsonValue current;
-	if (document.isObject())
-		current = QJsonValue(document.object());
-	else
-		current = QJsonValue(document.array());
-
-	for (const auto & segment : segments)
-	{
-		if (segment.isEmpty())
-			continue;
-
-		auto bracket_pos = segment.indexOf('[');
-		if (bracket_pos >= 0)
-		{
-			auto field_name = segment.left(bracket_pos);
-			auto index_str = segment.mid(bracket_pos + 1, segment.indexOf(']') - bracket_pos - 1);
-			auto index = index_str.toInt();
-
-			if (!field_name.isEmpty())
-			{
-				if (!current.isObject())
-					return {};
-
-				current = current.toObject().value(field_name);
-			}
-
-			if (!current.isArray())
-				return {};
-
-			current = current.toArray().at(index);
-		}
-		else
-		{
-			if (!current.isObject())
-				return {};
-
-			current = current.toObject().value(segment);
-		}
-	}
-
-	if (current.isString())
-		return current.toString().toStdString();
-
-	return {};
+std::vector<std::string> web_translator_t::extract_model_list(const QByteArray & data) const
+{
+	const auto document = QJsonDocument::fromJson(data);
+	return model_list_utils::extract_model_list(
+	    document, model_list_utils::model_list_path_t { m_config.models_path, m_config.models_id_key });
 }

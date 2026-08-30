@@ -3,6 +3,7 @@
   <ItemGroup>
     <ClCompile Include="source\utility\domain_types.cpp" />
     <ClCompile Include="source\utility\app_logger.cpp" />
+    <ClCompile Include="source\utility\string_utils.cpp" />
     <ClCompile Include="source\io\codepage.cpp" />
     <ClCompile Include="source\io\dict_reader.cpp" />
     <ClCompile Include="source\io\dict_writer.cpp" />
@@ -12,6 +13,7 @@
     <ClCompile Include="source\io\eet_converter.cpp" />
     <ClCompile Include="source\io\file_list.cpp" />
     <ClCompile Include="source\io\yaml_l10n_reader.cpp" />
+    <ClCompile Include="source\io\yaml_scalar.cpp" />
     <ClCompile Include="source\io\yaml_l10n_writer.cpp" />
     <ClCompile Include="source\io\loc_file_reader.cpp" />
     <ClCompile Include="source\io\loc_file_writer.cpp" />
@@ -44,10 +46,13 @@
     <ClCompile Include="source\scanner\auto_merge.cpp" />
     <ClCompile Include="source\scanner\batch_cleaner.cpp" />
     <ClCompile Include="source\scanner\header_repair.cpp" />
+    <ClCompile Include="source\decoder\field_validator.cpp" />
+    <ClCompile Include="source\decoder\field_encoder.cpp" />
     <ClCompile Include="source\decoder\sub_record_schema.cpp" />
     <ClCompile Include="source\decoder\view_group_def.cpp" />
     <ClCompile Include="source\decoder\content_alignment.cpp" />
     <ClCompile Include="source\decoder\view_tree_format.cpp" />
+    <ClCompile Include="source\decoder\scvr_condition.cpp" />
     <ClCompile Include="source\decoder\conflict_slots.cpp" />
     <ClCompile Include="source\scanner\plugin_index.cpp" />
     <ClCompile Include="source\scanner\plugin_scan.cpp" />
@@ -56,12 +61,12 @@
     <ClCompile Include="source\scanner\handler_parser.cpp" />
     <ClCompile Include="source\scanner\conflict_detector.cpp" />
     <ClCompile Include="source\scanner\lua_scanner.cpp" />
+    <ClCompile Include="source\scanner\dial_info_align.cpp" />
     <ClCompile Include="source\utility\language_config.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\utility\domain_types.hpp" />
     <ClInclude Include="source\utility\app_logger.hpp" />
-    <ClInclude Include="source\utility\includes.hpp" />
     <ClInclude Include="source\utility\string_utils.hpp" />
     <ClInclude Include="source\utility\record_types.hpp" />
     <ClInclude Include="source\utility\status_types.hpp" />
@@ -108,10 +113,13 @@
     <ClInclude Include="source\scanner\plugin_scan.hpp" />
     <ClInclude Include="source\scanner\merge_patch_store.hpp" />
     <ClInclude Include="source\decoder\sub_record_iter.hpp" />
+    <ClInclude Include="source\decoder\field_validator.hpp" />
+    <ClInclude Include="source\decoder\field_encoder.hpp" />
     <ClInclude Include="source\decoder\sub_record_schema.hpp" />
     <ClInclude Include="source\decoder\view_group_def.hpp" />
     <ClInclude Include="source\decoder\content_alignment.hpp" />
     <ClInclude Include="source\decoder\view_tree_format.hpp" />
+    <ClInclude Include="source\decoder\scvr_condition.hpp" />
     <ClInclude Include="source\io\profile_reader.hpp" />
     <ClInclude Include="source\utility\theme_enums.hpp" />
     <ClInclude Include="source\utility\color_palette.hpp" />

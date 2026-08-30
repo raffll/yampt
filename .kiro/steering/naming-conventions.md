@@ -177,8 +177,6 @@ All log messages use a unified prefix scheme:
 
 Rules:
 - Lowercase prefix tag, lowercase message body
-- No trailing `!` — plain statements only
-- No `...` ellipsis — use present tense (`loading "file.esp"` not `loading "file.esp"..."`)
 - No ad-hoc prefixes: `-->`, `->`, `Error:`, `Warning:`, `INFO:`
 
 ```cpp
@@ -188,8 +186,8 @@ tools_t::add_log("[error] cannot open \"file.esp\" for writing\r\n");
 tools_t::add_log("[warning] duplicate CELL record: Balmora\r\n");
 
 // Bad
-tools_t::add_log("--> Loading \"Morrowind.esm\"...\r\n");
-tools_t::add_log("--> Error loading \"file.esp\" (wrong path)!\r\n");
+tools_t::add_log("--> Loading \"Morrowind.esm\"\r\n");
+tools_t::add_log("Error: loading \"file.esp\" (wrong path)\r\n");
 tools_t::add_log("Warning: duplicate CELL value Balmora\r\n");
 ```
 

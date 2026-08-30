@@ -80,17 +80,3 @@ const sub_record_rule_t * find_sub_record_rule(
     const record_behavior_t * behavior,
     const std::string & sub_type,
     size_t data_size);
-
-struct sub_record_user_policy_t
-{
-	bool ignore_conflict = false;
-	bool exclude_from_merge = false;
-	bool skip_if_missing = false;
-};
-
-sub_record_user_policy_t find_user_policy(
-    const std::string & record_type,
-    const std::string & sub_type,
-    const std::set<std::string> & ignore_conflict_subs,
-    const std::set<std::string> & exclude_from_merge_subs,
-    const std::set<std::string> & skip_if_missing_subs);

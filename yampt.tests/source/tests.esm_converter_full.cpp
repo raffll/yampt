@@ -2,7 +2,8 @@
 #include <converter/esm_converter.hpp>
 #include <io/dict_writer.hpp>
 #include <utility/app_logger.hpp>
-#include <utility/includes.hpp>
+#include <filesystem>
+#include <fstream>
 #include <random>
 
 static std::string get_temp_path(const std::string & filename)
@@ -42,7 +43,7 @@ static dict_merger_t make_merger(
 
 	dict_t dict = domain_types::initialize_dict();
 	for (const auto & [record_type, key_text, old_text, new_text] : entries)
-		dict.at(record_type).insert({ key_text, old_text, new_text, status_t::translated });
+		dict.at(record_type).insert({ key_text, old_text, new_text, status_t::translated, {}, {}, {}, {} });
 
 	dict_writer_t::write(dict, dict_path);
 

@@ -83,6 +83,7 @@ void creator_ordered_t::build_dial_map()
 
 void creator_ordered_t::process_gmst(size_t i)
 {
+	(void)i;
 	m_ctx.esm.set_key("NAME");
 	m_ctx.esm.set_value("STRV");
 	if (!m_ctx.esm.get_key().exist || !m_ctx.esm.get_value().exist)
@@ -105,6 +106,7 @@ void creator_ordered_t::process_gmst(size_t i)
 
 void creator_ordered_t::process_fnam(size_t i)
 {
+	(void)i;
 	m_ctx.esm.set_key("NAME");
 	m_ctx.esm.set_value("FNAM");
 	if (!m_ctx.esm.get_key().exist || !m_ctx.esm.get_value().exist)
@@ -126,10 +128,13 @@ void creator_ordered_t::process_fnam(size_t i)
 
 	const auto & old_text = m_ctx.esm_ref.get_value().text;
 	insert_entry_base(key_text, old_text, new_text, rec_type_t::fnam, status_t::translated);
+
+	creator_helpers::enrich_fnam_enchantment(m_ctx, key_text, m_ctx.esm);
 }
 
 void creator_ordered_t::process_desc(size_t i)
 {
+	(void)i;
 	m_ctx.esm.set_key("NAME");
 	m_ctx.esm.set_value("DESC");
 	if (!m_ctx.esm.get_key().exist || !m_ctx.esm.get_value().exist)
@@ -149,6 +154,7 @@ void creator_ordered_t::process_desc(size_t i)
 
 void creator_ordered_t::process_text(size_t i)
 {
+	(void)i;
 	m_ctx.esm.set_key("NAME");
 	m_ctx.esm.set_value("TEXT");
 	if (!m_ctx.esm.get_key().exist || !m_ctx.esm.get_value().exist)
@@ -168,6 +174,7 @@ void creator_ordered_t::process_text(size_t i)
 
 void creator_ordered_t::process_rnam(size_t i)
 {
+	(void)i;
 	m_ctx.esm.set_key("NAME");
 	m_ctx.esm.set_value("RNAM");
 	if (!m_ctx.esm.get_key().exist)
@@ -199,6 +206,7 @@ void creator_ordered_t::process_rnam(size_t i)
 
 void creator_ordered_t::process_indx(size_t i)
 {
+	(void)i;
 	m_ctx.esm.set_key("INDX");
 	m_ctx.esm.set_value("DESC");
 	if (!m_ctx.esm.get_key().exist || !m_ctx.esm.get_value().exist)
@@ -218,6 +226,7 @@ void creator_ordered_t::process_indx(size_t i)
 
 void creator_ordered_t::process_cell(size_t i)
 {
+	(void)i;
 	m_ctx.esm.set_value("NAME");
 	if (!m_ctx.esm.get_value().exist || m_ctx.esm.get_value().text.empty())
 		return;
@@ -234,6 +243,7 @@ void creator_ordered_t::process_cell(size_t i)
 
 void creator_ordered_t::process_dial(size_t i, std::string & dial_type, std::string & dial_foreign_name)
 {
+	(void)i;
 	m_ctx.esm.set_key("DATA");
 	if (!m_ctx.esm.get_key().exist)
 		return;
@@ -321,6 +331,7 @@ void creator_ordered_t::process_info(size_t i, const std::string & dial_type, co
 
 void creator_ordered_t::process_sctx(size_t i)
 {
+	(void)i;
 	m_ctx.esm.set_key("SCHD");
 	m_ctx.esm.set_value("SCTX");
 	if (!m_ctx.esm.get_key().exist || !m_ctx.esm.get_value().exist)

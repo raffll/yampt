@@ -33,14 +33,14 @@ static std::string make_string(const std::string & text)
 	return text + std::string(1, '\0');
 }
 
-static std::string make_uint32(uint32_t value)
+[[maybe_unused]] static std::string make_uint32(uint32_t value)
 {
 	std::string result(4, '\0');
 	std::memcpy(result.data(), &value, 4);
 	return result;
 }
 
-static std::string make_float(float value)
+[[maybe_unused]] static std::string make_float(float value)
 {
 	std::string result(4, '\0');
 	std::memcpy(result.data(), &value, 4);

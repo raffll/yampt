@@ -1,7 +1,9 @@
 #pragma once
 
 #include "../model/view_tree_model.hpp"
+#include "../patcher/patch_builder.hpp"
 #include <functional>
+#include <set>
 #include <string>
 
 class plugin_session_t;
@@ -22,7 +24,7 @@ public:
 	    settings_store_t & settings,
 	    log_fn_t log_fn);
 
-	void create_merged_patch();
+	bool create_merged_patch();
 	void load_existing_merged_patch();
 	std::string resolve_output_directory() const;
 
@@ -61,10 +63,14 @@ public:
 
 	void remove_record_from_merge(const std::string & rec_type, const std::string & record_id);
 
+	void save_merged_patch();
+
+	bool save_plugin(int plugin_idx);
+	void save_all_dirty();
+
 private:
 	int create_merge_records();
 	std::string resolve_merge_output_path() const;
-	void save_merged_patch();
 	bool save_merge_to_file(
 	    const std::string & output_path,
 	    const std::string & author,
@@ -78,6 +84,8 @@ private:
 	    const std::string & record_id,
 	    const std::string & source_content);
 	int find_plugin_column(int plugin_idx) const;
+	std::set<int> collect_contributing_plugins() const;
+	std::vector<patch_builder_t::master_entry_t> build_master_list(const std::set<int> & contributing) const;
 
 	plugin_session_t & m_session;
 	record_view_t & m_record_view;

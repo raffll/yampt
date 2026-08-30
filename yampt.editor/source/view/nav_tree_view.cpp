@@ -23,6 +23,9 @@ nav_tree_view_t::nav_tree_view_t(plugin_scan_t & scan, QWidget * parent)
 	m_model = new nav_tree_model_t(scan, this);
 	m_tree->setModel(m_model);
 
+	const int id_column_width = m_tree->fontMetrics().horizontalAdvance(QString(30, '0')) + m_tree->indentation();
+	m_tree->setColumnWidth(0, id_column_width);
+
 	connect(
 	    m_tree->selectionModel(),
 	    &QItemSelectionModel::currentChanged,
@@ -59,7 +62,6 @@ nav_tree_view_t::nav_tree_view_t(plugin_scan_t & scan, QWidget * parent)
 void nav_tree_view_t::rebuild()
 {
 	m_model->rebuild();
-	m_tree->setColumnWidth(0, 280);
 }
 
 void nav_tree_view_t::rebuild_preserving_state()
@@ -102,6 +104,16 @@ void nav_tree_view_t::set_excluded_plugins(const std::set<std::string> * exclude
 void nav_tree_view_t::set_patch_plugins(const std::set<std::string> * patch)
 {
 	m_model->set_patch_plugins(patch);
+}
+
+void nav_tree_view_t::set_dirty_plugins(const std::set<std::string> * dirty)
+{
+	m_model->set_dirty_plugins(dirty);
+}
+
+void nav_tree_view_t::set_editable_columns(const editable_column_set_t * editable)
+{
+	m_model->set_editable_columns(editable);
 }
 
 void nav_tree_view_t::set_display_codepage(codepage_t codepage)

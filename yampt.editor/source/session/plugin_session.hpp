@@ -42,6 +42,12 @@ public:
 	const std::set<std::string> & patch_plugins() const;
 	void set_patch_plugins(const std::set<std::string> & patch);
 
+	void mark_plugin_dirty(int plugin_idx);
+	void clear_plugin_dirty(int plugin_idx);
+	bool is_plugin_dirty(int plugin_idx) const;
+	const std::set<std::string> & dirty_plugins() const;
+	bool has_any_unsaved() const;
+
 	load_source_t load_source() const;
 	const std::string & load_base_path() const;
 
@@ -63,6 +69,9 @@ private:
 	};
 
 	std::vector<std::string> parse_mo2_profile(const QString & profile_dir);
+	std::vector<std::string> read_load_order(const QString & profile_dir);
+	QString resolve_game_data_path(const QString & mo2_root_path);
+	void append_merge_patch(std::vector<std::string> & paths, const QString & overwrite_path);
 	std::vector<std::string> parse_openmw_cfg(const QString & cfg_path);
 	std::vector<std::string> resolve_mo2_plugins(
 	    const std::vector<std::string> & plugin_names,
@@ -73,6 +82,7 @@ private:
 	    const std::vector<std::string> & data_dirs);
 	std::string resolve_single_content(const std::string & content_name, const std::vector<std::string> & data_dirs);
 	void load_plugins_internal(const std::vector<std::string> & paths);
+	void restore_folder_session();
 	void build_lua_paths_for_mo2(const QString & profile_dir);
 	void build_lua_paths_for_openmw(const QString & cfg_path);
 
@@ -80,6 +90,7 @@ private:
 	std::unique_ptr<patch_builder_t> m_patch_builder;
 	std::set<std::string> m_excluded_plugins;
 	std::set<std::string> m_patch_plugins;
+	std::set<std::string> m_dirty_plugins;
 	load_source_t m_load_source = load_source_t::none;
 	std::string m_load_base_path;
 	std::vector<std::string> m_lua_data_paths;

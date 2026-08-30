@@ -1,12 +1,11 @@
-#include "creator_helpers.hpp"
-#include "../utility/app_logger.hpp"
+﻿#include "creator_helpers.hpp"
 #include "../utility/string_utils.hpp"
 #include <hunspell/hunspell.hxx>
 #include <sstream>
 
 creator_context_t::~creator_context_t() = default;
 
-static bool is_number_or_punct(char c)
+static bool is_digit(char c)
 {
 	return (c >= '0' && c <= '9');
 }
@@ -92,6 +91,7 @@ void creator_helpers::insert_duplicate(
     rec_type_t type,
     status_t status)
 {
+	(void)status;
 	auto * dup = ctx.dict.at(type).find(key_text);
 	if (!dup)
 		return;
@@ -557,15 +557,6 @@ void creator_helpers::load_english_dict(creator_context_t & ctx)
 		if (dot_pos != std::string::npos)
 			dic.replace(dot_pos, 4, ".dic");
 	}
-	else
-	{
-		auto dir = app_logger_t::get_exe_dir();
-		if (!dir.empty() && dir.back() != '/' && dir.back() != '\\')
-			dir += '/';
-
-		aff = dir + "dictionaries/en_US.aff";
-		dic = dir + "dictionaries/en_US.dic";
-	}
 
 	ctx.english_dict = std::make_unique<Hunspell>(aff.c_str(), dic.c_str());
 }
@@ -625,7 +616,7 @@ bool creator_helpers::differs_only_in_numbers_or_punct(const std::string & a, co
 		if (a[i] == b[i])
 			continue;
 
-		if (!is_number_or_punct(a[i]) || !is_number_or_punct(b[i]))
+		if (!is_digit(a[i]) || !is_digit(b[i]))
 			return false;
 
 		has_difference = true;
@@ -655,7 +646,7 @@ std::string creator_helpers::adapt_translation(
 
 		while (pos != std::string::npos)
 		{
-			if (is_number_or_punct(result[pos]))
+			if (is_digit(result[pos]))
 			{
 				result[pos] = source[i];
 				replaced = true;
@@ -713,4 +704,22 @@ void creator_helpers::enrich_info_speaker(creator_context_t & ctx, const std::st
 
 	entry->speaker_name = speaker_name;
 	entry->gender = gender;
+}
+
+void creator_helpers::enrich_fnam_enchantment(
+    creator_context_t & ctx,
+    const std::string & key_text,
+    esm_reader_t & esm_source)
+{
+	const auto & record_id = esm_source.get_record().id;
+	if (record_id != "ARMO" && record_id != "CLOT" && record_id != "WEAP" && record_id != "BOOK")
+		return;
+
+	esm_source.set_value("ENAM");
+	if (!esm_source.get_value().exist || esm_source.get_value().text.empty())
+		return;
+
+	auto * entry = ctx.dict.at(rec_type_t::fnam).find(key_text);
+	if (entry)
+		entry->enchantment = esm_source.get_value().text;
 }

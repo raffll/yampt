@@ -1,3 +1,4 @@
+#include <resource_paths.hpp>
 #include "dict_operations_controller.hpp"
 #include "../dialog/merge_dialog.hpp"
 #include "../model/dict_document.hpp"
@@ -48,7 +49,7 @@ void dict_operations_controller_t::on_merge()
 	dict_merger_t merger(selected_paths);
 	const auto & merged_dict = merger.get_dict();
 
-	const auto workspace_dir = QCoreApplication::applicationDirPath().toStdString() + "/workspace/";
+	const auto workspace_dir = resource_paths::workspace_dir();
 	QDir().mkpath(QString::fromStdString(workspace_dir));
 
 	const auto output_path =

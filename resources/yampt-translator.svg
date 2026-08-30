@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Background: rounded square with warm parchment gradient -->
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3a2a1a"/>
+      <stop offset="100%" style="stop-color:#5c3d1e"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="10" ry="10" fill="url(#bg)" stroke="#2a1a0a" stroke-width="1.5"/>
+  <!-- Scroll/page -->
+  <rect x="14" y="12" width="26" height="40" rx="2" ry="2" fill="#f5edd8" stroke="#8b7355" stroke-width="1"/>
+  <!-- Text lines on scroll -->
+  <line x1="18" y1="20" x2="36" y2="20" stroke="#6b5b4a" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="18" y1="26" x2="34" y2="26" stroke="#6b5b4a" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="18" y1="32" x2="36" y2="32" stroke="#6b5b4a" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="18" y1="38" x2="30" y2="38" stroke="#6b5b4a" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="18" y1="44" x2="34" y2="44" stroke="#6b5b4a" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Translation arrows -->
+  <path d="M 44 26 L 54 26 M 51 23 L 54 26 L 51 29" stroke="#d4a44a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M 54 36 L 44 36 M 47 33 L 44 36 L 47 39" stroke="#d4a44a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

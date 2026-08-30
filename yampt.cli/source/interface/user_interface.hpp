@@ -1,12 +1,12 @@
 #pragma once
 
 #include <utility/domain_types.hpp>
-#include <utility/includes.hpp>
+#include <vector>
 
 class user_interface_t
 {
 public:
-	user_interface_t(std::vector<std::string> & arg);
+	user_interface_t(std::vector<std::string> & arg, const std::string & base_directory);
 
 private:
 	void parse_command_line();
@@ -28,6 +28,7 @@ private:
 	std::string translate_model_path;
 	std::string esm_name_override;
 	std::string language_code;
+	std::string base_dir;
 
 	bool partial_mode = false;
 };

@@ -13,6 +13,8 @@ Audit the yampt codebase. Find issues from any of these categories:
 
 - Read the relevant source files before claiming anything.
 - Report exactly 10 issues per response.
+- Present findings as a numbered list in the chat response. Do NOT create any output files (no AUDIT_RESULTS.md, no markdown documents).
+- Always wait for explicit approval before implementing any fix. Never fix issues without asking first.
 - Format (repeat for each issue):
 
 **Category:** (from list above)

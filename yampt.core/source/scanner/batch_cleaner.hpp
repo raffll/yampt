@@ -17,7 +17,6 @@ struct clean_options_t
 struct clean_result_t
 {
 	std::string plugin_filename;
-	int itm_removed = 0;
 	int evil_gmst_removed = 0;
 	int junk_cell_removed = 0;
 	int total_removed = 0;

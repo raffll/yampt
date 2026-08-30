@@ -14,7 +14,6 @@ table_view_t::table_view_t(
     record_table_model_t & model,
     QLabel & progress,
     QLabel & file_label,
-    QLabel & search_label,
     QLineEdit & search_field,
     QAbstractButton & case_check,
     QAbstractButton & regex_check,
@@ -26,7 +25,6 @@ table_view_t::table_view_t(
     , m_model(model)
     , m_progress(progress)
     , m_file_label(file_label)
-    , m_search_label(search_label)
     , m_search_field(search_field)
     , m_case_check(case_check)
     , m_regex_check(regex_check)
@@ -37,6 +35,7 @@ table_view_t::table_view_t(
 
 void table_view_t::apply(table_build_result_t result, const std::string & file_path, dict_kind_t kind)
 {
+	(void)kind;
 	m_file_label.setText(QString::fromStdString(file_path));
 	m_filter_tree.setEnabled(true);
 	m_filter_tree.set_display_mode(filter_tree_view_t::display_mode_t::full);
@@ -63,11 +62,12 @@ void table_view_t::apply(table_build_result_t result, const std::string & file_p
 	{
 		int pct = static_cast<int>(result.counts.progress_translated * 100 / result.counts.progress_total);
 		int shown = m_model.rowCount();
-		m_progress.setText(QCoreApplication::translate("yTranslator", "%1 / %2 (%3%) | %4 shown")
-		                       .arg(result.counts.progress_translated)
-		                       .arg(result.counts.progress_total)
-		                       .arg(pct)
-		                       .arg(shown));
+		m_progress.setText(
+		    QCoreApplication::translate("yTranslator", "%1 / %2 (%3%) | %4 shown")
+		        .arg(result.counts.progress_translated)
+		        .arg(result.counts.progress_total)
+		        .arg(pct)
+		        .arg(shown));
 	}
 	else
 	{
@@ -100,7 +100,12 @@ void table_view_t::apply_yaml(
 	{
 		int pct = translated * 100 / total;
 		int shown = m_model.rowCount();
-		m_progress.setText(QCoreApplication::translate("yTranslator", "%1 / %2 (%3%) | %4 shown").arg(translated).arg(total).arg(pct).arg(shown));
+		m_progress.setText(
+		    QCoreApplication::translate("yTranslator", "%1 / %2 (%3%) | %4 shown")
+		        .arg(translated)
+		        .arg(total)
+		        .arg(pct)
+		        .arg(shown));
 	}
 	else
 	{
@@ -120,7 +125,6 @@ void table_view_t::clear()
 
 void table_view_t::set_enabled(bool enabled)
 {
-	m_search_label.setEnabled(enabled);
 	m_search_field.setEnabled(enabled);
 	m_case_check.setEnabled(enabled);
 	m_regex_check.setEnabled(enabled);

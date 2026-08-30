@@ -2,7 +2,8 @@
 #include <converter/esm_converter.hpp>
 #include <io/dict_writer.hpp>
 #include <utility/app_logger.hpp>
-#include <utility/includes.hpp>
+#include <filesystem>
+#include <fstream>
 
 static std::string get_temp_path(const std::string & filename)
 {
@@ -347,4 +348,99 @@ TEST_CASE("esm_converter_t::convert_scpt, SCTX and SCDT patched", "[i]")
 	const auto & scpt_content = records[1].content;
 	REQUIRE(scpt_content.find("Balmora PL") != std::string::npos);
 	REQUIRE(records[1].modified == true);
+}
+
+TEST_CASE("esm_converter_t::convert_mast, master with extension gets suffix", "[i]")
+{
+	auto merger = make_merger_with_entry(rec_type_t::cell, "Balmora", "Balmora", "Balmora PL");
+
+	auto tes3_body = make_sub_record("HEDR", std::string(300, '\0')) + make_sub_record("MAST", std::string("Morrowind.esm\0", 14));
+	auto esm_content = make_record("TES3", tes3_body);
+
+	const auto esm_path = get_temp_path("yampt_test_conv_mast_ext.esm");
+	write_esm_file(esm_content, esm_path);
+	app_logger_t::reset_log();
+
+	esm_converter_t converter(esm_path, merger, false, "_PL", false);
+	std::filesystem::remove(esm_path);
+
+	REQUIRE(converter.is_loaded());
+
+	const auto & records = converter.get_records();
+	const auto & tes3_content = records[0].content;
+	REQUIRE(tes3_content.find("Morrowind_PL.esm") != std::string::npos);
+}
+
+TEST_CASE("esm_converter_t::convert_mast, extensionless master does not crash", "[i]")
+{
+	auto merger = make_merger_with_entry(rec_type_t::cell, "Balmora", "Balmora", "Balmora PL");
+
+	auto tes3_body = make_sub_record("HEDR", std::string(300, '\0')) + make_sub_record("MAST", std::string("Morrowind\0", 10));
+	auto esm_content = make_record("TES3", tes3_body);
+
+	const auto esm_path = get_temp_path("yampt_test_conv_mast_noext.esm");
+	write_esm_file(esm_content, esm_path);
+	app_logger_t::reset_log();
+
+	esm_converter_t converter(esm_path, merger, false, "_PL", false);
+	std::filesystem::remove(esm_path);
+
+	REQUIRE(converter.is_loaded());
+
+	const auto & records = converter.get_records();
+	const auto & tes3_content = records[0].content;
+	REQUIRE(tes3_content.find("Morrowind_PL") != std::string::npos);
+}
+
+TEST_CASE("esm_converter_t::convert_bnam, info before any dial does not corrupt header", "[i]")
+{
+	auto merger = make_merger_with_entry(rec_type_t::bnam, "T^topic^resp_1", "PlaceItem", "PostawPrzedmiot");
+
+	auto info_body =
+	    make_sub_record("INAM", std::string("resp_1\0", 7)) + make_sub_record("BNAM", std::string("PlaceItem", 9));
+	auto info_record = make_record("INFO", info_body);
+
+	auto esm_content = make_tes3_record() + info_record;
+
+	const auto esm_path = get_temp_path("yampt_test_conv_bnam_orphan.esm");
+	write_esm_file(esm_content, esm_path);
+	app_logger_t::reset_log();
+
+	esm_converter_t converter(esm_path, merger, false, "", false);
+	std::filesystem::remove(esm_path);
+
+	REQUIRE(converter.is_loaded());
+
+	const auto & records = converter.get_records();
+	REQUIRE(records[0].modified == false);
+	REQUIRE(records[0].content.substr(0, 4) == "TES3");
+}
+
+TEST_CASE("esm_converter_t::convert_bnam, script converted after dial", "[i]")
+{
+	const std::string script_line = "choice \"Yes\"";
+	const std::string translated_line = "choice \"Tak\"";
+	auto merger = make_merger_with_entry(rec_type_t::bnam, "T^topic^resp_1^" + script_line, script_line, translated_line);
+
+	std::string topic_type(1, '\0');
+	auto dial_body = make_sub_record("NAME", std::string("topic\0", 6)) + make_sub_record("DATA", topic_type);
+	auto dial_record = make_record("DIAL", dial_body);
+
+	auto info_body = make_sub_record("INAM", std::string("resp_1\0", 7)) + make_sub_record("BNAM", script_line);
+	auto info_record = make_record("INFO", info_body);
+
+	auto esm_content = make_tes3_record() + dial_record + info_record;
+
+	const auto esm_path = get_temp_path("yampt_test_conv_bnam_ok.esm");
+	write_esm_file(esm_content, esm_path);
+	app_logger_t::reset_log();
+
+	esm_converter_t converter(esm_path, merger, false, "", false);
+	std::filesystem::remove(esm_path);
+
+	REQUIRE(converter.is_loaded());
+
+	const auto & records = converter.get_records();
+	const auto & info_content = records[2].content;
+	REQUIRE(info_content.find("Tak") != std::string::npos);
 }

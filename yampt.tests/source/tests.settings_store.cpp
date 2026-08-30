@@ -107,7 +107,7 @@ TEST_CASE("settings_store_t::save, round-trip", "[pbt]")
 			RC_ASSERT(std::abs(read_ratio - split_ratio) < 0.001f);
 		}
 
-		const auto full_path = QCoreApplication::applicationDirPath() + "/" + filename;
+		const auto full_path = settings_store_t::settings_dir() + "/" + filename;
 		QFile::remove(full_path);
 	});
 }

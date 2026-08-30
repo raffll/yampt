@@ -46,7 +46,6 @@ private:
 	std::string m_path;
 	std::string m_foreign_path;
 	std::string m_native_path;
-	std::string m_clicked_path;
 	std::string m_native_code;
 	bool m_is_native_file = false;
 

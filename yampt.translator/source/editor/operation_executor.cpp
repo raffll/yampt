@@ -1,3 +1,4 @@
+#include <resource_paths.hpp>
 #include "operation_executor.hpp"
 #include <converter/esm_converter.hpp>
 #include <creator/dict_creator.hpp>
@@ -17,10 +18,10 @@ std::string operation_executor_t::make_output_path(const std::string & source_pa
 {
 	const auto info = QFileInfo(QString::fromStdString(source_path));
 	const auto base_name = info.completeBaseName().toStdString();
-	return make_output_path(base_name, ext, true);
+	return make_output_path_from_name(base_name, ext);
 }
 
-std::string operation_executor_t::make_output_path(const std::string & base_name, const std::string & ext, bool) const
+std::string operation_executor_t::make_output_path_from_name(const std::string & base_name, const std::string & ext) const
 {
 	const auto dir = get_output_dir();
 
@@ -41,7 +42,7 @@ std::string operation_executor_t::get_output_dir() const
 	if (!m_output_dir.empty())
 		dir_path = QString::fromStdString(m_output_dir);
 	else
-		dir_path = QCoreApplication::applicationDirPath() + "/workspace/";
+		dir_path = QString::fromStdString(resource_paths::workspace_dir());
 
 	QDir dir(dir_path);
 	if (!dir.exists())
@@ -116,7 +117,7 @@ operation_executor_t::result_t operation_executor_t::make_base(
 
 	output_name += "_BASE_" + fl + "-" + nl;
 
-	const auto output_path = make_output_path(output_name, "json", true);
+	const auto output_path = make_output_path_from_name(output_name, "json");
 	dict_writer_t::write(creator.get_dict(), output_path);
 
 	return { !app_logger_t::has_error(), app_logger_t::get_log(), output_path };

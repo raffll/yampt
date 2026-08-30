@@ -38,25 +38,24 @@ public:
 protected:
 	void paintSection(QPainter * painter, const QRect & rect, int section) const override
 	{
-		auto fg = model()->headerData(section, Qt::Horizontal, Qt::ForegroundRole);
-		if (!fg.isValid())
-		{
-			QHeaderView::paintSection(painter, rect, section);
-			return;
-		}
-
 		painter->save();
 
 		QStyleOptionHeader opt;
-		initStyleOption(&opt);
+		initStyleOptionForIndex(&opt, section);
 		opt.rect = rect;
-		opt.section = section;
 		opt.text = {};
-		style()->drawControl(QStyle::CE_Header, &opt, painter, this);
+		opt.icon = {};
+		style()->drawControl(QStyle::CE_HeaderSection, &opt, painter, this);
 
-		auto text = model()->headerData(section, Qt::Horizontal, Qt::DisplayRole).toString();
-		auto text_rect = style()->subElementRect(QStyle::SE_HeaderLabel, &opt, this);
-		painter->setPen(fg.value<QBrush>().color());
+		const auto text = model()->headerData(section, Qt::Horizontal, Qt::DisplayRole).toString();
+
+		const auto fg = model()->headerData(section, Qt::Horizontal, Qt::ForegroundRole);
+		const auto pen_color = fg.isValid() ? fg.value<QBrush>().color() : palette().color(QPalette::ButtonText);
+
+		auto text_rect = rect;
+		text_rect.adjust(4, 0, -4, 0);
+
+		painter->setPen(pen_color);
 		painter->drawText(text_rect, Qt::AlignVCenter | Qt::AlignLeft, text);
 
 		painter->restore();

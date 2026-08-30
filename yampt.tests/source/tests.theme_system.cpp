@@ -6,6 +6,7 @@
 #include <settings_store.hpp>
 #include <theme_system.hpp>
 #include <QCoreApplication>
+#include <QDir>
 #include <QFile>
 
 TEST_CASE("theme_system_t::get_color, all named colors are valid", "[u]")
@@ -401,12 +402,12 @@ TEST_CASE("settings_store_t::theme, round-trip", "[i]")
 	REQUIRE(settings.theme() == theme_t::dark);
 	settings.set_theme(theme_t::light);
 	REQUIRE(settings.theme() == theme_t::light);
-	QFile::remove(QCoreApplication::applicationDirPath() + "/test_theme_settings.ini");
+	QFile::remove(settings_store_t::settings_dir() + "/test_theme_settings.ini");
 }
 
 TEST_CASE("settings_store_t::theme, default is light", "[i]")
 {
-	const auto path = QCoreApplication::applicationDirPath() + "/test_theme_empty.ini";
+	const auto path = settings_store_t::settings_dir() + "/test_theme_empty.ini";
 	QFile::remove(path);
 	settings_store_t settings("test_theme_empty.ini");
 	REQUIRE(settings.theme() == theme_t::light);
@@ -415,7 +416,7 @@ TEST_CASE("settings_store_t::theme, default is light", "[i]")
 
 TEST_CASE("settings_store_t::theme, invalid defaults to light", "[i]")
 {
-	const auto path = QCoreApplication::applicationDirPath() + "/test_theme_invalid.ini";
+	const auto path = settings_store_t::settings_dir() + "/test_theme_invalid.ini";
 	QSettings raw(path, QSettings::IniFormat);
 	raw.setValue("Appearance/Theme", "garbage");
 	raw.sync();

@@ -31,27 +31,26 @@ struct sub_slot_t
 	int occurrence = 0;
 };
 
+struct alignment_context_t
+{
+	const std::vector<std::vector<sub_record_view_t>> & all_subs;
+	size_t col_count;
+	std::vector<sub_slot_t> & unified_slots;
+	std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_type_indices;
+};
+
 class content_alignment_t
 {
 public:
 	static void align(
-	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
-	    size_t col_count,
-	    const std::vector<alignment_rule_t> & rules,
-	    std::vector<sub_slot_t> & unified_slots,
-	    std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_type_indices);
+	    alignment_context_t & context,
+	    const std::vector<alignment_rule_t> & rules);
 
 	static void build_from_slot_result(
 	    const slot_result_t & slot_result,
-	    size_t col_count,
-	    std::vector<sub_slot_t> & unified_slots,
-	    std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_type_indices);
+	    alignment_context_t & context);
 
-	static void build_occurrence_based(
-	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
-	    size_t col_count,
-	    std::vector<sub_slot_t> & unified_slots,
-	    std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_type_indices);
+	static void build_occurrence_based(alignment_context_t & context);
 
 	static void build_occurrence_from_ranges(
 	    const std::vector<std::vector<sub_record_view_t>> & all_subs,

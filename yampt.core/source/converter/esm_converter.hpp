@@ -3,7 +3,6 @@
 #include "../io/esm_reader.hpp"
 #include "../merger/dict_merger.hpp"
 #include "../utility/domain_types.hpp"
-#include "../utility/includes.hpp"
 #include "../utility/keyword_trie.hpp"
 
 class esm_converter_t
@@ -43,7 +42,7 @@ private:
 	void add_null_terminator_if_empty(std::string & new_text);
 	bool make_new_text(const entry_t & entry, std::string & new_text);
 	bool is_identical(const std::string & old_text, const std::string & new_text);
-	void print_log_line(const rec_type_t type);
+	void print_log_line(const rec_type_t record_type);
 	void convert_mast();
 	void make_header();
 	void convert_cell();

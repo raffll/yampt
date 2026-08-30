@@ -6,6 +6,7 @@
     <ClCompile Include="source\main_window_setup.cpp" />
     <ClCompile Include="source\session\session.cpp" />
     <ClCompile Include="source\model\record_table_model.cpp" />
+    <ClCompile Include="source\model\table_columns.cpp" />
     <ClCompile Include="source\model\sidebar_model.cpp" />
     <ClCompile Include="source\model\dict_document.cpp" />
     <ClCompile Include="source\model\yaml_document.cpp" />
@@ -36,7 +37,6 @@
     <ClCompile Include="source\editor\find_replace.cpp" />
     <ClCompile Include="source\editor\operation_executor.cpp" />
     <ClCompile Include="source\highlighter\grammar_checker.cpp" />
-    <ClCompile Include="source\dialog\find_replace_dialog.cpp" />
     <ClCompile Include="source\dialog\dict_selection_dialog.cpp" />
     <ClCompile Include="source\dialog\merge_dialog.cpp" />
     <ClCompile Include="source\dialog\make_base_dialog.cpp" />
@@ -54,6 +54,9 @@
     <ClCompile Include="source\translator\ctranslate2_translator.cpp" />
     <ClCompile Include="source\translator\web_translator.cpp" />
     <ClCompile Include="source\translator\web_translator_config.cpp" />
+    <ClCompile Include="source\translator\model_list_utils.cpp" />
+    <ClCompile Include="source\translator\web_response_utils.cpp" />
+    <ClCompile Include="source\translator\translation_example_ops.cpp" />
     <ClCompile Include="source\editor\spell_checker.cpp" />
     <ClCompile Include="source\view\display_name.cpp" />
     <ClCompile Include="source\highlighter\highlight_coordinator.cpp" />
@@ -93,5 +96,9 @@
     <ClInclude Include="source\highlighter\highlight_applier.hpp" />
     <ClInclude Include="source\model\loc_document.hpp" />
     <ClInclude Include="source\model\eet_document.hpp" />
+    <ClInclude Include="source\model\table_columns.hpp" />
+    <ClInclude Include="source\translator\model_list_utils.hpp" />
+    <ClInclude Include="source\translator\web_response_utils.hpp" />
+    <ClInclude Include="source\translator\translation_example_ops.hpp" />
   </ItemGroup>
 </Project>

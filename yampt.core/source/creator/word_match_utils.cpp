@@ -25,8 +25,13 @@ std::vector<std::string> split_words(const std::string & text)
 int count_shared_words(const std::vector<std::string> & source, const std::vector<std::string> & target)
 {
 	int count = 0;
+	std::set<std::string> seen;
+
 	for (const auto & word : source)
 	{
+		if (!seen.insert(word).second)
+			continue;
+
 		for (const auto & target_word : target)
 		{
 			if (word == target_word)

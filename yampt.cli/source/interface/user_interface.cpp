@@ -11,8 +11,9 @@
 #include <utility/app_logger.hpp>
 #include <utility/language_config.hpp>
 
-user_interface_t::user_interface_t(std::vector<std::string> & arg)
+user_interface_t::user_interface_t(std::vector<std::string> & arg, const std::string & base_directory)
     : args(arg)
+    , base_dir(base_directory)
 {
 	parse_command_line();
 	run_command();
@@ -173,7 +174,17 @@ void user_interface_t::make_dict_base()
 	}
 
 	auto mode = partial_mode ? base_mode_t::partial : base_mode_t::full;
-	dict_creator_t creator(file_paths[0], file_paths[1], engine_ptr, mode);
+	std::string dict_aff_path;
+	if (partial_mode)
+	{
+		auto dir = base_dir;
+		if (!dir.empty() && dir.back() != '/' && dir.back() != '\\')
+			dir += '/';
+
+		dict_aff_path = dir + "dictionaries/en_US.aff";
+	}
+
+	dict_creator_t creator(file_paths[0], file_paths[1], engine_ptr, mode, dict_aff_path);
 	dict_writer_t::write(creator.get_dict(), creator.get_name().name + ".BASE.json");
 	app_logger_t::add_log("[info] done!\r\n");
 }

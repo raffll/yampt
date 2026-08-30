@@ -1,5 +1,6 @@
 #pragma once
 
+#include <scanner/conflict_detector.hpp>
 #include <scanner/plugin_scan.hpp>
 #include <set>
 #include <string>
@@ -19,7 +20,13 @@ public:
 		std::string id_text;
 		bool filter_by_name = false;
 		std::string name_text;
+		bool search_case_sensitive = false;
+		bool search_regex = false;
 		bool filter_deleted = false;
+		bool filter_lua_severity = false;
+		std::set<conflict_severity_t> lua_severity_set;
+		bool filter_lua_interface = false;
+		std::set<std::string> lua_interface_set;
 
 		bool operator==(const filter_state_t &) const = default;
 	};
@@ -29,12 +36,15 @@ public:
 	void set_hide_duplicates(bool hide);
 	void set_excluded_plugins(const std::set<std::string> * excluded);
 	void set_patch_plugins(const std::set<std::string> * patch);
+	void set_dirty_plugins(const std::set<std::string> * dirty);
 
 	bool passes(const conflict_entry_t & entry, int plugin_idx) const;
+	bool passes_lua_conflict(const handler_conflict_t & conflict) const;
 	bool has_active_filter() const;
 	bool hide_duplicates() const;
 	const std::set<std::string> * excluded_plugins() const;
 	const std::set<std::string> * patch_plugins() const;
+	const std::set<std::string> * dirty_plugins() const;
 
 private:
 	filter_state_t m_filter;
@@ -42,7 +52,9 @@ private:
 	bool m_hide_duplicates = false;
 	const std::set<std::string> * m_excluded_plugins = nullptr;
 	const std::set<std::string> * m_patch_plugins = nullptr;
+	const std::set<std::string> * m_dirty_plugins = nullptr;
 
 	static bool contains_case_insensitive(const std::string & haystack, const std::string & needle);
 	static bool has_version_status(const conflict_entry_t & entry, int plugin_idx, conflict_this_t status);
+	bool matches_text(const std::string & haystack, const std::string & needle) const;
 };

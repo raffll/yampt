@@ -46,7 +46,7 @@ static std::string make_uint16(uint16_t value)
 	return result;
 }
 
-static std::string make_float(float value)
+[[maybe_unused]] static std::string make_float(float value)
 {
 	std::string result(4, '\0');
 	std::memcpy(result.data(), &value, 4);
@@ -1156,6 +1156,7 @@ TEST_CASE("leveled_list_merge_t::merge, LEVC creature list", "[u]")
 
 	auto make_header = [](const std::string & name, uint32_t count)
 	{
+		(void)count;
 		std::string name_data = name + '\0';
 		uint32_t flags = 1;
 		uint8_t chance = 0;

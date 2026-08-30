@@ -1,8 +1,7 @@
 {
-    "name": "Google Translate",
+    "name": "Google Cloud",
     "kind": "simple",
     "endpoint": "https://translation.googleapis.com/language/translate/v2",
-    "method": "POST",
     "body_format": "json",
     "headers": {
         "Content-Type": "application/json",
@@ -15,5 +14,12 @@
         "format": "text"
     },
     "response_path": "data.translations[0].translatedText",
-    "quota_limit": 0
+    "quota_limit": 500000,
+    "settings": [
+        {
+            "key": "api_key",
+            "label": "API Key",
+            "type": "password"
+        }
+    ]
 }
