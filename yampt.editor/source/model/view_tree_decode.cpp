@@ -296,7 +296,7 @@ void view_tree_model_t::decode_schema_children(
 			}
 
 			const auto & sv = all_subs[col][idx];
-			frow.values[col] = decode_field(fdef, sv.data, sv.size);
+			frow.values[col] = decode_field(fdef, sv.data, sv.size, m_display_codepage);
 
 			if (fdef.type == field_type_t::scvr_subject && frow.label == fdef.name)
 				frow.label = scvr_subject_label(sv.data, sv.size);

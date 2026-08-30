@@ -273,8 +273,9 @@ void view_tree_model_t::decode_schema_children_ref(
 			const auto & refs = col < col_refs.size() ? col_refs[col] : empty_refs;
 			const auto result = find_ref_sub_record(subs, refs, object_index, slot.type, slot.occurrence);
 
-			frow.values[col] =
-			    result.view.data ? decode_field(fdef, result.view.data, result.view.size) : non_existent_value;
+			frow.values[col] = result.view.data
+			                       ? decode_field(fdef, result.view.data, result.view.size, m_display_codepage)
+			                       : non_existent_value;
 		}
 
 		frow.all_identical = check_all_identical(frow.values);
@@ -432,7 +433,8 @@ view_tree_model_t::view_node_t view_tree_model_t::build_ref_child(
 		else if (slot.type == "DELE")
 			child_field.values[col] = "DELETED";
 		else if (schema && schema->field_count == 1)
-			child_field.values[col] = decode_field(schema->fields[0], result.view.data, result.view.size);
+			child_field.values[col] =
+			    decode_field(schema->fields[0], result.view.data, result.view.size, m_display_codepage);
 		else
 			child_field.values[col] = format_value_full(result.view.data, result.view.size, m_display_codepage);
 	}

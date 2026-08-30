@@ -367,7 +367,7 @@ static std::string decode_hex_bytes(const char * ptr, size_t available, size_t m
 	return hex_output;
 }
 
-std::string decode_field(const field_def_t & field, const char * data, size_t data_size)
+std::string decode_field(const field_def_t & field, const char * data, size_t data_size, codepage_t codepage)
 {
 	if (field.type == field_type_t::bool_bit)
 	{
@@ -402,14 +402,14 @@ std::string decode_field(const field_def_t & field, const char * data, size_t da
 	}
 
 	case field_type_t::string_fixed:
-		return read_fixed_string(ptr, field.size, data_size, field.offset);
+		return decode_to_utf8(read_fixed_string(ptr, field.size, data_size, field.offset), codepage);
 
 	case field_type_t::string_var:
 	{
 		if (field.offset >= data_size)
 			return "";
 
-		return read_fixed_string(ptr, data_size - field.offset, data_size, field.offset);
+		return decode_to_utf8(read_fixed_string(ptr, data_size - field.offset, data_size, field.offset), codepage);
 	}
 
 	case field_type_t::flags_u8:

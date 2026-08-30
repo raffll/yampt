@@ -1,5 +1,10 @@
 # Changelog
 
+## [XXX]
+
+### yEditor
+- [FIX] Text with accented or non-English characters (such as the curly quotes in book text) now renders correctly using the codepage chosen in settings, instead of showing replacement symbols. The codepage is applied on startup, so restart the application after changing it
+
 ## [0.1054] - 2026-08-30
 
 ### yTranslator

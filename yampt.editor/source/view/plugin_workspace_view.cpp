@@ -439,9 +439,6 @@ void plugin_workspace_view_t::on_settings_changed()
 		if (!selection.rec_type.empty())
 			on_nav_selection_changed(selection);
 	}
-
-	m_record_view->model()->set_display_codepage(static_cast<codepage_t>(m_settings.display_codepage()));
-	m_nav_view->set_display_codepage(static_cast<codepage_t>(m_settings.display_codepage()));
 }
 
 void plugin_workspace_view_t::rebuild_nav_preserving_state()
