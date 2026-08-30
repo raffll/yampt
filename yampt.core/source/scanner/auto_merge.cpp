@@ -474,17 +474,24 @@ std::string auto_merge_t::filter_ignored_sub_records(const std::string & rec_typ
 
 	const auto subs = sub_record_merge_t::parse_sub_records(content);
 	sub_record_sequence_t filtered;
+	bool in_reference_group = false;
 
 	for (const auto & entry : subs)
 	{
-		const auto specific_key = rec_type + ":" + entry.type;
-		const auto wildcard_key = rec_type + ":*";
+		if (entry.type == "FRMR")
+			in_reference_group = true;
 
-		if (m_config.ignored_sub_records.count(specific_key) > 0)
-			continue;
+		if (!in_reference_group)
+		{
+			const auto specific_key = rec_type + ":" + entry.type;
+			const auto wildcard_key = rec_type + ":*";
 
-		if (m_config.ignored_sub_records.count(wildcard_key) > 0)
-			continue;
+			if (m_config.ignored_sub_records.count(specific_key) > 0)
+				continue;
+
+			if (m_config.ignored_sub_records.count(wildcard_key) > 0)
+				continue;
+		}
 
 		filtered.push_back(entry);
 	}

@@ -3,9 +3,11 @@
 ## [XXX]
 
 ### yEditor
+- [CHANGE] Merged-patch context menu actions renamed for clarity: "Remove Sub-Record", "Remove Group", and the navigation tree's "Remove" are now "Remove Sub-Record from Merged Patch", "Remove Group from Merged Patch", and "Remove Record from Merged Patch"
 - [FIX] Text with accented or non-English characters (such as the curly quotes in book text) now renders correctly using the codepage chosen in settings, instead of showing replacement symbols
 - [FIX] Changing the text codepage in settings now updates the navigation tree and record view immediately; the Edit panel updates the next time a record cell is selected
 - [FIX] Clean All now works with a single loaded plugin, instead of wrongly reporting that two plugins are required
+- [FIX] Excluding a sub-record now affects only top-level sub-records; a rule like `CELL:DATA` no longer also strips the matching sub-record from every referenced object inside cells during merge
 
 ## [0.1054] - 2026-08-30
 

@@ -135,6 +135,8 @@ QColor theme_system_t::conflict_this_foreground(conflict_this_t value) const
 		return get_color(color_name_t::conflict_this_conflict_loses);
 	case conflict_this_t::deleted:
 		return get_color(color_name_t::conflict_this_deleted);
+	case conflict_this_t::ignored:
+		return (m_active_theme == theme_t::dark) ? QColor(220, 220, 220) : QColor(0, 0, 0);
 	default:
 		return (m_active_theme == theme_t::dark) ? QColor(220, 220, 220) : QColor(0, 0, 0);
 	}
