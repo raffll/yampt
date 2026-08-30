@@ -1,3 +1,4 @@
+#include <catch2/catch_all.hpp>
 #include <decoder/scvr_condition.hpp>
 #include <cstring>
 
