@@ -60,6 +60,11 @@ merge_controller_t::merge_controller_t(
     , m_log(std::move(log_fn))
 {}
 
+void merge_controller_t::set_refresh_callback(refresh_fn_t refresh_fn)
+{
+	m_refresh = std::move(refresh_fn);
+}
+
 bool merge_controller_t::create_merged_patch()
 {
 	if (m_session.has_any_unsaved())
@@ -426,7 +431,12 @@ void merge_controller_t::remove_record_from_merge(const std::string & rec_type, 
 {
 	m_session.scan().remove_from_merge(rec_type, record_id);
 	m_session.scan().rebuild_conflicts();
-	m_nav_view.rebuild_preserving_state();
+
+	if (m_refresh)
+		m_refresh();
+	else
+		m_nav_view.rebuild_preserving_state();
+
 	save_merged_patch();
 	m_log("Removed " + rec_type + ":" + record_id + " from merged patch");
 }
@@ -656,6 +666,13 @@ std::vector<patch_builder_t::master_entry_t> merge_controller_t::build_master_li
 void merge_controller_t::refresh_after_merge(const std::string & rec_type, const std::string & record_id)
 {
 	m_session.scan().recompute_single_conflict(rec_type, record_id);
+
+	if (m_refresh)
+	{
+		m_refresh();
+		return;
+	}
+
 	m_nav_view.refresh_colors();
 
 	const auto * updated = m_session.scan().find(rec_type, record_id);

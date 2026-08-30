@@ -214,7 +214,6 @@ void nav_tree_model_t::set_show_deleted_strikeout(bool value)
 void nav_tree_model_t::set_display_codepage(codepage_t codepage)
 {
 	m_display_codepage = codepage;
-	rebuild();
 }
 
 void nav_tree_model_t::set_excluded_plugins(const std::set<std::string> * excluded)

@@ -3,7 +3,9 @@
 ## [XXX]
 
 ### yEditor
-- [FIX] Text with accented or non-English characters (such as the curly quotes in book text) now renders correctly using the codepage chosen in settings, instead of showing replacement symbols. The codepage is applied on startup, so restart the application after changing it
+- [FIX] Text with accented or non-English characters (such as the curly quotes in book text) now renders correctly using the codepage chosen in settings, instead of showing replacement symbols
+- [FIX] Changing the text codepage in settings now updates the navigation tree and record view immediately; the Edit panel updates the next time a record cell is selected
+- [FIX] Clean All now works with a single loaded plugin, instead of wrongly reporting that two plugins are required
 
 ## [0.1054] - 2026-08-30
 
