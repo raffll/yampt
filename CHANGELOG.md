@@ -19,16 +19,6 @@
 - [FIX] Quoted values in localization YAML files now decode \n and \t escapes into real line breaks and tabs instead of showing them as literal characters
 - [FIX] Localization YAML block scalars written with the keep indicator (|+) are now read correctly instead of being treated as broken entries
 
-### Both Apps
-- [NEW] Linux support: builds with CMake and system libraries, AUR package available
-- [NEW] Cross-platform resource paths: shared data in `/usr/share/yampt/`, user data in `~/.yampt/`
-- [FIX] Disabled widgets now show greyed-out text on all platforms
-- [FIX] Workspace sidebar no longer shows a duplicate "Workspace" node when paths differ only by trailing slash
-- [FIX] Converting a plugin whose master reference or file name has no extension no longer crashes
-- [FIX] Converting a malformed plugin where a dialogue response appears before its topic no longer produces corrupted output
-- [FIX] Cell names with accented or Cyrillic letters referenced in scripts are now translated correctly instead of being cut off at the first non-ASCII character
-- [FIX] Case-insensitive search, glossary matching, and text highlighting now work for accented and Cyrillic letters, so a word matches regardless of the case of its non-ASCII letters
-
 ### yEditor
 - [NEW] Enable Editing: a single toolbar toggle makes decoded fields editable in the Edit panel for all plugins (combobox for flags and enums); starts disabled each time the app opens
 - [NEW] View menu: Toggle Sidebar and Toggle Bottom Panel hide or show the navigation and edit/log panels; state persists across sessions
@@ -56,6 +46,16 @@
 - [FIX] Excluding a sub-record from context menu now immediately greys out the row in the record view
 - [FIX] Excluded sub-records now grey out their decoded children (fields, flags) as well
 - [FIX] Dialogue conditions (INFO records) now read as a single line such as `Journal "IL_TalosTreason" >= 10`, grouped under a numbered Condition entry; the condition type and comparison operator show as words (Journal, Dead, Local, `==`, `>=`), function conditions show the function name, variable conditions show the variable storage type, and the comparison value appears as a sub-record, instead of raw hex bytes
+
+### Both Apps
+- [NEW] Linux support: builds with CMake and system libraries, AUR package available
+- [NEW] Cross-platform resource paths: shared data in `/usr/share/yampt/`, user data in `~/.yampt/`
+- [FIX] Disabled widgets now show greyed-out text on all platforms
+- [FIX] Workspace sidebar no longer shows a duplicate "Workspace" node when paths differ only by trailing slash
+- [FIX] Converting a plugin whose master reference or file name has no extension no longer crashes
+- [FIX] Converting a malformed plugin where a dialogue response appears before its topic no longer produces corrupted output
+- [FIX] Cell names with accented or Cyrillic letters referenced in scripts are now translated correctly instead of being cut off at the first non-ASCII character
+- [FIX] Case-insensitive search, glossary matching, and text highlighting now work for accented and Cyrillic letters, so a word matches regardless of the case of its non-ASCII letters
 
 ## [0.940] - 2026-07-29
 
