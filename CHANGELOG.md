@@ -1,6 +1,6 @@
 # Changelog
 
-## [XXX]
+## [0.1054] - 2026-08-30
 
 ### yTranslator
 - [NEW] Enchantment annotation: FNAM entries for weapons, armor, clothing, and books now show the enchantment ID in the Annotations panel when the item is enchanted

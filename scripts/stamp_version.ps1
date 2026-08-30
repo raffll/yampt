@@ -2,7 +2,7 @@ $repoRoot = Split-Path $PSScriptRoot -Parent
 $version = & "$PSScriptRoot\get_version.ps1"
 
 $vcpkgPath = Join-Path $repoRoot "vcpkg.json"
-$content = Get-Content $vcpkgPath -Raw
+$content = [System.IO.File]::ReadAllText($vcpkgPath, [System.Text.UTF8Encoding]::new($false))
 $updated = $content -replace '"version":\s*"[^"]*"', "`"version`": `"$version`""
 [System.IO.File]::WriteAllText($vcpkgPath, $updated, (New-Object System.Text.UTF8Encoding $false))
 
@@ -11,7 +11,7 @@ $versionFile = Join-Path $repoRoot "VERSION"
 
 $changelogPath = Join-Path $repoRoot "CHANGELOG.md"
 if (Test-Path $changelogPath) {
-    $clContent = Get-Content $changelogPath -Raw
+    $clContent = [System.IO.File]::ReadAllText($changelogPath, [System.Text.UTF8Encoding]::new($false))
     $today = Get-Date -Format "yyyy-MM-dd"
     $header = "## [$version] - $today"
     $clUpdated = $clContent -replace '## \[xxx\]', $header
