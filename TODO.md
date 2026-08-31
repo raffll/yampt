@@ -1,5 +1,7 @@
 # TODO
 
+sort languages alphabetically and in settings print encoding cormally, not greyed, show also model settings
+
 show optional subrecords in light grey, make them editable
 
 sctx - script script 
