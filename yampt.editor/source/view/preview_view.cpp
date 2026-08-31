@@ -17,40 +17,59 @@
 #include <QToolTip>
 #include <QVBoxLayout>
 
+namespace {
+
+constexpr int controls_margin = 2;
+constexpr int control_character_width = 24;
+
+} // namespace
+
 preview_view_t::preview_view_t(QWidget * parent)
     : QWidget(parent)
 {
-	auto * outer_layout = new QHBoxLayout(this);
+	auto * outer_layout = new QVBoxLayout(this);
 	outer_layout->setContentsMargins(0, 0, 0, 0);
-	outer_layout->setSpacing(4);
+	outer_layout->setSpacing(controls_margin);
+
+	auto * comparison_layout = new QHBoxLayout();
+	comparison_layout->setContentsMargins(0, 0, 0, 0);
+	comparison_layout->setSpacing(4);
 
 	m_left_edit = new QTextEdit(this);
 	m_left_edit->setReadOnly(true);
 	m_left_edit->setPlaceholderText(tr("Previous plugin"));
-	outer_layout->addWidget(m_left_edit);
-
-	auto * right_column = new QVBoxLayout();
-	right_column->setContentsMargins(0, 0, 0, 0);
-	right_column->setSpacing(4);
+	comparison_layout->addWidget(m_left_edit);
 
 	m_right_edit = new QTextEdit(this);
 	m_right_edit->setReadOnly(true);
 	m_right_edit->setPlaceholderText(tr("Selected plugin"));
 	m_right_edit->installEventFilter(this);
-	right_column->addWidget(m_right_edit);
+	comparison_layout->addWidget(m_right_edit);
+
+	outer_layout->addLayout(comparison_layout);
+
+	auto * controls_layout = new QHBoxLayout();
+	controls_layout->setContentsMargins(0, 0, controls_margin, controls_margin);
+	controls_layout->setSpacing(4);
+
+	controls_layout->addStretch();
+
+	const int control_width = fontMetrics().averageCharWidth() * control_character_width;
 
 	m_value_selector = new QComboBox(this);
 	m_value_selector->setVisible(false);
 	m_value_selector->setToolTip(tr("Select a value from the list"));
+	m_value_selector->setFixedWidth(control_width);
 	m_value_selector->view()->installEventFilter(this);
-	right_column->addWidget(m_value_selector);
+	controls_layout->addWidget(m_value_selector);
 
 	m_apply_button = new QPushButton(tr("Apply"), this);
 	m_apply_button->setToolTip(tr("Apply field edit to the loaded plugin"));
 	m_apply_button->setVisible(false);
-	right_column->addWidget(m_apply_button);
+	m_apply_button->setFixedWidth(control_width);
+	controls_layout->addWidget(m_apply_button);
 
-	outer_layout->addLayout(right_column);
+	outer_layout->addLayout(controls_layout);
 
 	connect(m_right_edit, &QTextEdit::textChanged, this, &preview_view_t::on_text_changed);
 	connect(m_apply_button, &QPushButton::clicked, this, &preview_view_t::on_apply_clicked);
@@ -207,6 +226,7 @@ void preview_view_t::set_editing_enabled(bool enabled)
 	{
 		m_right_edit->setStyleSheet("");
 		m_apply_button->setEnabled(false);
+		m_value_selector->setVisible(false);
 	}
 }
 
