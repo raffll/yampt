@@ -128,6 +128,18 @@ void main_window_t::setup_menu_bar()
 			m_dict_ops_controller->on_merge();
 	});
 
+	auto * apply_tags_action = tools_menu->addAction(tr("&Apply Topic Tags"));
+	apply_tags_action->setToolTip(tr("Wrap dialogue topics in @...# hyperlink tags"));
+	connect(
+	    apply_tags_action,
+	    &QAction::triggered,
+	    this,
+	    [this]()
+	{
+		if (m_dict_ops_controller)
+			m_dict_ops_controller->on_apply_tags();
+	});
+
 	tools_menu->addSeparator();
 	m_settings_action = tools_menu->addAction(tr("&Preferences..."));
 	m_settings_action->setShortcut(QKeySequence("Ctrl+,"));
@@ -882,8 +894,7 @@ void main_window_t::connect_editor_signals()
 		}
 		else
 		{
-			const auto prepared = m_glossary.apply_glossary(row_data->old_text);
-			m_translation_tab->request_translation(prepared);
+			m_translation_tab->request_translation_segments(row_data->old_text);
 		}
 	});
 
@@ -909,6 +920,17 @@ void main_window_t::connect_editor_signals()
 			joined.append(QString::fromStdString(line));
 
 		m_editor_view->translation_editor()->setPlainText(joined.join('\n'));
+		m_editor_controller.set_pending_status(status_t::model);
+		advance_to_next_row();
+	});
+
+	connect(
+	    m_translation_tab,
+	    &translation_suggestion_view_t::translation_segments_committed,
+	    this,
+	    [this](const std::string & reassembled_text)
+	{
+		m_editor_view->translation_editor()->setPlainText(QString::fromStdString(reassembled_text));
 		m_editor_controller.set_pending_status(status_t::model);
 		advance_to_next_row();
 	});

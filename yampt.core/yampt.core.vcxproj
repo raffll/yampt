@@ -179,7 +179,10 @@
     <ClCompile Include="source\creator\creator_ordered.cpp" />
     <ClCompile Include="source\creator\inflection.cpp" />
     <ClCompile Include="source\creator\loc_generator.cpp" />
+    <ClCompile Include="source\creator\phrase_form_builder.cpp" />
     <ClCompile Include="source\creator\text_match_index.cpp" />
+    <ClCompile Include="source\creator\topic_link_splitter.cpp" />
+    <ClCompile Include="source\creator\topic_tagger.cpp" />
     <ClCompile Include="source\creator\word_match_utils.cpp" />
     <ClCompile Include="source\decoder\conflict_slots.cpp" />
     <ClCompile Include="source\decoder\field_validator.cpp" />
@@ -245,7 +248,10 @@
     <ClInclude Include="source\creator\creator_ordered.hpp" />
     <ClInclude Include="source\creator\inflection.hpp" />
     <ClInclude Include="source\creator\loc_generator.hpp" />
+    <ClInclude Include="source\creator\phrase_form_builder.hpp" />
     <ClInclude Include="source\creator\text_match_index.hpp" />
+    <ClInclude Include="source\creator\topic_link_splitter.hpp" />
+    <ClInclude Include="source\creator\topic_tagger.hpp" />
     <ClInclude Include="source\creator\word_match_utils.hpp" />
     <ClInclude Include="source\decoder\conflict_slots.hpp" />
     <ClInclude Include="source\decoder\sub_record_iter.hpp" />

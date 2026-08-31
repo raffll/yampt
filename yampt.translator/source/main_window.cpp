@@ -104,9 +104,12 @@ main_window_t::main_window_t(QWidget * parent)
 	                             *m_log_view,
 	                             *m_record_tabs,
 	                             this,
+	                             m_edit_history,
 	                             [this]() { m_sidebar_controller->scan_workspace(); },
 	                             [this](document_t * doc) { switch_document(doc); },
-	                             [this]() { rebuild_sidebar(); } });
+	                             [this]() { rebuild_sidebar(); },
+	                             [this]() { return dynamic_cast<dict_document_t *>(m_active_doc); },
+	                             [this]() { rebuild_table(); } });
 
 	m_record_display_controller =
 	    std::make_unique<record_display_controller_t>(record_display_deps_t { *m_editor_view,

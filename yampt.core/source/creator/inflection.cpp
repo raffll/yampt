@@ -1,4 +1,6 @@
 #include "inflection.hpp"
+#include "phrase_form_builder.hpp"
+#include <algorithm>
 #include <hunspell/hunspell.hxx>
 #include <set>
 #include <sstream>
@@ -82,7 +84,33 @@ static std::vector<std::string> split_by_space(const std::string & phrase)
 	return words;
 }
 
-static std::string join_words(const std::vector<std::string> & words)
+static std::vector<std::string> build_word_candidates(Hunspell & hunspell, const std::string & word)
+{
+	std::vector<std::string> candidates{ word };
+
+	const auto forms = generate_forms_for_word(hunspell, word);
+	for (const auto & form : forms)
+	{
+		if (form != word)
+			candidates.push_back(form);
+	}
+
+	return candidates;
+}
+
+static std::vector<std::vector<std::string>> build_per_word_candidates(
+    Hunspell & hunspell,
+    const std::vector<std::string> & words)
+{
+	std::vector<std::vector<std::string>> per_word_candidates;
+	per_word_candidates.reserve(words.size());
+	for (const auto & word : words)
+		per_word_candidates.push_back(build_word_candidates(hunspell, word));
+
+	return per_word_candidates;
+}
+
+static std::string join_with_space(const std::vector<std::string> & words)
 {
 	std::string result;
 	for (size_t index = 0; index < words.size(); ++index)
@@ -92,30 +120,8 @@ static std::string join_words(const std::vector<std::string> & words)
 
 		result += words[index];
 	}
+
 	return result;
-}
-
-static std::vector<std::string> build_candidates_for_position(
-    Hunspell & hunspell,
-    const std::vector<std::string> & words,
-    size_t position)
-{
-	const auto forms = generate_forms_for_word(hunspell, words[position]);
-
-	std::vector<std::string> candidates;
-	candidates.reserve(forms.size());
-
-	for (const auto & form : forms)
-	{
-		if (!hunspell.spell(form))
-			continue;
-
-		auto modified_words = words;
-		modified_words[position] = form;
-		candidates.push_back(join_words(modified_words));
-	}
-
-	return candidates;
 }
 
 std::vector<std::string> inflection_t::phrase_forms(const std::string & phrase) const
@@ -130,21 +136,23 @@ std::vector<std::string> inflection_t::phrase_forms(const std::string & phrase) 
 	if (words.size() == 1)
 		return word_forms(phrase);
 
-	std::set<std::string> unique_results;
-	for (size_t position = 0; position < words.size(); ++position)
-	{
-		const auto candidates = build_candidates_for_position(*m_impl->m_hunspell, words, position);
+	auto & hunspell = *m_impl->m_hunspell;
+	const auto per_word_candidates = build_per_word_candidates(hunspell, words);
 
-		for (const auto & candidate : candidates)
+	const auto is_valid_phrase = [&hunspell](const std::vector<std::string> & combination) {
+		for (const auto & word : combination)
 		{
-			if (candidate == phrase)
-				continue;
-
-			unique_results.insert(candidate);
-			if (static_cast<int>(unique_results.size()) >= max_phrase_forms)
-				return { unique_results.begin(), unique_results.end() };
+			if (!hunspell.spell(word))
+				return false;
 		}
-	}
 
-	return { unique_results.begin(), unique_results.end() };
+		return true;
+	};
+
+	auto forms = phrase_form_builder::build_phrase_forms(per_word_candidates, is_valid_phrase, max_phrase_forms);
+
+	const auto nominative_phrase = join_with_space(words);
+	forms.erase(std::remove(forms.begin(), forms.end(), nominative_phrase), forms.end());
+
+	return forms;
 }

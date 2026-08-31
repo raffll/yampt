@@ -511,6 +511,7 @@ void translation_suggestion_view_t::request_translation(const std::string & text
 	}
 
 	m_translating = true;
+	m_segment_mode = false;
 	m_line_queue.clear();
 	m_line_results.clear();
 	m_translate_all_btn->setEnabled(false);
@@ -527,7 +528,63 @@ void translation_suggestion_view_t::request_translation_lines(const std::vector<
 	}
 
 	m_translating = true;
+	m_segment_mode = false;
 	m_line_queue = lines;
+	m_line_results.clear();
+	m_translate_all_btn->setEnabled(false);
+	advance_line_queue();
+}
+
+std::vector<std::string> translation_suggestion_view_t::build_segment_sources() const
+{
+	std::vector<std::string> sources;
+	sources.reserve(m_segments.size());
+
+	for (const auto & segment : m_segments)
+	{
+		if (segment.is_link)
+		{
+			sources.push_back(segment.inner_phrase);
+			continue;
+		}
+
+		const auto prepared =
+		    m_glossary_fn ? m_glossary_fn(segment.plain_text) : segment.plain_text;
+		sources.push_back(prepared);
+	}
+
+	return sources;
+}
+
+std::string translation_suggestion_view_t::reassemble_segment_results() const
+{
+	auto segments = m_segments;
+
+	for (std::size_t index = 0; index < segments.size() && index < m_line_results.size(); ++index)
+	{
+		const auto & translated = m_line_results[index];
+		if (segments[index].is_link)
+			segments[index].inner_phrase = translated;
+		else
+			segments[index].plain_text = translated;
+	}
+
+	return topic_link_splitter::reassemble(segments);
+}
+
+void translation_suggestion_view_t::request_translation_segments(const std::string & source_line)
+{
+	auto * provider = active_provider();
+	if (!provider || !provider->is_available())
+	{
+		emit translation_failed("translation provider not available");
+		return;
+	}
+
+	m_segments = topic_link_splitter::split(source_line);
+	m_segment_mode = true;
+	m_translating = true;
+	m_line_queue = build_segment_sources();
 	m_line_results.clear();
 	m_translate_all_btn->setEnabled(false);
 	advance_line_queue();
@@ -545,7 +602,7 @@ void translation_suggestion_view_t::advance_line_queue()
 	{
 		m_translating = false;
 		m_translate_all_btn->setEnabled(true);
-		emit translation_lines_committed(m_line_results);
+		emit_queue_result();
 		return;
 	}
 
@@ -561,6 +618,18 @@ void translation_suggestion_view_t::advance_line_queue()
 	provider->translate(m_line_queue.front(), m_target_language);
 }
 
+void translation_suggestion_view_t::emit_queue_result()
+{
+	if (m_segment_mode)
+	{
+		m_segment_mode = false;
+		emit translation_segments_committed(reassemble_segment_results());
+		return;
+	}
+
+	emit translation_lines_committed(m_line_results);
+}
+
 void translation_suggestion_view_t::on_provider_result(const translation_suggestion_t & result)
 {
 	if (!m_translating)
@@ -572,6 +641,7 @@ void translation_suggestion_view_t::on_provider_result(const translation_suggest
 	if (!result.success)
 	{
 		m_translating = false;
+		m_segment_mode = false;
 		m_line_queue.clear();
 		m_line_results.clear();
 		m_translate_all_btn->setEnabled(true);

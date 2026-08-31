@@ -4,6 +4,7 @@
 
 ### yTranslator
 - [NEW] Added Spanish and Portuguese, plus Czech, Slovak, Slovenian, Croatian, Romanian, Ukrainian, Bulgarian, Serbian, Dutch, Swedish, Danish, Norwegian Bokmal, Finnish, Catalan, and Galician as target languages; Finnish can be translated but has no spell-check dictionary
+- [NEW] Apply Topic Tags in the Tools menu: wraps dialogue topics found in the active dictionary's translated text in hyperlink tags so they appear as clickable links in-game; changes are recorded in history and can be reverted
 - [CHANGE] Sync Scrolling now remembers its on/off state between sessions instead of always starting enabled
 
 ### yEditor

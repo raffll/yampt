@@ -258,6 +258,9 @@
     <ClCompile Include="source\tests.string_utils_utf8.cpp" />
     <ClCompile Include="source\tests.case_fold.cpp" />
     <ClCompile Include="source\tests.loc_generator.cpp" />
+    <ClCompile Include="source\tests.topic_tagger.cpp" />
+    <ClCompile Include="source\tests.topic_link_splitter.cpp" />
+    <ClCompile Include="source\tests.phrase_form_builder.cpp" />
     <ClCompile Include="source\tests.byte_limit_validator.cpp" />
     <ClCompile Include="source\tests.row_filter.cpp" />
     <ClCompile Include="source\tests.pending_status.cpp" />

@@ -75,6 +75,9 @@
     <ClCompile Include="source\tests.model_list_utils.cpp" />
     <ClCompile Include="source\tests.web_response_utils.cpp" />
     <ClCompile Include="source\tests.loc_generator.cpp" />
+    <ClCompile Include="source\tests.topic_tagger.cpp" />
+    <ClCompile Include="source\tests.topic_link_splitter.cpp" />
+    <ClCompile Include="source\tests.phrase_form_builder.cpp" />
     <ClCompile Include="source\tests.translation_examples.cpp" />
     <ClCompile Include="source\tests.loc_file_writer.cpp" />
     <ClCompile Include="source\tests.loc_file_reader.cpp" />

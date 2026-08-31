@@ -61,6 +61,7 @@ Qt6 GUI for interactive plugin translation.
 - **EET file import: convert ESP-ESM Translator dictionaries to JSON**
 - **Generate localization files (.cel, .mrk, .top) from dictionary**
 - **Hyperlink insertion during plugin conversion**
+- **Apply Topic Tags: wrap dialogue topics in the translated text so they show as clickable links in-game**
 
 ## yampt.exe — Command Line
 
@@ -70,6 +71,7 @@ Batch tool for automated dictionary and conversion workflows.
 - Create base dictionaries by pairing two language versions of a master file
 - Create dictionaries from plugins using a base dictionary
 - Merge multiple dictionaries with priority ordering
+- **Apply dialogue topic tags to a dictionary's translated text**
 - **JSON dictionary format with status tracking**
 
 **Conversion**

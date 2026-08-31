@@ -4,23 +4,23 @@ Order: build the pure core first (tagging, strip, dict-wide apply), then the inf
 
 ## 1. Core: topic tagging facility
 
-- [ ] 1.1 Create `yampt.core/source/creator/topic_tagger.hpp/.cpp` with `topic_tag_result_t`, `apply_tags_result_t`, and the `topic_tagger_t` class (`seed_topics`, `tag_line`, static `strip_tags`). Add files to `yampt.core.vcxproj` and `.vcxproj.filters` (flat, per project-paths rules). (R4.1–R4.5)
-- [ ] 1.2 Implement `strip_tags`: remove every `@...#` span, unwrapping the inner phrase; preserve text outside links; leave a lone `@` with no following `#` unchanged. (R4.4)
-- [ ] 1.3 Implement `seed_topics(const dict_t &)`: seed an internal `keyword_trie_t` from DIAL standard forms only (use `new_text` as the surface). (R4.2, R4.9)
-- [ ] 1.4 Implement `tag_line`: strip first, run `keyword_trie_t::find_matches`, skip overlapping spans, insert `@`/`#` around accepted spans, return tagged text + count. (R4.3–R4.5)
-- [ ] 1.5 Implement free function `apply_topic_tags(dict_t &) -> apply_tags_result_t`: seed from the dict's DIAL, tag translatable records' `new_text`, write back changed entries, count entries changed and tags inserted; skip entries below the existing min-length / non-translated criteria. (R4.1, R5.4)
+- [x] 1.1 Create `yampt.core/source/creator/topic_tagger.hpp/.cpp` with `topic_tag_result_t`, `apply_tags_result_t`, and the `topic_tagger_t` class (`seed_topics`, `tag_line`, static `strip_tags`). Add files to `yampt.core.vcxproj` and `.vcxproj.filters` (flat, per project-paths rules). (R4.1–R4.5)
+- [x] 1.2 Implement `strip_tags`: remove every `@...#` span, unwrapping the inner phrase; preserve text outside links; leave a lone `@` with no following `#` unchanged. (R4.4)
+- [x] 1.3 Implement `seed_topics(const dict_t &)`: seed an internal `keyword_trie_t` from DIAL standard forms only (use `new_text` as the surface). (R4.2, R4.9)
+- [x] 1.4 Implement `tag_line`: strip first, run `keyword_trie_t::find_matches`, skip overlapping spans, insert `@`/`#` around accepted spans, return tagged text + count. (R4.3–R4.5)
+- [x] 1.5 Implement free function `apply_topic_tags(dict_t &) -> apply_tags_result_t`: seed from the dict's DIAL, tag translatable records' `new_text`, write back changed entries, count entries changed and tags inserted; skip entries below the existing min-length / non-translated criteria. (R4.1, R5.4)
 
 ## 2. Core: unit tests for tagging
 
-- [ ] 2.1 Add `yampt.tests/source/tests.topic_tagger.cpp` (register in `yampt.tests.vcxproj` + filters). (R6.4, R6.5)
-- [ ] 2.2 `topic_tagger_t::strip_tags` tests: single link, multiple links, malformed lone `@`, text outside links preserved.
-- [ ] 2.3 `topic_tagger_t::tag_line` tests: single topic wrapped; multiple topics; substring inside a word not tagged; longest-match wins; idempotent re-run; pre-existing tags stripped and reinserted; only DIAL topics seeded.
-- [ ] 2.4 `topic_tagger_t::apply_topic_tags` tests: counts changed entries and inserted tags; non-matching entries untouched; entries below threshold skipped.
+- [x] 2.1 Add `yampt.tests/source/tests.topic_tagger.cpp` (register in `yampt.tests.vcxproj` + filters). (R6.4, R6.5)
+- [x] 2.2 `topic_tagger_t::strip_tags` tests: single link, multiple links, malformed lone `@`, text outside links preserved.
+- [x] 2.3 `topic_tagger_t::tag_line` tests: single topic wrapped; multiple topics; substring inside a word not tagged; longest-match wins; idempotent re-run; pre-existing tags stripped and reinserted; only DIAL topics seeded.
+- [x] 2.4 `topic_tagger_t::apply_topic_tags` tests: counts changed entries and inserted tags; non-matching entries untouched; entries below threshold skipped.
 
 ## 3. Core: preserve tags across translation (split/reassemble helper)
 
-- [ ] 3.1 Add a pure link-split/reassemble helper (in `topic_tagger` or sibling `topic_link_splitter`): split a line into ordered plain-text and explicit-link segments using the `@`-to-next-`#` rule; expose reassembly that re-wraps a translated inner phrase with `@...#` preserving pseudo-asterisk suffixes. (R1.1–R1.4)
-- [ ] 3.2 Unit tests: one link, multiple links, pseudo-asterisks preserved, mixed plain+link; assert order and count preserved. (R6.1)
+- [x] 3.1 Add a pure link-split/reassemble helper (in `topic_tagger` or sibling `topic_link_splitter`): split a line into ordered plain-text and explicit-link segments using the `@`-to-next-`#` rule; expose reassembly that re-wraps a translated inner phrase with `@...#` preserving pseudo-asterisk suffixes. (R1.1–R1.4)
+- [x] 3.2 Unit tests: one link, multiple links, pseudo-asterisks preserved, mixed plain+link; assert order and count preserved. (R6.1)
 
 ## 4. Core: fix multi-word phrase inflection
 
