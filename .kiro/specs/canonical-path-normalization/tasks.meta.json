@@ -1,0 +1,260 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "Create `yampt.core/source/utility/string_utils.cpp` with `canonicalize_path` and `paths_equal` implementations": [
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788189465710
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788189474980
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788189579227
+      }
+    ],
+    "Add `string_utils.cpp` to `yampt.core.vcxproj` and `yampt.core.vcxproj.filters`": [
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788189465767
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788189588152
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788189615425
+      }
+    ],
+    "Add declarations to `string_utils.hpp` (non-inline, since defined in .cpp)": [
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788189465816
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788189619261
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788190722574
+      }
+    ],
+    "Write unit tests for `canonicalize_path` covering: empty, Unix root, drive roots, dot segments, double-dot segments, redundant separators, UNC paths, trailing slashes, relative paths with `..`": [
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788189465847
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788190738602
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788190885582
+      }
+    ],
+    "Write unit tests for `paths_equal` covering: case differences on Windows, identical paths, trailing slash differences, separator differences": [
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788189465878
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788190893080
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788190970831
+      }
+    ],
+    "`file_list_t::scan_single_root` — use `canonicalize_path` for `fe.root_path` assignment": [
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788189465909
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788190988507
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788191171584
+      }
+    ],
+    "`sidebar_model.cpp::build_render_model` — use `canonicalize_path` for `roots_map` keys": [
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788189465941
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788191179469
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788191324043
+      }
+    ],
+    "`sidebar_controller.cpp` — use `paths_equal` for workspace root deduplication": [
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788189465978
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788191330882
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788191411681
+      }
+    ],
+    "`session.cpp` — remove local `canonicalize_path`, replace with `string_utils::canonicalize_path`": [
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788189466030
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788191418917
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788191553994
+      }
+    ],
+    "`main_window.cpp` startup — use `paths_equal` for root deduplication check": [
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788189466082
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788191561891
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788191633301
+      }
+    ],
+    "`settings_store_t` — canonicalize workspace_roots on read and write": [
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788189466132
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788191640570
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788191730233
+      }
+    ],
+    "`dict_selection_dialog.cpp` — use `paths_equal` for saved-order matching": [
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788189466168
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788191737362
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788191826208
+      }
+    ],
+    "Audit all remaining `normalize_path` + `==` comparison sites — replace with `paths_equal` where the intent is filesystem equivalence": [
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788189466200
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788191833390
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788192298616
+      }
+    ],
+    "Update `resource_paths::workspace_dir()` and other `resolve_*` functions to NOT append trailing slash (now redundant since `canonicalize_path` strips it)": [
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788189466246
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788192306587
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788192518669
+      }
+    ],
+    "Verify no test regressions": [
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788189466284
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788192524630
+      },
+      {
+        "executionId": "b0c2a0f8-1c5d-4c83-8950-50e75f03e838",
+        "chatSessionId": "sess_ff25f690-cdc8-4da7-8d4f-9a53b9ebe0bd",
+        "timestamp": 1788192529136
+      }
+    ]
+  }
+}
