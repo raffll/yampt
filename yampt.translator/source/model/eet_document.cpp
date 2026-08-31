@@ -2,9 +2,10 @@
 #include <io/dict_writer.hpp>
 #include <io/eet_converter.hpp>
 #include <io/eet_reader.hpp>
+#include <utility/string_utils.hpp>
 
 eet_document_t::eet_document_t(const std::string & path, codepage_t codepage)
-    : m_path(path)
+    : m_path(string_utils::canonicalize_path(path))
 {
 	eet_reader_t reader;
 	if (!reader.load(path))

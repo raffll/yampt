@@ -117,10 +117,9 @@ void dict_selection_dialog_t::populate_order_list(
 	{
 		for (const auto & saved_path : saved_order)
 		{
-			const auto normalized = string_utils::normalize_path(saved_path);
 			for (const auto & entry : entries)
 			{
-				if (string_utils::normalize_path(entry.path) != normalized)
+				if (!string_utils::paths_equal(entry.path, saved_path))
 					continue;
 
 				display_name_t dname(entry.name);

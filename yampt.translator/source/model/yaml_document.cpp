@@ -14,15 +14,15 @@ yaml_document_t::yaml_document_t(const std::string & clicked_path, const std::st
 	auto stem = fs::path(normalized).stem().string();
 
 	m_is_native_file = (stem == native_language_code);
-	m_path = normalized;
+	m_path = string_utils::canonicalize_path(clicked_path);
 	m_foreign_path = "";
-	m_native_path = string_utils::normalize_path((dir / (native_language_code + ".yaml")).string());
+	m_native_path = string_utils::canonicalize_path((dir / (native_language_code + ".yaml")).string());
 
 	if (m_is_native_file)
 	{
 		auto en_path = dir / "en.yaml";
 		if (fs::exists(en_path))
-			m_foreign_path = string_utils::normalize_path(en_path.string());
+			m_foreign_path = string_utils::canonicalize_path(en_path.string());
 		else
 		{
 			for (const auto & entry : fs::directory_iterator(dir))
@@ -33,7 +33,7 @@ yaml_document_t::yaml_document_t(const std::string & clicked_path, const std::st
 				if (entry.path().stem().string() == native_language_code)
 					continue;
 
-				m_foreign_path = string_utils::normalize_path(entry.path().string());
+				m_foreign_path = string_utils::canonicalize_path(entry.path().string());
 				break;
 			}
 		}

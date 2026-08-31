@@ -28,8 +28,7 @@ void sidebar_controller_t::on_item_clicked(const std::string & path)
 	if (!entry)
 		return;
 
-	const auto norm_path = string_utils::normalize_path(path);
-	if (m_deps.active_doc && m_deps.active_doc->path() == norm_path)
+	if (m_deps.active_doc && string_utils::paths_equal(m_deps.active_doc->path(), path))
 		return;
 
 	auto * doc = m_deps.session.open(path);
@@ -42,9 +41,7 @@ void sidebar_controller_t::on_item_clicked(const std::string & path)
 
 void sidebar_controller_t::on_save_requested(const std::string & path)
 {
-	const auto norm_path = string_utils::normalize_path(path);
-
-	if (m_deps.active_doc && m_deps.active_doc->path() == norm_path)
+	if (m_deps.active_doc && string_utils::paths_equal(m_deps.active_doc->path(), path))
 	{
 		m_deps.active_doc->save();
 		update_sidebar_item(m_deps.active_doc->path());
@@ -98,8 +95,8 @@ void sidebar_controller_t::on_unload_requested(const std::string & path)
 
 	m_deps.session.close(path);
 
-	const auto norm = string_utils::normalize_path(path);
-	m_deps.filter_states.erase(norm);
+	const auto canonical_path = string_utils::canonicalize_path(path);
+	m_deps.filter_states.erase(canonical_path);
 
 	m_deps.callbacks.rebuild_annotations();
 	m_deps.last_annotation_version = m_deps.session.dict_version();
@@ -130,12 +127,12 @@ void sidebar_controller_t::on_delete_requested(const std::string & path)
 		return;
 	}
 
-	const auto norm_del_path = string_utils::normalize_path(path);
-	if (m_deps.active_doc && m_deps.active_doc->path() == norm_del_path)
+	const auto canonical_path = string_utils::canonicalize_path(path);
+	if (m_deps.active_doc && string_utils::paths_equal(m_deps.active_doc->path(), path))
 		m_deps.callbacks.switch_document(nullptr);
 
 	m_deps.session.close(path);
-	m_deps.filter_states.erase(norm_del_path);
+	m_deps.filter_states.erase(canonical_path);
 	m_deps.callbacks.rebuild_annotations();
 	m_deps.last_annotation_version = m_deps.session.dict_version();
 	m_deps.file_list.remove(path);
@@ -151,7 +148,7 @@ void sidebar_controller_t::scan_workspace()
 	roots.push_back(workspace);
 	for (const auto & root : m_deps.file_list.get_roots())
 	{
-		if (!string_utils::paths_equivalent(root, workspace))
+		if (!string_utils::paths_equal(root, workspace))
 			roots.push_back(root);
 	}
 
@@ -192,7 +189,7 @@ void sidebar_controller_t::update_watcher_roots()
 
 	for (const auto & root : m_deps.file_list.get_roots())
 	{
-		if (string_utils::paths_equivalent(root, workspace))
+		if (string_utils::paths_equal(root, workspace))
 			continue;
 
 		roots.append(QString::fromStdString(root));
@@ -286,18 +283,18 @@ void sidebar_controller_t::on_delete_folder_requested(const std::string & folder
 
 	if (m_deps.active_doc)
 	{
-		const auto folder_norm = string_utils::normalize_path(folder_path);
+		const auto folder_norm = string_utils::canonicalize_path(folder_path);
 		const auto & doc_path = m_deps.active_doc->path();
-		if (doc_path.find(folder_norm + "/") == 0 || doc_path == folder_norm)
+		if (doc_path.find(folder_norm + "/") == 0 || string_utils::paths_equal(doc_path, folder_norm))
 			m_deps.callbacks.switch_document(nullptr);
 	}
 
-	const auto folder_norm = string_utils::normalize_path(folder_path);
+	const auto folder_norm = string_utils::canonicalize_path(folder_path);
 
 	m_deps.session.close_if([this, &folder_norm](const document_t & doc)
 	{
 		const auto & doc_path = doc.path();
-		if (doc_path.find(folder_norm + "/") == 0 || doc_path == folder_norm)
+		if (doc_path.find(folder_norm + "/") == 0 || string_utils::paths_equal(doc_path, folder_norm))
 		{
 			m_deps.filter_states.erase(doc_path);
 			return true;
@@ -398,7 +395,7 @@ void sidebar_controller_t::reload_open_loc_documents(const loc_generator::genera
 		const auto & loc_path = loc_doc->path();
 		for (const auto & out_path : output_paths)
 		{
-			if (string_utils::normalize_path(loc_path) == string_utils::normalize_path(out_path))
+			if (string_utils::paths_equal(loc_path, out_path))
 			{
 				loc_doc->reload();
 				if (m_deps.active_doc == loc_doc)

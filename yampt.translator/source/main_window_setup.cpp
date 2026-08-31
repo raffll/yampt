@@ -487,7 +487,7 @@ void main_window_t::connect_menu_signals()
 			const auto path = m_active_doc->path();
 			switch_document(nullptr);
 			m_session.close(path);
-			m_filter_states.erase(path);
+			m_filter_states.erase(string_utils::canonicalize_path(path));
 			rebuild_annotations();
 			m_last_annotation_version = m_session.dict_version();
 		}

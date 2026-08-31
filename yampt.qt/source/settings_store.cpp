@@ -1,5 +1,6 @@
 #include "settings_store.hpp"
 #include "resource_paths.hpp"
+#include <utility/string_utils.hpp>
 #include <algorithm>
 #include <QCoreApplication>
 #include <QDir>
@@ -190,7 +191,8 @@ std::vector<std::string> settings_store_t::workspace_roots() const
 	for (int i = 0; i < count; ++i)
 	{
 		const auto key = QString("WorkspaceRoots/Path%1").arg(i);
-		roots.push_back(m_settings.value(key, "").toString().toStdString());
+		const auto stored = m_settings.value(key, "").toString().toStdString();
+		roots.push_back(string_utils::canonicalize_path(stored));
 	}
 	return roots;
 }
@@ -201,7 +203,8 @@ void settings_store_t::set_workspace_roots(const std::vector<std::string> & root
 	for (int i = 0; i < static_cast<int>(roots.size()); ++i)
 	{
 		const auto key = QString("WorkspaceRoots/Path%1").arg(i);
-		m_settings.setValue(key, QString::fromStdString(roots[i]));
+		const auto canonical = string_utils::canonicalize_path(roots[i]);
+		m_settings.setValue(key, QString::fromStdString(canonical));
 	}
 }
 

@@ -941,10 +941,10 @@ void main_window_t::load_config()
 
 	const auto workspace = resource_paths::workspace_dir();
 	std::vector<std::string> roots = { workspace };
-	for (const auto & r : m_settings.workspace_roots())
+	for (const auto & saved_root : m_settings.workspace_roots())
 	{
-		if (r != workspace)
-			roots.push_back(r);
+		if (!string_utils::paths_equal(saved_root, workspace))
+			roots.push_back(saved_root);
 	}
 	m_file_list.scan_roots(roots);
 	scan_workspace();

@@ -195,7 +195,8 @@ static void populate_tree_from_entries(
 			}
 		}
 
-		auto & root_builder = roots_map[entry->root_path];
+		const auto canonical_root = string_utils::canonicalize_path(entry->root_path);
+		auto & root_builder = roots_map[canonical_root];
 
 		if (entry->workspace_subfolder.empty())
 		{
@@ -256,7 +257,7 @@ sidebar_render_model_t build_render_model(
 
 	std::map<std::string, tree_builder_t> roots_map;
 	for (const auto & root : file_list.get_roots())
-		roots_map[string_utils::normalize_path(root)];
+		roots_map[string_utils::canonicalize_path(root)];
 
 	populate_tree_from_entries(file_list, session, roots_map);
 	assemble_root_nodes(roots_map, model);

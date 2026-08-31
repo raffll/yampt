@@ -9,7 +9,7 @@ dict_document_t::dict_document_t(const std::string & path, codepage_t codepage, 
     , m_codepage(codepage)
     , m_kind(kind)
 {
-	m_path = string_utils::normalize_path(m_path);
+	m_path = string_utils::canonicalize_path(m_path);
 
 	dict_reader_t reader(path);
 	if (!reader.is_loaded())

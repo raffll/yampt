@@ -1,7 +1,8 @@
 #include "model/loc_document.hpp"
+#include <utility/string_utils.hpp>
 
 loc_document_t::loc_document_t(const std::string & path, codepage_t codepage)
-    : m_path(path)
+    : m_path(string_utils::canonicalize_path(path))
     , m_codepage(codepage)
     , m_file(loc_file_reader::read(path, codepage))
 {}

@@ -100,10 +100,9 @@ std::string to_lower_utf8(std::string_view input);
 
 bool case_insensitive_equal_utf8(std::string_view lhs, std::string_view rhs);
 
-inline bool paths_equivalent(std::string_view lhs, std::string_view rhs)
-{
-	return case_insensitive_equal(normalize_path(lhs), normalize_path(rhs));
-}
+std::string canonicalize_path(std::string_view input);
+
+bool paths_equal(std::string_view lhs, std::string_view rhs);
 
 inline std::string erase_null_chars(std::string str)
 {

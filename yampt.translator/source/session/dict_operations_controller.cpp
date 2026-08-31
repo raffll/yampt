@@ -63,7 +63,7 @@ void dict_operations_controller_t::on_merge()
 
 	m_deps.scan_workspace();
 
-	const auto norm_output = string_utils::normalize_path(output_path);
+	const auto norm_output = string_utils::canonicalize_path(output_path);
 	auto * doc = m_deps.session.find(norm_output);
 	if (doc)
 	{
