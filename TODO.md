@@ -7,3 +7,5 @@ sctx - script script
 left of apply button is space when explanaition why edit is not valid
 
 is it possible to remove individual records from a plugin with this? 
+
+translator: ai tyransaltor editable prompt
