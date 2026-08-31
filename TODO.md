@@ -1,1 +1,9 @@
 # TODO
+
+show optional subrecords in light grey, make them editable
+
+sctx - script script 
+
+left of apply button is space when explanaition why edit is not valid
+
+is it possible to remove individual records from a plugin with this? 
