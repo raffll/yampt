@@ -773,16 +773,20 @@ static QVariant sub_record_background(const view_tree_model_t::view_node_t & row
 }
 
 static QVariant sub_record_foreground(
-    const std::vector<conflict_this_t> & cell_conflicts,
+    const view_tree_model_t::view_node_t & row,
     size_t column_count,
     int column,
     bool has_merge_column)
 {
+	const auto & cell_conflicts = row.cell_conflict_this;
 	const size_t real_columns = has_merge_column ? column_count - 1 : column_count;
 	if (real_columns <= 1)
 		return {};
 
 	const auto & theme = theme_system_t::instance();
+
+	if (row.is_ignored)
+		return QBrush(theme.conflict_this_foreground(conflict_this_t::ignored));
 
 	if (column == 0)
 	{
@@ -838,8 +842,7 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 		if (m_is_merge_pinned && is_merge_column(index.column()))
 			return QBrush(QColor(0, 128, 128));
 
-		return sub_record_foreground(
-		    node->cell_conflict_this, m_column_names.size(), index.column(), m_has_merge_column);
+		return sub_record_foreground(*node, m_column_names.size(), index.column(), m_has_merge_column);
 	}
 
 	case Qt::FontRole:

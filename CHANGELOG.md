@@ -8,6 +8,7 @@
 ### yEditor
 - [NEW] Sync Scrolling: a View menu toggle binds scrolling between the two comparison panes in the Edit panel, so both sides move together; the state persists between sessions
 - [FIX] The Edit panel comparison now leaves a pane blank when the corresponding plugin has no version of the selected sub-record, instead of showing stray placeholder characters
+- [FIX] Sub-records excluded from the merged patch now show their row text in the neutral color instead of the red, yellow, or orange conflict coloring, matching their greyed-out background
 
 ## [0.1060] - 2026-08-31
 
