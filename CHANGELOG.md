@@ -8,6 +8,7 @@
 - [FIX] Changing the text codepage in settings now updates the navigation tree and record view immediately; the Edit panel updates the next time a record cell is selected
 - [FIX] Clean All now works with a single loaded plugin, instead of wrongly reporting that two plugins are required
 - [FIX] Excluding a sub-record now affects only top-level sub-records; a rule like `CELL:DATA` no longer also strips the matching sub-record from every referenced object inside cells during merge
+- [FIX] Scanning for Lua handler conflicts no longer crashes when a mod contains files or folders whose names use accented, Cyrillic, or other non-English characters; such scripts are now read correctly, and an unreadable folder is skipped instead of aborting the scan
 
 ## [0.1054] - 2026-08-30
 

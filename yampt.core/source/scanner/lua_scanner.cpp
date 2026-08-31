@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <fstream>
 #include <sstream>
+#include <system_error>
 
 struct scan_context_t
 {
@@ -16,7 +17,7 @@ struct scan_context_t
 
 static std::string read_file_content(const std::string & file_path)
 {
-	std::ifstream stream(file_path);
+	std::ifstream stream(string_utils::utf8_to_path(file_path));
 	if (!stream.is_open())
 		return {};
 
@@ -29,37 +30,49 @@ static std::vector<std::string> discover_omwscripts(const std::string & data_pat
 {
 	std::vector<std::string> omwscripts_files;
 	const auto normalized = string_utils::normalize_path(data_path);
+	const auto normalized_root = string_utils::utf8_to_path(normalized);
 
-	if (!std::filesystem::exists(normalized))
+	if (!std::filesystem::exists(normalized_root))
 		return omwscripts_files;
 
-	if (!std::filesystem::is_directory(normalized))
+	if (!std::filesystem::is_directory(normalized_root))
 		return omwscripts_files;
 
-	for (const auto & entry : std::filesystem::recursive_directory_iterator(normalized))
+	std::error_code iteration_error;
+	auto iterator = std::filesystem::recursive_directory_iterator(
+	    normalized_root, std::filesystem::directory_options::skip_permission_denied, iteration_error);
+	const std::filesystem::recursive_directory_iterator iteration_end;
+
+	for (; iterator != iteration_end; iterator.increment(iteration_error))
 	{
-		if (!entry.is_regular_file())
+		if (iteration_error)
+			break;
+
+		const auto & entry = *iterator;
+
+		std::error_code file_type_error;
+		if (!entry.is_regular_file(file_type_error) || file_type_error)
 			continue;
 
-		const auto filename = string_utils::to_lower(entry.path().filename().string());
+		const auto filename = string_utils::to_lower(string_utils::path_to_utf8(entry.path().filename()));
 
 		if (filename.ends_with(".omwscripts"))
 		{
-			omwscripts_files.push_back(string_utils::normalize_path(entry.path().string()));
+			omwscripts_files.push_back(string_utils::normalize_path(string_utils::path_to_utf8(entry.path())));
 			continue;
 		}
 
 		if (!filename.ends_with(".omwscripts.esp"))
 			continue;
 
-		const auto real_name = entry.path().filename().string();
+		const auto real_name = string_utils::path_to_utf8(entry.path().filename());
 		const auto stripped = real_name.substr(0, real_name.size() - 4);
-		const auto real_path = entry.path().parent_path() / stripped;
+		const auto real_path = entry.path().parent_path() / string_utils::utf8_to_path(stripped);
 
 		if (!std::filesystem::exists(real_path))
 			continue;
 
-		const auto normalized_real = string_utils::normalize_path(real_path.string());
+		const auto normalized_real = string_utils::normalize_path(string_utils::path_to_utf8(real_path));
 		const auto already_found = std::find(omwscripts_files.begin(), omwscripts_files.end(), normalized_real);
 
 		if (already_found == omwscripts_files.end())
