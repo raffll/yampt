@@ -1,6 +1,6 @@
 # Changelog
 
-## [XXX]
+## [0.1060] - 2026-08-31
 
 ### yEditor
 - [CHANGE] Merged-patch context menu actions renamed for clarity: "Remove Sub-Record", "Remove Group", and the navigation tree's "Remove" are now "Remove Sub-Record from Merged Patch", "Remove Group from Merged Patch", and "Remove Record from Merged Patch"
