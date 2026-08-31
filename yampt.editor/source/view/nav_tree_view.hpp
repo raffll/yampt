@@ -31,6 +31,7 @@ public:
 
 	nav_tree_model_t::node_info_t current_selection() const;
 	nav_tree_model_t::node_info_t node_at(const QModelIndex & index) const;
+	void select_record(const std::string & rec_type, const std::string & record_id);
 	QModelIndex find_index(const std::string & rec_type, const std::string & record_id) const;
 	QModelIndex parent_index(const QModelIndex & index) const;
 

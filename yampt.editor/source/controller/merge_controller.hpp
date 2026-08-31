@@ -16,6 +16,7 @@ class merge_controller_t
 {
 public:
 	using log_fn_t = std::function<void(const std::string &)>;
+	using refresh_fn_t = std::function<void()>;
 
 	merge_controller_t(
 	    plugin_session_t & session,
@@ -23,6 +24,8 @@ public:
 	    nav_tree_view_t & nav_view,
 	    settings_store_t & settings,
 	    log_fn_t log_fn);
+
+	void set_refresh_callback(refresh_fn_t refresh_fn);
 
 	bool create_merged_patch();
 	void load_existing_merged_patch();
@@ -92,4 +95,5 @@ private:
 	nav_tree_view_t & m_nav_view;
 	settings_store_t & m_settings;
 	log_fn_t m_log;
+	refresh_fn_t m_refresh;
 };

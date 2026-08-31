@@ -1,4 +1,5 @@
 #include <catch2/catch_all.hpp>
+#include <filesystem>
 #include <utility/string_utils.hpp>
 
 TEST_CASE("string_utils::to_lower, ascii mixed case", "[u]")
@@ -130,4 +131,41 @@ TEST_CASE("string_utils::replace_non_printable_with_dot, mixed content", "[u]")
 	        "b") == "a.b");
 	REQUIRE(string_utils::replace_non_printable_with_dot(std::string("\x00\x1F", 2)) == "..");
 	REQUIRE(string_utils::replace_non_printable_with_dot("") == "");
+}
+
+TEST_CASE("string_utils::path_to_utf8, ascii path round-trips", "[u]")
+{
+	const std::filesystem::path ascii_path = "C:/mods/scripts/handler.lua";
+	REQUIRE(string_utils::path_to_utf8(ascii_path) == "C:/mods/scripts/handler.lua");
+}
+
+TEST_CASE("string_utils::path_to_utf8, non-ansi filename does not throw", "[u]")
+{
+	const std::u8string unicode_name = u8"\u6708\u660e\u304b\u308a.lua";
+	const std::filesystem::path unicode_path = std::filesystem::path(unicode_name);
+
+	std::string converted;
+	REQUIRE_NOTHROW(converted = string_utils::path_to_utf8(unicode_path));
+
+	const std::string expected(reinterpret_cast<const char *>(unicode_name.data()), unicode_name.size());
+	REQUIRE(converted == expected);
+}
+
+TEST_CASE("string_utils::path_to_utf8, cyrillic filename converts to utf8", "[u]")
+{
+	const std::u8string unicode_name = u8"\u041c\u043e\u0434.omwscripts";
+	const std::filesystem::path unicode_path = std::filesystem::path(unicode_name);
+
+	const auto converted = string_utils::path_to_utf8(unicode_path);
+	const std::string expected(reinterpret_cast<const char *>(unicode_name.data()), unicode_name.size());
+	REQUIRE(converted == expected);
+}
+
+TEST_CASE("string_utils::utf8_to_path, round-trips through path_to_utf8", "[u]")
+{
+	const std::u8string unicode_name = u8"\u041c\u043e\u0434\u6708.omwscripts";
+	const std::string utf8_text(reinterpret_cast<const char *>(unicode_name.data()), unicode_name.size());
+
+	const auto path = string_utils::utf8_to_path(utf8_text);
+	REQUIRE(string_utils::path_to_utf8(path) == utf8_text);
 }

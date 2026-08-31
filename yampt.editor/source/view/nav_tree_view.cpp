@@ -4,6 +4,7 @@
 #include <QDragMoveEvent>
 #include <QDropEvent>
 #include <QMimeData>
+#include <QSignalBlocker>
 #include <QTreeView>
 #include <QVBoxLayout>
 
@@ -136,6 +137,17 @@ nav_tree_model_t::node_info_t nav_tree_view_t::node_at(const QModelIndex & index
 		return { -1, {}, {} };
 
 	return m_model->node_at(index);
+}
+
+void nav_tree_view_t::select_record(const std::string & rec_type, const std::string & record_id)
+{
+	const auto index = m_model->find_index(rec_type, record_id);
+	if (!index.isValid())
+		return;
+
+	const QSignalBlocker blocker(m_tree->selectionModel());
+	m_tree->setCurrentIndex(index);
+	m_tree->scrollTo(index);
 }
 
 QModelIndex nav_tree_view_t::find_index(const std::string & rec_type, const std::string & record_id) const

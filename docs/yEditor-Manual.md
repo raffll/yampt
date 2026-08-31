@@ -75,10 +75,10 @@ Right-click in the record view to access merge operations:
 - **Copy Sub-Record to Merged Patch** — copies a single sub-record (one row) from a plugin column.
 - **Copy Field to Merged Patch** — copies a single decoded field within a sub-record from a plugin column.
 - **Copy Group to Merged Patch** — copies a group of related sub-records (e.g. all fields of a referenced object in a cell).
-- **Remove Sub-Record** / **Remove Group** — removes content from the merged patch column.
-- **Exclude Sub-Record** — adds the sub-record type to the exclusion list in settings. The sub-record will be hidden from conflict detection and excluded from the merged patch. The rule is stored as `RECORD:SUB` (e.g. `CELL:NAM0`) and can be reviewed in Settings.
+- **Remove Sub-Record from Merged Patch** / **Remove Group from Merged Patch** — removes content from the merged patch column.
+- **Exclude Sub-Record** — adds the sub-record type to the exclusion list in settings. The sub-record will be hidden from conflict detection and excluded from the merged patch. The rule is stored as `RECORD:SUB` (e.g. `CELL:NAM0`) and can be reviewed in Settings. Exclusion applies only to top-level sub-records; sub-records nested inside a cell's referenced objects are never excluded, so a rule such as `CELL:DATA` affects the cell's own data and leaves the referenced objects intact. This option is offered only on top-level sub-record rows.
 
-Right-click a record node belonging to the merged patch in the navigation tree to see the **Remove** option, which deletes that record from the merged patch entirely.
+Right-click a record node belonging to the merged patch in the navigation tree to see the **Remove Record from Merged Patch** option, which deletes that record from the merged patch entirely.
 
 Right-click a plugin node in the navigation tree for plugin-level options:
 
@@ -144,7 +144,7 @@ You can refine the auto-merge result manually. Use the record view context menu 
 
 Open Settings via Ctrl+, or the Tools menu. Four pages are available:
 
-- **Appearance** — choose between light and dark theme.
+- **Appearance** — choose between light and dark theme, and set the text codepage used to display plugin text. Choose Windows-1250 for Polish and Central European plugins, Windows-1251 for Russian, or Windows-1252 for English and other Western languages. The codepage applies to the navigation tree, the record view, and the Edit panel. Changing it updates the navigation tree and record view right away; the Edit panel refreshes the next time you select a record cell. Plugin files carry no encoding marker, so pick the codepage that matches the language of the plugins you are inspecting; choosing the wrong one makes accented or non-English characters appear as replacement symbols.
 - **Output Paths** — configure the merged patch output path for each loading mode (folder, MO2, OpenMW). Normally these are automatic and don't need changing.
 - **Merged Patch** — three sub-tabs control how auto-merge behaves:
   - **Exclude Sub-Records** — a list of sub-records excluded from conflict detection and the merged patch. Each entry uses `RECORD:SUB` format (e.g. `CELL:NAM0`). Use `TYPE:*` to exclude an entire record type. Add entries via the input field or right-click a sub-record row in the record view and choose "Exclude Sub-Record."

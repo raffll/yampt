@@ -133,7 +133,7 @@ omwscripts_result_t omwscripts_parser_t::parse(const std::string & file_path, co
 	result.source_file = file_path;
 	result.mod_name = mod_name;
 
-	std::ifstream file_stream(file_path);
+	std::ifstream file_stream(string_utils::utf8_to_path(file_path));
 	if (!file_stream.is_open())
 	{
 		result.warnings.push_back("[error] cannot open \"" + file_path + "\"");

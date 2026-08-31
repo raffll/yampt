@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <filesystem>
 #include <string>
 #include <string_view>
 
@@ -32,6 +33,18 @@ inline std::string normalize_path(std::string_view input)
 	}
 
 	return result;
+}
+
+inline std::string path_to_utf8(const std::filesystem::path & path)
+{
+	const auto utf8_bytes = path.u8string();
+	return std::string(reinterpret_cast<const char *>(utf8_bytes.data()), utf8_bytes.size());
+}
+
+inline std::filesystem::path utf8_to_path(std::string_view utf8_text)
+{
+	const std::u8string utf8_bytes(reinterpret_cast<const char8_t *>(utf8_text.data()), utf8_text.size());
+	return std::filesystem::path(utf8_bytes);
 }
 
 inline std::string_view extract_filename(std::string_view path)

@@ -37,7 +37,7 @@ void view_context_menu_t::show_nav_menu(const QPoint & global_pos, const nav_tre
 	if (!info.record_id.empty() && is_merge)
 	{
 		menu.addAction(
-		    QCoreApplication::translate("yEditor", "Remove"),
+		    QCoreApplication::translate("yEditor", "Remove Record from Merged Patch"),
 		    [this, info]() { m_merge.remove_record_from_merge(info.rec_type, info.record_id); });
 	}
 	else if (info.rec_type.empty() && info.record_id.empty() && !is_merge)
@@ -56,6 +56,21 @@ void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_mo
 	const auto & filename = m_session.scan().plugin_filename(info.plugin_idx);
 	const bool excluded = m_session.excluded_plugins().count(filename) > 0;
 	const bool is_patch = m_session.patch_plugins().count(filename) > 0;
+
+	auto * save_action = menu.addAction(
+	    QCoreApplication::translate("yEditor", "Save"),
+	    [this, info]()
+	{
+		if (m_merge.save_plugin(info.plugin_idx))
+			m_nav_view.rebuild_preserving_state();
+
+		if (m_on_unsaved_changed)
+			m_on_unsaved_changed(m_session.has_any_unsaved());
+	});
+	save_action->setToolTip(QCoreApplication::translate("yEditor", "Write in-memory changes to the plugin file"));
+	save_action->setEnabled(m_session.is_plugin_dirty(info.plugin_idx));
+
+	menu.addSeparator();
 
 	menu.addAction(
 	    excluded ? QCoreApplication::translate("yEditor", "Include in Merged Patch")
@@ -104,19 +119,6 @@ void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_mo
 		m_session.save_session_state(settings_store_t::settings_dir() + "yEditor.ini");
 		m_nav_view.rebuild_preserving_state();
 	});
-
-	auto * save_action = menu.addAction(
-	    QCoreApplication::translate("yEditor", "Save"),
-	    [this, info]()
-	{
-		if (m_merge.save_plugin(info.plugin_idx))
-			m_nav_view.rebuild_preserving_state();
-
-		if (m_on_unsaved_changed)
-			m_on_unsaved_changed(m_session.has_any_unsaved());
-	});
-	save_action->setToolTip(QCoreApplication::translate("yEditor", "Write in-memory changes to the plugin file"));
-	save_action->setEnabled(m_session.is_plugin_dirty(info.plugin_idx));
 }
 
 void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModelIndex & index)
@@ -356,7 +358,7 @@ void view_context_menu_t::build_merge_remove_menu(QMenu & menu, const view_menu_
 			const auto removed_type = context.row.type;
 			const auto bin_idx = context.bin_idx;
 			menu.addAction(
-			    QCoreApplication::translate("yEditor", "Remove Sub-Record"),
+			    QCoreApplication::translate("yEditor", "Remove Sub-Record from Merged Patch"),
 			    [this, &context, bin_idx, removed_type]()
 			{ m_merge.remove_sub_record(context.rec_type, context.record_id, bin_idx, removed_type); });
 		}
@@ -378,7 +380,7 @@ void view_context_menu_t::build_merge_remove_menu(QMenu & menu, const view_menu_
 		if (merge_range.start >= 0)
 		{
 			menu.addAction(
-			    QCoreApplication::translate("yEditor", "Remove Group"),
+			    QCoreApplication::translate("yEditor", "Remove Group from Merged Patch"),
 			    [this, &context, merge_range]()
 			{ m_merge.remove_group(context.rec_type, context.record_id, merge_range); });
 		}
@@ -409,7 +411,7 @@ void view_context_menu_t::build_merge_remove_menu(QMenu & menu, const view_menu_
 		{
 			const auto removed_type = sub_record_node->type;
 			menu.addAction(
-			    QCoreApplication::translate("yEditor", "Remove Sub-Record"),
+			    QCoreApplication::translate("yEditor", "Remove Sub-Record from Merged Patch"),
 			    [this, &context, merge_bin, removed_type]()
 			{ m_merge.remove_sub_record(context.rec_type, context.record_id, merge_bin, removed_type); });
 		}

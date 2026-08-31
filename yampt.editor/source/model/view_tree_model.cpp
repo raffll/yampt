@@ -787,14 +787,21 @@ static QVariant sub_record_foreground(
 	if (column == 0)
 	{
 		conflict_this_t worst = conflict_this_t::unknown;
+		bool any_ignored = false;
 		for (const auto & status : cell_conflicts)
 		{
+			if (status == conflict_this_t::ignored)
+				any_ignored = true;
+
 			if (status == conflict_this_t::identical_to_master)
 				continue;
 
 			if (status > worst)
 				worst = status;
 		}
+
+		if (any_ignored)
+			return QBrush(theme.conflict_this_foreground(conflict_this_t::ignored));
 
 		if (worst == conflict_this_t::unknown || worst == conflict_this_t::master)
 			return {};

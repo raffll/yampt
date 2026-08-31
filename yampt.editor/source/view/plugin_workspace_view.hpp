@@ -106,6 +106,8 @@ private:
 	void update_status();
 	void log_message(const std::string & msg);
 	void rebuild_nav_preserving_state();
+	void refresh_all_views();
+	void clear_views_if_record_filtered_out();
 	void load_plugins_from_paths(const std::vector<std::string> & paths, const std::string & base_path);
 	void display_record_in_view(const conflict_entry_t & entry);
 	QString build_mode_prefix() const;

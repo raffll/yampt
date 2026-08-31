@@ -75,6 +75,8 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 	m_merge_controller = new merge_controller_t(
 	    *m_session, *m_record_view, *m_nav_view, m_settings, [this](const std::string & msg) { log_message(msg); });
 
+	m_merge_controller->set_refresh_callback([this]() { refresh_all_views(); });
+
 	m_context_menu = new view_context_menu_t(
 	    *m_session,
 	    *m_record_view,
@@ -146,7 +148,7 @@ void plugin_workspace_view_t::setup_connections()
 	    this,
 	    [this](bool is_merge_edit)
 	{
-		rebuild_nav_preserving_state();
+		refresh_all_views();
 		if (is_merge_edit)
 			m_merge_controller->save_merged_patch();
 		else
@@ -157,18 +159,7 @@ void plugin_workspace_view_t::setup_connections()
 	    m_preview,
 	    &preview_view_t::edit_committed,
 	    this,
-	    [this]()
-	{
-		const auto * model = m_record_view->model();
-		const auto & rec_type = model->record_type();
-		const auto & record_id = model->record_id();
-
-		const auto * entry = m_session->scan().find(rec_type, record_id);
-		if (!entry)
-			return;
-
-		display_record_in_view(*entry);
-	});
+	    [this]() { refresh_all_views(); });
 }
 
 void plugin_workspace_view_t::load_plugins_from_paths(
@@ -329,21 +320,7 @@ void plugin_workspace_view_t::on_create_merged_patch()
 	if (!m_merge_controller->create_merged_patch())
 		return;
 
-	const auto info = m_nav_view->current_selection();
-	if (info.record_id.empty())
-	{
-		update_status();
-		return;
-	}
-
-	const auto * updated = m_session->scan().find(info.rec_type, info.record_id);
-	if (!updated)
-	{
-		update_status();
-		return;
-	}
-
-	display_record_in_view(*updated);
+	refresh_all_views();
 	update_status();
 }
 
@@ -359,9 +336,9 @@ void plugin_workspace_view_t::on_clean_all()
 			m_merge_controller->save_all_dirty();
 	}
 
-	if (m_session->scan().plugin_count() < 2)
+	if (m_session->scan().plugin_count() < 1)
 	{
-		log_message("[error] need at least 2 plugins loaded to clean");
+		log_message("[error] no plugins loaded to clean");
 		return;
 	}
 
@@ -427,21 +404,49 @@ void plugin_workspace_view_t::apply_user_conflict_rules()
 void plugin_workspace_view_t::on_settings_changed()
 {
 	apply_user_conflict_rules();
+
+	const auto codepage = static_cast<codepage_t>(m_settings.display_codepage());
+	m_record_view->model()->set_display_codepage(codepage);
+	m_nav_view->set_display_codepage(codepage);
 	m_record_view->model()->set_user_ignore_conflict(m_session->scan().user_ignore_conflict());
 
 	if (m_session->scan().plugin_count() > 0)
 	{
-		const auto selection = m_nav_view->current_selection();
-
 		m_session->scan().rebuild_conflicts();
-		rebuild_nav_preserving_state();
-
-		if (!selection.rec_type.empty())
-			on_nav_selection_changed(selection);
+		refresh_all_views();
 	}
+}
 
-	m_record_view->model()->set_display_codepage(static_cast<codepage_t>(m_settings.display_codepage()));
-	m_nav_view->set_display_codepage(static_cast<codepage_t>(m_settings.display_codepage()));
+void plugin_workspace_view_t::refresh_all_views()
+{
+	const auto displayed_rec_type = m_record_view->model()->record_type();
+	const auto displayed_record_id = m_record_view->model()->record_id();
+
+	const auto current_cell = m_record_view->tree()->currentIndex();
+	const int cell_row = current_cell.row();
+	const int cell_column = current_cell.column();
+	const int cell_parent_row = current_cell.parent().isValid() ? current_cell.parent().row() : -1;
+
+	rebuild_nav_preserving_state();
+
+	if (displayed_rec_type.empty())
+		return;
+
+	const auto * entry = m_session->scan().find(displayed_rec_type, displayed_record_id);
+	if (entry == nullptr)
+		return;
+
+	m_nav_view->select_record(displayed_rec_type, displayed_record_id);
+	display_record_in_view(*entry);
+
+	const auto * model = m_record_view->model();
+	const auto parent_index = cell_parent_row >= 0 ? model->index(cell_parent_row, 0, QModelIndex()) : QModelIndex();
+	const auto restored_cell = model->index(cell_row, cell_column, parent_index);
+	if (!restored_cell.isValid())
+		return;
+
+	m_record_view->tree()->setCurrentIndex(restored_cell);
+	on_view_selection_changed(restored_cell);
 }
 
 void plugin_workspace_view_t::rebuild_nav_preserving_state()
@@ -913,6 +918,24 @@ void plugin_workspace_view_t::apply_effective_filter()
 	else
 		m_nav_view->set_filter(state);
 
+	clear_views_if_record_filtered_out();
+
 	update_status();
 	emit filters_active_changed(state != nav_tree_model_t::filter_state_t {});
+}
+
+void plugin_workspace_view_t::clear_views_if_record_filtered_out()
+{
+	const auto displayed_rec_type = m_record_view->model()->record_type();
+	const auto displayed_record_id = m_record_view->model()->record_id();
+	if (displayed_rec_type.empty())
+		return;
+
+	const auto index = m_nav_view->find_index(displayed_rec_type, displayed_record_id);
+	if (index.isValid())
+		return;
+
+	m_record_view->clear();
+	if (m_preview)
+		m_preview->clear();
 }
