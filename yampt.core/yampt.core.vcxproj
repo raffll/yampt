@@ -228,6 +228,7 @@
     <ClCompile Include="source\utility\domain_types.cpp" />
     <ClCompile Include="source\utility\app_logger.cpp" />
     <ClCompile Include="source\utility\string_utils.cpp" />
+    <ClCompile Include="source\utility\case_fold.cpp" />
     <ClCompile Include="source\utility\language_config.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -298,6 +299,7 @@
     <ClInclude Include="source\utility\record_types.hpp" />
     <ClInclude Include="source\utility\status_types.hpp" />
     <ClInclude Include="source\utility\string_utils.hpp" />
+    <ClInclude Include="source\utility\case_fold.hpp" />
     <ClInclude Include="source\utility\theme_enums.hpp" />
     <ClInclude Include="source\utility\domain_types.hpp" />
     <ClInclude Include="source\utility\app_logger.hpp" />

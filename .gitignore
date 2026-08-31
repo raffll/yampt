@@ -6,7 +6,13 @@ x64/
 packages/
 build/
 models/
-external/
+# external/ holds local-only third-party content (models, 7za.exe, CTranslate2
+# build output). Ignore everything except the tracked git submodules.
+external/*
+!external/CTranslate2
+!external/dictionaries
+# CTranslate2 build artifacts live inside its submodule tree; never track them.
+external/CTranslate2/build/
 /scripts/finetune_tmp
 /vcpkg_installed
 /tests
@@ -16,3 +22,8 @@ external/
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
+
+# Hunspell dictionaries are sourced from the external/dictionaries submodule
+# and copied at build time; never track loose dictionary files here.
+dictionaries/*.aff
+dictionaries/*.dic

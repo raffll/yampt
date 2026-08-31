@@ -10,9 +10,9 @@
 #include "../view/sidebar_view.hpp"
 #include <creator/loc_generator.hpp>
 #include <io/loc_file_reader.hpp>
+#include <utility/language_config.hpp>
 #include <utility/string_utils.hpp>
 #include <algorithm>
-#include <map>
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
@@ -314,16 +314,8 @@ void sidebar_controller_t::on_delete_folder_requested(const std::string & folder
 
 std::string sidebar_controller_t::resolve_hunspell_locale(const std::string & language_code) const
 {
-	static const std::map<std::string, std::string> locale_map = {
-		{ "PL", "pl_PL" }, { "DE", "de_DE" }, { "FR", "fr_FR" },
-		{ "RU", "ru_RU" }, { "IT", "it_IT" }, { "HU", "hu_HU" },
-	};
-
-	const auto it_locale = locale_map.find(language_code);
-	if (it_locale == locale_map.end())
-		return {};
-
-	return it_locale->second;
+	const auto languages = language_config::load(resource_paths::languages_file());
+	return language_config::resolve_dictionary_prefix(languages, language_code);
 }
 
 void sidebar_controller_t::on_export_eet_requested(const std::string & path)

@@ -189,6 +189,7 @@
     <ClCompile Include="source\tests.dict_writer.cpp" />
     <ClCompile Include="source\tests.dict_creator.cpp" />
     <ClCompile Include="source\tests.codepage.cpp" />
+    <ClCompile Include="source\tests.language_config.cpp" />
     <ClCompile Include="source\tests.main.cpp" />
     <ClCompile Include="source\tests.script_parser.cpp" />
     <ClCompile Include="source\tests.tools.cpp" />
@@ -255,6 +256,7 @@
     <ClCompile Include="source\tests.workspace_watcher.cpp" />
     <ClCompile Include="source\tests.string_utils.cpp" />
     <ClCompile Include="source\tests.string_utils_utf8.cpp" />
+    <ClCompile Include="source\tests.case_fold.cpp" />
     <ClCompile Include="source\tests.loc_generator.cpp" />
     <ClCompile Include="source\tests.byte_limit_validator.cpp" />
     <ClCompile Include="source\tests.row_filter.cpp" />

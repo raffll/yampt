@@ -1,0 +1,6 @@
+[submodule "external/dictionaries"]
+	path = external/dictionaries
+	url = https://github.com/wooorm/dictionaries.git
+[submodule "external/CTranslate2"]
+	path = external/CTranslate2
+	url = https://github.com/OpenNMT/CTranslate2.git

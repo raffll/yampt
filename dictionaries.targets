@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!--
+    Shared dictionary deployment logic for yampt.translator and yampt.cli.
+    Hunspell dictionaries are NOT committed to this repo. They are sourced from
+    the wooorm/dictionaries git submodule at external/dictionaries and copied
+    into the output directory, renaming each upstream index.aff / index.dic to the
+    locale prefix yampt expects (matching the "dictionary" field in languages.json).
+
+    To populate the submodule after a fresh clone:
+      git submodule update (init) external/dictionaries
+  -->
+
+  <PropertyGroup>
+    <UpstreamDictRoot>$(SolutionDir)external\dictionaries\dictionaries</UpstreamDictRoot>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <UpstreamDict Include="en_US"><Folder>en</Folder></UpstreamDict>
+    <UpstreamDict Include="pl_PL"><Folder>pl</Folder></UpstreamDict>
+    <UpstreamDict Include="de_DE"><Folder>de</Folder></UpstreamDict>
+    <UpstreamDict Include="fr_FR"><Folder>fr</Folder></UpstreamDict>
+    <UpstreamDict Include="ru_RU"><Folder>ru</Folder></UpstreamDict>
+    <UpstreamDict Include="it_IT"><Folder>it</Folder></UpstreamDict>
+    <UpstreamDict Include="hu_HU"><Folder>hu</Folder></UpstreamDict>
+    <UpstreamDict Include="es_ES"><Folder>es</Folder></UpstreamDict>
+    <UpstreamDict Include="pt_PT"><Folder>pt-PT</Folder></UpstreamDict>
+    <UpstreamDict Include="cs_CZ"><Folder>cs</Folder></UpstreamDict>
+    <UpstreamDict Include="sk_SK"><Folder>sk</Folder></UpstreamDict>
+    <UpstreamDict Include="sl_SI"><Folder>sl</Folder></UpstreamDict>
+    <UpstreamDict Include="hr_HR"><Folder>hr</Folder></UpstreamDict>
+    <UpstreamDict Include="ro_RO"><Folder>ro</Folder></UpstreamDict>
+    <UpstreamDict Include="uk_UA"><Folder>uk</Folder></UpstreamDict>
+    <UpstreamDict Include="bg_BG"><Folder>bg</Folder></UpstreamDict>
+    <UpstreamDict Include="sr_RS"><Folder>sr</Folder></UpstreamDict>
+    <UpstreamDict Include="nl_NL"><Folder>nl</Folder></UpstreamDict>
+    <UpstreamDict Include="sv_SE"><Folder>sv</Folder></UpstreamDict>
+    <UpstreamDict Include="da_DK"><Folder>da</Folder></UpstreamDict>
+    <UpstreamDict Include="nb_NO"><Folder>nb</Folder></UpstreamDict>
+    <UpstreamDict Include="ca_ES"><Folder>ca</Folder></UpstreamDict>
+    <UpstreamDict Include="gl_ES"><Folder>gl</Folder></UpstreamDict>
+  </ItemGroup>
+
+  <Target Name="CopyDictionaries"
+          AfterTargets="Build"
+          Condition="Exists('$(UpstreamDictRoot)')">
+    <MakeDir Directories="$(OutDir)dictionaries" />
+    <ItemGroup>
+      <DictAff Include="@(UpstreamDict)">
+        <SourcePath>$(UpstreamDictRoot)\%(UpstreamDict.Folder)\index.aff</SourcePath>
+        <DestPath>$(OutDir)dictionaries\%(UpstreamDict.Identity).aff</DestPath>
+      </DictAff>
+      <DictDic Include="@(UpstreamDict)">
+        <SourcePath>$(UpstreamDictRoot)\%(UpstreamDict.Folder)\index.dic</SourcePath>
+        <DestPath>$(OutDir)dictionaries\%(UpstreamDict.Identity).dic</DestPath>
+      </DictDic>
+    </ItemGroup>
+    <Copy SourceFiles="%(DictAff.SourcePath)" DestinationFiles="%(DictAff.DestPath)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="%(DictDic.SourcePath)" DestinationFiles="%(DictDic.DestPath)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(SolutionDir)dictionaries\LICENSE" DestinationFolder="$(OutDir)dictionaries" SkipUnchangedFiles="true" Condition="Exists('$(SolutionDir)dictionaries\LICENSE')" />
+  </Target>
+
+</Project>

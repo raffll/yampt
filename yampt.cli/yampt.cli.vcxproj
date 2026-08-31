@@ -163,6 +163,7 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Import Project="$(SolutionDir)dictionaries.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
   <Target Name="CopyCTranslate2Dll" AfterTargets="Build" Condition="Exists('$(SolutionDir)external\CTranslate2\build\Release\ctranslate2.dll')">
@@ -183,12 +184,5 @@
   </Target>
   <Target Name="CopyLanguages" AfterTargets="Build" Condition="Exists('$(SolutionDir)languages.json')">
     <Copy SourceFiles="$(SolutionDir)languages.json" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
-  </Target>
-  <Target Name="CopyDictionaries" AfterTargets="Build" Condition="Exists('$(SolutionDir)dictionaries')">
-    <MakeDir Directories="$(OutDir)dictionaries" />
-    <ItemGroup>
-      <DictFiles Include="$(SolutionDir)dictionaries\*.*" />
-    </ItemGroup>
-    <Copy SourceFiles="@(DictFiles)" DestinationFolder="$(OutDir)dictionaries" SkipUnchangedFiles="true" />
   </Target>
 </Project>

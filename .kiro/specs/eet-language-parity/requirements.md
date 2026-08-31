@@ -1,4 +1,4 @@
-# Requirements — EET Language Parity (Spanish + Portuguese)
+# Requirements — Language Expansion (EET Parity + Additional Languages)
 
 ## Background — Current Behavior
 
@@ -40,14 +40,20 @@ So reaching EET parity for Morrowind means adding **Spanish** and **Portuguese**
 
 ## Goal
 
-Add Spanish and Portuguese (pt_PT) to yampt's supported languages so the app reaches EET parity for Morrowind translation, driven by data (`languages.json` + dictionaries) with no changes to the codepage machinery, and eliminate the hardcoded locale map that would otherwise need manual updates.
+Expand yampt's supported languages in two stages, both driven purely by data (`languages.json` + Hunspell dictionaries) with no codepage-machinery change:
+
+1. **EET parity** — add Spanish (`es_ES`) and Portuguese (`pt_PT`) so the app reaches EET parity for Morrowind translation, and eliminate the last hardcoded locale map so future languages need no C++ change.
+2. **Additional languages** — add 15 more languages (Czech, Slovak, Slovenian, Croatian, Romanian, Ukrainian, Bulgarian, Serbian, Dutch, Swedish, Danish, Norwegian Bokmal, Finnish, Catalan, Galician) using the exact same data-driven pattern: one `languages.json` row plus one UTF-8 wooorm dictionary pair each (Finnish excepted — see R8), and one steering/doc line each. Every added language maps to an already-supported codepage (1250 / 1251 / 1252); no codepage machinery changes and no UI code changes.
+
+Because the `resolve_hunspell_locale` refactor (R3) makes the hunspell-locale path data-driven, the entire expansion (ES, PT, and all 15) requires **zero additional C++** beyond that single refactor.
 
 ## User-Facing Outcomes
 
-- Spanish and Portuguese appear in every yTranslator language selector (first-run dialog, Language settings foreign/native combos, Translation settings) exactly like the existing languages, because those lists are built from `languages.json`.
-- Selecting Spanish or Portuguese as the native language sets the NLLB translation target (`spa_Latn` / `por_Latn`), the codepage (1252), and the spellcheck dictionary (`es_ES` / `pt_PT`) through the same data-driven paths the existing languages use.
-- Spell checking and localization-file generation work for the two new languages (their dictionaries are present and resolved from `languages.json`).
-- No existing language regresses; the 6 target languages in the steering rule remain, plus the two new ones.
+- All added languages (ES, PT, and the 15) appear in every yTranslator language selector (first-run dialog, Language settings foreign/native combos, Translation settings) exactly like the existing languages, because those lists are built from `languages.json`.
+- Selecting any added language as the native language sets its NLLB translation target, its codepage (1250 / 1251 / 1252), and its spellcheck dictionary through the same data-driven paths the existing languages use.
+- Spell checking and localization-file generation work for every added language whose dictionary ships (all except Finnish — see R8), resolved from `languages.json`.
+- Finnish is translation-only: it translates via NLLB (`fin_Latn`) but ships no Hunspell dictionary, so the spell-check combo simply omits `fi_FI` until a UTF-8 Finnish dictionary is sourced.
+- No existing language regresses; the 6 original target languages in the steering rule remain, plus the two EET-parity additions and the 15 further languages.
 
 ## Requirements
 
@@ -96,14 +102,55 @@ Add Spanish and Portuguese (pt_PT) to yampt's supported languages so the app rea
 7.3 Dictionary presence is verifiable: `dictionaries/es_ES.aff/.dic` and `dictionaries/pt_PT.aff/.dic` exist and load in the spell checker.
 7.4 Pure logic covered by `[u]` unit tests without file I/O where possible (e.g. `resolve_dictionary_prefix` / `resolve_codepage` given an in-memory `languages` vector). Tests that need the real `languages.json` or dictionary files on disk are integration-level, not `[u]`.
 
+### R8 — Additional Languages
+
+8.1 Add 15 entries to `languages.json` after the ES/PT entries, each in the exact five-field shape `{ code, name, nllb, dictionary, codepage }`:
+
+| Code | Name | nllb | dictionary | codepage | wooorm folder |
+|------|------|------|-----------|----------|---------------|
+| CS | Czech | ces_Latn | cs_CZ | 1250 | cs |
+| SK | Slovak | slk_Latn | sk_SK | 1250 | sk |
+| SL | Slovenian | slv_Latn | sl_SI | 1250 | sl |
+| HR | Croatian | hrv_Latn | hr_HR | 1250 | hr |
+| RO | Romanian | ron_Latn | ro_RO | 1250 | ro |
+| UK | Ukrainian | ukr_Cyrl | uk_UA | 1251 | uk |
+| BG | Bulgarian | bul_Cyrl | bg_BG | 1251 | bg |
+| SR | Serbian | srp_Cyrl | sr_RS | 1251 | sr (Cyrillic variant) |
+| NL | Dutch | nld_Latn | nl_NL | 1252 | nl |
+| SV | Swedish | swe_Latn | sv_SE | 1252 | sv |
+| DA | Danish | dan_Latn | da_DK | 1252 | da |
+| NB | Norwegian Bokmal | nob_Latn | nb_NO | 1252 | nb |
+| FI | Finnish | fin_Latn | fi_FI | 1252 | (none — no wooorm Finnish dictionary) |
+| CA | Catalan | cat_Latn | ca_ES | 1252 | ca |
+| GL | Galician | glg_Latn | gl_ES | 1252 | gl |
+
+8.2 The 14 dictionary'd languages (all except Finnish) ship a UTF-8 Hunspell pair `dictionaries/<prefix>.aff` + `.dic`, sourced from `wooorm/dictionaries` from the folder named in the table, with the prefix matching the `dictionary` field exactly. Each `.aff` must declare `SET UTF-8` (not `ISO8859-1`); this is verified per file before inclusion. Each dictionary's upstream license is appended to `dictionaries/LICENSE`.
+
+8.3 **Finnish special case:** `wooorm/dictionaries` has no Finnish dictionary. Finnish gets a full `languages.json` entry (translation via NLLB `fin_Latn` works) with `dictionary` field `fi_FI`, but **no `.aff`/`.dic` file is shipped**. This is the documented missing-dictionary behavior: the spell-check combo does not list `fi_FI`, and localization-file generation for Finnish skips the hunspell path (empty locale → skip). Finnish is therefore translation-only until a UTF-8 Hunspell Finnish dictionary is sourced. Finnish is NOT dropped from the set.
+
+8.4 **Serbian Cyrillic choice:** Serbian uses the Cyrillic wooorm variant (folder `sr`, not `sr-Latn`), `nllb` `srp_Cyrl`, `codepage` 1251 — matching the Russian Cyrillic path. Latin Serbian would need codepage 1250 + `sr-Latn` and is intentionally NOT chosen.
+
+8.5 **Codepage 1251 coverage note:** Ukrainian, Bulgarian, and Serbian all map to codepage 1251 (the Russian Cyrillic path). Windows-1251 has imperfect coverage of some Ukrainian letters (e.g. ge-with-upturn); this is accepted for Morrowind text.
+
+8.6 No codepage machinery change: all 15 languages map to the already-supported 1250 / 1251 / 1252 codepages via the existing `codepage_to_index` path (R4 unchanged). No new codepage is introduced.
+
+8.7 Zero additional C++: the `resolve_hunspell_locale` refactor (R3) already makes the hunspell-locale path data-driven, so it resolves every one of the 15 new languages automatically. Adding the 14 dictionary'd languages plus Finnish requires no C++ change beyond that single existing refactor.
+
+8.8 The NLLB-600M base model covers all 15 language codes natively; no model change or download-script change is required.
+
+8.9 Verification (mirroring R7): after adding the entries, `language_config::find_by_code` returns each new code with its correct `nllb_code`, `dictionary_prefix`, and `codepage`; `resolve_codepage` returns the right codepage per language (1250 for CS/SK/SL/HR/RO, 1251 for UK/BG/SR, 1252 for NL/SV/DA/NB/FI/CA/GL); `resolve_dictionary_prefix` returns the right prefix per language — including `fi_FI` for Finnish even though no dictionary file ships (the prefix resolves from data; the file's absence is handled downstream). Pure logic is `[u]`-tested in-memory; dictionary presence and real-file loading are integration-level.
+
 ## Open Decisions
 
 Resolved:
-- Which languages → Spanish + Portuguese (the only Morrowind-relevant EET languages yampt lacks). (R1)
+- EET-parity languages → Spanish + Portuguese (the only Morrowind-relevant EET languages yampt lacks). (R1)
 - Portuguese variant → `pt_PT` (European), not EET's `pt_BR`. NLLB/codepage identical; only the dictionary differs. (Decisions)
 - Dictionary source → `wooorm/dictionaries` UTF-8, not EET's ISO-8859-1 copies. (R2)
 - `resolve_hunspell_locale` → refactor to data-driven via `resolve_dictionary_prefix`, not extend the hardcoded map. (R3)
-- Codepage → no machinery change; both are 1252. (R4)
+- Codepage → no machinery change; ES/PT are 1252, and the 15 additional languages all map to existing 1250 / 1251 / 1252. (R4, R8.6)
+- Scope of expansion → the user chose "everything listed": all 15 additional languages (CS/SK/SL/HR/RO/UK/BG/SR/NL/SV/DA/NB/FI/CA/GL). (R8.1)
+- Finnish → kept in the set without a dictionary (translation-only via NLLB `fin_Latn`); the spell-check path is skipped until a UTF-8 Finnish dictionary is sourced. Not dropped. (R8.3)
+- Serbian → Cyrillic variant (`sr` folder, `srp_Cyrl`, codepage 1251) to match the Russian path; Latin Serbian (1250 + `sr-Latn`) intentionally not chosen. (R8.4)
 
 To confirm during design:
 - Whether any other hardcoded language reference (`file_list::detect_language` file-size heuristic, `session`/`sidebar_model` `"pl"` default) needs touching. `detect_language` matches vanilla Morrowind/Tribunal/Bloodmoon file sizes by language and does not affect ES/PT (no official Spanish/Portuguese vanilla release), so it is expected to be out of scope; the design will confirm.

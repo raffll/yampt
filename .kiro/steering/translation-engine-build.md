@@ -2,7 +2,12 @@
 
 ## Quick Reproduction (From Scratch)
 
-1. **Clone CTranslate2** into `external/CTranslate2/` with submodules
+1. **Init submodules** (CTranslate2 source + Hunspell dictionaries):
+   ```powershell
+   git submodule update --init --recursive external/CTranslate2
+   git submodule update --init external/dictionaries
+   ```
+   CTranslate2 is pinned to a release tag (currently v4.8.1). The dictionaries submodule is copied into `x64\Release\dictionaries\` automatically via `dictionaries.targets`.
 2. **Build CTranslate2**:
    ```powershell
    $cmake = "C:\OMEN\Morrowind\vcpkg\downloads\tools\cmake-4.3.2-windows\cmake-4.3.2-windows-x86_64\bin\cmake.exe"
@@ -38,7 +43,7 @@ Uses the default `x64-windows` triplet. No custom triplet or overlay-triplets co
 
 ## CTranslate2
 
-- Source at `external/CTranslate2/`
+- Git submodule at `external/CTranslate2` (upstream `OpenNMT/CTranslate2`), pinned to a release tag (currently v4.8.1). Init with `git submodule update --init --recursive external/CTranslate2`.
 - Built separately via CMake (VS 18 2026 generator, Release, Ruy backend)
 - Produces `ctranslate2.dll` + `ctranslate2.lib` at `external/CTranslate2/build/Release/`
 - Must copy `ctranslate2.dll` to output dir (`x64/Debug/` or `x64/Release/`) for runtime

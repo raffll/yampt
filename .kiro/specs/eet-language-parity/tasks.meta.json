@@ -1,0 +1,156 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1. Unit-test language_config helpers for ES/PT and unknown codes": [
+      {
+        "executionId": "61168078-ee9c-4f38-9531-f22b95e2805b",
+        "chatSessionId": "sess_234d7770-d6e3-4c3a-880f-9a496f637480",
+        "timestamp": 1788183102558
+      },
+      {
+        "executionId": "61168078-ee9c-4f38-9531-f22b95e2805b",
+        "chatSessionId": "sess_234d7770-d6e3-4c3a-880f-9a496f637480",
+        "timestamp": 1788183114486
+      }
+    ],
+    "2. Register the new test file in the tests project": [
+      {
+        "executionId": "61168078-ee9c-4f38-9531-f22b95e2805b",
+        "chatSessionId": "sess_234d7770-d6e3-4c3a-880f-9a496f637480",
+        "timestamp": 1788183102726
+      },
+      {
+        "executionId": "91d94ff3-432b-4e96-ae96-32b686348777",
+        "chatSessionId": "sess_6ed7336c-0c1b-4f46-9988-bd91c771c7c6",
+        "timestamp": 1788184184435
+      },
+      {
+        "executionId": "91d94ff3-432b-4e96-ae96-32b686348777",
+        "chatSessionId": "sess_6ed7336c-0c1b-4f46-9988-bd91c771c7c6",
+        "timestamp": 1788184568091
+      },
+      {
+        "executionId": "91d94ff3-432b-4e96-ae96-32b686348777",
+        "chatSessionId": "sess_6ed7336c-0c1b-4f46-9988-bd91c771c7c6",
+        "timestamp": 1788184715879
+      }
+    ],
+    "3. Add Spanish and Portuguese to languages.json": [
+      {
+        "executionId": "61168078-ee9c-4f38-9531-f22b95e2805b",
+        "chatSessionId": "sess_234d7770-d6e3-4c3a-880f-9a496f637480",
+        "timestamp": 1788183102825
+      },
+      {
+        "executionId": "61168078-ee9c-4f38-9531-f22b95e2805b",
+        "chatSessionId": "sess_234d7770-d6e3-4c3a-880f-9a496f637480",
+        "timestamp": 1788183119662
+      }
+    ],
+    "4. Add UTF-8 Hunspell dictionaries": [
+      {
+        "executionId": "61168078-ee9c-4f38-9531-f22b95e2805b",
+        "chatSessionId": "sess_234d7770-d6e3-4c3a-880f-9a496f637480",
+        "timestamp": 1788183102938
+      },
+      {
+        "executionId": "61168078-ee9c-4f38-9531-f22b95e2805b",
+        "chatSessionId": "sess_234d7770-d6e3-4c3a-880f-9a496f637480",
+        "timestamp": 1788183120648
+      },
+      {
+        "executionId": "91d94ff3-432b-4e96-ae96-32b686348777",
+        "chatSessionId": "sess_6ed7336c-0c1b-4f46-9988-bd91c771c7c6",
+        "timestamp": 1788184184526
+      },
+      {
+        "executionId": "91d94ff3-432b-4e96-ae96-32b686348777",
+        "chatSessionId": "sess_6ed7336c-0c1b-4f46-9988-bd91c771c7c6",
+        "timestamp": 1788184199091
+      },
+      {
+        "executionId": "91d94ff3-432b-4e96-ae96-32b686348777",
+        "chatSessionId": "sess_6ed7336c-0c1b-4f46-9988-bd91c771c7c6",
+        "timestamp": 1788184561622
+      }
+    ],
+    "5. Make resolve_hunspell_locale data-driven": [
+      {
+        "executionId": "61168078-ee9c-4f38-9531-f22b95e2805b",
+        "chatSessionId": "sess_234d7770-d6e3-4c3a-880f-9a496f637480",
+        "timestamp": 1788183103028
+      },
+      {
+        "executionId": "91d94ff3-432b-4e96-ae96-32b686348777",
+        "chatSessionId": "sess_6ed7336c-0c1b-4f46-9988-bd91c771c7c6",
+        "timestamp": 1788184184570
+      },
+      {
+        "executionId": "91d94ff3-432b-4e96-ae96-32b686348777",
+        "chatSessionId": "sess_6ed7336c-0c1b-4f46-9988-bd91c771c7c6",
+        "timestamp": 1788184569092
+      },
+      {
+        "executionId": "91d94ff3-432b-4e96-ae96-32b686348777",
+        "chatSessionId": "sess_6ed7336c-0c1b-4f46-9988-bd91c771c7c6",
+        "timestamp": 1788184716790
+      }
+    ],
+    "6. Update steering and user documentation": [
+      {
+        "executionId": "61168078-ee9c-4f38-9531-f22b95e2805b",
+        "chatSessionId": "sess_234d7770-d6e3-4c3a-880f-9a496f637480",
+        "timestamp": 1788183103110
+      },
+      {
+        "executionId": "91d94ff3-432b-4e96-ae96-32b686348777",
+        "chatSessionId": "sess_6ed7336c-0c1b-4f46-9988-bd91c771c7c6",
+        "timestamp": 1788184184611
+      },
+      {
+        "executionId": "91d94ff3-432b-4e96-ae96-32b686348777",
+        "chatSessionId": "sess_6ed7336c-0c1b-4f46-9988-bd91c771c7c6",
+        "timestamp": 1788184721521
+      },
+      {
+        "executionId": "91d94ff3-432b-4e96-ae96-32b686348777",
+        "chatSessionId": "sess_6ed7336c-0c1b-4f46-9988-bd91c771c7c6",
+        "timestamp": 1788184865057
+      }
+    ],
+    "1. Unit-test language_config helpers across all codepages and unknown codes": [
+      {
+        "executionId": "91d94ff3-432b-4e96-ae96-32b686348777",
+        "chatSessionId": "sess_6ed7336c-0c1b-4f46-9988-bd91c771c7c6",
+        "timestamp": 1788184184386
+      },
+      {
+        "executionId": "91d94ff3-432b-4e96-ae96-32b686348777",
+        "chatSessionId": "sess_6ed7336c-0c1b-4f46-9988-bd91c771c7c6",
+        "timestamp": 1788184197492
+      },
+      {
+        "executionId": "91d94ff3-432b-4e96-ae96-32b686348777",
+        "chatSessionId": "sess_6ed7336c-0c1b-4f46-9988-bd91c771c7c6",
+        "timestamp": 1788184559787
+      }
+    ],
+    "3. Add all new languages to languages.json": [
+      {
+        "executionId": "91d94ff3-432b-4e96-ae96-32b686348777",
+        "chatSessionId": "sess_6ed7336c-0c1b-4f46-9988-bd91c771c7c6",
+        "timestamp": 1788184184490
+      },
+      {
+        "executionId": "91d94ff3-432b-4e96-ae96-32b686348777",
+        "chatSessionId": "sess_6ed7336c-0c1b-4f46-9988-bd91c771c7c6",
+        "timestamp": 1788184198348
+      },
+      {
+        "executionId": "91d94ff3-432b-4e96-ae96-32b686348777",
+        "chatSessionId": "sess_6ed7336c-0c1b-4f46-9988-bd91c771c7c6",
+        "timestamp": 1788184560760
+      }
+    ]
+  }
+}

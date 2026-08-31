@@ -5,5 +5,22 @@
 	{ "code": "FR", "name": "French",    "nllb": "fra_Latn", "dictionary": "fr_FR", "codepage": 1252 },
 	{ "code": "RU", "name": "Russian",   "nllb": "rus_Cyrl", "dictionary": "ru_RU", "codepage": 1251 },
 	{ "code": "IT", "name": "Italian",   "nllb": "ita_Latn", "dictionary": "it_IT", "codepage": 1252 },
-	{ "code": "HU", "name": "Hungarian", "nllb": "hun_Latn", "dictionary": "hu_HU", "codepage": 1250 }
+	{ "code": "HU", "name": "Hungarian", "nllb": "hun_Latn", "dictionary": "hu_HU", "codepage": 1250 },
+	{ "code": "ES", "name": "Spanish",   "nllb": "spa_Latn", "dictionary": "es_ES", "codepage": 1252 },
+	{ "code": "PT", "name": "Portuguese", "nllb": "por_Latn", "dictionary": "pt_PT", "codepage": 1252 },
+	{ "code": "CS", "name": "Czech",     "nllb": "ces_Latn", "dictionary": "cs_CZ", "codepage": 1250 },
+	{ "code": "SK", "name": "Slovak",    "nllb": "slk_Latn", "dictionary": "sk_SK", "codepage": 1250 },
+	{ "code": "SL", "name": "Slovenian", "nllb": "slv_Latn", "dictionary": "sl_SI", "codepage": 1250 },
+	{ "code": "HR", "name": "Croatian",  "nllb": "hrv_Latn", "dictionary": "hr_HR", "codepage": 1250 },
+	{ "code": "RO", "name": "Romanian",  "nllb": "ron_Latn", "dictionary": "ro_RO", "codepage": 1250 },
+	{ "code": "UK", "name": "Ukrainian", "nllb": "ukr_Cyrl", "dictionary": "uk_UA", "codepage": 1251 },
+	{ "code": "BG", "name": "Bulgarian", "nllb": "bul_Cyrl", "dictionary": "bg_BG", "codepage": 1251 },
+	{ "code": "SR", "name": "Serbian",   "nllb": "srp_Cyrl", "dictionary": "sr_RS", "codepage": 1251 },
+	{ "code": "NL", "name": "Dutch",     "nllb": "nld_Latn", "dictionary": "nl_NL", "codepage": 1252 },
+	{ "code": "SV", "name": "Swedish",   "nllb": "swe_Latn", "dictionary": "sv_SE", "codepage": 1252 },
+	{ "code": "DA", "name": "Danish",    "nllb": "dan_Latn", "dictionary": "da_DK", "codepage": 1252 },
+	{ "code": "NB", "name": "Norwegian Bokmal", "nllb": "nob_Latn", "dictionary": "nb_NO", "codepage": 1252 },
+	{ "code": "FI", "name": "Finnish",   "nllb": "fin_Latn", "dictionary": "", "codepage": 1252 },
+	{ "code": "CA", "name": "Catalan",   "nllb": "cat_Latn", "dictionary": "ca_ES", "codepage": 1252 },
+	{ "code": "GL", "name": "Galician",  "nllb": "glg_Latn", "dictionary": "gl_ES", "codepage": 1252 }
 ]

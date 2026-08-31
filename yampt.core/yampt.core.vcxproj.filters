@@ -4,6 +4,7 @@
     <ClCompile Include="source\utility\domain_types.cpp" />
     <ClCompile Include="source\utility\app_logger.cpp" />
     <ClCompile Include="source\utility\string_utils.cpp" />
+    <ClCompile Include="source\utility\case_fold.cpp" />
     <ClCompile Include="source\io\codepage.cpp" />
     <ClCompile Include="source\io\dict_reader.cpp" />
     <ClCompile Include="source\io\dict_writer.cpp" />
@@ -68,6 +69,7 @@
     <ClInclude Include="source\utility\domain_types.hpp" />
     <ClInclude Include="source\utility\app_logger.hpp" />
     <ClInclude Include="source\utility\string_utils.hpp" />
+    <ClInclude Include="source\utility\case_fold.hpp" />
     <ClInclude Include="source\utility\record_types.hpp" />
     <ClInclude Include="source\utility\status_types.hpp" />
     <ClInclude Include="source\utility\char_diff.hpp" />

@@ -12,6 +12,7 @@
     <ClCompile Include="source\tests.dict_merger.cpp" />
     <ClCompile Include="source\tests.dict_creator.cpp" />
     <ClCompile Include="source\tests.codepage.cpp" />
+    <ClCompile Include="source\tests.language_config.cpp" />
     <ClCompile Include="source\tests.script_parser.cpp" />
     <ClCompile Include="source\tests.record_conflict.cpp" />
     <ClCompile Include="source\tests.conflict_slots.cpp" />
@@ -88,6 +89,7 @@
     <ClCompile Include="source\tests.count_label_format.cpp" />
     <ClCompile Include="source\tests.filter_composer.cpp" />
     <ClCompile Include="source\tests.string_utils_utf8.cpp" />
+    <ClCompile Include="source\tests.case_fold.cpp" />
     <ClCompile Include="source\tests.scvr_condition.cpp" />
     <ClCompile Include="..\yampt.core\source\io\eet_converter.cpp" />
     <ClCompile Include="..\yampt.core\source\io\eet_reader.cpp" />
