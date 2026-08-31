@@ -554,6 +554,12 @@ void plugin_workspace_view_t::set_hide_duplicates(bool hide)
 		display_record_in_view(*entry);
 }
 
+void plugin_workspace_view_t::set_preview_scroll_sync(bool enabled)
+{
+	if (m_preview)
+		m_preview->set_scroll_sync(enabled);
+}
+
 void plugin_workspace_view_t::on_advanced_filter()
 {
 	auto types = m_session->scan().all_types();

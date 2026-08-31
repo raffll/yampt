@@ -26,6 +26,8 @@ public:
 	void set_editing_enabled(bool enabled);
 	void update_selection(const QModelIndex & index, const view_tree_model_t * model, const std::string & cell_value);
 
+	void set_scroll_sync(bool enabled);
+
 protected:
 	bool eventFilter(QObject * watched, QEvent * event) override;
 
@@ -40,6 +42,8 @@ private slots:
 private:
 	void populate_value_selector();
 	void populate_flags_selector(const field_def_t & field);
+	void setup_scroll_sync();
+	void sync_scroll_from(QTextEdit * source_edit);
 
 	QTextEdit * m_left_edit = nullptr;
 	QTextEdit * m_right_edit = nullptr;
@@ -54,4 +58,7 @@ private:
 	bool m_user_has_typed = false;
 	std::string m_original_value;
 	size_t m_existing_sub_size = 0;
+
+	bool m_scroll_syncing = false;
+	bool m_scroll_sync_enabled = true;
 };

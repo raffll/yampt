@@ -113,6 +113,17 @@ void editor_window_t::setup_menu_bar()
 	view_menu->addAction(m_bottom_toggle);
 	connect(m_bottom_toggle, &QAction::toggled, m_plugin_workspace_view->bottom_panel_widget(), &QWidget::setVisible);
 
+	m_sync_scroll_toggle = new QAction(tr("S&ync Scrolling"), this);
+	m_sync_scroll_toggle->setCheckable(true);
+	m_sync_scroll_toggle->setChecked(true);
+	m_sync_scroll_toggle->setToolTip(tr("Sync scrolling between the two comparison panes"));
+	view_menu->addAction(m_sync_scroll_toggle);
+	connect(
+	    m_sync_scroll_toggle,
+	    &QAction::toggled,
+	    m_plugin_workspace_view,
+	    &plugin_workspace_view_t::set_preview_scroll_sync);
+
 	view_menu->addSeparator();
 
 	auto * hide_dup_action = new QAction(tr("Show &Only One Column Per Plugin"), this);
@@ -285,6 +296,7 @@ void editor_window_t::save_config()
 
 	m_settings.set_sidebar_visible(m_sidebar_toggle->isChecked());
 	m_settings.set_bottom_visible(m_bottom_toggle->isChecked());
+	m_settings.set_sync_scroll_enabled(m_sync_scroll_toggle->isChecked());
 
 	m_plugin_workspace_view->save_session_state();
 }
@@ -293,6 +305,7 @@ void editor_window_t::restore_panel_state()
 {
 	m_sidebar_toggle->setChecked(m_settings.sidebar_visible());
 	m_bottom_toggle->setChecked(m_settings.bottom_visible());
+	m_sync_scroll_toggle->setChecked(m_settings.sync_scroll_enabled());
 }
 
 void editor_window_t::on_search_apply()

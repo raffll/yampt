@@ -910,6 +910,7 @@ void main_window_t::load_config()
 
 	m_sidebar_toggle->setChecked(m_settings.sidebar_visible());
 	m_bottom_panel_toggle->setChecked(m_settings.bottom_visible());
+	m_sync_scroll_check->setChecked(m_settings.sync_scroll_enabled());
 
 	const float split_ratio = m_settings.split_ratio();
 	if (split_ratio > 0.0f)
@@ -975,6 +976,7 @@ void main_window_t::save_config()
 
 	m_settings.set_sidebar_visible(m_sidebar_toggle->isChecked());
 	m_settings.set_bottom_visible(m_bottom_panel_toggle->isChecked());
+	m_settings.set_sync_scroll_enabled(m_sync_scroll_check->isChecked());
 
 	m_settings.set_split_ratio(static_cast<float>(m_editor_view->get_split_ratio()));
 

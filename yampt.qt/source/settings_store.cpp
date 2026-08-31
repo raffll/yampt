@@ -389,6 +389,16 @@ void settings_store_t::set_bottom_visible(bool value)
 	m_settings.setValue("Editor/BottomVisible", value);
 }
 
+bool settings_store_t::sync_scroll_enabled() const
+{
+	return m_settings.value("Editor/SyncScroll", true).toBool();
+}
+
+void settings_store_t::set_sync_scroll_enabled(bool value)
+{
+	m_settings.setValue("Editor/SyncScroll", value);
+}
+
 int settings_store_t::column_width(int index) const
 {
 	const auto key = QString("Editor/Column%1").arg(index);

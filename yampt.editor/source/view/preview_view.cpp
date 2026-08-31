@@ -12,6 +12,7 @@
 #include <QModelIndex>
 #include <QMouseEvent>
 #include <QPushButton>
+#include <QScrollBar>
 #include <QTextEdit>
 #include <QToolTip>
 #include <QVBoxLayout>
@@ -54,6 +55,60 @@ preview_view_t::preview_view_t(QWidget * parent)
 	connect(m_right_edit, &QTextEdit::textChanged, this, &preview_view_t::on_text_changed);
 	connect(m_apply_button, &QPushButton::clicked, this, &preview_view_t::on_apply_clicked);
 	connect(m_value_selector, &QComboBox::currentTextChanged, this, &preview_view_t::on_value_selector_changed);
+
+	setup_scroll_sync();
+}
+
+void preview_view_t::setup_scroll_sync()
+{
+	connect(
+	    m_left_edit->verticalScrollBar(),
+	    &QScrollBar::valueChanged,
+	    this,
+	    [this]() { sync_scroll_from(m_left_edit); });
+	connect(
+	    m_left_edit->horizontalScrollBar(),
+	    &QScrollBar::valueChanged,
+	    this,
+	    [this]() { sync_scroll_from(m_left_edit); });
+	connect(
+	    m_right_edit->verticalScrollBar(),
+	    &QScrollBar::valueChanged,
+	    this,
+	    [this]() { sync_scroll_from(m_right_edit); });
+	connect(
+	    m_right_edit->horizontalScrollBar(),
+	    &QScrollBar::valueChanged,
+	    this,
+	    [this]() { sync_scroll_from(m_right_edit); });
+}
+
+void preview_view_t::sync_scroll_from(QTextEdit * source_edit)
+{
+	if (m_scroll_syncing || !m_scroll_sync_enabled)
+		return;
+
+	m_scroll_syncing = true;
+
+	auto * target_edit = (source_edit == m_left_edit) ? m_right_edit : m_left_edit;
+	auto * source_vertical = source_edit->verticalScrollBar();
+	auto * source_horizontal = source_edit->horizontalScrollBar();
+	auto * target_vertical = target_edit->verticalScrollBar();
+
+	if (source_vertical->maximum() > 0)
+	{
+		const double ratio = static_cast<double>(source_vertical->value()) / source_vertical->maximum();
+		target_vertical->setValue(static_cast<int>(ratio * target_vertical->maximum()));
+	}
+
+	target_edit->horizontalScrollBar()->setValue(source_horizontal->value());
+
+	m_scroll_syncing = false;
+}
+
+void preview_view_t::set_scroll_sync(bool enabled)
+{
+	m_scroll_sync_enabled = enabled;
 }
 
 bool preview_view_t::eventFilter(QObject * watched, QEvent * event)

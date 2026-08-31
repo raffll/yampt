@@ -118,7 +118,7 @@ The Filters tab shows record types present in the current dictionary (CELL, DIAL
 - **Spell Check** — when enabled, misspelled words in the Translation panel are underlined in red. Uses Hunspell dictionaries configured in Settings → Language.
 - **Grammar Check** — highlights common issues: double spaces, unmatched quotes or parentheses, missing terminal punctuation. Quoted text within entries is shown in a lighter color for visual distinction.
 - **Whitespace Markers** — renders spaces as dots and line endings as paragraph marks in the editor panels.
-- **Sync Scrolling** — locks the scroll position between the Original and Translation panels so they stay aligned as you scroll either one.
+- **Sync Scrolling** — locks the scroll position between the Original and Translation panels so they stay aligned as you scroll either one. The setting is remembered between sessions.
 
 ## Keyboard Shortcuts
 

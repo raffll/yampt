@@ -66,6 +66,8 @@ public:
 	QWidget * sidebar_widget() const { return m_nav_tabs; }
 	QWidget * bottom_panel_widget() const { return m_bottom_tabs; }
 
+	void set_preview_scroll_sync(bool enabled);
+
 public slots:
 	void on_load_data_files();
 	void on_load_mo2_profile();

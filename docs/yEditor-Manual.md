@@ -92,6 +92,7 @@ The View menu provides display options:
 
 - **Toggle Sidebar** — shows or hides the left navigation panel, giving the record view the full width of the window.
 - **Toggle Bottom Panel** — shows or hides the bottom edit and log panel, giving the record view more vertical space. Both toggles remember their state between sessions.
+- **Sync Scrolling** — locks the scroll position between the two comparison panes in the Edit panel so they stay aligned as you scroll either one. The setting is remembered between sessions.
 - **Show Only One Column Per Plugin** — when a plugin defines the same record more than once, collapses those versions into a single column showing only that plugin's last (winning) version, instead of one column per occurrence.
 - **Strike Out Deleted Records** — renders deleted records and cell references with strikethrough text, making them visually distinct from active content.
 

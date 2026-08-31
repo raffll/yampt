@@ -1,5 +1,13 @@
 # Changelog
 
+## [XXX]
+
+### yTranslator
+- [CHANGE] Sync Scrolling now remembers its on/off state between sessions instead of always starting enabled
+
+### yEditor
+- [NEW] Sync Scrolling: a View menu toggle binds scrolling between the two comparison panes in the Edit panel, so both sides move together; the state persists between sessions
+
 ## [0.1060] - 2026-08-31
 
 ### yEditor
