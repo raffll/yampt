@@ -18,7 +18,7 @@ class preview_view_t : public QWidget
 public:
 	explicit preview_view_t(QWidget * parent = nullptr);
 
-	void show_comparison(const std::string & left_text, const std::string & right_text);
+	void show_comparison(const std::string & left_raw, const std::string & right_raw);
 	void clear();
 
 	void set_edit_controller(field_edit_controller_t * controller);

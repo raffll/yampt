@@ -904,7 +904,7 @@ void plugin_workspace_view_t::on_lua_scan_complete(const lua_scan_result_t & res
 	    " conflicts");
 
 	for (const auto & warning : result.warnings)
-		log_message("[warning] " + warning);
+		log_message(warning);
 
 	m_lua_view->set_scan_result(result);
 	update_status();

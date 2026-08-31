@@ -113,17 +113,6 @@ void editor_window_t::setup_menu_bar()
 	view_menu->addAction(m_bottom_toggle);
 	connect(m_bottom_toggle, &QAction::toggled, m_plugin_workspace_view->bottom_panel_widget(), &QWidget::setVisible);
 
-	m_sync_scroll_toggle = new QAction(tr("S&ync Scrolling"), this);
-	m_sync_scroll_toggle->setCheckable(true);
-	m_sync_scroll_toggle->setChecked(true);
-	m_sync_scroll_toggle->setToolTip(tr("Sync scrolling between the two comparison panes"));
-	view_menu->addAction(m_sync_scroll_toggle);
-	connect(
-	    m_sync_scroll_toggle,
-	    &QAction::toggled,
-	    m_plugin_workspace_view,
-	    &plugin_workspace_view_t::set_preview_scroll_sync);
-
 	view_menu->addSeparator();
 
 	auto * hide_dup_action = new QAction(tr("Show &Only One Column Per Plugin"), this);
@@ -143,6 +132,19 @@ void editor_window_t::setup_menu_bar()
 	    &QAction::toggled,
 	    m_plugin_workspace_view,
 	    &plugin_workspace_view_t::set_show_deleted_strikeout);
+
+	view_menu->addSeparator();
+
+	m_sync_scroll_toggle = new QAction(tr("S&ync Scrolling"), this);
+	m_sync_scroll_toggle->setCheckable(true);
+	m_sync_scroll_toggle->setChecked(true);
+	m_sync_scroll_toggle->setToolTip(tr("Sync scrolling between the two comparison panes"));
+	view_menu->addAction(m_sync_scroll_toggle);
+	connect(
+	    m_sync_scroll_toggle,
+	    &QAction::toggled,
+	    m_plugin_workspace_view,
+	    &plugin_workspace_view_t::set_preview_scroll_sync);
 
 	auto * tools_menu = menuBar()->addMenu(tr("&Tools"));
 	auto * settings_action = new QAction(tr("&Preferences..."), this);

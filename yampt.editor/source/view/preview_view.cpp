@@ -134,8 +134,11 @@ bool preview_view_t::eventFilter(QObject * watched, QEvent * event)
 	return QWidget::eventFilter(watched, event);
 }
 
-void preview_view_t::show_comparison(const std::string & left_text, const std::string & right_text)
+void preview_view_t::show_comparison(const std::string & left_raw, const std::string & right_raw)
 {
+	const std::string left_text = (left_raw == non_existent_value) ? std::string {} : left_raw;
+	const std::string right_text = (right_raw == non_existent_value) ? std::string {} : right_raw;
+
 	if (left_text.empty())
 	{
 		m_left_edit->clear();
