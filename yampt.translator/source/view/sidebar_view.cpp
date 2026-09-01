@@ -239,7 +239,9 @@ void sidebar_view_t::show_dict_context_menu(const std::string & path, const QPoi
 	auto * save_action = menu.addAction(tr("Save"));
 	menu.addSeparator();
 	auto * apply_tags_action = menu.addAction(tr("Apply Topic Tags"));
-	apply_tags_action->setToolTip(tr("Wrap dialogue topics in @...# hyperlink tags"));
+	apply_tags_action->setToolTip(tr("Refresh @...# topic tags on dialogue responses"));
+	auto * remove_tags_action = menu.addAction(tr("Remove Topic Tags"));
+	remove_tags_action->setToolTip(tr("Strip all @...# topic tags from dialogue responses"));
 	auto * generate_loc_action = menu.addAction(tr("Generate Localization Files"));
 	generate_loc_action->setToolTip(tr("Generate .cel/.top/.mrk for OpenMW"));
 	menu.addSeparator();
@@ -250,6 +252,8 @@ void sidebar_view_t::show_dict_context_menu(const std::string & path, const QPoi
 		emit save_requested(path);
 	else if (selected == apply_tags_action)
 		emit apply_tags_requested(path);
+	else if (selected == remove_tags_action)
+		emit remove_tags_requested(path);
 	else if (selected == generate_loc_action)
 		emit generate_loc_requested(path);
 	else if (selected == delete_action)

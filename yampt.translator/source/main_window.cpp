@@ -923,6 +923,7 @@ void main_window_t::load_config()
 
 	m_session.set_codepage(m_current_codepage);
 	m_session.set_native_language(m_settings.native_language());
+	m_byte_limit_validator.set_codepage(m_current_codepage);
 
 	m_translation_tab->apply_provider_settings(m_settings);
 

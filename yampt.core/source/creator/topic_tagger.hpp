@@ -16,16 +16,22 @@ struct apply_tags_result_t
 	int tags_inserted = 0;
 };
 
+namespace loc_types {
+struct loc_entry_t;
+}
+
 class topic_tagger_t
 {
 public:
 	void seed_topics(const dict_t & dict);
+	void seed_inflections(const std::vector<std::pair<std::string, std::string>> & inflected_forms);
 	topic_tag_result_t tag_line(const std::string & line) const;
 
 	static std::string strip_tags(const std::string & line);
 
 private:
 	keyword_trie_t m_topic_trie;
+	keyword_trie_t m_inflection_trie;
 };
 
 apply_tags_result_t apply_topic_tags(dict_t & dict);

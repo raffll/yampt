@@ -43,7 +43,10 @@ bool table_columns_t::contains(table_col_t logical_column) const
 
 std::vector<table_col_t> table_columns_t::columns_for_kind(document_kind_t kind)
 {
-	if (kind == document_kind_t::loc || kind == document_kind_t::yaml)
+	if (kind == document_kind_t::loc)
+		return { col_original, col_translation };
+
+	if (kind == document_kind_t::yaml)
 		return { col_original, col_translation, col_status };
 
 	return { col_id, col_key, col_original, col_translation, col_status };

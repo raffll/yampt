@@ -1,6 +1,5 @@
 #include "inflection.hpp"
 #include "phrase_form_builder.hpp"
-#include "utility/app_logger.hpp"
 #include <algorithm>
 #include <hunspell/hunspell.hxx>
 #include <set>
@@ -42,20 +41,10 @@ static std::vector<std::string> generate_forms_for_word(Hunspell & hunspell, con
 {
 	const auto stems = hunspell.stem(word);
 
-	std::string debug_stems;
-	for (const auto & stem : stems)
-		debug_stems += stem + ",";
-
-	app_logger_t::add_log(
-	    "[debug] word=\"" + word + "\" spell=" + std::to_string(hunspell.spell(word)) + " stems=[" + debug_stems +
-	    "]\r\n");
-
 	std::set<std::string> unique_forms;
 	for (const auto & stem : stems)
 	{
 		const auto expanded = hunspell.suffix_suggest(stem);
-		app_logger_t::add_log(
-		    "[debug]   suffix_suggest(stem=\"" + stem + "\") count=" + std::to_string(expanded.size()) + "\r\n");
 		for (const auto & form : expanded)
 		{
 			if (form != word)
@@ -66,8 +55,6 @@ static std::vector<std::string> generate_forms_for_word(Hunspell & hunspell, con
 	if (unique_forms.empty())
 	{
 		const auto expanded = hunspell.suffix_suggest(word);
-		app_logger_t::add_log(
-		    "[debug]   suffix_suggest(word=\"" + word + "\") count=" + std::to_string(expanded.size()) + "\r\n");
 		for (const auto & form : expanded)
 		{
 			if (form != word)

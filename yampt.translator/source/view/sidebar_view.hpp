@@ -26,6 +26,7 @@ signals:
 	void export_native_requested(const std::string & path);
 	void generate_loc_requested(const std::string & path);
 	void apply_tags_requested(const std::string & path);
+	void remove_tags_requested(const std::string & path);
 	void export_eet_requested(const std::string & path);
 	void unload_requested(const std::string & path);
 	void delete_requested(const std::string & path);

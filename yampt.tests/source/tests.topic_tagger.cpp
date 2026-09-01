@@ -219,3 +219,31 @@ TEST_CASE("topic_tagger_t::apply_topic_tags, refresh strips and reinserts existi
 	REQUIRE(result.tags_inserted == 1);
 	REQUIRE(dict[rec_type_t::info].records[0].new_text == "Meet Caius and the @Blades#");
 }
+
+TEST_CASE("topic_tagger_t::apply_topic_tags, voice info records skipped", "[u]")
+{
+	auto dict = make_apply_dict(
+		{ { "Blades", "Blades" } },
+		{ { "V^Attack^voice_one", "Join the Blades order", "Join the Blades order", status_t::translated },
+			{ "T^Blades^topic_one", "Join the Blades order", "Join the Blades order", status_t::translated } });
+
+	const auto result = apply_topic_tags(dict);
+
+	REQUIRE(result.entries_changed == 1);
+	REQUIRE(result.tags_inserted == 1);
+	REQUIRE(dict[rec_type_t::info].records[0].new_text == "Join the Blades order");
+	REQUIRE(dict[rec_type_t::info].records[1].new_text == "Join the @Blades# order");
+}
+
+TEST_CASE("topic_tagger_t::apply_topic_tags, non-info records not tagged", "[u]")
+{
+	dict_t dict;
+	dict[rec_type_t::dial].insert({ "Blades", "Blades", "Blades", status_t::translated });
+	dict[rec_type_t::cell].insert({ "Blades Hall", "Blades Hall", "Join the Blades order", status_t::translated });
+
+	const auto result = apply_topic_tags(dict);
+
+	REQUIRE(result.entries_changed == 0);
+	REQUIRE(result.tags_inserted == 0);
+	REQUIRE(dict[rec_type_t::cell].records[0].new_text == "Join the Blades order");
+}

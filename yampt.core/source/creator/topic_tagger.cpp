@@ -23,6 +23,11 @@ bool has_control_characters(const std::string & text)
 	return false;
 }
 
+bool is_voice_info(const record_entry_t & entry)
+{
+	return entry.key_text.rfind("V^", 0) == 0;
+}
+
 bool should_skip_record(const record_entry_t & entry)
 {
 	if (entry.status != status_t::translated)
@@ -132,21 +137,25 @@ apply_tags_result_t apply_topic_tags(dict_t & dict)
 
 	apply_tags_result_t result;
 
-	for (auto & chapter_pair : dict)
+	const auto it_info = dict.find(rec_type_t::info);
+	if (it_info == dict.end())
+		return result;
+
+	for (auto & entry : it_info->second.records)
 	{
-		for (auto & entry : chapter_pair.second.records)
-		{
-			if (should_skip_record(entry))
-				continue;
+		if (is_voice_info(entry))
+			continue;
 
-			const auto tagged = tagger.tag_line(entry.new_text);
-			if (tagged.text == entry.new_text)
-				continue;
+		if (should_skip_record(entry))
+			continue;
 
-			entry.new_text = tagged.text;
-			++result.entries_changed;
-			result.tags_inserted += tagged.tags_inserted;
-		}
+		const auto tagged = tagger.tag_line(entry.new_text);
+		if (tagged.text == entry.new_text)
+			continue;
+
+		entry.new_text = tagged.text;
+		++result.entries_changed;
+		result.tags_inserted += tagged.tags_inserted;
 	}
 
 	return result;

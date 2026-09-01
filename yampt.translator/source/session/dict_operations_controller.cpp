@@ -36,6 +36,11 @@ bool has_control_characters(const std::string & text)
 	return false;
 }
 
+bool is_voice_info(const record_entry_t & entry)
+{
+	return entry.key_text.rfind("V^", 0) == 0;
+}
+
 bool should_skip_record(const record_entry_t & entry)
 {
 	if (entry.status != status_t::translated)
@@ -56,12 +61,21 @@ bool should_skip_record(const record_entry_t & entry)
 	return false;
 }
 
-std::string build_summary(const apply_tags_result_t & result)
+std::string build_apply_summary(const apply_tags_result_t & result)
 {
 	app_logger_t::reset_log();
 	app_logger_t::add_log(
 	    "[info] apply tags: " + std::to_string(result.entries_changed) + " entries changed, "
 	    + std::to_string(result.tags_inserted) + " tags inserted\r\n");
+
+	return app_logger_t::get_log();
+}
+
+std::string build_remove_summary(const apply_tags_result_t & result)
+{
+	app_logger_t::reset_log();
+	app_logger_t::add_log(
+	    "[info] remove tags: " + std::to_string(result.entries_changed) + " entries changed\r\n");
 
 	return app_logger_t::get_log();
 }
@@ -73,45 +87,45 @@ struct tag_context_t
 	const topic_tagger_t & tagger;
 };
 
-struct record_location_t
+apply_tags_result_t process_info_record(tag_context_t context, std::size_t index, bool apply)
 {
-	rec_type_t type;
-	std::size_t index;
-};
+	auto & chapter = context.document.data_mut().at(rec_type_t::info);
+	auto & entry = chapter.records.at(index);
 
-apply_tags_result_t tag_record(tag_context_t context, const record_location_t & location)
-{
-	auto & chapter = context.document.data_mut().at(location.type);
-	auto & entry = chapter.records.at(location.index);
+	if (is_voice_info(entry))
+		return {};
+
 	if (should_skip_record(entry))
 		return {};
 
-	const auto tagged = context.tagger.tag_line(entry.new_text);
+	const auto tagged = apply ? context.tagger.tag_line(entry.new_text)
+	                          : topic_tag_result_t { topic_tagger_t::strip_tags(entry.new_text), 0 };
 	if (tagged.text == entry.new_text)
 		return {};
 
-	context.edit_history.record_change(location.type, entry.key_text, entry.new_text, tagged.text, entry.status);
+	context.edit_history.record_change(rec_type_t::info, entry.key_text, entry.new_text, tagged.text, entry.status);
 
 	entry.new_text = tagged.text;
-	context.document.modified_records_insert(location.type, location.index);
+	context.document.modified_records_insert(rec_type_t::info, index);
 	context.document.set_dirty(true);
 
 	return { 1, tagged.tags_inserted };
 }
 
-apply_tags_result_t tag_all_records(tag_context_t context)
+apply_tags_result_t process_all_info_records(tag_context_t context, bool apply)
 {
 	apply_tags_result_t total;
 
-	for (const auto & chapter_pair : context.document.data())
+	const auto it_info = context.document.data().find(rec_type_t::info);
+	if (it_info == context.document.data().end())
+		return total;
+
+	const auto record_count = it_info->second.records.size();
+	for (std::size_t index = 0; index < record_count; ++index)
 	{
-		const auto record_count = chapter_pair.second.records.size();
-		for (std::size_t index = 0; index < record_count; ++index)
-		{
-			const auto partial = tag_record(context, { chapter_pair.first, index });
-			total.entries_changed += partial.entries_changed;
-			total.tags_inserted += partial.tags_inserted;
-		}
+		const auto partial = process_info_record(context, index, apply);
+		total.entries_changed += partial.entries_changed;
+		total.tags_inserted += partial.tags_inserted;
 	}
 
 	return total;
@@ -186,11 +200,28 @@ void dict_operations_controller_t::on_apply_tags(dict_document_t * dict_doc)
 	topic_tagger_t tagger;
 	tagger.seed_topics(dict_doc->data());
 
-	const auto result = tag_all_records({ *dict_doc, m_deps.edit_history, tagger });
+	const auto result = process_all_info_records({ *dict_doc, m_deps.edit_history, tagger }, true);
 
 	if (result.entries_changed > 0 && m_deps.refresh_table)
 		m_deps.refresh_table();
 
-	m_deps.log_view.append_log("apply tags", build_summary(result));
+	m_deps.log_view.append_log("apply tags", build_apply_summary(result));
+	m_deps.record_tabs.setCurrentWidget(&m_deps.log_view);
+}
+
+void dict_operations_controller_t::on_remove_tags(dict_document_t * dict_doc)
+{
+	if (!dict_doc)
+		return;
+
+	topic_tagger_t tagger;
+	tagger.seed_topics(dict_doc->data());
+
+	const auto result = process_all_info_records({ *dict_doc, m_deps.edit_history, tagger }, false);
+
+	if (result.entries_changed > 0 && m_deps.refresh_table)
+		m_deps.refresh_table();
+
+	m_deps.log_view.append_log("remove tags", build_remove_summary(result));
 	m_deps.record_tabs.setCurrentWidget(&m_deps.log_view);
 }

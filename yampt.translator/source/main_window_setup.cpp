@@ -586,6 +586,22 @@ void main_window_t::connect_sidebar_signals()
 
 	connect(
 	    m_sidebar,
+	    &sidebar_view_t::remove_tags_requested,
+	    this,
+	    [this](const std::string & path)
+	{
+		auto * doc = m_session.open(path);
+		auto * dict_doc = dynamic_cast<dict_document_t *>(doc);
+		if (!dict_doc)
+			return;
+
+		switch_document(dict_doc);
+		if (m_dict_ops_controller)
+			m_dict_ops_controller->on_remove_tags(dict_doc);
+	});
+
+	connect(
+	    m_sidebar,
 	    &sidebar_view_t::export_eet_requested,
 	    this,
 	    [this](const std::string & path) { m_sidebar_controller->on_export_eet_requested(path); });

@@ -31,6 +31,7 @@ public:
 
 	void on_merge();
 	void on_apply_tags(dict_document_t * dict_doc);
+	void on_remove_tags(dict_document_t * dict_doc);
 
 private:
 	dict_operations_deps_t m_deps;
