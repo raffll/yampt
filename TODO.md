@@ -10,7 +10,7 @@ translator: rename "Merge Dictionaries" to "Dictionary Merger" (menu action and 
 
 editor: drag & drop a decoded cell value between plugin columns when Enable Editing is on — dropping onto another plugin column applies the value as a field edit; dropping onto the merged-patch column copies it into the merge. Both are recorded in the History tab.
 editor: when the nav selection changes, also reset/clear the Edit panel
-editor: prefix the validation message text with "Error: "
+
 editor: Revert button in the History tab
 
 maybe:

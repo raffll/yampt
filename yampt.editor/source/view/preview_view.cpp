@@ -49,31 +49,34 @@ preview_view_t::preview_view_t(QWidget * parent)
 
 	outer_layout->addLayout(comparison_layout);
 
-	auto * controls_layout = new QHBoxLayout();
+	m_controls_widget = new QWidget(this);
+	m_controls_widget->setVisible(false);
+
+	auto * controls_layout = new QHBoxLayout(m_controls_widget);
 	controls_layout->setContentsMargins(0, 0, controls_margin, controls_margin);
 	controls_layout->setSpacing(4);
 
-	m_validation_label = new QLabel(this);
+	m_validation_label = new QLabel(m_controls_widget);
 	m_validation_label->setStyleSheet("color: rgb(200, 60, 60);");
 	m_validation_label->setWordWrap(true);
 	controls_layout->addWidget(m_validation_label, 1);
 
 	const int control_width = fontMetrics().averageCharWidth() * control_character_width;
 
-	m_value_selector = new QComboBox(this);
+	m_value_selector = new QComboBox(m_controls_widget);
 	m_value_selector->setVisible(false);
 	m_value_selector->setToolTip(tr("Select a value from the list"));
 	m_value_selector->setFixedWidth(control_width);
 	m_value_selector->view()->installEventFilter(this);
 	controls_layout->addWidget(m_value_selector);
 
-	m_apply_button = new QPushButton(tr("Apply"), this);
+	m_apply_button = new QPushButton(tr("Apply"), m_controls_widget);
 	m_apply_button->setToolTip(tr("Apply field edit to the loaded plugin"));
 	m_apply_button->setVisible(false);
 	m_apply_button->setFixedWidth(control_width);
 	controls_layout->addWidget(m_apply_button);
 
-	outer_layout->addLayout(controls_layout);
+	outer_layout->addWidget(m_controls_widget);
 
 	connect(m_right_edit, &QTextEdit::textChanged, this, &preview_view_t::on_text_changed);
 	connect(m_apply_button, &QPushButton::clicked, this, &preview_view_t::on_apply_clicked);
@@ -222,6 +225,7 @@ void preview_view_t::clear()
 void preview_view_t::set_editing_enabled(bool enabled)
 {
 	m_right_edit->setReadOnly(!enabled);
+	m_controls_widget->setVisible(enabled);
 	m_apply_button->setVisible(enabled);
 	m_editing_active = enabled;
 	m_user_has_typed = false;
@@ -356,7 +360,7 @@ void preview_view_t::on_text_changed()
 	if (!is_valid)
 	{
 		m_right_edit->setStyleSheet("background-color: #ffcccc;");
-		m_validation_label->setText(QString::fromStdString(error_message));
+		m_validation_label->setText(tr("Error: ") + QString::fromStdString(error_message));
 	}
 	else
 	{
