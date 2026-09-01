@@ -192,7 +192,7 @@ void main_window_t::setup_replace_toolbar()
 	m_replace_toolbar = new QWidget(this);
 
 	auto * layout = new QVBoxLayout(m_replace_toolbar);
-	layout->setContentsMargins(4, 4, 4, 4);
+	layout->setContentsMargins(2, 2, 2, 2);
 	layout->setSpacing(4);
 
 	m_find_field = new QLineEdit(this);

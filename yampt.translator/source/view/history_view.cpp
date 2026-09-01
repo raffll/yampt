@@ -11,7 +11,7 @@ history_view_t::history_view_t(QWidget * parent)
     : QWidget(parent)
 {
 	auto * layout = new QVBoxLayout(this);
-	layout->setContentsMargins(4, 4, 4, 4);
+	layout->setContentsMargins(0, 0, 0, 0);
 	layout->setSpacing(4);
 
 	auto * scroll_area = new QScrollArea(this);

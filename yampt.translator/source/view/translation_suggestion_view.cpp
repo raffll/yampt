@@ -38,7 +38,7 @@ translation_suggestion_view_t::translation_suggestion_view_t(QWidget * parent)
     : QWidget(parent)
 {
 	auto * layout = new QVBoxLayout(this);
-	layout->setContentsMargins(4, 4, 4, 4);
+	layout->setContentsMargins(2, 2, 2, 2);
 	layout->setSpacing(4);
 
 	auto * top_row = new QHBoxLayout;
