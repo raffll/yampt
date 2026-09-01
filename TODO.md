@@ -14,3 +14,6 @@ editor: drag & drop cell between plugins if edit is enabled
 editor: if nav row changed, reset also edit
 editor: prefix for validation text
 editor: Revert button in history
+
+maybe:
+editor: [TAGS] insetad of icons, for Guard Patch, Exclude from Merged, Active Plugin, Overriden by Override
