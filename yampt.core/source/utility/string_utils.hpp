@@ -47,6 +47,27 @@ inline std::filesystem::path utf8_to_path(std::string_view utf8_text)
 	return std::filesystem::path(utf8_bytes);
 }
 
+inline std::string join_path(std::string_view base, std::string_view leaf)
+{
+	if (base.empty())
+		return std::string(leaf);
+
+	if (leaf.empty())
+		return std::string(base);
+
+	std::string result(base);
+	if (result.back() == '/' || result.back() == '\\')
+		result.pop_back();
+
+	result += '/';
+
+	if (leaf.front() == '/' || leaf.front() == '\\')
+		leaf.remove_prefix(1);
+
+	result += leaf;
+	return result;
+}
+
 inline std::string_view extract_filename(std::string_view path)
 {
 	const auto pos = path.find_last_of("\\/");

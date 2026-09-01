@@ -11,7 +11,7 @@ QString settings_store_t::settings_dir()
 }
 
 settings_store_t::settings_store_t(const QString & filename)
-    : m_settings(settings_dir() + filename, QSettings::IniFormat)
+    : m_settings(QDir(settings_dir()).filePath(filename), QSettings::IniFormat)
 {}
 
 int settings_store_t::encoding_index() const

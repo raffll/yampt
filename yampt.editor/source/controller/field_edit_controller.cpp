@@ -164,6 +164,15 @@ edit_result_t field_edit_controller_t::commit_to_source(
 	m_session.scan().recompute_single_conflict(request.record_type, request.record_id);
 
 	const auto & plugin_path = m_session.scan().plugin_path(request.plugin_idx);
+
+	const std::string field_name = request.field.name != nullptr ? request.field.name : std::string {};
+	emit field_edited(
+	    { m_session.scan().plugin_filename(request.plugin_idx),
+	      request.record_type,
+	      request.record_id,
+	      field_name,
+	      request.input_text });
+
 	emit record_modified(false, plugin_path);
 	return { true, {} };
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../model/edit_history.hpp"
 #include "../model/view_tree_model.hpp"
 #include "../patcher/patch_builder.hpp"
 #include <functional>
@@ -17,6 +18,7 @@ class merge_controller_t
 public:
 	using log_fn_t = std::function<void(const std::string &)>;
 	using refresh_fn_t = std::function<void()>;
+	using record_removal_fn_t = std::function<void(const record_removal_record_t &)>;
 
 	merge_controller_t(
 	    plugin_session_t & session,
@@ -26,6 +28,7 @@ public:
 	    log_fn_t log_fn);
 
 	void set_refresh_callback(refresh_fn_t refresh_fn);
+	void set_record_removal_callback(record_removal_fn_t removal_fn);
 
 	bool create_merged_patch();
 	void load_existing_merged_patch();
@@ -98,4 +101,5 @@ private:
 	settings_store_t & m_settings;
 	log_fn_t m_log;
 	refresh_fn_t m_refresh;
+	record_removal_fn_t m_record_removal;
 };

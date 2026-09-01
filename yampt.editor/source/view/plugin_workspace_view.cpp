@@ -77,6 +77,13 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 
 	m_merge_controller->set_refresh_callback([this]() { refresh_all_views(); });
 
+	m_merge_controller->set_record_removal_callback(
+	    [this](const record_removal_record_t & removal)
+	{
+		m_edit_history.record_record_removal(removal);
+		m_history_view->update_history(m_edit_history.entries());
+	});
+
 	m_context_menu = new view_context_menu_t(
 	    *m_session,
 	    *m_record_view,
@@ -99,7 +106,9 @@ void plugin_workspace_view_t::setup_views()
 	m_bottom_tabs = new QTabWidget(m_main_splitter);
 	m_messages = new messages_view_t(m_bottom_tabs);
 	m_preview = new preview_view_t(m_bottom_tabs);
+	m_history_view = new history_view_t(m_bottom_tabs);
 	m_bottom_tabs->addTab(m_preview, tr("Edit"));
+	m_bottom_tabs->addTab(m_history_view, tr("History"));
 	m_bottom_tabs->addTab(m_messages, tr("Log"));
 
 	m_main_splitter->addWidget(m_content_splitter);
@@ -133,6 +142,8 @@ void plugin_workspace_view_t::setup_connections()
 		m_lua_view->clear();
 		m_record_view->clear();
 		m_nav_view->rebuild();
+		m_edit_history.clear();
+		m_history_view->clear();
 		update_status();
 	});
 	connect(m_session, &plugin_session_t::log_message, this, &plugin_workspace_view_t::log_message);
@@ -153,6 +164,16 @@ void plugin_workspace_view_t::setup_connections()
 			m_merge_controller->save_merged_patch();
 		else
 			emit unsaved_changes_changed(true);
+	});
+
+	connect(
+	    m_edit_controller,
+	    &field_edit_controller_t::field_edited,
+	    this,
+	    [this](const field_edit_record_t & edit)
+	{
+		m_edit_history.record_field_edit(edit);
+		m_history_view->update_history(m_edit_history.entries());
 	});
 
 	connect(
@@ -792,7 +813,7 @@ void plugin_workspace_view_t::log_message(const std::string & msg)
 
 void plugin_workspace_view_t::save_session_state()
 {
-	const auto ini_path = settings_store_t::settings_dir() + "yEditor.ini";
+	const auto ini_path = QDir(settings_store_t::settings_dir()).filePath("yEditor.ini");
 
 	m_session->save_session_state(ini_path);
 
@@ -820,7 +841,8 @@ void plugin_workspace_view_t::save_session_state()
 
 void plugin_workspace_view_t::restore_session_state()
 {
-	QSettings settings(settings_store_t::settings_dir() + "yEditor.ini", QSettings::IniFormat);
+	const auto ini_path = QDir(settings_store_t::settings_dir()).filePath("yEditor.ini");
+	QSettings settings(ini_path, QSettings::IniFormat);
 
 	m_conflicts_only = settings.value("view/conflicts_only", false).toBool();
 	m_hide_duplicates = settings.value("view/hide_duplicates", false).toBool();
@@ -841,7 +863,7 @@ void plugin_workspace_view_t::restore_session_state()
 	if (!content_state.isEmpty())
 		m_content_splitter->restoreState(content_state);
 
-	m_session->restore_session_state(settings_store_t::settings_dir() + "yEditor.ini");
+	m_session->restore_session_state(ini_path);
 
 	auto rec_type = settings.value("session/nav_rec_type").toString().toStdString();
 	auto record_id = settings.value("session/nav_record_id").toString().toStdString();

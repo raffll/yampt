@@ -129,6 +129,12 @@ A plugin with changes that have not yet been written to disk is marked with an a
 
 To write a plugin's pending changes to disk, right-click that plugin in the navigation panel and choose **Save**. This option is available only while the plugin has unsaved changes. Saving writes the plugin file and removes its asterisk. The File menu offers **Save** to write the currently selected plugin and **Save All** to write every plugin with unsaved changes at once. Text you have typed into a field but not yet applied is not saved; only changes you confirmed with Apply are written.
 
+## History
+
+The History tab sits beside the Edit and Log tabs at the bottom of the window. It lists the changes you have made during the current session, most recent first: each field edit you applied and each record you removed from a plugin. Every line shows the time of the change, the plugin it affected, and a short description of what changed.
+
+The history is a record of what you did this session only. It is not written to disk, it is not restored the next time you open the application, and it clears when you unload all plugins. It is a reference for reviewing your recent edits, not an undo mechanism.
+
 ## Creating a Merged Patch
 
 Click **Create Merged Patch** in the toolbar to run the automatic merge. If any loaded plugin has unsaved field edits, you are first offered to save those plugins or cancel the merge. The merge uses the current on-screen state of each plugin, so saving first keeps the files on disk consistent with what goes into the merged patch. Cancelling stops the merge and changes nothing.

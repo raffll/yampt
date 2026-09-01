@@ -7,6 +7,7 @@
 #include <scanner/record_conflict.hpp>
 #include <utility/record_behavior.hpp>
 #include <QCoreApplication>
+#include <QDir>
 #include <QMenu>
 #include <QMessageBox>
 
@@ -99,7 +100,7 @@ void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_mo
 		}
 
 		m_session.set_excluded_plugins(excluded_copy);
-		m_session.save_session_state(settings_store_t::settings_dir() + "yEditor.ini");
+		m_session.save_session_state(QDir(settings_store_t::settings_dir()).filePath("yEditor.ini"));
 		m_nav_view.rebuild_preserving_state();
 	});
 
@@ -123,7 +124,7 @@ void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_mo
 		}
 
 		m_session.set_patch_plugins(patch_copy);
-		m_session.save_session_state(settings_store_t::settings_dir() + "yEditor.ini");
+		m_session.save_session_state(QDir(settings_store_t::settings_dir()).filePath("yEditor.ini"));
 		m_nav_view.rebuild_preserving_state();
 	});
 }

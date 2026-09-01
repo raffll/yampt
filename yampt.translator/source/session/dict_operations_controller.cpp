@@ -157,8 +157,9 @@ void dict_operations_controller_t::on_merge()
 	const auto workspace_dir = resource_paths::workspace_dir();
 	QDir().mkpath(QString::fromStdString(workspace_dir));
 
-	const auto output_path =
-	    workspace_dir + "Merged_" + QDateTime::currentDateTime().toString("yyyyMMddHHmmss").toStdString() + ".json";
+	const auto merged_filename =
+	    "Merged_" + QDateTime::currentDateTime().toString("yyyyMMddHHmmss").toStdString() + ".json";
+	const auto output_path = string_utils::join_path(workspace_dir, merged_filename);
 
 	dict_writer_t::write(merged_dict, output_path);
 

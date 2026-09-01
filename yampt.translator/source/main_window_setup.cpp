@@ -468,7 +468,7 @@ void main_window_t::connect_menu_signals()
 
 		const auto archive_name = QFileInfo(archive_path).completeBaseName();
 		const auto target_dir =
-		    QString::fromStdString(resource_paths::workspace_dir()) + archive_name;
+		    QDir(QString::fromStdString(resource_paths::workspace_dir())).filePath(archive_name);
 		QDir().mkpath(target_dir);
 
 		QProcess proc;

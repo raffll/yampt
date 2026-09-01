@@ -1,9 +1,7 @@
 #include "edit_history.hpp"
-#include <nlohmann/json.hpp>
 #include <utility/status_types.hpp>
 #include <chrono>
 #include <ctime>
-#include <fstream>
 
 static std::string make_key(rec_type_t type, const std::string & key)
 {
@@ -39,7 +37,6 @@ void edit_history_t::record_change(
 	entry.timestamp = make_timestamp();
 	entry.status = old_status;
 	m_entries[compound_key].push_back(entry);
-	m_session_modified.insert(compound_key);
 }
 
 std::vector<history_entry_t> edit_history_t::get_history(rec_type_t type, const std::string & key) const
@@ -63,67 +60,4 @@ revert_result_t edit_history_t::revert(rec_type_t type, const std::string & key,
 
 	const auto & entry = it->second[history_index];
 	return { entry.value, entry.status, true };
-}
-
-void edit_history_t::load_from_file(const std::string & path)
-{
-	std::ifstream file(path);
-	if (!file.is_open())
-		return;
-
-	nlohmann::json j;
-
-	try
-	{
-		file >> j;
-	}
-	catch (...)
-	{
-		return;
-	}
-
-	m_entries.clear();
-	for (auto & [key, arr] : j.items())
-	{
-		std::vector<history_entry_t> vec;
-		for (auto & item : arr)
-		{
-			history_entry_t entry;
-			entry.value = item.value("value", "");
-			entry.timestamp = item.value("timestamp", "");
-			entry.status = string_to_status(item.value("status", "untranslated"));
-			vec.push_back(entry);
-		}
-
-		m_entries[key] = std::move(vec);
-	}
-}
-
-void edit_history_t::save_to_file(const std::string & path) const
-{
-	nlohmann::json j;
-	for (const auto & [key, vec] : m_entries)
-	{
-		nlohmann::json arr = nlohmann::json::array();
-		for (const auto & entry : vec)
-		{
-			nlohmann::json item;
-			item["value"] = entry.value;
-			item["timestamp"] = entry.timestamp;
-			item["status"] = std::string(status_to_string(entry.status));
-			arr.push_back(item);
-		}
-		j[key] = arr;
-	}
-
-	std::ofstream file(path);
-	if (!file.is_open())
-		return;
-
-	file << j.dump(2);
-}
-
-bool edit_history_t::is_modified_this_session(rec_type_t type, const std::string & key) const
-{
-	return m_session_modified.count(make_key(type, key)) > 0;
 }

@@ -47,24 +47,24 @@ static std::string resolve_shared_directory(const QString & relative_path)
 {
 	const auto from_user = user_dir() + "/" + relative_path;
 	if (QFileInfo(from_user).isDir())
-		return from_user.toStdString() + "/";
+		return from_user.toStdString();
 
 	const auto from_system = system_dir() + "/" + relative_path;
 	if (QFileInfo(from_system).isDir())
-		return from_system.toStdString() + "/";
+		return from_system.toStdString();
 
 	const auto from_exe = exe_dir() + "/" + relative_path;
 	if (QFileInfo(from_exe).isDir())
-		return from_exe.toStdString() + "/";
+		return from_exe.toStdString();
 
-	return from_system.toStdString() + "/";
+	return from_system.toStdString();
 }
 
 static std::string resolve_user_directory(const QString & relative_path)
 {
-	const auto path = user_dir() + "/" + relative_path;
+	const auto path = relative_path.isEmpty() ? user_dir() : user_dir() + "/" + relative_path;
 	QDir().mkpath(path);
-	return path.toStdString() + "/";
+	return path.toStdString();
 }
 
 std::string resource_paths::languages_file()

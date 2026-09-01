@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../model/edit_history.hpp"
 #include <decoder/sub_record_schema.hpp>
 #include <io/codepage.hpp>
 #include <string>
@@ -39,6 +40,7 @@ public:
 
 signals:
 	void record_modified(bool is_merge_edit, const std::string & saved_path);
+	void field_edited(const field_edit_record_t & edit);
 
 private:
 	edit_result_t commit_to_merge(const field_edit_request_t & request, const std::string & patched_content);

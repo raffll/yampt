@@ -10,6 +10,17 @@ TEST_CASE("string_utils::to_lower, ascii mixed case", "[u]")
 	REQUIRE(string_utils::to_lower("") == "");
 }
 
+TEST_CASE("string_utils::join_path, single separator regardless of trailing or leading slash", "[u]")
+{
+	REQUIRE(string_utils::join_path("dir", "file.txt") == "dir/file.txt");
+	REQUIRE(string_utils::join_path("dir/", "file.txt") == "dir/file.txt");
+	REQUIRE(string_utils::join_path("dir", "/file.txt") == "dir/file.txt");
+	REQUIRE(string_utils::join_path("dir/", "/file.txt") == "dir/file.txt");
+	REQUIRE(string_utils::join_path("a/b/", "c/d") == "a/b/c/d");
+	REQUIRE(string_utils::join_path("", "file.txt") == "file.txt");
+	REQUIRE(string_utils::join_path("dir", "") == "dir");
+}
+
 TEST_CASE("string_utils::normalize_path, backslash to forward slash", "[u]")
 {
 	REQUIRE(string_utils::normalize_path("C:\\Users\\test\\file.txt") == "C:/Users/test/file.txt");

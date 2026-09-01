@@ -65,6 +65,11 @@ void merge_controller_t::set_refresh_callback(refresh_fn_t refresh_fn)
 	m_refresh = std::move(refresh_fn);
 }
 
+void merge_controller_t::set_record_removal_callback(record_removal_fn_t removal_fn)
+{
+	m_record_removal = std::move(removal_fn);
+}
+
 bool merge_controller_t::create_merged_patch()
 {
 	if (m_session.has_any_unsaved())
@@ -468,6 +473,8 @@ bool merge_controller_t::remove_record_from_plugin(
 	if (!found)
 		return false;
 
+	const auto & plugin_filename = m_session.scan().plugin_filename(plugin_idx);
+
 	m_session.scan().mutable_plugin(plugin_idx).remove_record(record_index);
 	m_session.mark_plugin_dirty(plugin_idx);
 	m_session.scan().rebuild_conflicts();
@@ -477,7 +484,10 @@ bool merge_controller_t::remove_record_from_plugin(
 	else
 		m_nav_view.rebuild_preserving_state();
 
-	m_log("[info] removed " + rec_type + ":" + record_id + " from " + m_session.scan().plugin_filename(plugin_idx));
+	if (m_record_removal)
+		m_record_removal({ plugin_filename, rec_type, record_id });
+
+	m_log("[info] removed " + rec_type + ":" + record_id + " from " + plugin_filename);
 	return true;
 }
 
