@@ -17,8 +17,6 @@ void editor_highlighter_t::on_theme_changed()
 	m_format_html_tag.setForeground(theme.get_color(color_name_t::syntax_html_tag));
 	m_format_html_tag.setFontWeight(QFont::Bold);
 	m_format_forbidden.setBackground(theme.get_color(color_name_t::syntax_forbidden_background));
-	m_format_hyperlink.setForeground(theme.get_color(color_name_t::syntax_hyperlink));
-	m_format_hyperlink.setFontUnderline(true);
 	m_format_misspelled.setUnderlineStyle(QTextCharFormat::WaveUnderline);
 	m_format_misspelled.setUnderlineColor(theme.get_color(color_name_t::syntax_misspelled));
 
@@ -99,25 +97,6 @@ void editor_highlighter_t::apply_forbidden_chars(const QString & text)
 	}
 }
 
-void editor_highlighter_t::apply_hyperlink_prefix(const QString & text)
-{
-	for (int i = 0; i < text.length() - 1; ++i)
-	{
-		if (text.at(i).unicode() != '@')
-			continue;
-
-		if (!text.at(i + 1).isLetterOrNumber())
-			continue;
-
-		int end = i + 1;
-		while (end < text.length() && text.at(end).isLetterOrNumber())
-			++end;
-
-		setFormat(i, end - i, m_format_hyperlink);
-		i = end - 1;
-	}
-}
-
 void editor_highlighter_t::apply_spell_check(const QString & text)
 {
 	const auto & text_str = text.toStdString();
@@ -141,7 +120,6 @@ void editor_highlighter_t::highlightBlock(const QString & text)
 		apply_syntax_tokens(text);
 
 	apply_forbidden_chars(text);
-	apply_hyperlink_prefix(text);
 
 	if (!m_is_translation || !m_spell_checker || !m_spell_checker->is_loaded())
 		return;

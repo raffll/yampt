@@ -18,20 +18,36 @@ std::string create_temp_top(const std::string & name, const std::string & conten
 
 } // namespace
 
-TEST_CASE("inflection_store_t::annotate, keeps forms present in translation text", "[i]")
+TEST_CASE("inflection_store_t::annotate, matches inflected form on left side", "[i]")
 {
-	const auto path = create_temp_top("infl_present.top", "miecze\tmiecz\r\nmieczy\tmiecz\r\n");
+	const auto path = create_temp_top("infl_left.top", "szczura\tszczur\r\n");
 
 	inflection_store_t store;
 	store.rebuild({ path }, codepage_t::windows_1250);
 
-	const auto result = store.annotate("Dwa miecze i cztery topory");
+	const auto result = store.annotate("widzialem szczura wczoraj");
 
 	REQUIRE(result.size() == 1);
 	REQUIRE(result[0].kind == annotation_t::inflection_form);
-	REQUIRE(result[0].old_text == "miecze");
-	REQUIRE(result[0].new_text == "miecz");
-	REQUIRE(result[0].source == "infl_present.top");
+	REQUIRE(result[0].old_text == "szczura");
+	REQUIRE(result[0].new_text == "szczur");
+	REQUIRE(result[0].source == "infl_left.top");
+
+	std::filesystem::remove(path);
+}
+
+TEST_CASE("inflection_store_t::annotate, matches standard form on right side", "[i]")
+{
+	const auto path = create_temp_top("infl_right.top", "chorobami\tchoroba\r\n");
+
+	inflection_store_t store;
+	store.rebuild({ path }, codepage_t::windows_1250);
+
+	const auto result = store.annotate("mam wiele wiedzy o choroba tutaj");
+
+	REQUIRE(result.size() == 1);
+	REQUIRE(result[0].old_text == "chorobami");
+	REQUIRE(result[0].new_text == "choroba");
 
 	std::filesystem::remove(path);
 }

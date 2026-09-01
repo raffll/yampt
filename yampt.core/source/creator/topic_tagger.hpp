@@ -3,6 +3,8 @@
 #include "utility/domain_types.hpp"
 #include "utility/keyword_trie.hpp"
 #include <string>
+#include <utility>
+#include <vector>
 
 struct topic_tag_result_t
 {
@@ -15,10 +17,6 @@ struct apply_tags_result_t
 	int entries_changed = 0;
 	int tags_inserted = 0;
 };
-
-namespace loc_types {
-struct loc_entry_t;
-}
 
 class topic_tagger_t
 {

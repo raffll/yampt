@@ -227,7 +227,6 @@ void plugin_operations_controller_t::log_operation_result(
 	}
 
 	m_deps.log_view.append_log(operation_name, result.log_text);
-	m_deps.record_tabs.setCurrentWidget(&m_deps.log_view);
 }
 
 std::vector<dict_selection_dialog_t::dict_entry_t> plugin_operations_controller_t::build_dict_entries(

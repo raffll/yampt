@@ -108,6 +108,36 @@ TEST_CASE("topic_tagger_t::tag_line, pre-existing tags stripped and reinserted",
 	REQUIRE(result.tags_inserted == 1);
 }
 
+TEST_CASE("topic_tagger_t::tag_line, inflected form tagged when no overlap", "[u]")
+{
+	dict_t dict;
+	dict[rec_type_t::dial].insert({ "szczur", "szczur", "szczur", status_t::translated });
+
+	topic_tagger_t tagger;
+	tagger.seed_topics(dict);
+	tagger.seed_inflections({ { "szczura", "szczur" } });
+
+	const auto result = tagger.tag_line("widzialem szczura wczoraj");
+
+	REQUIRE(result.text == "widzialem @szczura# wczoraj");
+	REQUIRE(result.tags_inserted == 1);
+}
+
+TEST_CASE("topic_tagger_t::tag_line, standard form wins over overlapping inflection", "[u]")
+{
+	dict_t dict;
+	dict[rec_type_t::dial].insert({ "szczur polny", "szczur polny", "szczur polny", status_t::translated });
+
+	topic_tagger_t tagger;
+	tagger.seed_topics(dict);
+	tagger.seed_inflections({ { "szczur", "szczur" } });
+
+	const auto result = tagger.tag_line("to jest szczur polny tutaj");
+
+	REQUIRE(result.text == "to jest @szczur polny# tutaj");
+	REQUIRE(result.tags_inserted == 1);
+}
+
 TEST_CASE("topic_tagger_t::tag_line, only DIAL topics seeded", "[u]")
 {
 	dict_t dict;

@@ -4,13 +4,18 @@
 
 ### yTranslator
 - [NEW] Added Spanish and Portuguese, plus Czech, Slovak, Slovenian, Croatian, Romanian, Ukrainian, Bulgarian, Serbian, Dutch, Swedish, Danish, Norwegian Bokmal, Finnish, Catalan, and Galician as target languages; Finnish can be translated but has no spell-check dictionary
-- [NEW] Apply Topic Tags in a dictionary's right-click menu: wraps dialogue topics found in that dictionary's translated text in hyperlink tags so they appear as clickable links in-game; changes are recorded in history and can be reverted
-- [NEW] Localization files opened in the workbench now show their inflected-form entries in the Annotations tab under an Inflection section
+- [NEW] Apply Topic Tags in a dictionary's right-click menu: wraps dialogue topics found in the translated text of dialogue responses in hyperlink tags so they appear as clickable links in-game. It also tags inflected forms of topics (read from the dictionary's generated .top file) where they do not collide with a direct topic link. Only dialogue responses are tagged, excluding voice lines. Changes are recorded in history and can be reverted, and re-running refreshes the tags rather than duplicating them
+- [NEW] Remove Topic Tags in a dictionary's right-click menu: strips all topic hyperlink tags from dialogue responses; the change is recorded in history and can be reverted
+- [NEW] While editing a dictionary, the Annotations tab now lists the inflected topic forms (from loaded .top and .mrk files) that appear in the current entry's translation, under an Inflection section, each showing its source file
 - [NEW] Editable AI translation prompt: a Prompt tab in the Auto Translation settings holds a single system prompt shared by all AI providers, with a Reset to Default button to restore the built-in prompt
+- [CHANGE] Inflected topic forms are highlighted in the editor with their own color, distinct from dialogue topics and glossary terms
+- [CHANGE] Localization files (.cel, .top, .mrk) no longer show the Status column or the Statuses filter, since their entries have no status
 - [CHANGE] Language settings now list the foreign and native languages in alphabetical order
 - [CHANGE] The Encoding line in Language settings is now shown in the normal text color instead of a greyed-out note
 - [CHANGE] Sync Scrolling now remembers its on/off state between sessions instead of always starting enabled
 - [CHANGE] The History panel now lists the selected entry's changes as a plain list; right-click a change and choose Revert to restore it, instead of a Revert button on every row
+- [FIX] Topic tag markers in the editor are no longer shown as underlined colored web-style links; the tagged text now renders normally while recognized topics keep their background highlight
+- [FIX] Grammar and topic highlights in the translation editor now refresh correctly when text is edited back to its original value — removing a double space now clears the grammar mark, and reverting a broken topic tag to a valid form restores its highlight
 
 ### yEditor
 - [NEW] Sync Scrolling: a View menu toggle binds scrolling between the two comparison panes in the Edit panel, so both sides move together; the state persists between sessions

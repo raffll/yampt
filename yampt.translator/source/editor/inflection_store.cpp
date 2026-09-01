@@ -39,7 +39,12 @@ std::vector<annotation_t> inflection_store_t::annotate(const std::string & trans
 			continue;
 
 		const auto key_lower = string_utils::to_lower_utf8(entry.key);
-		if (text_lower.find(key_lower) == std::string::npos)
+		const auto value_lower = string_utils::to_lower_utf8(entry.value);
+
+		const bool key_matches = text_lower.find(key_lower) != std::string::npos;
+		const bool value_matches = !value_lower.empty() && text_lower.find(value_lower) != std::string::npos;
+
+		if (!key_matches && !value_matches)
 			continue;
 
 		annotation_t annotation;

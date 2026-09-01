@@ -1,5 +1,7 @@
 #include "creator/topic_tagger.hpp"
 
+#include <algorithm>
+
 namespace
 {
 constexpr char link_open = '@';
@@ -67,37 +69,84 @@ void topic_tagger_t::seed_topics(const dict_t & dict)
 	}
 }
 
+void topic_tagger_t::seed_inflections(const std::vector<std::pair<std::string, std::string>> & inflected_forms)
+{
+	m_inflection_trie.clear();
+
+	for (const auto & [inflected_form, standard_form] : inflected_forms)
+	{
+		if (inflected_form.empty())
+			continue;
+
+		m_inflection_trie.seed(inflected_form, standard_form);
+	}
+}
+
+namespace
+{
+struct accepted_span_t
+{
+	std::size_t start;
+	std::size_t end;
+};
+
+bool overlaps_any(const std::vector<accepted_span_t> & spans, std::size_t start, std::size_t end)
+{
+	for (const auto & span : spans)
+	{
+		if (start < span.end && end > span.start)
+			return true;
+	}
+
+	return false;
+}
+
+void collect_matches(
+    const std::vector<keyword_match_t> & matches,
+    std::vector<accepted_span_t> & accepted)
+{
+	for (const auto & match : matches)
+	{
+		const auto start = match.start;
+		const auto end = match.start + match.length;
+
+		if (overlaps_any(accepted, start, end))
+			continue;
+
+		accepted.push_back({ start, end });
+	}
+}
+}
+
 topic_tag_result_t topic_tagger_t::tag_line(const std::string & line) const
 {
 	const auto stripped = strip_tags(line);
-	const auto matches = m_topic_trie.find_matches(stripped);
+
+	std::vector<accepted_span_t> accepted;
+	collect_matches(m_topic_trie.find_matches(stripped), accepted);
+	collect_matches(m_inflection_trie.find_matches(stripped), accepted);
+
+	std::sort(
+	    accepted.begin(),
+	    accepted.end(),
+	    [](const accepted_span_t & first, const accepted_span_t & second) { return first.start < second.start; });
 
 	std::string result;
-	result.reserve(stripped.size() + matches.size() * 2);
+	result.reserve(stripped.size() + accepted.size() * 2);
 
 	std::size_t copy_pos = 0;
-	int accepted_count = 0;
-	std::size_t last_span_end = 0;
-
-	for (const auto & match : matches)
+	for (const auto & span : accepted)
 	{
-		if (accepted_count != 0 && match.start < last_span_end)
-			continue;
-
-		const auto match_end = match.start + match.length;
-		result.append(stripped, copy_pos, match.start - copy_pos);
+		result.append(stripped, copy_pos, span.start - copy_pos);
 		result.push_back(link_open);
-		result.append(stripped, match.start, match.length);
+		result.append(stripped, span.start, span.end - span.start);
 		result.push_back(link_close);
-
-		copy_pos = match_end;
-		last_span_end = match_end;
-		++accepted_count;
+		copy_pos = span.end;
 	}
 
 	result.append(stripped, copy_pos, std::string::npos);
 
-	return { result, accepted_count };
+	return { result, static_cast<int>(accepted.size()) };
 }
 
 std::string topic_tagger_t::strip_tags(const std::string & line)

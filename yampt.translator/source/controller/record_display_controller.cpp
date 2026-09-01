@@ -6,6 +6,7 @@
 #include "../view/history_view.hpp"
 #include "../view/translation_suggestion_view.hpp"
 #include "../view/validation_view.hpp"
+#include <theme_system.hpp>
 #include <utility/string_utils.hpp>
 #include <QString>
 #include <QTextCursor>
@@ -284,8 +285,7 @@ void record_display_controller_t::update_validation()
 		}
 
 		QTextEdit::ExtraSelection sel;
-		sel.format.setBackground(QColor(180, 40, 40));
-		sel.format.setForeground(QColor(255, 255, 255));
+		sel.format.setBackground(theme_system_t::instance().get_color(color_name_t::syntax_forbidden_background));
 		sel.cursor = QTextCursor(m_deps.editor_view.translation_editor()->document());
 		sel.cursor.setPosition(char_start);
 		sel.cursor.setPosition(plain_text.length(), QTextCursor::KeepAnchor);

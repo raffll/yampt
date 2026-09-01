@@ -48,7 +48,7 @@ Qt6 GUI for interactive plugin translation.
 **Analysis**
 - Multi-layer syntax highlighting: MWScript keywords, hyperlinks, glossary terms, forbidden characters
 - Spell checking with per-language Hunspell dictionaries
-- Annotation system: hyperlinks, gender info, glossary matches from loaded base dicts
+- Annotation system: hyperlinks, gender info, glossary matches from loaded base dicts, and inflected topic forms from loaded localization files
 - Full script preview with sync scrolling between original and translation
 - Book content preview with live update
 
@@ -63,7 +63,8 @@ Qt6 GUI for interactive plugin translation.
 - **EET file import: convert ESP-ESM Translator dictionaries to JSON**
 - **Generate localization files (.cel, .mrk, .top) from dictionary**
 - **Hyperlink insertion during plugin conversion**
-- **Apply Topic Tags: wrap dialogue topics in the translated text so they show as clickable links in-game**
+- **Apply Topic Tags: wrap dialogue topics — and their inflected forms — in the translated text of dialogue responses so they show as clickable links in-game**
+- **Remove Topic Tags: strip all topic hyperlink tags from a dictionary's dialogue responses**
 
 ## yampt.exe — Command Line
 

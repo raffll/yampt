@@ -15,7 +15,6 @@
 class dict_document_t;
 class log_view_t;
 class translation_suggestion_view_t;
-class QTabWidget;
 class QString;
 class QWidget;
 
@@ -33,7 +32,6 @@ struct plugin_operations_deps_t
 	operation_executor_t & executor;
 	log_view_t & log_view;
 	translation_suggestion_view_t & translation_suggestion_view;
-	QTabWidget & record_tabs;
 	QWidget * parent_widget;
 	plugin_operations_callbacks_t callbacks;
 };

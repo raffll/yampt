@@ -92,7 +92,7 @@ std::set<rec_type_t> loc_document_t::supported_types() const
 
 std::set<status_t> loc_document_t::supported_statuses() const
 {
-	return { status_t::translated };
+	return {};
 }
 
 void loc_document_t::set_dirty(bool)

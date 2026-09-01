@@ -93,7 +93,6 @@ main_window_t::main_window_t(QWidget * parent)
 	                               m_executor,
 	                               *m_log_view,
 	                               *m_translation_tab,
-	                               *m_record_tabs,
 	                               this,
 	                               { [this]() { m_sidebar_controller->scan_workspace(); },
 	                                 [this](const std::string & path) { return show_make_base_dialog(path); } } });
@@ -101,7 +100,6 @@ main_window_t::main_window_t(QWidget * parent)
 	m_dict_ops_controller = std::make_unique<dict_operations_controller_t>(
 	    dict_operations_deps_t { m_session,
 	                             *m_log_view,
-	                             *m_record_tabs,
 	                             this,
 	                             m_edit_history,
 	                             [this]() { m_sidebar_controller->scan_workspace(); },
@@ -478,20 +476,20 @@ void main_window_t::on_translation_changed()
 		return;
 
 	const auto current_text = m_editor_view->translation_editor()->toPlainText();
-	if (current_text == m_editor_controller.loaded_text())
-		return;
+	const bool text_matches_loaded = (current_text == m_editor_controller.loaded_text());
 
-	if (!m_active_doc->is_dirty())
+	if (!text_matches_loaded)
 	{
-		m_active_doc->set_dirty(true);
-		update_sidebar_item(m_active_doc->path());
+		if (!m_active_doc->is_dirty())
+		{
+			m_active_doc->set_dirty(true);
+			update_sidebar_item(m_active_doc->path());
+		}
+
+		set_unsaved_changes(true);
 	}
 
-	set_unsaved_changes(true);
 	update_validation();
-
-	if (m_editor_controller.current_row() < 0)
-		return;
 
 	const auto * row_data = m_table_model->row_at(m_editor_controller.current_row());
 	if (!row_data)

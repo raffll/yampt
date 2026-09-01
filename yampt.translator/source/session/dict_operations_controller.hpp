@@ -7,14 +7,12 @@
 class log_view_t;
 class edit_history_t;
 class dict_document_t;
-class QTabWidget;
 class QWidget;
 
 struct dict_operations_deps_t
 {
 	session_t & session;
 	log_view_t & log_view;
-	QTabWidget & record_tabs;
 	QWidget * parent_widget;
 	edit_history_t & edit_history;
 	std::function<void()> scan_workspace;
