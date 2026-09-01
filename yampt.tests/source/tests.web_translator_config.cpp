@@ -95,10 +95,19 @@ TEST_CASE("web_translator_config::load_single, parses chat_completion provider",
 	REQUIRE(config.headers.at("x-api-key") == "{{api_key}}");
 	REQUIRE(config.body_fields.at("model") == "claude-sonnet-4-20250514");
 	REQUIRE(config.response_path == "content[0].text");
-	REQUIRE(config.system_prompt == "Translate to {{target_lang}}.");
+	REQUIRE(config.system_prompt.empty());
 	REQUIRE(config.quota_limit == 0);
 
 	cleanup_dir(directory);
+}
+
+TEST_CASE("web_translator_config::default_system_prompt, non-empty with language placeholders", "[u]")
+{
+	const auto & prompt = web_translator_config::default_system_prompt();
+
+	REQUIRE(!prompt.empty());
+	REQUIRE(prompt.find("{{target_lang}}") != std::string::npos);
+	REQUIRE(prompt.find("{{source_lang_upper}}") != std::string::npos);
 }
 
 TEST_CASE("web_translator_config::load_single, empty file returns empty config", "[u]")

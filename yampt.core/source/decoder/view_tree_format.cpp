@@ -625,7 +625,13 @@ static std::string build_schema_label(
 
 	auto it = descs.find(sub_type);
 	if (it != descs.end())
-		return sub_type + " - " + parent_name + " " + it->second;
+	{
+		const std::string description = it->second;
+		if (description.rfind(parent_name + " ", 0) == 0 || description == parent_name)
+			return sub_type + " - " + description;
+
+		return sub_type + " - " + parent_name + " " + description;
+	}
 
 	return sub_type + " - " + parent_name + " Data";
 }

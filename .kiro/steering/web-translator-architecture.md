@@ -6,14 +6,13 @@ Translation providers are defined as JSON files in `providers/` next to the exec
 
 Config schema:
 - `name` — display name in the UI
-- `kind` — `"simple"` (direct translation API) or `"chat_completion"` (LLM with system prompt + messages)
+- `kind` — `"simple"` (direct translation API) or `"chat_completion"` (LLM with a system prompt + messages; the prompt is NOT in the config — see System Prompt below)
 - `message_style` — only for `chat_completion` kind: `"openai"` (default, system role in messages array) or `"anthropic"` (top-level system field, user-only messages)
 - `endpoint` — API URL
 - `body_format` — `"json"`, `"form"` (URL-encoded), or `"query"` (URL query parameters, uses GET)
 - `headers` — key/value map, supports template variables
 - `body` — key/value map of request body fields, supports template variables
 - `response_path` — dot-separated JSON path with array indexing (e.g. `translations[0].text`, `content[0].text`)
-- `system_prompt` — only used for `chat_completion` kind
 - `quota_limit` — optional character limit (0 = unlimited)
 - `settings` — array of provider-specific settings (see below)
 
@@ -29,7 +28,7 @@ Each provider can define user-configurable settings via the `settings` array. Ea
 
 ## Template Variables
 
-Available in `headers`, `body`, and `system_prompt` fields:
+Available in `headers`, `body`, and the system prompt:
 
 | Variable | Expands to |
 |----------|-----------|
@@ -44,6 +43,16 @@ Available in `headers`, `body`, and `system_prompt` fields:
 ## Source Language
 
 The source language is read from `settings.foreign_language()` and set on each `web_translator_t` instance via `set_source_language()`. It is NOT hardcoded in provider configs — configs use `{{source_lang}}` placeholders.
+
+## System Prompt
+
+The `chat_completion` system prompt is NOT stored in provider JSON configs. There is a single shared, user-editable prompt for all chat providers:
+
+- The canonical default lives in code: `web_translator_config::default_system_prompt()`.
+- The user override is stored globally under `[Translation]/SystemPrompt` (`settings.translation_prompt()` / `set_translation_prompt()`), not per provider.
+- It is edited in Settings → Auto Translation → **Prompt** tab (a single multi-line box with a "Reset to Default" button).
+- At runtime, `translation_suggestion_view_t::apply_provider_settings` calls `web_translator_t::set_system_prompt(shared_prompt)` on every `chat_completion` provider. An empty override falls back to `default_system_prompt()`.
+- The prompt supports the same template variables as headers/body, and the glossary and examples are appended to it automatically in `send_chat_request`.
 
 ## Settings Storage
 

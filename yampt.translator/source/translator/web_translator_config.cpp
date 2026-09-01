@@ -13,7 +13,6 @@ static web_translator_config_t parse_config(const QJsonObject & root, const std:
 	config.endpoint = root.value("endpoint").toString().toStdString();
 	config.response_path = root.value("response_path").toString().toStdString();
 	config.quota_limit = root.value("quota_limit").toInt(0);
-	config.system_prompt = root.value("system_prompt").toString().toStdString();
 	config.models_endpoint = root.value("models_endpoint").toString().toStdString();
 	config.models_path = root.value("models_path").toString().toStdString();
 	config.models_id_key = root.value("models_id_key").toString("id").toStdString();
@@ -66,6 +65,15 @@ static web_translator_config_t parse_config(const QJsonObject & root, const std:
 	}
 
 	return config;
+}
+
+const std::string & web_translator_config::default_system_prompt()
+{
+	static const std::string prompt =
+	    "You are a translator for the video game Morrowind. Translate the given text from "
+	    "{{source_lang_upper}} to {{target_lang}}. Output only the translated text, nothing else. "
+	    "Preserve all HTML tags, line breaks, and formatting exactly as they appear.";
+	return prompt;
 }
 
 web_translator_config_t web_translator_config::parse_string(const std::string & json_content, const std::string & identifier)

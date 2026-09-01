@@ -61,6 +61,8 @@ struct web_translator_config_t
 
 namespace web_translator_config {
 
+const std::string & default_system_prompt();
+
 std::vector<web_translator_config_t> load_all(const std::string & providers_dir);
 web_translator_config_t load_single(const std::string & json_path);
 web_translator_config_t parse_string(const std::string & json_content, const std::string & identifier);

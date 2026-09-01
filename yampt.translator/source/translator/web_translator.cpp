@@ -16,7 +16,10 @@ web_translator_t::web_translator_t(const web_translator_config_t & config, QObje
     : QObject(parent)
     , m_config(config)
     , m_network(new QNetworkAccessManager(this))
-{}
+{
+	if (m_config.system_prompt.empty())
+		m_config.system_prompt = web_translator_config::default_system_prompt();
+}
 
 std::string web_translator_t::name() const
 {
@@ -88,6 +91,11 @@ void web_translator_t::set_source_language(const std::string & language)
 std::string web_translator_t::source_language() const
 {
 	return m_source_language;
+}
+
+void web_translator_t::set_system_prompt(const std::string & prompt)
+{
+	m_config.system_prompt = prompt.empty() ? web_translator_config::default_system_prompt() : prompt;
 }
 
 const web_translator_config_t & web_translator_t::config() const

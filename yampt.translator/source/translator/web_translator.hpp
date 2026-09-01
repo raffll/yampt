@@ -38,6 +38,8 @@ public:
 	void set_source_language(const std::string & language);
 	std::string source_language() const;
 
+	void set_system_prompt(const std::string & prompt);
+
 	const web_translator_config_t & config() const;
 
 	void set_glossary_fn(std::function<std::string(const std::string &)> glossary_fn);

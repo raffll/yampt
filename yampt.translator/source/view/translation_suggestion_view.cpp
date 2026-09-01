@@ -238,6 +238,7 @@ void translation_suggestion_view_t::apply_provider_settings(const settings_store
 {
 	const int language_index = settings.translation_language_index();
 	const auto source_language = settings.foreign_language();
+	const auto shared_prompt = settings.translation_prompt();
 
 	m_target_language = settings.native_language();
 
@@ -259,6 +260,9 @@ void translation_suggestion_view_t::apply_provider_settings(const settings_store
 
 		web_provider->set_provider_settings(provider_settings);
 		web_provider->set_source_language(source_language);
+
+		if (config.kind == provider_kind_t::chat_completion)
+			web_provider->set_system_prompt(shared_prompt);
 	}
 
 	if (m_languages.empty())

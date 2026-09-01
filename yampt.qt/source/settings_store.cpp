@@ -171,6 +171,16 @@ void settings_store_t::set_translation_language_index(int index)
 	m_settings.setValue("Translation/LanguageIndex", index);
 }
 
+std::string settings_store_t::translation_prompt() const
+{
+	return m_settings.value("Translation/SystemPrompt", "").toString().toStdString();
+}
+
+void settings_store_t::set_translation_prompt(const std::string & prompt)
+{
+	m_settings.setValue("Translation/SystemPrompt", QString::fromStdString(prompt));
+}
+
 std::string settings_store_t::shortcut(const std::string & action_name) const
 {
 	const auto key = QString("Shortcuts/") + QString::fromStdString(action_name);

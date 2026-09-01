@@ -2,6 +2,7 @@
 #include "language_settings_view.hpp"
 #include <io/codepage.hpp>
 #include <utility/language_config.hpp>
+#include <algorithm>
 #include <filesystem>
 #include <settings_store.hpp>
 #include <QComboBox>
@@ -33,8 +34,14 @@ language_settings_view_t::language_settings_view_t(const std::string & dictionar
 	m_foreign_language_combo = new QComboBox(this);
 	m_native_language_combo = new QComboBox(this);
 
-	const auto & languages = get_languages();
-	for (const auto & lang : languages)
+	auto sorted_languages = get_languages();
+	std::sort(
+	    sorted_languages.begin(),
+	    sorted_languages.end(),
+	    [](const language_entry_t & first, const language_entry_t & second)
+	{ return first.display_name < second.display_name; });
+
+	for (const auto & lang : sorted_languages)
 	{
 		const auto display = QString::fromStdString(lang.display_name);
 		const auto code = QString::fromStdString(lang.code);
@@ -74,7 +81,6 @@ language_settings_view_t::language_settings_view_t(const std::string & dictionar
 
 	auto * encoding_form = new QFormLayout;
 	m_encoding_note = new QLabel(this);
-	m_encoding_note->setStyleSheet("color: rgb(120, 120, 120); font-size: 11px;");
 	encoding_form->addRow(tr("Encoding:"), m_encoding_note);
 	layout->addLayout(encoding_form);
 

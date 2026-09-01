@@ -447,6 +447,12 @@ TEST_CASE("view_tree_format::make_sub_label, SCPT SCDT context override", "[u]")
 	REQUIRE(label == "SCDT - Bytecode");
 }
 
+TEST_CASE("view_tree_format::make_sub_label, SCPT SCTX no parent name doubling", "[u]")
+{
+	auto label = make_sub_label("SCTX", "SCPT", 100);
+	REQUIRE(label == "SCTX - Script Source");
+}
+
 TEST_CASE("view_tree_format::make_sub_label, ALCH TEXT context override", "[u]")
 {
 	auto label = make_sub_label("TEXT", "ALCH", 20);

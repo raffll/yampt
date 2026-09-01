@@ -56,6 +56,9 @@ public:
 	int translation_language_index() const;
 	void set_translation_language_index(int index);
 
+	std::string translation_prompt() const;
+	void set_translation_prompt(const std::string & prompt);
+
 	std::string shortcut(const std::string & action_name) const;
 	void set_shortcut(const std::string & action_name, const std::string & key_sequence);
 

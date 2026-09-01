@@ -10,6 +10,7 @@
 class QComboBox;
 class QLabel;
 class QLineEdit;
+class QPlainTextEdit;
 class QPushButton;
 class QTableWidget;
 class QVBoxLayout;
@@ -45,6 +46,7 @@ private:
 
 	void build_local_models_section(QVBoxLayout * parent, const std::string & models_dir);
 	void build_provider_card(QVBoxLayout * parent, const web_translator_config_t & config);
+	void build_prompt_tab(QVBoxLayout * parent);
 	void build_examples_tab(QVBoxLayout * parent);
 	void rebuild_examples_table();
 	void update_status(const provider_card_t & card);
@@ -54,6 +56,8 @@ private:
 	std::vector<web_translator_config_t> m_configs;
 	std::vector<setting_widget_t> m_setting_widgets;
 	std::vector<provider_card_t> m_provider_cards;
+
+	QPlainTextEdit * m_prompt_edit = nullptr;
 
 	std::vector<translation_example_t> m_examples;
 	QTableWidget * m_examples_table = nullptr;
