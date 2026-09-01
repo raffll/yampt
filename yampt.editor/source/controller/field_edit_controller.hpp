@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../model/edit_history.hpp"
+#include "../model/edit_log.hpp"
 #include <decoder/sub_record_schema.hpp>
 #include <io/codepage.hpp>
 #include <string>

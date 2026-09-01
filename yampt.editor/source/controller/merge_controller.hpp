@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../model/edit_history.hpp"
+#include "../model/edit_log.hpp"
 #include "../model/view_tree_model.hpp"
 #include "../patcher/patch_builder.hpp"
 #include <functional>

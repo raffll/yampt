@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../model/edit_history.hpp"
+#include "../model/edit_log.hpp"
 #include <vector>
 #include <QWidget>
 
@@ -13,7 +13,7 @@ class history_view_t : public QWidget
 public:
 	explicit history_view_t(QWidget * parent = nullptr);
 
-	void update_history(const std::vector<edit_history_entry_t> & entries);
+	void update_history(const std::vector<edit_log_entry_t> & entries);
 	void clear();
 
 private:

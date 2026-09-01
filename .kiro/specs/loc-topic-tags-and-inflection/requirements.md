@@ -102,6 +102,28 @@ This floods `.top` with wrong forms, wastes the 50-form budget on invalid varian
 5.3 All three files remain tab-separated `key\tvalue`, codepage-encoded, with the existing skip/encode/dedup and collision-warning behavior.
 5.4 Entries shorter than the existing minimum length threshold continue to be skipped.
 
+### R7 — Apply Topic Tags lives on the dictionary right-click menu
+
+7.1 In yTranslator the whole-document "Apply Topic Tags" action SHALL be invoked from the dictionary's right-click (context) menu in the sidebar, targeting the right-clicked dictionary.
+7.2 The action SHALL be removed from the Tools menu; it is no longer a global menu action.
+7.3 The action SHALL operate on the dictionary that was right-clicked, not on whichever document happens to be active.
+7.4 The action SHALL only appear for dictionary documents, not for localization files (see R8).
+
+### R8 — Apply Topic Tags only for dictionaries
+
+8.1 The Apply Topic Tags operation SHALL apply only to dictionary documents; it SHALL NOT apply to localization documents (`.top`, `.mrk`, `.yaml`).
+8.2 The right-click "Apply Topic Tags" action SHALL be offered only for dictionaries, never for a localization document.
+8.3 Loc-file generation (`.cel`/`.top`/`.mrk`) is unaffected — R8 concerns the in-workbench tagging action only, not the OpenMW files yampt produces.
+
+### R9 — Localization inflection entries appear in the Annotations tab
+
+The `.top` and `.mrk` files hold inflected forms mapping to a standard form. These entries belong alongside the existing Hyperlinks and Glossary contextual data.
+
+9.1 Localization-file entries (the inflected-form → standard-form pairs from a loaded `.top`/`.mrk`/`.yaml` document) SHALL be shown in the Annotations tab under a new section titled **"— Inflection —"**.
+9.2 The new Inflection section SHALL sit alongside the existing Hyperlinks and Glossary sections in the same list, using the same section-header style (its own distinct header color).
+9.3 Each inflection entry SHALL display as `form → standard form` consistent with the other annotation rows, and clicking it SHALL copy the standard form like other annotation rows.
+9.4 When no localization inflection data is loaded, the Inflection section SHALL NOT appear (empty sections are omitted, matching the existing Hyperlinks/Glossary behavior).
+
 ### R6 — Correctness is verified by unit tests
 
 6.1 Unit tests cover explicit-link preservation: source with one link, multiple links, pseudo-asterisks, and text mixing links with plain text, asserting the translated output keeps the tags in order.

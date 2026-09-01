@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-struct edit_history_entry_t
+struct edit_log_entry_t
 {
 	std::string timestamp;
 	std::string plugin_filename;
@@ -26,7 +26,7 @@ struct record_removal_record_t
 	std::string record_id;
 };
 
-class edit_history_t
+class edit_log_t
 {
 public:
 	void record_field_edit(const field_edit_record_t & edit);
@@ -34,10 +34,10 @@ public:
 
 	void clear();
 
-	const std::vector<edit_history_entry_t> & entries() const;
+	const std::vector<edit_log_entry_t> & entries() const;
 
 private:
 	void append(const std::string & plugin_filename, const std::string & description);
 
-	std::vector<edit_history_entry_t> m_entries;
+	std::vector<edit_log_entry_t> m_entries;
 };

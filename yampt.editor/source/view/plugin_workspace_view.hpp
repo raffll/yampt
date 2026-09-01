@@ -6,7 +6,7 @@
 #include "../model/lua_tree_model.hpp"
 #include "../model/nav_tree_model.hpp"
 #include "../session/plugin_session.hpp"
-#include "../model/edit_history.hpp"
+#include "../model/edit_log.hpp"
 #include "history_view.hpp"
 #include "lua_tree_view.hpp"
 #include "messages_view.hpp"
@@ -142,7 +142,7 @@ private:
 	history_view_t * m_history_view = nullptr;
 	QTabWidget * m_bottom_tabs = nullptr;
 
-	edit_history_t m_edit_history;
+	edit_log_t m_edit_history;
 
 	lua_scan_worker_t * m_lua_scan_worker = nullptr;
 	lua_scan_result_t m_lua_scan_result;

@@ -114,6 +114,32 @@ Pure Hunspell cannot verify grammatical agreement between words. The pragmatic r
 
 The pure combination + validation logic is extracted so it is unit-testable by injecting a small stub form-provider/validator (no real Hunspell load — R6.5).
 
+## Component 4 — Apply Topic Tags on the dictionary right-click menu (R7, R8)
+
+The whole-document Apply Topic Tags action moves off the Tools menu onto the sidebar's dictionary right-click (context) menu, so it targets the right-clicked dictionary rather than the active document.
+
+- Remove the `apply_tags_action` from the Tools menu in `main_window_setup.cpp`.
+- Add an "Apply Topic Tags" entry to the sidebar's document context menu, shown only when the right-clicked item is a dictionary document (not a `.top`/`.mrk`/`.yaml` loc document). The action passes the right-clicked document to the controller.
+- The controller method (`dict_operations_controller_t::on_apply_tags`) is adjusted to operate on the supplied dictionary rather than the active document. Its core behavior (seed from DIAL, refresh tags, edit-history record, `data_mut()` + `modified_records_insert` + `set_dirty(true)`, no `commit()`) is unchanged.
+- Loc documents are excluded at the menu level (R8): the action is not added for them, so `apply_topic_tags` is never invoked on a loc document.
+
+Follows the Main Window Anti-Gravity Rule (logic stays in the controller / context-menu builder, not `main_window_t`) and the gui-tooltips rule for the menu action.
+
+## Component 5 — Loc inflection entries in the Annotations tab (R9)
+
+`annotations_view_t` already renders sectioned rows via `add_annotation_section(header_text, color)` (existing sections: `--- Hyperlinks ---` blue, `--- Glossary ---` green). Add a third section for localization inflection data.
+
+- Add a new annotation kind for inflection entries (e.g. `annotation_t::inflection_form`) sourced from a loaded `.top`/`.mrk`/`.yaml` document's entries (form → standard form).
+- The glossary/annotation builder (`glossary_t` / annotation rebuild path) contributes these entries when a loc document is loaded, keyed like the other kinds (`old_text` = inflected form, `new_text` = standard form, `source` = loc filename).
+- In `annotations_view_t::update_annotations`, after the Glossary section, add:
+  ```cpp
+  const auto inflection = deduplicate_and_sort(annotations, annotation_t::inflection_form);
+  add_annotation_section(m_list, inflection, tr("--- Inflection ---"), QColor(...));
+  ```
+  with a distinct header color. Empty section omitted automatically (R9.4). Clicking copies `new_text` (the standard form) like the other rows (R9.3).
+
+The section header text uses the same `--- X ---` convention already in the widget; the requirement's "— Inflection —" is that section title.
+
 ## Files
 
 New:
@@ -123,6 +149,9 @@ Modified:
 - `yampt.core/source/creator/inflection.cpp` — replace one-word-at-a-time generation with bounded product + validation; extract pure combination logic.
 - `yampt.cli/source/interface/user_interface.hpp/.cpp` — `--apply-tags` command + `apply_tags()` handler.
 - `yampt.translator/source/...` — controller method + menu/toolbar action for whole-document "Apply Topic Tags"; wiring only.
+- `yampt.translator/source/main_window_setup.cpp` — remove the Tools-menu Apply Topic Tags action (R7.2).
+- `yampt.translator/source/...` sidebar context menu — add the dictionary-only "Apply Topic Tags" entry (R7).
+- `yampt.translator/source/view/annotations_view.cpp` + the annotation/glossary builder — new `--- Inflection ---` section for loc inflection entries (R9); new `annotation_t::inflection_form` kind.
 - vcxproj / vcxproj.filters for `yampt.core` (new files) and `yampt.tests` (new test files) per project-paths rules.
 - Docs: CLI manual + README/CHANGELOG for the user-visible apply-tags feature (per changelog/doc rules).
 

@@ -103,6 +103,11 @@ loc_types::loc_file_kind_t loc_document_t::file_kind() const
 	return m_file.file_kind;
 }
 
+const std::vector<loc_types::loc_entry_t> & loc_document_t::entries() const
+{
+	return m_file.entries;
+}
+
 void loc_document_t::reload()
 {
 	m_file = loc_file_reader::read(m_path, m_codepage);

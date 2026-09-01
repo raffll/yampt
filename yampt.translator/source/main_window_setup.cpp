@@ -128,18 +128,6 @@ void main_window_t::setup_menu_bar()
 			m_dict_ops_controller->on_merge();
 	});
 
-	auto * apply_tags_action = tools_menu->addAction(tr("&Apply Topic Tags"));
-	apply_tags_action->setToolTip(tr("Wrap dialogue topics in @...# hyperlink tags"));
-	connect(
-	    apply_tags_action,
-	    &QAction::triggered,
-	    this,
-	    [this]()
-	{
-		if (m_dict_ops_controller)
-			m_dict_ops_controller->on_apply_tags();
-	});
-
 	tools_menu->addSeparator();
 	m_settings_action = tools_menu->addAction(tr("&Preferences..."));
 	m_settings_action->setShortcut(QKeySequence("Ctrl+,"));
@@ -579,6 +567,22 @@ void main_window_t::connect_sidebar_signals()
 	    &sidebar_view_t::generate_loc_requested,
 	    this,
 	    [this](const std::string & path) { m_sidebar_controller->on_generate_loc_requested(path); });
+
+	connect(
+	    m_sidebar,
+	    &sidebar_view_t::apply_tags_requested,
+	    this,
+	    [this](const std::string & path)
+	{
+		auto * doc = m_session.open(path);
+		auto * dict_doc = dynamic_cast<dict_document_t *>(doc);
+		if (!dict_doc)
+			return;
+
+		switch_document(dict_doc);
+		if (m_dict_ops_controller)
+			m_dict_ops_controller->on_apply_tags(dict_doc);
+	});
 
 	connect(
 	    m_sidebar,

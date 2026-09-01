@@ -24,7 +24,7 @@ history_view_t::history_view_t(QWidget * parent)
 	layout->addWidget(scroll_area);
 }
 
-void history_view_t::update_history(const std::vector<edit_history_entry_t> & entries)
+void history_view_t::update_history(const std::vector<edit_log_entry_t> & entries)
 {
 	clear();
 

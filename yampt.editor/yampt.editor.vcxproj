@@ -190,7 +190,7 @@
     <ClCompile Include="source\model\view_tree_decode.cpp" />
     <ClCompile Include="source\model\view_tree_decode_cell.cpp" />
     <ClCompile Include="source\model\view_tree_decode_lists.cpp" />
-    <ClCompile Include="source\model\edit_history.cpp" />
+    <ClCompile Include="source\model\edit_log.cpp" />
     <ClCompile Include="source\dialog\plugin_select_dialog.cpp" />
     <ClCompile Include="source\dialog\filter_dialog.cpp" />
     <ClCompile Include="source\view\messages_view.cpp" />
@@ -215,7 +215,7 @@
     <ClInclude Include="source\model\nav_tree_filter.hpp" />
     <ClInclude Include="source\model\filter_composer.hpp" />
     <ClInclude Include="source\model\editable_column_set.hpp" />
-    <ClInclude Include="source\model\edit_history.hpp" />
+    <ClInclude Include="source\model\edit_log.hpp" />
     <ClInclude Include="source\patcher\patch_builder.hpp" />
     <ClInclude Include="source\view\count_label_format.hpp" />
   </ItemGroup>

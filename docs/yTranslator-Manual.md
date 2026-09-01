@@ -18,7 +18,7 @@ Open File → Add Folder and point it to a directory containing your plugins and
 
 Files are color-coded by type: green for plugins, gold for base dictionaries, blue for user dictionaries, purple for YAML localization files. An asterisk prefix indicates unsaved changes.
 
-Right-click a file or folder to access its context menu. Plugins offer Make Dictionary, Make Base Dictionary, Convert Plugin, Convert Plugin with Hyperlinks, Create Patch Plugin, and Delete. Dictionaries offer Save, Generate Localization Files, and Delete. YAML foreign files offer Make Translation (creates a native scaffold) and Delete. YAML native files offer Save and Delete. Localization files (.cel, .mrk, .top) offer Delete. Folders offer Remove Folder (unload from sidebar) and Delete Folder (remove from disk).
+Right-click a file or folder to access its context menu. Plugins offer Make Dictionary, Make Base Dictionary, Convert Plugin, Convert Plugin with Hyperlinks, Create Patch Plugin, and Delete. Dictionaries offer Save, Apply Topic Tags, Generate Localization Files, and Delete. YAML foreign files offer Make Translation (creates a native scaffold) and Delete. YAML native files offer Save and Delete. Localization files (.cel, .mrk, .top) offer Delete. Folders offer Remove Folder (unload from sidebar) and Delete Folder (remove from disk).
 
 ## Operations
 
@@ -66,6 +66,10 @@ Right-click a dictionary in the sidebar and select Generate Localization Files. 
 - **.top** — maps all grammatical forms of native topic names to their canonical (nominative) form. When a topic appears in an inflected form inside dialog text, OpenMW uses this file to match it back to the correct topic. Forms are generated using the Hunspell dictionary configured in Language settings.
 
 Only entries with status Translated and where the original differs from the translation are included. The output files use the codepage set in Language settings.
+
+### Apply Topic Tags
+
+Right-click a dictionary in the sidebar and select Apply Topic Tags. This scans every translatable entry in that dictionary and wraps any dialogue topic it finds in the translated text with hyperlink tags, so the topics appear as clickable links in-game. It is a refresh: existing tags are removed first and re-inserted from the current set of topics, so running it again does not nest or duplicate tags. Each changed entry is recorded in history and can be reverted, and a summary of the changes is written to the log. The action is offered only for dictionaries, not for localization files.
 
 ### Find/Replace
 
@@ -139,6 +143,8 @@ The Annotations tab shows contextual information about the currently selected en
 For INFO entries, the panel shows the speaker's NPC name and gender when available. For FNAM entries belonging to weapons, armor, clothing, or books, it shows the enchantment ID if the item is enchanted. These metadata fields help translators choose correct grammatical forms in languages where gender or item properties affect the translation.
 
 The Original and Translation panels also highlight recognized terms inline: dialog topic names appear in blue (matching known DIAL entries), and glossary terms from loaded base dictionaries appear in green.
+
+When a localization file (.top or .mrk) is the selected document, the Annotations tab lists its entries under an Inflection section, showing each inflected form and the standard form it maps to. Clicking an entry copies the standard form.
 
 ## Auto Translate
 

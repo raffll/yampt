@@ -1,5 +1,7 @@
 #include "record_display_controller.hpp"
+#include "../editor/loc_inflection_annotations.hpp"
 #include "../model/dict_document.hpp"
+#include "../model/loc_document.hpp"
 #include "../view/annotations_view.hpp"
 #include "../view/book_preview_view.hpp"
 #include "../view/editor_view.hpp"
@@ -9,6 +11,16 @@
 #include <utility/string_utils.hpp>
 #include <QString>
 #include <QTextCursor>
+
+static void append_loc_inflection_annotations(std::vector<annotation_t> & annotations, document_t * active_doc)
+{
+	auto * loc_doc = dynamic_cast<loc_document_t *>(active_doc);
+	if (!loc_doc)
+		return;
+
+	const auto loc_annotations = loc_inflection_annotations::build(loc_doc->file_kind(), loc_doc->entries());
+	annotations.insert(annotations.end(), loc_annotations.begin(), loc_annotations.end());
+}
 
 record_display_controller_t::record_display_controller_t(record_display_deps_t deps)
     : m_deps(std::move(deps))
@@ -37,8 +49,10 @@ void record_display_controller_t::load_record(int row, document_t * active_doc)
 
 	load_book_preview(row_data, active_doc);
 
+	auto view_annotations = load_result.annotations;
+	append_loc_inflection_annotations(view_annotations, active_doc);
 	m_deps.annotations_view.update_annotations(
-	    load_result.annotations, load_result.speaker_name, load_result.gender, load_result.enchantment);
+	    view_annotations, load_result.speaker_name, load_result.gender, load_result.enchantment);
 
 	m_deps.translation_suggestion_view.set_source_text(row_data->old_text);
 
@@ -301,7 +315,8 @@ void record_display_controller_t::update_annotations(document_t * active_doc)
 	if (!row_data)
 		return;
 
-	const auto annotations = m_deps.glossary.annotate(row_data->old_text, row_data->type);
+	auto annotations = m_deps.glossary.annotate(row_data->old_text, row_data->type);
+	append_loc_inflection_annotations(annotations, active_doc);
 
 	std::string speaker_name;
 	std::string gender_str;

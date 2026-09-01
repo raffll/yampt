@@ -16,7 +16,8 @@ struct annotation_t
 		dial_topic,
 		glossary_term,
 		speaker_gender,
-		loc_coverage
+		loc_coverage,
+		inflection_form
 	};
 
 	kind_t kind;

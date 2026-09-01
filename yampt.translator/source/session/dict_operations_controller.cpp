@@ -178,17 +178,10 @@ void dict_operations_controller_t::on_merge()
 	}
 }
 
-void dict_operations_controller_t::on_apply_tags()
+void dict_operations_controller_t::on_apply_tags(dict_document_t * dict_doc)
 {
-	auto * dict_doc = m_deps.active_dict_document ? m_deps.active_dict_document() : nullptr;
 	if (!dict_doc)
-	{
-		QMessageBox::information(
-		    m_deps.parent_widget,
-		    QCoreApplication::translate("yTranslator", "Apply Topic Tags"),
-		    QCoreApplication::translate("yTranslator", "Open a dictionary before applying topic tags."));
 		return;
-	}
 
 	topic_tagger_t tagger;
 	tagger.seed_topics(dict_doc->data());

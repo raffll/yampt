@@ -30,7 +30,7 @@ public:
 	explicit dict_operations_controller_t(dict_operations_deps_t deps);
 
 	void on_merge();
-	void on_apply_tags();
+	void on_apply_tags(dict_document_t * dict_doc);
 
 private:
 	dict_operations_deps_t m_deps;

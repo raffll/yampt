@@ -114,6 +114,9 @@ void annotations_view_t::update_annotations(
 
 	const auto glossary = deduplicate_and_sort(annotations, annotation_t::glossary_term);
 	add_annotation_section(m_list, glossary, tr("--- Glossary ---"), QColor(50, 150, 50));
+
+	const auto inflection = deduplicate_and_sort(annotations, annotation_t::inflection_form);
+	add_annotation_section(m_list, inflection, tr("--- Inflection ---"), QColor(190, 140, 60));
 }
 
 void annotations_view_t::on_item_clicked(QListWidgetItem * item)

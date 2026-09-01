@@ -2,18 +2,16 @@
 
 both apps: backup saved files — before overwriting a file on save, copy it to a `.bak` in the same folder as the original. One on/off checkbox in a new "Backup" settings tab, in both yTranslator and yEditor. Spec first.
 
-translator: whole-dictionary spell check — scan every entry's translation for typos using the native-language Hunspell dictionary, ignore all-uppercase words (acronyms/tags), and mark records that contain misspellings with a new status so they can be filtered and reviewed.
+translator: whole-dictionary spell check — scan every entry's translation for typos using the native-language Hunspell dictionary, ignoring all-uppercase words (acronyms/tags). Mark entries that contain misspellings with a new `misspelled` status (added to status_types) so they can be filtered and reviewed. `misspelled` is NOT an approved status — it is skipped during --convert/--create like every non-`translated` status.
 
-translator: move adding hyperlink tags to dict right click menu
-trabsaktor: loc files dont need tags
-translator: loc files should be in annottaion tab
-translator: prompt shuld be filed with default by default and there is not need to lowercase and uppercase {{}} language tags
-trabslator -> rename Merge DIctionary to DIctionary Merger and add output filename edit box in dialog
+translator: simplify the AI prompt — keep only one language-variable pair (drop the `{{..._upper}}` variants). The source/target language is substituted automatically when the prompt is built; the language template variables are not exposed to the user. The Prompt settings box shows only the editable non-technical instruction text, pre-filled with the default instruction; the technical/language part is fixed and not editable.
 
-editor: drag & drop cell between plugins if edit is enabled
-editor: if nav row changed, reset also edit
-editor: prefix for validation text
-editor: Revert button in history
+translator: rename "Merge Dictionaries" to "Dictionary Merger" (menu action and dialog title). Add an output-filename edit box in the merge dialog, defaulting to a name derived from the inputs (e.g. `dict1+dict2_MERGED.json`).
+
+editor: drag & drop a decoded cell value between plugin columns when Enable Editing is on — dropping onto another plugin column applies the value as a field edit; dropping onto the merged-patch column copies it into the merge. Both are recorded in the History tab.
+editor: when the nav selection changes, also reset/clear the Edit panel
+editor: prefix the validation message text with "Error: "
+editor: Revert button in the History tab
 
 maybe:
-editor: [TAGS] insetad of icons, for Guard Patch, Exclude from Merged, Active Plugin, Overriden by Override OR multiple icons with tooltips
+editor: use text [TAGS] instead of icons for Guard Patch, Exclude from Merged Patch, Active Plugin, Overridden-by-Override — or keep multiple icons but add tooltips

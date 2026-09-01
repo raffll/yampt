@@ -24,31 +24,46 @@ Order: build the pure core first (tagging, strip, dict-wide apply), then the inf
 
 ## 4. Core: fix multi-word phrase inflection
 
-- [ ] 4.1 Write failing unit tests first (test-before-fix): a multi-word phrase must produce the agreeing form and must NOT produce one-word-only invalid mixes; `.top` target is always the nominative phrase; per-phrase cap respected. Use an injected stub form-provider/validator so no real Hunspell load is needed. (R6.2, R6.3, R6.5)
-- [ ] 4.2 Extract the pure combination + validation logic from `inflection.cpp` into a testable unit that takes per-word candidate forms and a validity predicate and returns valid whole-phrase forms, bounded by the per-phrase cap. (R3.1–R3.3, R3.5)
-- [ ] 4.3 Replace `build_candidates_for_position`/`phrase_forms` multi-word path to use the product-and-validate approach; keep single-word path via `word_forms`; keep the nominative standard-form target. (R3.1–R3.4)
-- [ ] 4.4 Confirm the failing tests from 4.1 now pass.
+- [x] 4.1 Write failing unit tests first (test-before-fix): a multi-word phrase must produce the agreeing form and must NOT produce one-word-only invalid mixes; `.top` target is always the nominative phrase; per-phrase cap respected. Use an injected stub form-provider/validator so no real Hunspell load is needed. (R6.2, R6.3, R6.5)
+- [x] 4.2 Extract the pure combination + validation logic from `inflection.cpp` into a testable unit that takes per-word candidate forms and a validity predicate and returns valid whole-phrase forms, bounded by the per-phrase cap. (R3.1–R3.3, R3.5)
+- [x] 4.3 Replace `build_candidates_for_position`/`phrase_forms` multi-word path to use the product-and-validate approach; keep single-word path via `word_forms`; keep the nominative standard-form target. (R3.1–R3.4)
+- [x] 4.4 Confirm the failing tests from 4.1 now pass.
 
 ## 5. CLI: apply-tags batch mode
 
-- [ ] 5.1 Add `--apply-tags` to `parse_command_line` (accept `-d` dict input and `-o` output) and to `run_command` dispatch. (R4.7)
-- [ ] 5.2 Add `user_interface_t::apply_tags()`: load dict via `dict_reader_t`, call `apply_topic_tags`, write via `dict_writer_t`, log an `[info]` summary in CLI style. (R4.7, R4.8)
+- [x] 5.1 Add `--apply-tags` to `parse_command_line` (accept `-d` dict input and `-o` output) and to `run_command` dispatch. (R4.7)
+- [x] 5.2 Add `user_interface_t::apply_tags()`: load dict via `dict_reader_t`, call `apply_topic_tags`, write via `dict_writer_t`, log an `[info]` summary in CLI style. (R4.7, R4.8)
 
 ## 6. yTranslator: whole-document Apply Topic Tags action
 
-- [ ] 6.1 Add a controller method (existing operations controller) that builds topics from the active `dict_document_t::data()`, refreshes `new_text` per translatable record, and for each changed record: records edit history, writes via `data_mut()` + `modified_records_insert` + `set_dirty(true)`, and does NOT call `commit()` (no propagation). (R4.6)
-- [ ] 6.2 Refresh changed table rows and append an `"apply tags"` log summary. (R4.6)
-- [ ] 6.3 Add the menu action (and optional toolbar button with `setToolTip`) wired to the controller method — no logic in `main_window_t`. Follow Auto-Save-Before-Operations if other batch ops prompt to save. (R4.6, gui-tooltips, Anti-Gravity Rule)
+- [x] 6.1 Add a controller method (existing operations controller) that builds topics from the active `dict_document_t::data()`, refreshes `new_text` per translatable record, and for each changed record: records edit history, writes via `data_mut()` + `modified_records_insert` + `set_dirty(true)`, and does NOT call `commit()` (no propagation). (R4.6)
+- [x] 6.2 Refresh changed table rows and append an `"apply tags"` log summary. (R4.6)
+- [x] 6.3 Add the menu action (and optional toolbar button with `setToolTip`) wired to the controller method — no logic in `main_window_t`. Follow Auto-Save-Before-Operations if other batch ops prompt to save. (R4.6, gui-tooltips, Anti-Gravity Rule)
 
 ## 7. Component 2a wiring: tags in the translate flow
 
-- [ ] 7.1 In the translate action path, use the split/reassemble helper: translate link inner phrases as separate segments and re-wrap, reassemble in order; place the tagged result into the editor. Keep orchestration in a helper/controller, not `main_window_t`. (R1.1–R1.4)
+- [x] 7.1 In the translate action path, use the split/reassemble helper: translate link inner phrases as separate segments and re-wrap, reassemble in order; place the tagged result into the editor. Keep orchestration in a helper/controller, not `main_window_t`. (R1.1–R1.4)
+
+## 9. Move Apply Topic Tags to the dictionary right-click menu
+
+- [x] 9.1 Remove the Apply Topic Tags action from the Tools menu in `main_window_setup.cpp`. (R7.2)
+- [x] 9.2 Add an "Apply Topic Tags" entry to the sidebar's document right-click menu, shown only for dictionary documents (not `.top`/`.mrk`/`.yaml`). Wire it (no logic in `main_window_t`) to the controller, passing the right-clicked document. (R7.1, R7.3, R7.4, R8.2, gui-tooltips, Anti-Gravity)
+- [x] 9.3 Adjust `dict_operations_controller_t::on_apply_tags` to operate on the supplied dictionary rather than the active document; guard against loc documents. (R7.3, R8.1)
+
+## 10. Loc inflection entries in the Annotations tab
+
+- [x] 10.1 Add `annotation_t::inflection_form` kind. (R9.1)
+- [x] 10.2 In the annotation/glossary rebuild path, contribute inflection entries (form → standard form) from a loaded `.top`/`.mrk`/`.yaml` document, with `source` = loc filename. (R9.1, R9.3)
+- [x] 10.3 In `annotations_view_t::update_annotations`, add a `--- Inflection ---` section after Glossary with a distinct header color; empty section omitted; click copies the standard form. (R9.1–R9.4)
+- [x] 10.4 Unit-test the inflection-entry contribution/dedup where pure logic allows (`[u]`). (R6.5)
 
 ## 8. Documentation
 
-- [ ] 8.1 Update `docs/yampt-CLI-Manual.md` with the `--apply-tags` mode (explanatory prose, manual-style). (R4.7)
-- [ ] 8.2 Update `README.md`, `docs/README.bbcode` (mirror), and `CHANGELOG.md` under `2.0beta` for the user-visible Apply Topic Tags feature (`[NEW]`). Do not mention tests, scripts, or build changes. (changelog-categories, readme rules)
-- [ ] 8.3 If any user-visible label is added (menu/toolbar text), verify README/manual describe it (sync-docs-with-code).
+- [x] 8.1 Update `docs/yampt-CLI-Manual.md` with the `--apply-tags` mode (explanatory prose, manual-style). (R4.7)
+- [x] 8.2 Update `README.md`, `docs/README.bbcode` (mirror), and `CHANGELOG.md` under `2.0beta` for the user-visible Apply Topic Tags feature (`[NEW]`). Do not mention tests, scripts, or build changes. (changelog-categories, readme rules)
+- [x] 8.3 If any user-visible label is added (menu/toolbar text), verify README/manual describe it (sync-docs-with-code).
+- [x] 8.4 Document that Apply Topic Tags moved from the Tools menu to the dictionary right-click menu (CHANGELOG `[CHANGE]`, yTranslator manual). (R7)
+- [x] 8.5 Document that localization files' inflection entries now show in the Annotations tab under an Inflection section (CHANGELOG `[NEW]`/`[CHANGE]`, yTranslator manual). (R9)
 
 ## Notes
 
