@@ -66,6 +66,8 @@ public:
 
 	void remove_record_from_merge(const std::string & rec_type, const std::string & record_id);
 
+	bool remove_record_from_plugin(int plugin_idx, const std::string & rec_type, const std::string & record_id);
+
 	void save_merged_patch();
 
 	bool save_plugin(int plugin_idx);

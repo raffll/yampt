@@ -441,6 +441,46 @@ void merge_controller_t::remove_record_from_merge(const std::string & rec_type, 
 	m_log("Removed " + rec_type + ":" + record_id + " from merged patch");
 }
 
+bool merge_controller_t::remove_record_from_plugin(
+    int plugin_idx,
+    const std::string & rec_type,
+    const std::string & record_id)
+{
+	if (plugin_idx < 0 || m_session.scan().is_merge_plugin(plugin_idx))
+		return false;
+
+	const auto * entry = m_session.scan().find(rec_type, record_id);
+	if (!entry)
+		return false;
+
+	size_t record_index = 0;
+	bool found = false;
+	for (const auto & version : entry->versions)
+	{
+		if (version.plugin_idx != plugin_idx)
+			continue;
+
+		record_index = version.record_index;
+		found = true;
+		break;
+	}
+
+	if (!found)
+		return false;
+
+	m_session.scan().mutable_plugin(plugin_idx).remove_record(record_index);
+	m_session.mark_plugin_dirty(plugin_idx);
+	m_session.scan().rebuild_conflicts();
+
+	if (m_refresh)
+		m_refresh();
+	else
+		m_nav_view.rebuild_preserving_state();
+
+	m_log("[info] removed " + rec_type + ":" + record_id + " from " + m_session.scan().plugin_filename(plugin_idx));
+	return true;
+}
+
 int merge_controller_t::create_merge_records()
 {
 	auto pinned_records = m_session.scan().collect_pinned_records();

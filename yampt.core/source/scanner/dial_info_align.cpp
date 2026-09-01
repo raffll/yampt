@@ -10,10 +10,11 @@ struct info_insert_record_t
 	std::string inam;
 	std::string prev_inam;
 	std::string display_name;
+	std::string name_text;
 	int source_plugin_idx = -1;
 };
 
-static std::string extract_pnam(plugin_scan_t & scan, int plugin_idx, size_t record_index)
+static std::string extract_sub_text(plugin_scan_t & scan, int plugin_idx, size_t record_index, const std::string & sub_type)
 {
 	const auto content = scan.read_record_content(plugin_idx, record_index);
 	sub_record_iter_t iter(content);
@@ -21,7 +22,7 @@ static std::string extract_pnam(plugin_scan_t & scan, int plugin_idx, size_t rec
 
 	while (iter.next(view))
 	{
-		if (view.type == "PNAM")
+		if (view.type == sub_type)
 			return string_utils::erase_null_chars(std::string(view.data, view.size));
 	}
 
@@ -39,6 +40,7 @@ static std::vector<info_align_entry_t> resolve_openmw_order(
 		std::string display_name;
 		int source_plugin_idx = -1;
 		std::vector<bool> present_in_plugin;
+		std::vector<std::string> text_in_plugin;
 	};
 
 	std::list<ordered_item_t> ordered_list;
@@ -55,7 +57,10 @@ static std::vector<info_align_entry_t> resolve_openmw_order(
 				existing->second->display_name = insert.display_name;
 				existing->second->source_plugin_idx = insert.source_plugin_idx;
 				if (insert.source_plugin_idx >= 0)
+				{
 					existing->second->present_in_plugin[insert.source_plugin_idx] = true;
+					existing->second->text_in_plugin[insert.source_plugin_idx] = insert.name_text;
+				}
 
 				continue;
 			}
@@ -64,7 +69,10 @@ static std::vector<info_align_entry_t> resolve_openmw_order(
 			existing->second->prev_inam = insert.prev_inam;
 			existing->second->source_plugin_idx = insert.source_plugin_idx;
 			if (insert.source_plugin_idx >= 0)
+			{
 				existing->second->present_in_plugin[insert.source_plugin_idx] = true;
+				existing->second->text_in_plugin[insert.source_plugin_idx] = insert.name_text;
+			}
 
 			auto before = ordered_list.begin();
 			if (!insert.prev_inam.empty())
@@ -96,8 +104,12 @@ static std::vector<info_align_entry_t> resolve_openmw_order(
 		item.display_name = insert.display_name;
 		item.source_plugin_idx = insert.source_plugin_idx;
 		item.present_in_plugin.resize(plugin_count, false);
+		item.text_in_plugin.resize(plugin_count);
 		if (insert.source_plugin_idx >= 0)
+		{
 			item.present_in_plugin[insert.source_plugin_idx] = true;
+			item.text_in_plugin[insert.source_plugin_idx] = insert.name_text;
+		}
 
 		auto inserted = ordered_list.insert(before, std::move(item));
 		position_map[insert.inam] = inserted;
@@ -114,6 +126,7 @@ static std::vector<info_align_entry_t> resolve_openmw_order(
 		entry.display_name = item.display_name;
 		entry.source_plugin_idx = item.source_plugin_idx;
 		entry.present_in_plugin = item.present_in_plugin;
+		entry.text_in_plugin = item.text_in_plugin;
 		result.push_back(std::move(entry));
 	}
 
@@ -148,12 +161,16 @@ dial_info_align_result_t dial_info_align_t::build(plugin_scan_t & scan, const st
 			const auto inam = (separator_pos != std::string::npos) ? plugin_entry.record_id.substr(separator_pos + 1)
 			                                                       : plugin_entry.record_id;
 
-			const auto prev_inam = extract_pnam(scan, static_cast<int>(plugin_idx), plugin_entry.record_index);
+			const auto prev_inam =
+			    extract_sub_text(scan, static_cast<int>(plugin_idx), plugin_entry.record_index, "PNAM");
+			const auto name_text =
+			    extract_sub_text(scan, static_cast<int>(plugin_idx), plugin_entry.record_index, "NAME");
 
 			info_insert_record_t insert;
 			insert.inam = inam;
 			insert.prev_inam = prev_inam;
 			insert.display_name = plugin_entry.display_name;
+			insert.name_text = name_text;
 			insert.source_plugin_idx = static_cast<int>(plugin_idx);
 			inserts.push_back(std::move(insert));
 		}

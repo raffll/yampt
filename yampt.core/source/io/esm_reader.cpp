@@ -82,6 +82,28 @@ void esm_reader_t::replace_record(const std::string & content)
 	ptr_record->size = content.size();
 }
 
+void esm_reader_t::remove_record(size_t index)
+{
+	if (!m_loaded || index >= m_records.size())
+		return;
+
+	std::vector<record_t> kept_records;
+	kept_records.reserve(m_records.size() - 1);
+	for (size_t i = 0; i < m_records.size(); ++i)
+	{
+		if (i == index)
+			continue;
+
+		kept_records.push_back(m_records[i]);
+	}
+
+	m_records = std::move(kept_records);
+
+	ptr_record = nullptr;
+	m_key = {};
+	m_value = {};
+}
+
 void esm_reader_t::set_modified(size_t index)
 {
 	if (m_loaded)

@@ -5,6 +5,7 @@
 #include <QWidget>
 
 class QComboBox;
+class QLabel;
 class QTextEdit;
 class QPushButton;
 class QModelIndex;
@@ -47,6 +48,7 @@ private:
 
 	QTextEdit * m_left_edit = nullptr;
 	QTextEdit * m_right_edit = nullptr;
+	QLabel * m_validation_label = nullptr;
 	QComboBox * m_value_selector = nullptr;
 	QPushButton * m_apply_button = nullptr;
 

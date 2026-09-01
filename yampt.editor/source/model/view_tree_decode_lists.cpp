@@ -196,38 +196,36 @@ void view_tree_model_t::set_record_dial(
 		info_row.values.resize(col_count);
 		info_row.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
 
-		bool all_same = true;
-		bool any_present = false;
-
 		for (size_t col = 0; col < col_count; ++col)
 		{
 			const int plugin_idx = (col < m_column_plugin_indices.size()) ? m_column_plugin_indices[col] : -1;
 
-			if (plugin_idx < 0 || plugin_idx >= static_cast<int>(info_entry.present_in_plugin.size()))
+			const bool present = plugin_idx >= 0 &&
+			    plugin_idx < static_cast<int>(info_entry.present_in_plugin.size()) &&
+			    info_entry.present_in_plugin[plugin_idx];
+
+			if (!present)
 			{
 				info_row.values[col] = non_existent_value;
 				continue;
 			}
 
-			if (info_entry.present_in_plugin[plugin_idx])
-			{
-				info_row.values[col] = "\xE2\x9C\x93";
-				any_present = true;
-			}
-			else
-			{
-				info_row.values[col] = non_existent_value;
-				all_same = false;
-			}
+			info_row.values[col] = info_entry.text_in_plugin[plugin_idx];
 		}
 
+		bool all_same = true;
+		for (size_t col = 1; col < col_count; ++col)
+		{
+			if (info_row.values[col] != info_row.values[0])
+			{
+				all_same = false;
+				break;
+			}
+		}
 		info_row.all_identical = all_same;
 
-		if (col_count <= 1)
-			info_row.row_conflict_all = conflict_all_t::only_one;
-		else
-			info_row.row_conflict_all =
-			    (any_present && !all_same) ? conflict_all_t::override_benign : conflict_all_t::no_conflict;
+		info_row.row_conflict_all = record_conflict::compute_conflict_all_skip_empty(info_row.values);
+		info_row.cell_conflict_this = record_conflict::compute_conflict_this_skip_empty(info_row.values);
 
 		m_rows.push_back(std::move(info_row));
 	}

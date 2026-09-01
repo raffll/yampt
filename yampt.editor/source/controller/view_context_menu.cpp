@@ -8,6 +8,7 @@
 #include <utility/record_behavior.hpp>
 #include <QCoreApplication>
 #include <QMenu>
+#include <QMessageBox>
 
 view_context_menu_t::view_context_menu_t(
     plugin_session_t & session,
@@ -39,6 +40,12 @@ void view_context_menu_t::show_nav_menu(const QPoint & global_pos, const nav_tre
 		menu.addAction(
 		    QCoreApplication::translate("yEditor", "Remove Record from Merged Patch"),
 		    [this, info]() { m_merge.remove_record_from_merge(info.rec_type, info.record_id); });
+	}
+	else if (!info.record_id.empty() && !is_merge)
+	{
+		menu.addAction(
+		    QCoreApplication::translate("yEditor", "Remove Record from Plugin"),
+		    [this, info]() { confirm_remove_record_from_plugin(info); });
 	}
 	else if (info.rec_type.empty() && info.record_id.empty() && !is_merge)
 	{
@@ -119,6 +126,32 @@ void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_mo
 		m_session.save_session_state(settings_store_t::settings_dir() + "yEditor.ini");
 		m_nav_view.rebuild_preserving_state();
 	});
+}
+
+void view_context_menu_t::confirm_remove_record_from_plugin(const nav_tree_model_t::node_info_t & info)
+{
+	const auto & filename = m_session.scan().plugin_filename(info.plugin_idx);
+
+	const auto title = QCoreApplication::translate("yEditor", "Remove Record");
+	const auto message = QCoreApplication::translate(
+	                         "yEditor",
+	                         "Remove record %1:%2 from \"%3\"?\n\nThis cannot be undone. The record is dropped from the "
+	                         "plugin in memory and disappears from the file when you save it.")
+	                         .arg(QString::fromStdString(info.rec_type))
+	                         .arg(QString::fromStdString(info.record_id))
+	                         .arg(QString::fromStdString(filename));
+
+	const auto choice =
+	    QMessageBox::question(nullptr, title, message, QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+
+	if (choice != QMessageBox::Yes)
+		return;
+
+	if (!m_merge.remove_record_from_plugin(info.plugin_idx, info.rec_type, info.record_id))
+		return;
+
+	if (m_on_unsaved_changed)
+		m_on_unsaved_changed(m_session.has_any_unsaved());
 }
 
 void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModelIndex & index)

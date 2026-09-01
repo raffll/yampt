@@ -45,12 +45,19 @@ static std::string make_dial_record(const std::string & topic_name, uint8_t dial
 	    make_sub("NAME", make_string(topic_name)) + make_sub("DATA", std::string(1, static_cast<char>(dial_type))));
 }
 
-static std::string make_info_record(const std::string & inam, const std::string & onam, const std::string & pnam = "")
+static std::string make_info_record(
+    const std::string & inam,
+    const std::string & onam,
+    const std::string & pnam = "",
+    const std::string & name_text = "")
 {
 	auto subs = make_sub("INAM", make_string(inam));
 	subs += make_sub("PNAM", make_string(pnam));
 	if (!onam.empty())
 		subs += make_sub("ONAM", make_string(onam));
+
+	if (!name_text.empty())
+		subs += make_sub("NAME", make_string(name_text));
 
 	return make_record("INFO", subs);
 }
@@ -90,6 +97,30 @@ TEST_CASE("dial_info_align_t::build, collects INFOs for a DIAL", "[i]")
 	REQUIRE(result.entries[1].display_name == "NPC_B");
 	REQUIRE(result.entries[0].present_in_plugin[0] == true);
 	REQUIRE(result.entries[1].present_in_plugin[0] == true);
+
+	fs::remove(path);
+}
+
+TEST_CASE("dial_info_align_t::build, captures NAME response text per plugin", "[i]")
+{
+	namespace fs = std::filesystem;
+
+	auto plugin_content = make_tes3_record() + make_dial_record("Greeting", 2) +
+	                      make_info_record("info1", "NPC_A", "", "Hello there.") +
+	                      make_info_record("info2", "NPC_B", "info1", "");
+
+	auto path = get_temp_path("yampt_test_dial_align_text.esm");
+	write_binary_file(path, plugin_content);
+
+	plugin_scan_t scan;
+	scan.load_plugin(path);
+	scan.rebuild_conflicts();
+
+	auto result = dial_info_align_t::build(scan, "Greeting");
+
+	REQUIRE(result.entries.size() == 2);
+	REQUIRE(result.entries[0].text_in_plugin[0] == "Hello there.");
+	REQUIRE(result.entries[1].text_in_plugin[0].empty());
 
 	fs::remove(path);
 }

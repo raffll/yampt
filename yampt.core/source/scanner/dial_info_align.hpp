@@ -11,6 +11,7 @@ struct info_align_entry_t
 	std::string display_name;
 	int source_plugin_idx = -1;
 	std::vector<bool> present_in_plugin;
+	std::vector<std::string> text_in_plugin;
 };
 
 struct dial_info_align_result_t

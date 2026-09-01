@@ -15,6 +15,7 @@ public:
 
 	void select_record(size_t index);
 	void replace_record(const std::string & content);
+	void remove_record(size_t index);
 	void set_modified(size_t index);
 
 	void set_key(const std::string & sub_id);

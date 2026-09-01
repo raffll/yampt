@@ -9,6 +9,7 @@
 #include <QComboBox>
 #include <QEvent>
 #include <QHBoxLayout>
+#include <QLabel>
 #include <QModelIndex>
 #include <QMouseEvent>
 #include <QPushButton>
@@ -52,7 +53,10 @@ preview_view_t::preview_view_t(QWidget * parent)
 	controls_layout->setContentsMargins(0, 0, controls_margin, controls_margin);
 	controls_layout->setSpacing(4);
 
-	controls_layout->addStretch();
+	m_validation_label = new QLabel(this);
+	m_validation_label->setStyleSheet("color: rgb(200, 60, 60);");
+	m_validation_label->setWordWrap(true);
+	controls_layout->addWidget(m_validation_label, 1);
 
 	const int control_width = fontMetrics().averageCharWidth() * control_character_width;
 
@@ -221,6 +225,7 @@ void preview_view_t::set_editing_enabled(bool enabled)
 	m_apply_button->setVisible(enabled);
 	m_editing_active = enabled;
 	m_user_has_typed = false;
+	m_validation_label->clear();
 
 	if (!enabled)
 	{
@@ -338,18 +343,26 @@ void preview_view_t::on_text_changed()
 	const auto current_text = m_right_edit->toPlainText().toStdString();
 
 	bool is_valid = true;
+	std::string error_message;
 	if (m_pending_request.field.name != nullptr)
 	{
 		const auto result = field_validator::validate_field(
 		    m_pending_request.field, current_text, m_pending_request.codepage, m_existing_sub_size);
 
 		is_valid = result.valid;
+		error_message = result.error_message;
 	}
 
 	if (!is_valid)
+	{
 		m_right_edit->setStyleSheet("background-color: #ffcccc;");
+		m_validation_label->setText(QString::fromStdString(error_message));
+	}
 	else
+	{
 		m_right_edit->setStyleSheet("");
+		m_validation_label->clear();
+	}
 
 	const bool value_changed = (current_text != m_original_value);
 	m_apply_button->setEnabled(is_valid && value_changed);
