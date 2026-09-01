@@ -130,7 +130,7 @@ The Filters tab shows record types present in the current dictionary (CELL, DIAL
 - **Toggle Sidebar** — show or hide the left panel entirely.
 - **Toggle Bottom Panel** — show or hide the editor area.
 - **Spell Check** — when enabled, misspelled words in the Translation panel are underlined in red. Uses Hunspell dictionaries configured in Settings → Language.
-- **Grammar Check** — highlights common issues: double spaces, unmatched quotes or parentheses, missing terminal punctuation. Quoted text within entries is shown in a lighter color for visual distinction.
+- **Grammar Check** — marks common issues with an amber wavy underline (distinct from the red wavy underline used for spelling): double spaces, unmatched quotes or parentheses, missing terminal punctuation. Quoted text within entries is shown in a lighter color for visual distinction.
 - **Whitespace Markers** — renders spaces as dots and line endings as paragraph marks in the editor panels.
 - **Sync Scrolling** — locks the scroll position between the Original and Translation panels so they stay aligned as you scroll either one. The setting is remembered between sessions.
 
@@ -187,13 +187,13 @@ The context menu also lets you teach an AI provider your preferred style. Right-
 - **Outdated** — like Changed, but the entry had not been approved as Translated before the source text changed.
 - **Ambiguous** — multiple entries in the base dictionary offer different translations for the same original text. The Details panel lists all candidates. Pick the correct one and set to Translated.
 - **Reused** — the base dictionary contained a matching original text under a different key. The translation was copied from that entry.
-- **Propagated** — after you committed a translation, all entries sharing the same original text (including the committed entry itself) were updated to match. Both the source and all targets receive this status.
+- **Propagated** — after you committed a translation, all entries sharing the same original text (including the committed entry itself) were updated to match. Both the source and all targets receive this status. Propagation applies even when the translation is identical to the original (a proper noun). Entries that already hold the same translation are left untouched, and an entry is skipped if its record type cannot hold the text within its byte limit (for example a long translation is not propagated to a short-limit name field).
 - **Replaced** — the translation was modified by a Replace All operation. Review the result and set to Translated when satisfied.
 - **Missing** — during Make Base Dictionary, this record existed in the foreign file but no corresponding record was found in the native file. Requires manual translation.
 - **Heuristic** — during Make Base Dictionary, this cell or topic was matched by the translation engine heuristic rather than by exact record pairing. The match may be incorrect. Verify the translation and set to Translated if correct.
 - **Duplicate** — the same key appeared more than once in the source plugin. Only the first occurrence is stored.
 - **Mismatch** — during Make Base Dictionary, a record existed in the native file with no corresponding record in the foreign file. Informational; no action needed.
-- **Error** — the translation exceeds the maximum byte length allowed for this sub-record type and cannot be written to the plugin. Shorten the translation.
+- **Error** — the translation cannot be written to the plugin, either because it exceeds the maximum byte length for this sub-record type, contains a forbidden character, or contains a character not representable in the plugin's codepage. The validation line at the bottom states the specific reason. An entry with this status is not propagated to other entries. Fix the translation to clear it.
 
 ## Settings
 

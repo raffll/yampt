@@ -6,7 +6,8 @@
 QTextCharFormat grammar_checker_t::warning_format()
 {
 	QTextCharFormat fmt;
-	fmt.setBackground(QColor(200, 150, 0, 60));
+	fmt.setUnderlineStyle(QTextCharFormat::WaveUnderline);
+	fmt.setUnderlineColor(QColor(200, 150, 0));
 	return fmt;
 }
 

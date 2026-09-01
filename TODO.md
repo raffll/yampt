@@ -8,6 +8,8 @@ translator: simplify the AI prompt — keep only one language-variable pair (dro
 
 translator: rename "Merge Dictionaries" to "Dictionary Merger" (menu action and dialog title). Add an output-filename edit box in the merge dialog, defaulting to a name derived from the inputs (e.g. `dict1+dict2_MERGED.json`).
 
+translator: when propagation skips one or more target entries because the translation exceeds their record type's byte limit (e.g. a 40-char translation from a CELL propagated to an FNAM with a 31-byte limit), show a dialog listing the skipped entries so the user knows they were not updated, instead of silently skipping them.
+
 translator: inflection generation for .top files uses the Hunspell spellcheck dictionary, whose affix coverage is incomplete — some valid inflected forms are never generated (e.g. Polish `chorobą`, because `choroba` lacks the affix flag that produces the singular instrumental). Consider a proper morphological dictionary (e.g. Morfeusz/SGJP for Polish) to generate full paradigms. Large dependency change and PL-only.
 
 editor: drag & drop a decoded cell value between plugin columns when Enable Editing is on — dropping onto another plugin column applies the value as a field edit; dropping onto the merged-patch column copies it into the merge. Both are recorded in the History tab.

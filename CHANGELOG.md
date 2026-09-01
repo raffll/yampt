@@ -14,6 +14,12 @@
 - [CHANGE] The Encoding line in Language settings is now shown in the normal text color instead of a greyed-out note
 - [CHANGE] Sync Scrolling now remembers its on/off state between sessions instead of always starting enabled
 - [CHANGE] The History panel now lists the selected entry's changes as a plain list; right-click a change and choose Revert to restore it, instead of a Revert button on every row
+- [CHANGE] Grammar issues in the translation editor are now marked with a wavy underline, like spell check (amber for grammar, red for spelling), instead of a background highlight
+- [CHANGE] The over-the-byte-limit part of a translation now uses the same highlight color as forbidden characters, so all validation problems share one color
+- [CHANGE] The @ character is no longer treated as a forbidden character, so translations containing topic tags no longer show a validation error
+- [FIX] The validation status now states the reason when a translation is invalid (for example the byte limit it exceeds, or the forbidden character it contains), instead of only the character count
+- [FIX] A translation is now propagated to other entries with the same source text even when the translation is identical to the original (a proper noun), while entries that already hold that text are left untouched
+- [FIX] An invalid translation (containing a forbidden character or exceeding the byte limit) is marked with the Error status and is no longer propagated to other entries; propagation also skips any entry whose record type cannot hold the text within its own byte limit
 - [FIX] Topic tag markers in the editor are no longer shown as underlined colored web-style links; the tagged text now renders normally while recognized topics keep their background highlight
 - [FIX] Grammar and topic highlights in the translation editor now refresh correctly when text is edited back to its original value — removing a double space now clears the grammar mark, and reverting a broken topic tag to a valid form restores its highlight
 

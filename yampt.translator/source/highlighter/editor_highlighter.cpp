@@ -85,9 +85,7 @@ void editor_highlighter_t::apply_forbidden_chars(const QString & text)
 	{
 		const auto ch = text.at(i).unicode();
 
-		const bool is_standalone_at = ch == '@' && (i + 1 >= text.length() || !text.at(i + 1).isLetterOrNumber());
-
-		if (ch == '|' || ch == '~' || is_standalone_at || ch == '{' || ch == '}' ||
+		if (ch == '|' || ch == '~' || ch == '{' || ch == '}' ||
 		    (ch <= 0x1F && ch != 0x09 && ch != 0x0D && ch != 0x0A))
 		{
 			auto merged = format(i);
