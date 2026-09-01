@@ -7,6 +7,7 @@
 #include "editor/edit_history.hpp"
 #include "editor/find_replace.hpp"
 #include "editor/glossary.hpp"
+#include "editor/inflection_store.hpp"
 #include "editor/operation_executor.hpp"
 #include "editor/row_filter.hpp"
 #include "editor/spell_checker.hpp"
@@ -223,6 +224,7 @@ private:
 	translation_suggestion_view_t * m_translation_tab = nullptr;
 
 	glossary_t m_glossary;
+	inflection_store_t m_inflection_store;
 	edit_history_t m_edit_history;
 	spell_checker_t m_spell_checker;
 	byte_limit_validator_t m_byte_limit_validator;

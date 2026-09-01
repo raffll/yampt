@@ -83,7 +83,6 @@ main_window_t::main_window_t(QWidget * parent)
 	                                this,
 	                                { [this](document_t * doc) { switch_document(doc); },
 	                                  [this]() { rebuild_annotations(); },
-	                                  [this](const loc_entries_t & entries) { m_glossary.set_loc_entries(entries); },
 	                                  [this]() { save_config(); },
 	                                  [this](bool dirty) { set_unsaved_changes(dirty); } } });
 
@@ -116,6 +115,7 @@ main_window_t::main_window_t(QWidget * parent)
 	                                                                          *m_table_model,
 	                                                                          m_editor_controller,
 	                                                                          m_glossary,
+	                                                                          m_inflection_store,
 	                                                                          m_grammar_checker,
 	                                                                          m_byte_limit_validator,
 	                                                                          m_edit_history,
@@ -780,6 +780,21 @@ void main_window_t::rebuild_annotations()
 		sources.push_back({ &dict_doc->data(), dict_doc->path() });
 
 	m_glossary.rebuild(sources);
+
+	std::vector<std::string> loc_paths;
+	for (const auto * entry : m_file_list.workspace_files())
+	{
+		if (entry->type != file_type_t::loc_file)
+			continue;
+
+		const auto extension = string_utils::to_lower(string_utils::extract_filename(entry->path));
+		if (extension.find(".top") == std::string::npos && extension.find(".mrk") == std::string::npos)
+			continue;
+
+		loc_paths.push_back(entry->path);
+	}
+
+	m_inflection_store.rebuild(loc_paths, m_current_codepage);
 }
 
 void main_window_t::save_current_filter_state()

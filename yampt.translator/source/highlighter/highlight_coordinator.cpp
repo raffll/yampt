@@ -18,6 +18,9 @@ std::vector<highlight_position_t> highlight_coordinator_t::find_annotation_highl
 
 	for (const auto & annotation : *request.annotations)
 	{
+		if (annotation.kind == annotation_t::inflection_form)
+			continue;
+
 		const auto & raw = request.use_old_text ? annotation.old_text : annotation.new_text;
 		if (raw.empty())
 			continue;

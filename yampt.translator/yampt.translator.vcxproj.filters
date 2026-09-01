@@ -33,7 +33,7 @@
     <ClCompile Include="source\editor\byte_limit_validator.cpp" />
     <ClCompile Include="source\editor\commit_orchestrator.cpp" />
     <ClCompile Include="source\editor\glossary.cpp" />
-    <ClCompile Include="source\editor\loc_inflection_annotations.cpp" />
+    <ClCompile Include="source\editor\inflection_store.cpp" />
     <ClCompile Include="source\editor\edit_history.cpp" />
     <ClCompile Include="source\editor\find_replace.cpp" />
     <ClCompile Include="source\editor\operation_executor.cpp" />
@@ -96,7 +96,7 @@
     <ClInclude Include="source\highlighter\highlight_coordinator.hpp" />
     <ClInclude Include="source\highlighter\highlight_applier.hpp" />
     <ClInclude Include="source\model\loc_document.hpp" />
-    <ClInclude Include="source\editor\loc_inflection_annotations.hpp" />
+    <ClInclude Include="source\editor\inflection_store.hpp" />
     <ClInclude Include="source\model\eet_document.hpp" />
     <ClInclude Include="source\model\table_columns.hpp" />
     <ClInclude Include="source\translator\model_list_utils.hpp" />

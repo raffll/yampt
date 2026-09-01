@@ -1,7 +1,5 @@
 #include "record_display_controller.hpp"
-#include "../editor/loc_inflection_annotations.hpp"
 #include "../model/dict_document.hpp"
-#include "../model/loc_document.hpp"
 #include "../view/annotations_view.hpp"
 #include "../view/book_preview_view.hpp"
 #include "../view/editor_view.hpp"
@@ -11,16 +9,6 @@
 #include <utility/string_utils.hpp>
 #include <QString>
 #include <QTextCursor>
-
-static void append_loc_inflection_annotations(std::vector<annotation_t> & annotations, document_t * active_doc)
-{
-	auto * loc_doc = dynamic_cast<loc_document_t *>(active_doc);
-	if (!loc_doc)
-		return;
-
-	const auto loc_annotations = loc_inflection_annotations::build(loc_doc->file_kind(), loc_doc->entries());
-	annotations.insert(annotations.end(), loc_annotations.begin(), loc_annotations.end());
-}
 
 record_display_controller_t::record_display_controller_t(record_display_deps_t deps)
     : m_deps(std::move(deps))
@@ -50,7 +38,8 @@ void record_display_controller_t::load_record(int row, document_t * active_doc)
 	load_book_preview(row_data, active_doc);
 
 	auto view_annotations = load_result.annotations;
-	append_loc_inflection_annotations(view_annotations, active_doc);
+	const auto inflections = m_deps.inflection_store.annotate(row_data->new_text);
+	view_annotations.insert(view_annotations.end(), inflections.begin(), inflections.end());
 	m_deps.annotations_view.update_annotations(
 	    view_annotations, load_result.speaker_name, load_result.gender, load_result.enchantment);
 
@@ -241,7 +230,7 @@ void record_display_controller_t::load_record_plain(const table_row_t * row_data
 
 void record_display_controller_t::apply_translation_highlights(const table_row_t * row_data)
 {
-	const auto annotations = m_deps.glossary.annotate(row_data->old_text, row_data->type);
+	const auto annotations = m_deps.glossary.annotate(row_data->old_text);
 	const auto current_text =
 	    string_utils::to_lower_utf8(m_deps.editor_view.translation_editor()->toPlainText().toStdString());
 
@@ -315,8 +304,9 @@ void record_display_controller_t::update_annotations(document_t * active_doc)
 	if (!row_data)
 		return;
 
-	auto annotations = m_deps.glossary.annotate(row_data->old_text, row_data->type);
-	append_loc_inflection_annotations(annotations, active_doc);
+	auto annotations = m_deps.glossary.annotate(row_data->old_text);
+	const auto inflections = m_deps.inflection_store.annotate(row_data->new_text);
+	annotations.insert(annotations.end(), inflections.begin(), inflections.end());
 
 	std::string speaker_name;
 	std::string gender_str;

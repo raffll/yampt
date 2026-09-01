@@ -1,11 +1,12 @@
 #include "inflection.hpp"
 #include "phrase_form_builder.hpp"
+#include "utility/app_logger.hpp"
 #include <algorithm>
 #include <hunspell/hunspell.hxx>
 #include <set>
 #include <sstream>
 
-static constexpr int max_phrase_forms = 50;
+static constexpr int max_phrase_forms = 2000;
 
 struct inflection_t::impl_t
 {
@@ -41,10 +42,20 @@ static std::vector<std::string> generate_forms_for_word(Hunspell & hunspell, con
 {
 	const auto stems = hunspell.stem(word);
 
+	std::string debug_stems;
+	for (const auto & stem : stems)
+		debug_stems += stem + ",";
+
+	app_logger_t::add_log(
+	    "[debug] word=\"" + word + "\" spell=" + std::to_string(hunspell.spell(word)) + " stems=[" + debug_stems +
+	    "]\r\n");
+
 	std::set<std::string> unique_forms;
 	for (const auto & stem : stems)
 	{
 		const auto expanded = hunspell.suffix_suggest(stem);
+		app_logger_t::add_log(
+		    "[debug]   suffix_suggest(stem=\"" + stem + "\") count=" + std::to_string(expanded.size()) + "\r\n");
 		for (const auto & form : expanded)
 		{
 			if (form != word)
@@ -55,6 +66,8 @@ static std::vector<std::string> generate_forms_for_word(Hunspell & hunspell, con
 	if (unique_forms.empty())
 	{
 		const auto expanded = hunspell.suffix_suggest(word);
+		app_logger_t::add_log(
+		    "[debug]   suffix_suggest(word=\"" + word + "\") count=" + std::to_string(expanded.size()) + "\r\n");
 		for (const auto & form : expanded)
 		{
 			if (form != word)
@@ -139,17 +152,9 @@ std::vector<std::string> inflection_t::phrase_forms(const std::string & phrase) 
 	auto & hunspell = *m_impl->m_hunspell;
 	const auto per_word_candidates = build_per_word_candidates(hunspell, words);
 
-	const auto is_valid_phrase = [&hunspell](const std::vector<std::string> & combination) {
-		for (const auto & word : combination)
-		{
-			if (!hunspell.spell(word))
-				return false;
-		}
+	const auto accept_all = [](const std::vector<std::string> &) { return true; };
 
-		return true;
-	};
-
-	auto forms = phrase_form_builder::build_phrase_forms(per_word_candidates, is_valid_phrase, max_phrase_forms);
+	auto forms = phrase_form_builder::build_phrase_forms(per_word_candidates, accept_all, max_phrase_forms);
 
 	const auto nominative_phrase = join_with_space(words);
 	forms.erase(std::remove(forms.begin(), forms.end(), nominative_phrase), forms.end());

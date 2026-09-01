@@ -6,6 +6,7 @@
 #include "../model/yaml_document.hpp"
 #include <utility/string_utils.hpp>
 #include <algorithm>
+#include <exception>
 
 session_t::session_t(codepage_t codepage)
     : m_codepage(codepage)
@@ -30,20 +31,27 @@ document_t * session_t::open(const std::string & path)
 	    extension.begin(),
 	    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 
-	if (extension == ".esp" || extension == ".esm")
-		return handle_open_plugin(normalized);
+	try
+	{
+		if (extension == ".esp" || extension == ".esm")
+			return handle_open_plugin(normalized);
 
-	if (extension == ".json" || extension == ".xml")
-		return handle_open_dict(normalized);
+		if (extension == ".json" || extension == ".xml")
+			return handle_open_dict(normalized);
 
-	if (extension == ".yaml" || extension == ".yml")
-		return handle_open_yaml(normalized);
+		if (extension == ".yaml" || extension == ".yml")
+			return handle_open_yaml(normalized);
 
-	if (extension == ".cel" || extension == ".top" || extension == ".mrk")
-		return handle_open_loc(normalized);
+		if (extension == ".cel" || extension == ".top" || extension == ".mrk")
+			return handle_open_loc(normalized);
 
-	if (extension == ".eet")
-		return handle_open_eet(normalized);
+		if (extension == ".eet")
+			return handle_open_eet(normalized);
+	}
+	catch (const std::exception &)
+	{
+		return nullptr;
+	}
 
 	return nullptr;
 }

@@ -59,7 +59,7 @@
     <ClCompile Include="source\tests.armor_slots.cpp" />
     <ClCompile Include="source\tests.dial_info_align.cpp" />
     <ClCompile Include="source\tests.editor_edit_log.cpp" />
-    <ClCompile Include="source\tests.loc_inflection_annotations.cpp" />
+    <ClCompile Include="source\tests.inflection_store.cpp" />
     <ClCompile Include="source\tests.word_match_utils.cpp" />
     <ClCompile Include="source\tests.text_match_index.cpp" />
     <ClCompile Include="source\tests.cell_matcher.cpp" />
@@ -156,7 +156,7 @@
     <ClCompile Include="..\yampt.editor\source\model\view_tree_decode_lists.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\filter_composer.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\edit_log.cpp" />
-    <ClCompile Include="..\yampt.translator\source\editor\loc_inflection_annotations.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\inflection_store.cpp" />
     <ClCompile Include="..\yampt.translator\source\translator\web_translator_config.cpp" />
     <ClCompile Include="..\yampt.translator\source\translator\model_list_utils.cpp" />
     <ClCompile Include="..\yampt.translator\source\translator\web_response_utils.cpp" />
