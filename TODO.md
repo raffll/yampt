@@ -9,3 +9,7 @@ trabsaktor: loc files dont need tags
 translator: loc files should be in annottaion tab
 translator: prompt shuld be filed with default by default and there is not need to lowercase and uppercase {{}} language tags
 trabslator -> rename Merge DIctionary to DIctionary Merger and add output filename edit box in dialog
+
+editor: drag & drop cell between plugins if edit is enabled
+editor: if nav row changed, reset also edit
+editor: prefix for validation text
