@@ -6,7 +6,7 @@
 
 struct history_entry_t;
 
-class QVBoxLayout;
+class QListWidget;
 
 class history_view_t : public QWidget
 {
@@ -21,7 +21,10 @@ public:
 signals:
 	void revert_requested(size_t history_index);
 
+private slots:
+	void on_context_menu(const QPoint & pos);
+
 private:
-	QVBoxLayout * m_entries_layout = nullptr;
-	QWidget * m_scroll_content = nullptr;
+	QListWidget * m_list = nullptr;
+	bool m_allow_revert = false;
 };

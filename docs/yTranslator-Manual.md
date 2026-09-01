@@ -79,7 +79,7 @@ Replace All replaces the search term in all currently visible entries. Only entr
 
 Entries modified by Replace All receive the status Replaced. This makes it easy to filter and review all changes after a batch operation.
 
-Each replacement is recorded individually in the edit history. To undo a replacement, select the affected entries in the Records table, right-click, and choose Revert. This restores the text and status each entry had before the replacement. You can also view and revert individual entries from the History panel.
+Each replacement is recorded individually in the edit history. To undo a replacement, select the affected entries in the Records table, right-click, and choose Revert. This restores the text and status each entry had before the replacement. You can also revert from the History panel: it lists the recorded changes for the selected entry with the most recent at the top. Right-click a change and choose Revert to restore the entry to that state.
 
 ### EET Import
 

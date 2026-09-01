@@ -10,6 +10,7 @@
 - [CHANGE] Language settings now list the foreign and native languages in alphabetical order
 - [CHANGE] The Encoding line in Language settings is now shown in the normal text color instead of a greyed-out note
 - [CHANGE] Sync Scrolling now remembers its on/off state between sessions instead of always starting enabled
+- [CHANGE] The History panel now lists the selected entry's changes as a plain list; right-click a change and choose Revert to restore it, instead of a Revert button on every row
 
 ### yEditor
 - [NEW] Sync Scrolling: a View menu toggle binds scrolling between the two comparison panes in the Edit panel, so both sides move together; the state persists between sessions
