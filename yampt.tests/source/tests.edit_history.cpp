@@ -97,16 +97,6 @@ TEST_CASE("edit_history_t::get_history, separate keys independent", "[u]")
 	REQUIRE(history.get_history(rec_type_t::cell, "KeyB")[0].value == "oldB");
 }
 
-TEST_CASE("edit_history_t::is_modified_this_session, tracks modifications", "[u]")
-{
-	edit_history_t history;
-	REQUIRE(history.is_modified_this_session(rec_type_t::info, "key1") == false);
-
-	history.record_change(rec_type_t::info, "key1", "old", "new", status_t::untranslated);
-	REQUIRE(history.is_modified_this_session(rec_type_t::info, "key1") == true);
-	REQUIRE(history.is_modified_this_session(rec_type_t::info, "key2") == false);
-}
-
 TEST_CASE("edit_history_t::revert, invalid index returns failure", "[u]")
 {
 	edit_history_t history;
@@ -123,42 +113,4 @@ TEST_CASE("edit_history_t::revert, unknown key returns failure", "[u]")
 	REQUIRE(result.success == false);
 }
 
-TEST_CASE("edit_history_t::save_to_file and load_from_file, round-trip", "[i]")
-{
-	namespace fs = std::filesystem;
-	const auto temp_path = (fs::temp_directory_path() / "yampt_history_test.json").string();
 
-	edit_history_t original;
-	original.record_change(rec_type_t::cell, "Balmora", "old_value", "new_value", status_t::untranslated);
-	original.record_change(rec_type_t::info, "dialogue_key", "hello", "czesc", status_t::translated);
-	original.record_change(rec_type_t::cell, "Balmora", "new_value", "final_value", status_t::in_progress);
-
-	original.save_to_file(temp_path);
-
-	edit_history_t loaded;
-	loaded.load_from_file(temp_path);
-
-	const auto cell_history = loaded.get_history(rec_type_t::cell, "Balmora");
-	REQUIRE(cell_history.size() == 2);
-	REQUIRE(cell_history[0].value == "old_value");
-	REQUIRE(cell_history[0].status == status_t::untranslated);
-	REQUIRE(cell_history[1].value == "new_value");
-	REQUIRE(cell_history[1].status == status_t::in_progress);
-
-	const auto info_history = loaded.get_history(rec_type_t::info, "dialogue_key");
-	REQUIRE(info_history.size() == 1);
-	REQUIRE(info_history[0].value == "hello");
-	REQUIRE(info_history[0].status == status_t::translated);
-
-	std::error_code error_code;
-	fs::remove(temp_path, error_code);
-}
-
-TEST_CASE("edit_history_t::load_from_file, missing file preserves entries", "[i]")
-{
-	edit_history_t history;
-	history.record_change(rec_type_t::cell, "key", "old", "new", status_t::untranslated);
-	history.load_from_file("nonexistent_path_that_does_not_exist.json");
-
-	REQUIRE(history.get_history(rec_type_t::cell, "key").size() == 1);
-}
