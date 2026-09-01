@@ -13,3 +13,4 @@ trabslator -> rename Merge DIctionary to DIctionary Merger and add output filena
 editor: drag & drop cell between plugins if edit is enabled
 editor: if nav row changed, reset also edit
 editor: prefix for validation text
+editor: Revert button in history
