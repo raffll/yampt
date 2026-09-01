@@ -9,9 +9,10 @@ translator: simplify the AI prompt — keep only one language-variable pair (dro
 translator: rename "Merge Dictionaries" to "Dictionary Merger" (menu action and dialog title). Add an output-filename edit box in the merge dialog, defaulting to a name derived from the inputs (e.g. `dict1+dict2_MERGED.json`).
 
 editor: drag & drop a decoded cell value between plugin columns when Enable Editing is on — dropping onto another plugin column applies the value as a field edit; dropping onto the merged-patch column copies it into the merge. Both are recorded in the History tab.
+
 editor: when the nav selection changes, also reset/clear the Edit panel
 
-editor: Revert button in the History tab
+editor: hisotry tab same as translator
 
 maybe:
 editor: use text [TAGS] instead of icons for Guard Patch, Exclude from Merged Patch, Active Plugin, Overridden-by-Override — or keep multiple icons but add tooltips
