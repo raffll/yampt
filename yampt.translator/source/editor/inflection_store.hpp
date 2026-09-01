@@ -2,7 +2,6 @@
 
 #include "glossary.hpp"
 #include <io/codepage.hpp>
-#include <io/loc_types.hpp>
 #include <string>
 #include <vector>
 
@@ -15,5 +14,12 @@ public:
 	std::vector<annotation_t> annotate(const std::string & translation_text) const;
 
 private:
-	std::vector<loc_types::loc_entry_t> m_entries;
+	struct stored_entry_t
+	{
+		std::string key;
+		std::string value;
+		std::string source;
+	};
+
+	std::vector<stored_entry_t> m_entries;
 };

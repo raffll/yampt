@@ -5,11 +5,18 @@
 
 struct annotation_t;
 
+enum class highlight_kind_t
+{
+	hyperlink,
+	inflection,
+	glossary,
+};
+
 struct highlight_position_t
 {
 	int start;
 	int length;
-	bool is_hyperlink;
+	highlight_kind_t kind;
 };
 
 enum class highlight_sort_policy_t

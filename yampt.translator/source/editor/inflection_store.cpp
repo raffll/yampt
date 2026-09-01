@@ -13,8 +13,9 @@ void inflection_store_t::rebuild(const std::vector<std::string> & loc_paths, cod
 		if (file.file_kind == loc_types::loc_file_kind_t::cel)
 			continue;
 
+		const auto source = std::string(string_utils::extract_filename(path));
 		for (const auto & entry : file.entries)
-			m_entries.push_back(entry);
+			m_entries.push_back({ entry.key, entry.value, source });
 	}
 }
 
@@ -47,6 +48,7 @@ std::vector<annotation_t> inflection_store_t::annotate(const std::string & trans
 		annotation.kind = annotation_t::inflection_form;
 		annotation.old_text = entry.key;
 		annotation.new_text = entry.value;
+		annotation.source = entry.source;
 		result.push_back(std::move(annotation));
 	}
 

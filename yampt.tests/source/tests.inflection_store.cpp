@@ -31,6 +31,7 @@ TEST_CASE("inflection_store_t::annotate, keeps forms present in translation text
 	REQUIRE(result[0].kind == annotation_t::inflection_form);
 	REQUIRE(result[0].old_text == "miecze");
 	REQUIRE(result[0].new_text == "miecz");
+	REQUIRE(result[0].source == "infl_present.top");
 
 	std::filesystem::remove(path);
 }

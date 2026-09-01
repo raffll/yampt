@@ -123,5 +123,5 @@ TEST_CASE("highlight_coordinator_t::find_annotation_highlights, uppercase annota
 	REQUIRE(results.size() == 1);
 	REQUIRE(results[0].start == 8);
 	REQUIRE(results[0].length == 8);
-	REQUIRE(results[0].is_hyperlink == true);
+	REQUIRE(results[0].kind == highlight_kind_t::hyperlink);
 }

@@ -159,6 +159,9 @@ static void insert_top_entry(top_build_context_t & context, const loc_types::loc
 	if (candidate.key.size() < 3)
 		return;
 
+	if (string_utils::to_lower(candidate.key) == string_utils::to_lower(candidate.value))
+		return;
+
 	const auto it_existing = context.dedup_map.find(candidate.key);
 	if (it_existing != context.dedup_map.end())
 	{

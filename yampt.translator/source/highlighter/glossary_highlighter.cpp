@@ -60,6 +60,9 @@ static QTextCharFormat format_for_annotation(const annotation_t & annotation)
 	case annotation_t::glossary_term:
 		format.setBackground(theme_system_t::instance().get_color(color_name_t::annotation_glossary_term));
 		break;
+	case annotation_t::inflection_form:
+		format.setBackground(theme_system_t::instance().get_color(color_name_t::annotation_inflection));
+		break;
 	default:
 		return {};
 	}
