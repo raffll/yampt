@@ -16,4 +16,4 @@ editor: prefix for validation text
 editor: Revert button in history
 
 maybe:
-editor: [TAGS] insetad of icons, for Guard Patch, Exclude from Merged, Active Plugin, Overriden by Override
+editor: [TAGS] insetad of icons, for Guard Patch, Exclude from Merged, Active Plugin, Overriden by Override OR multiple icons with tooltips
