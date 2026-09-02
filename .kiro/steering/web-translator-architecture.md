@@ -37,6 +37,8 @@ Available in `headers`, `body`, and the system prompt:
 | `{{target_lang}}` | Target language code (as-is from settings) |
 | `{{source_lang}}` | Source language from settings (foreign_language) |
 | `{{<setting_key>}}` | Value of any provider setting by its `key` (e.g. `{{model}}`) |
+| `{{examples}}` | System prompt only: marked example lines (`original -> translation`) |
+| `{{hyperlinks}}` | System prompt only: per-entry glossary/topic terms from `m_glossary_fn` |
 
 ## Source Language
 
@@ -50,7 +52,8 @@ The `chat_completion` system prompt is NOT stored in provider JSON configs. Ther
 - The user override is stored globally under `[Translation]/SystemPrompt` (`settings.translation_prompt()` / `set_translation_prompt()`), not per provider.
 - It is edited in Settings → Auto Translation → **Prompt** tab (a single multi-line box with a "Reset to Default" button).
 - At runtime, `translation_suggestion_view_t::apply_provider_settings` calls `web_translator_t::set_system_prompt(shared_prompt)` on every `chat_completion` provider. An empty override falls back to `default_system_prompt()`.
-- The prompt supports the same template variables as headers/body, and the glossary and examples are appended to it automatically in `send_chat_request`.
+- The prompt supports the same language template variables as headers/body. It is a template with two extra placeholders resolved in `send_chat_request` by in-place substitution (NOT appended): `{{examples}}` is replaced with the marked example lines (`original -> translation`, no header), and `{{hyperlinks}}` with the per-entry glossary/topic terms from `m_glossary_fn(text)`. If a placeholder is absent from the prompt, that content is omitted. The default prompt writes its own "Examples:" and "Hyperlinks:" section headers around these placeholders.
+- The Preview tab (Settings → Auto Translation → **Preview**, read-only) shows the resolved prompt: languages and `{{examples}}` filled in; `{{hyperlinks}}` shown as a note since it depends on the entry being translated.
 
 ## Settings Storage
 
