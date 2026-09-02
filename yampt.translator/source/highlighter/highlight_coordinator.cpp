@@ -36,6 +36,16 @@ static highlight_kind_t kind_for_annotation(const annotation_t & annotation)
 	return highlight_kind_t::glossary;
 }
 
+std::vector<annotation_t> highlight_coordinator_t::combine_translation_annotations(
+    const std::vector<annotation_t> & glossary_annotations,
+    const std::vector<annotation_t> & inflection_annotations)
+{
+	std::vector<annotation_t> combined = glossary_annotations;
+	combined.insert(combined.end(), inflection_annotations.begin(), inflection_annotations.end());
+
+	return combined;
+}
+
 std::vector<highlight_position_t> highlight_coordinator_t::find_annotation_highlights(
     const std::string & text_lower,
     const highlight_request_t & request)
@@ -44,11 +54,13 @@ std::vector<highlight_position_t> highlight_coordinator_t::find_annotation_highl
 
 	for (const auto & annotation : *request.annotations)
 	{
-		const auto & raw = request.use_old_text ? annotation.old_text : annotation.new_text;
+		const auto kind = kind_for_annotation(annotation);
+		const auto & raw =
+		    kind == highlight_kind_t::inflection ? annotation.old_text
+		                                         : (request.use_old_text ? annotation.old_text : annotation.new_text);
 		if (raw.empty())
 			continue;
 
-		const auto kind = kind_for_annotation(annotation);
 		const auto term = string_utils::to_lower_utf8(raw);
 		const auto term_length = static_cast<int>(term.length());
 

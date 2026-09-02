@@ -50,6 +50,7 @@ public:
 
 	void load_record(int row, document_t * active_doc);
 	void apply_translation_highlights(const table_row_t * row_data);
+	void refresh_highlight_filter(const table_row_t * row_data);
 	void update_validation();
 	void update_annotations(document_t * active_doc);
 

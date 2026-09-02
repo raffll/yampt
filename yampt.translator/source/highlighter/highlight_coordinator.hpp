@@ -1,9 +1,8 @@
 #pragma once
 
+#include <editor/glossary.hpp>
 #include <string>
 #include <vector>
-
-struct annotation_t;
 
 enum class highlight_kind_t
 {
@@ -35,6 +34,10 @@ struct highlight_request_t
 class highlight_coordinator_t
 {
 public:
+	static std::vector<annotation_t> combine_translation_annotations(
+	    const std::vector<annotation_t> & glossary_annotations,
+	    const std::vector<annotation_t> & inflection_annotations);
+
 	static std::vector<highlight_position_t> find_annotation_highlights(
 	    const std::string & text_lower,
 	    const highlight_request_t & request);

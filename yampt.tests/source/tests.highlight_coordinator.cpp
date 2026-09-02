@@ -3,6 +3,7 @@
 #include <highlighter/highlight_coordinator.hpp>
 #include <rapidcheck/catch.h>
 #include <rapidcheck.h>
+#include <algorithm>
 
 TEST_CASE("highlight_coordinator_t::find_annotation_highlights, position bounds", "[pbt]")
 {
@@ -124,4 +125,46 @@ TEST_CASE("highlight_coordinator_t::find_annotation_highlights, uppercase annota
 	REQUIRE(results[0].start == 8);
 	REQUIRE(results[0].length == 8);
 	REQUIRE(results[0].kind == highlight_kind_t::hyperlink);
+}
+
+TEST_CASE("highlight_coordinator_t::combine_translation_annotations, inflected form highlighted in translation", "[u]")
+{
+	std::vector<annotation_t> glossary_annotations;
+	annotation_t term;
+	term.start = 0;
+	term.end = 0;
+	term.kind = annotation_t::glossary_term;
+	term.old_text = "services";
+	term.new_text = "us\xc5\x82ugi";
+	term.source = "test.json";
+	glossary_annotations.push_back(term);
+
+	std::vector<annotation_t> inflection_annotations;
+	annotation_t inflected;
+	inflected.start = 0;
+	inflected.end = 0;
+	inflected.kind = annotation_t::inflection_form;
+	inflected.old_text = "us\xc5\x82ugach";
+	inflected.new_text = "us\xc5\x82ug";
+	inflected.source = "PL_BASE.top";
+	inflection_annotations.push_back(inflected);
+
+	const auto combined =
+	    highlight_coordinator_t::combine_translation_annotations(glossary_annotations, inflection_annotations);
+
+	const std::string text_lower = "je\xc5\x9bli interesuj\xc4\x85 ci\xc4\x99 moje us\xc5\x82ugach";
+
+	highlight_request_t request;
+	request.annotations = &combined;
+	request.use_old_text = false;
+	request.sort_policy = highlight_sort_policy_t::hyperlink_first;
+
+	const auto results = highlight_coordinator_t::find_annotation_highlights(text_lower, request);
+
+	const bool inflection_highlighted = std::any_of(
+	    results.begin(),
+	    results.end(),
+	    [](const highlight_position_t & pos) { return pos.kind == highlight_kind_t::inflection; });
+
+	REQUIRE(inflection_highlighted);
 }

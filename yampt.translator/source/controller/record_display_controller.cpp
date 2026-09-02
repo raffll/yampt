@@ -231,9 +231,29 @@ void record_display_controller_t::load_record_plain(const table_row_t * row_data
 	m_deps.editor_view.translation_editor()->set_block_multiline(block_multiline);
 }
 
-void record_display_controller_t::apply_translation_highlights(const table_row_t * row_data)
+void record_display_controller_t::refresh_highlight_filter(const table_row_t * row_data)
 {
 	const auto annotations = m_deps.glossary.annotate(row_data->old_text);
+	const auto enabled_kinds = m_deps.editor_view.enabled_highlight_kinds();
+
+	const auto original_lower =
+	    string_utils::to_lower_utf8(m_deps.editor_view.original_view()->toPlainText().toStdString());
+	const highlight_request_t orig_request { &annotations, true, highlight_sort_policy_t::length_first };
+	auto orig_highlights = highlight_coordinator_t::find_annotation_highlights(original_lower, orig_request);
+	m_deps.extra_sel_original.annotations =
+	    highlight_applier_t::build_selections(m_deps.editor_view.original_view(), orig_highlights, enabled_kinds);
+	highlight_applier_t::apply(m_deps.editor_view.original_view(), m_deps.extra_sel_original);
+
+	apply_translation_highlights(row_data);
+}
+
+void record_display_controller_t::apply_translation_highlights(const table_row_t * row_data)
+{
+	const auto glossary_annotations = m_deps.glossary.annotate(row_data->old_text);
+	const auto inflection_annotations = m_deps.inflection_store.annotate(row_data->new_text);
+	const auto annotations =
+	    highlight_coordinator_t::combine_translation_annotations(glossary_annotations, inflection_annotations);
+
 	const auto current_text =
 	    string_utils::to_lower_utf8(m_deps.editor_view.translation_editor()->toPlainText().toStdString());
 
@@ -306,9 +326,10 @@ void record_display_controller_t::update_annotations(document_t * active_doc)
 	if (!row_data)
 		return;
 
-	auto annotations = m_deps.glossary.annotate(row_data->old_text);
-	const auto inflections = m_deps.inflection_store.annotate(row_data->new_text);
-	annotations.insert(annotations.end(), inflections.begin(), inflections.end());
+	const auto glossary_annotations = m_deps.glossary.annotate(row_data->old_text);
+	const auto inflection_annotations = m_deps.inflection_store.annotate(row_data->new_text);
+	auto annotations =
+	    highlight_coordinator_t::combine_translation_annotations(glossary_annotations, inflection_annotations);
 
 	std::string speaker_name;
 	std::string gender_str;

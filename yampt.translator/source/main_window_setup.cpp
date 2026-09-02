@@ -846,8 +846,12 @@ void main_window_t::connect_editor_signals()
 
 		m_settings.set_highlight_kinds_mask(mask);
 
-		if (m_editor_controller.current_row() >= 0)
-			load_record(m_editor_controller.current_row());
+		if (m_editor_controller.current_row() < 0)
+			return;
+
+		const auto * row_data = m_table_model->row_at(m_editor_controller.current_row());
+		if (row_data)
+			m_record_display_controller->refresh_highlight_filter(row_data);
 	});
 
 	connect(m_editor_view, &editor_view_t::apply_clicked, this, [this]() { advance_to_next_row(); });
