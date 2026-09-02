@@ -69,7 +69,7 @@ Only entries with status Translated and where the original differs from the tran
 
 ### Apply Topic Tags
 
-Right-click a dictionary in the sidebar and select Apply Topic Tags. This scans the translated text of every dialogue response in that dictionary and wraps any dialogue topic it finds with hyperlink tags, so the topics appear as clickable links in-game. Only dialogue responses are tagged; voice lines are left untouched.
+Right-click a dictionary in the sidebar and select Apply Topic Tags. This scans the text of every dialogue response in that dictionary, regardless of its status, and wraps any dialogue topic it finds with hyperlink tags, so the topics appear as clickable links in-game. Only dialogue responses are tagged; voice lines are left untouched.
 
 Alongside the canonical topic names, it also tags inflected forms of those topics, so a topic mentioned in a declined form is still linked. These forms are read from the dictionary's generated .top file, so run Generate Localization Files first if you want inflected forms tagged. An inflected form is only tagged where it does not overlap a direct topic link, which always takes priority.
 
@@ -152,9 +152,9 @@ The Annotations tab shows contextual information about the currently selected en
 
 For INFO entries, the panel shows the speaker's NPC name and gender when available. For FNAM entries belonging to weapons, armor, clothing, or books, it shows the enchantment ID if the item is enchanted. These metadata fields help translators choose correct grammatical forms in languages where gender or item properties affect the translation.
 
-The Original and Translation panels also highlight recognized terms inline: dialog topic names appear in blue (matching known DIAL entries), glossary terms from loaded base dictionaries appear in green, and inflected topic forms appear in their own distinct color.
+The Original and Translation panels also highlight recognized terms inline: dialog topic names appear in blue (matching known DIAL entries), glossary terms from loaded base dictionaries appear in green, and inflected topic forms appear in their own distinct color. Only entries marked Translated contribute topic links and glossary terms. Three toggle buttons beside the Next button — H, I, and G — turn the hyperlink, inflection, and glossary highlights on or off. Turning one off lets a lower-priority highlight take over the same word, so disabling hyperlinks reveals the inflection highlight on a word that is both a topic and an inflected form. The choices are remembered between sessions.
 
-When one or more localization files (.top or .mrk) are loaded in the workspace, the Annotations tab adds an Inflection section listing the inflected forms that appear in the current entry's translation, each showing the standard form it maps to and its source file. Clicking an entry copies the standard form. This section appears whether you are editing a dictionary or viewing a localization file.
+When one or more localization files (.top or .mrk) are loaded in the workspace, the Annotations tab adds an Inflection section related to the current entry's translation. When any form of a topic appears in the text, every known form of that topic is listed, not only the one present, so you can see the full set of declensions at a glance. The tab is a two-column table: the first column shows each annotation and the second shows the source file it came from, and the columns can be resized. Clicking an entry copies the standard form. This section appears whether you are editing a dictionary or viewing a localization file.
 
 ## Auto Translate
 

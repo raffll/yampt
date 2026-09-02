@@ -9,11 +9,6 @@ bool glossary_t::is_alpha(char c)
 	return isalpha(static_cast<unsigned char>(c)) != 0;
 }
 
-bool glossary_t::is_trusted_status(status_t status)
-{
-	return status == status_t::translated || status == status_t::reused || status == status_t::adapted;
-}
-
 void glossary_t::collect_dial_entries(const dict_source_t & source)
 {
 	auto dial_it = source.dict->find(rec_type_t::dial);
@@ -23,6 +18,9 @@ void glossary_t::collect_dial_entries(const dict_source_t & source)
 	for (const auto & entry : dial_it->second.records)
 	{
 		if (entry.old_text.empty())
+			continue;
+
+		if (entry.status != status_t::translated)
 			continue;
 
 		m_dial_topics.push_back({ string_utils::to_lower_utf8(entry.old_text), entry.new_text, source.name });
@@ -43,7 +41,7 @@ void glossary_t::collect_glossary_entries(const dict_source_t & source, rec_type
 		if (entry.old_text == entry.new_text)
 			continue;
 
-		if (!is_trusted_status(entry.status))
+		if (entry.status != status_t::translated)
 			continue;
 
 		m_glossary_terms.push_back({ string_utils::to_lower_utf8(entry.old_text), entry.new_text, source.name });

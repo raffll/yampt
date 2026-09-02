@@ -1,6 +1,7 @@
 #pragma once
 
 #include <editor/glossary.hpp>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -29,6 +30,7 @@ struct highlight_request_t
 	const std::vector<annotation_t> * annotations;
 	bool use_old_text;
 	highlight_sort_policy_t sort_policy;
+	std::set<highlight_kind_t> enabled_kinds;
 };
 
 class highlight_coordinator_t

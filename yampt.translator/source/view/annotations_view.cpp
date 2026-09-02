@@ -4,8 +4,16 @@
 #include <set>
 #include <QApplication>
 #include <QClipboard>
-#include <QListWidget>
+#include <QHeaderView>
+#include <QTreeWidget>
 #include <QVBoxLayout>
+
+namespace {
+
+constexpr int column_annotation = 0;
+constexpr int column_source = 1;
+
+} // namespace
 
 annotations_view_t::annotations_view_t(QWidget * parent)
     : QWidget(parent)
@@ -14,10 +22,19 @@ annotations_view_t::annotations_view_t(QWidget * parent)
 	layout->setContentsMargins(0, 0, 0, 0);
 	layout->setSpacing(4);
 
-	m_list = new QListWidget(this);
-	layout->addWidget(m_list);
+	m_tree = new QTreeWidget(this);
+	m_tree->setColumnCount(2);
+	m_tree->setHeaderLabels({ tr("Annotation"), tr("Source") });
+	m_tree->setRootIsDecorated(false);
+	m_tree->setSelectionMode(QAbstractItemView::SingleSelection);
+	m_tree->header()->setSectionResizeMode(column_annotation, QHeaderView::Interactive);
+	m_tree->header()->setSectionResizeMode(column_source, QHeaderView::Interactive);
+	m_tree->header()->setStretchLastSection(true);
+	m_tree->header()->setSectionsMovable(false);
+	m_tree->setColumnWidth(column_annotation, 220);
+	layout->addWidget(m_tree);
 
-	connect(m_list, &QListWidget::itemClicked, this, &annotations_view_t::on_item_clicked);
+	connect(m_tree, &QTreeWidget::itemClicked, this, &annotations_view_t::on_item_clicked);
 }
 
 struct annotation_entry_t
@@ -55,19 +72,8 @@ static std::vector<annotation_entry_t> deduplicate_and_sort(
 	return result;
 }
 
-static QString format_annotation_display(const annotation_entry_t & entry)
-{
-	QString display = QString::fromStdString(entry.old_text + " \xe2\x86\x92 " + entry.new_text);
-	if (entry.source.empty())
-		return display;
-
-	const auto name = string_utils::extract_filename(entry.source);
-	display += QString::fromStdString("  [" + std::string(name) + "]");
-	return display;
-}
-
 static void add_annotation_section(
-    QListWidget * list,
+    QTreeWidget * tree,
     const std::vector<annotation_entry_t> & entries,
     const QString & header_text,
     const QColor & header_color)
@@ -75,16 +81,20 @@ static void add_annotation_section(
 	if (entries.empty())
 		return;
 
-	auto * header = new QListWidgetItem(header_text);
-	header->setForeground(header_color);
+	auto * header = new QTreeWidgetItem(tree, { header_text });
+	header->setForeground(column_annotation, header_color);
 	header->setFlags(Qt::NoItemFlags);
-	list->addItem(header);
+	header->setFirstColumnSpanned(true);
 
 	for (const auto & entry : entries)
 	{
-		auto * item = new QListWidgetItem(format_annotation_display(entry));
-		item->setData(Qt::UserRole, QString::fromStdString(entry.new_text));
-		list->addItem(item);
+		const auto annotation = QString::fromStdString(entry.old_text + " \xe2\x86\x92 " + entry.new_text);
+		const auto source = entry.source.empty()
+		    ? QString()
+		    : QString::fromStdString(std::string(string_utils::extract_filename(entry.source)));
+
+		auto * item = new QTreeWidgetItem(tree, { annotation, source });
+		item->setData(column_annotation, Qt::UserRole, QString::fromStdString(entry.new_text));
 	}
 }
 
@@ -94,37 +104,38 @@ void annotations_view_t::update_annotations(
     const std::string & gender,
     const std::string & enchantment)
 {
-	m_list->clear();
+	m_tree->clear();
 
 	if (!enchantment.empty())
 	{
-		auto * item = new QListWidgetItem(tr("Enchantment: %1").arg(QString::fromStdString(enchantment)));
-		m_list->addItem(item);
+		auto * item = new QTreeWidgetItem(m_tree, { tr("Enchantment: %1").arg(QString::fromStdString(enchantment)) });
+		item->setFirstColumnSpanned(true);
 	}
 
 	if (!speaker_name.empty())
 	{
-		auto * item = new QListWidgetItem(
-		    tr("Speaker: %1 (%2)").arg(QString::fromStdString(speaker_name), QString::fromStdString(gender)));
-		m_list->addItem(item);
+		auto * item = new QTreeWidgetItem(
+		    m_tree,
+		    { tr("Speaker: %1 (%2)").arg(QString::fromStdString(speaker_name), QString::fromStdString(gender)) });
+		item->setFirstColumnSpanned(true);
 	}
 
 	const auto hyperlinks = deduplicate_and_sort(annotations, annotation_t::dial_topic);
-	add_annotation_section(m_list, hyperlinks, tr("--- Hyperlinks ---"), QColor(70, 130, 200));
+	add_annotation_section(m_tree, hyperlinks, tr("--- Hyperlinks ---"), QColor(70, 130, 200));
 
 	const auto glossary = deduplicate_and_sort(annotations, annotation_t::glossary_term);
-	add_annotation_section(m_list, glossary, tr("--- Glossary ---"), QColor(50, 150, 50));
+	add_annotation_section(m_tree, glossary, tr("--- Glossary ---"), QColor(50, 150, 50));
 
 	const auto inflection = deduplicate_and_sort(annotations, annotation_t::inflection_form);
-	add_annotation_section(m_list, inflection, tr("--- Inflection ---"), QColor(190, 140, 60));
+	add_annotation_section(m_tree, inflection, tr("--- Inflection ---"), QColor(190, 140, 60));
 }
 
-void annotations_view_t::on_item_clicked(QListWidgetItem * item)
+void annotations_view_t::on_item_clicked(QTreeWidgetItem * item, int)
 {
 	if (!item)
 		return;
 
-	auto new_text = item->data(Qt::UserRole).toString();
+	auto new_text = item->data(column_annotation, Qt::UserRole).toString();
 	if (new_text.isEmpty())
 		return;
 
@@ -134,5 +145,5 @@ void annotations_view_t::on_item_clicked(QListWidgetItem * item)
 
 void annotations_view_t::clear()
 {
-	m_list->clear();
+	m_tree->clear();
 }

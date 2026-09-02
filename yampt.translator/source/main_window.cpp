@@ -942,6 +942,10 @@ void main_window_t::load_config()
 
 	m_editor_view->set_enabled_highlight_kinds(enabled_kinds);
 
+	m_editor_view->set_spell_check_checked(m_spell_check->isChecked());
+	m_editor_view->set_grammar_check_checked(m_grammar_check->isChecked());
+	m_editor_view->set_whitespace_checked(m_whitespace_check->isChecked());
+
 	const float split_ratio = m_settings.split_ratio();
 	if (split_ratio > 0.0f)
 		m_editor_view->set_split_ratio(split_ratio);

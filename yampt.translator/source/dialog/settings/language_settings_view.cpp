@@ -1,5 +1,6 @@
 #include <resource_paths.hpp>
 #include "language_settings_view.hpp"
+#include "editor/spell_checker.hpp"
 #include <io/codepage.hpp>
 #include <utility/language_config.hpp>
 #include <algorithm>
@@ -79,10 +80,10 @@ language_settings_view_t::language_settings_view_t(const std::string & dictionar
 	encoding_separator->setFrameShadow(QFrame::Sunken);
 	layout->addWidget(encoding_separator);
 
-	auto * encoding_form = new QFormLayout;
 	m_encoding_note = new QLabel(this);
-	encoding_form->addRow(tr("Encoding:"), m_encoding_note);
-	layout->addLayout(encoding_form);
+	layout->addWidget(m_encoding_note);
+	m_spell_status_note = new QLabel(this);
+	layout->addWidget(m_spell_status_note);
 
 	layout->addStretch();
 
@@ -99,6 +100,12 @@ language_settings_view_t::language_settings_view_t(const std::string & dictionar
 	    &QComboBox::currentIndexChanged,
 	    this,
 	    &language_settings_view_t::on_native_language_changed);
+
+	connect(
+	    m_native_spell_combo,
+	    &QComboBox::currentIndexChanged,
+	    this,
+	    [this](int) { update_spell_status(); });
 }
 
 void language_settings_view_t::load(const settings_store_t & settings)
@@ -215,7 +222,37 @@ void language_settings_view_t::on_native_language_changed(int index)
 	m_native_tag_edit->setText(code);
 
 	if (m_encoding_note)
-		m_encoding_note->setText(QString::fromStdString(codepage_name(lang->codepage)));
+		m_encoding_note->setText(tr("Encoding: %1").arg(QString::fromStdString(codepage_name(lang->codepage))));
+
+	update_spell_status();
+}
+
+void language_settings_view_t::update_spell_status()
+{
+	if (!m_spell_status_note)
+		return;
+
+	const auto label = m_native_spell_combo->currentText();
+	const auto aff_path = m_native_spell_combo->currentData().toString().toStdString();
+
+	if (aff_path.empty())
+	{
+		m_spell_status_note->setText(tr("Spell Check: no dictionary selected"));
+		return;
+	}
+
+	auto dic_path = aff_path;
+	const auto dot = dic_path.find_last_of('.');
+	if (dot != std::string::npos)
+		dic_path = dic_path.substr(0, dot) + ".dic";
+
+	spell_checker_t checker;
+	const bool loaded = checker.load(aff_path, dic_path) && checker.is_loaded();
+
+	if (loaded)
+		m_spell_status_note->setText(tr("Spell Check: %1 loaded").arg(label));
+	else
+		m_spell_status_note->setText(tr("Spell Check: %1 failed to load").arg(label));
 }
 
 void language_settings_view_t::update_spell_combo(QComboBox * combo, const std::string & prefix)

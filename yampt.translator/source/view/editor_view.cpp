@@ -124,9 +124,27 @@ QWidget * editor_view_t::setup_right_panel(QSplitter * parent_splitter)
 	m_inflection_toggle = make_toggle(tr("I"), tr("Show inflected topic form highlights"), QColor(210, 185, 235));
 	m_glossary_toggle = make_toggle(tr("G"), tr("Show glossary term highlights"), QColor(200, 240, 200));
 
+	const auto make_plain_toggle = [&](const QString & letter, const QString & tooltip)
+	{
+		auto * button = new QPushButton(letter, apply_row);
+		button->setToolTip(tooltip);
+		button->setCheckable(true);
+		button->setChecked(true);
+		button->setFixedWidth(toggle_width);
+
+		return button;
+	};
+
+	m_spell_toggle = make_plain_toggle(tr("S"), tr("Toggle spell check underlines in translation"));
+	m_grammar_toggle = make_plain_toggle(tr("Gr"), tr("Toggle grammar check highlights in translation"));
+	m_whitespace_toggle = make_plain_toggle(tr("W"), tr("Show tabs and line endings in editor"));
+
 	apply_layout->addWidget(m_hyperlink_toggle);
 	apply_layout->addWidget(m_inflection_toggle);
 	apply_layout->addWidget(m_glossary_toggle);
+	apply_layout->addWidget(m_spell_toggle);
+	apply_layout->addWidget(m_grammar_toggle);
+	apply_layout->addWidget(m_whitespace_toggle);
 	apply_layout->addWidget(m_apply_button, 1);
 
 	right_layout->addWidget(m_translation_label);
@@ -150,6 +168,10 @@ void editor_view_t::setup_connections()
 	connect(m_hyperlink_toggle, &QPushButton::toggled, this, &editor_view_t::highlight_filter_changed);
 	connect(m_inflection_toggle, &QPushButton::toggled, this, &editor_view_t::highlight_filter_changed);
 	connect(m_glossary_toggle, &QPushButton::toggled, this, &editor_view_t::highlight_filter_changed);
+
+	connect(m_spell_toggle, &QPushButton::toggled, this, &editor_view_t::spell_check_toggled);
+	connect(m_grammar_toggle, &QPushButton::toggled, this, &editor_view_t::grammar_check_toggled);
+	connect(m_whitespace_toggle, &QPushButton::toggled, this, &editor_view_t::whitespace_toggled);
 
 	auto sync_from = [this](QAbstractScrollArea * source_widget)
 	{
@@ -526,4 +548,22 @@ void editor_view_t::set_enabled_highlight_kinds(const std::set<highlight_kind_t>
 	m_hyperlink_toggle->setChecked(kinds.find(highlight_kind_t::hyperlink) != kinds.end());
 	m_inflection_toggle->setChecked(kinds.find(highlight_kind_t::inflection) != kinds.end());
 	m_glossary_toggle->setChecked(kinds.find(highlight_kind_t::glossary) != kinds.end());
+}
+
+void editor_view_t::set_spell_check_checked(bool checked)
+{
+	const QSignalBlocker blocker(m_spell_toggle);
+	m_spell_toggle->setChecked(checked);
+}
+
+void editor_view_t::set_grammar_check_checked(bool checked)
+{
+	const QSignalBlocker blocker(m_grammar_toggle);
+	m_grammar_toggle->setChecked(checked);
+}
+
+void editor_view_t::set_whitespace_checked(bool checked)
+{
+	const QSignalBlocker blocker(m_whitespace_toggle);
+	m_whitespace_toggle->setChecked(checked);
 }

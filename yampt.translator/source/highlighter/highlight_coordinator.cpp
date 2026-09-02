@@ -55,6 +55,9 @@ std::vector<highlight_position_t> highlight_coordinator_t::find_annotation_highl
 	for (const auto & annotation : *request.annotations)
 	{
 		const auto kind = kind_for_annotation(annotation);
+		if (request.enabled_kinds.find(kind) == request.enabled_kinds.end())
+			continue;
+
 		const auto & raw =
 		    kind == highlight_kind_t::inflection ? annotation.old_text
 		                                         : (request.use_old_text ? annotation.old_text : annotation.new_text);

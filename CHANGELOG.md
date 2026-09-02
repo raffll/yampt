@@ -4,10 +4,11 @@
 
 ### yTranslator
 - [NEW] Added Spanish and Portuguese, plus Czech, Slovak, Slovenian, Croatian, Romanian, Ukrainian, Bulgarian, Serbian, Dutch, Swedish, Danish, Norwegian Bokmal, Finnish, Catalan, and Galician as target languages; Finnish can be translated but has no spell-check dictionary
-- [NEW] Apply Topic Tags in a dictionary's right-click menu: wraps dialogue topics found in the translated text of dialogue responses in hyperlink tags so they appear as clickable links in-game. It also tags inflected forms of topics (read from the dictionary's generated .top file) where they do not collide with a direct topic link. Only dialogue responses are tagged, excluding voice lines. Changes are recorded in history and can be reverted, and re-running refreshes the tags rather than duplicating them
+- [NEW] Apply Topic Tags in a dictionary's right-click menu: wraps dialogue topics found in the text of dialogue responses in hyperlink tags so they appear as clickable links in-game. It also tags inflected forms of topics (read from the dictionary's generated .top file) where they do not collide with a direct topic link. All dialogue responses are tagged regardless of their status, excluding voice lines. Changes are recorded in history and can be reverted, and re-running refreshes the tags rather than duplicating them
 - [NEW] Remove Topic Tags in a dictionary's right-click menu: strips all topic hyperlink tags from dialogue responses; the change is recorded in history and can be reverted
-- [NEW] While editing a dictionary, the Annotations tab now lists the inflected topic forms (from loaded .top and .mrk files) that appear in the current entry's translation, under an Inflection section, each showing its source file
+- [NEW] While editing a dictionary, the Annotations tab lists the inflected topic forms (from loaded .top and .mrk files) related to the current entry's translation, under an Inflection section. When any form of a topic appears in the text, every known form of that topic is listed, not only the one present. The tab is now a two-column table showing each annotation and its source file, with resizable columns
 - [NEW] Editable AI translation prompt: a Prompt tab in the Auto Translation settings holds a single system prompt shared by all AI providers, with a Reset to Default button to restore the built-in prompt
+- [NEW] Three toggle buttons (H, I, G) beside the Next button turn the hyperlink, inflection, and glossary highlights on or off in the translation editor. Turning one off lets a lower-priority highlight take over the same word — for example disabling hyperlinks reveals the inflection highlight underneath. The choices are remembered between sessions
 - [CHANGE] Inflected topic forms are highlighted in the editor with their own color, distinct from dialogue topics and glossary terms
 - [CHANGE] Localization files (.cel, .top, .mrk) no longer show the Status column or the Statuses filter, since their entries have no status
 - [CHANGE] Language settings now list the foreign and native languages in alphabetical order
@@ -18,6 +19,9 @@
 - [CHANGE] The over-the-byte-limit part of a translation now uses the same highlight color as forbidden characters, so all validation problems share one color
 - [CHANGE] The @ character is no longer treated as a forbidden character, so translations containing topic tags no longer show a validation error
 - [CHANGE] The Tools menu entry and its dialog title "Merge Dictionaries" are now named "Dictionary Merger"
+- [CHANGE] Hyperlink and glossary annotations are now built only from entries with the Translated status, so unverified translations no longer contribute topic links or glossary terms
+- [CHANGE] When editing a localization file, the two columns are now labelled for the file type: Cell for .cel, Topic Form and Topic for .top, and Marker for .mrk
+- [CHANGE] History entries now show the status in square brackets to match the timestamp style
 - [FIX] The validation status now states the reason when a translation is invalid (for example the byte limit it exceeds, or the forbidden character it contains), instead of only the character count
 - [FIX] A translation is now propagated to other entries with the same source text even when the translation is identical to the original (a proper noun), while entries that already hold that text are left untouched
 - [FIX] An invalid translation (containing a forbidden character or exceeding the byte limit) is marked with the Error status and is no longer propagated to other entries; propagation also skips any entry whose record type cannot hold the text within its own byte limit

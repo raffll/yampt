@@ -63,7 +63,6 @@ private:
 	std::vector<topic_entry_t> m_glossary_terms;
 
 	static bool is_alpha(char c);
-	static bool is_trusted_status(status_t status);
 
 	void collect_dial_entries(const dict_source_t & source);
 	void collect_glossary_entries(const dict_source_t & source, rec_type_t record_type);

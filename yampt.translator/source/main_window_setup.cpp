@@ -854,6 +854,14 @@ void main_window_t::connect_editor_signals()
 			m_record_display_controller->refresh_highlight_filter(row_data);
 	});
 
+	connect(m_editor_view, &editor_view_t::spell_check_toggled, m_spell_check, &QAction::setChecked);
+	connect(m_editor_view, &editor_view_t::grammar_check_toggled, m_grammar_check, &QAction::setChecked);
+	connect(m_editor_view, &editor_view_t::whitespace_toggled, m_whitespace_check, &QAction::setChecked);
+
+	connect(m_spell_check, &QAction::toggled, m_editor_view, &editor_view_t::set_spell_check_checked);
+	connect(m_grammar_check, &QAction::toggled, m_editor_view, &editor_view_t::set_grammar_check_checked);
+	connect(m_whitespace_check, &QAction::toggled, m_editor_view, &editor_view_t::set_whitespace_checked);
+
 	connect(m_editor_view, &editor_view_t::apply_clicked, this, [this]() { advance_to_next_row(); });
 
 	connect(

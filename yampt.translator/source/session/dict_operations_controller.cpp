@@ -45,9 +45,6 @@ bool is_voice_info(const record_entry_t & entry)
 
 bool should_skip_record(const record_entry_t & entry)
 {
-	if (entry.status != status_t::translated)
-		return true;
-
 	if (is_whitespace_only(entry.new_text))
 		return true;
 
@@ -63,9 +60,10 @@ bool should_skip_record(const record_entry_t & entry)
 	return false;
 }
 
-std::string build_apply_summary(const apply_tags_result_t & result)
+std::string build_apply_summary(const apply_tags_result_t & result, const std::string & top_path)
 {
 	app_logger_t::reset_log();
+	app_logger_t::add_log("[info] apply tags: reading inflections from \"" + top_path + "\"\r\n");
 	app_logger_t::add_log(
 	    "[info] apply tags: " + std::to_string(result.entries_changed) + " entries changed, "
 	    + std::to_string(result.tags_inserted) + " tags inserted\r\n");
@@ -218,14 +216,19 @@ void dict_operations_controller_t::on_apply_tags(dict_document_t * dict_doc)
 
 	topic_tagger_t tagger;
 	tagger.seed_topics(dict_doc->data());
-	tagger.seed_inflections(load_inflected_forms(dict_doc->path(), m_deps.session.codepage()));
+	const auto dict_path = dict_doc->path();
+	const auto sep = dict_path.find_last_of("/\\");
+	const auto dir = sep != std::string::npos ? dict_path.substr(0, sep) : std::string(".");
+	const auto top_path = string_utils::join_path(dir, loc_generator::derive_esm_name(dict_path) + ".top");
+
+	tagger.seed_inflections(load_inflected_forms(dict_path, m_deps.session.codepage()));
 
 	const auto result = process_all_info_records({ *dict_doc, m_deps.edit_history, tagger }, true);
 
 	if (result.entries_changed > 0 && m_deps.refresh_table)
 		m_deps.refresh_table();
 
-	m_deps.log_view.append_log("apply tags", build_apply_summary(result));
+	m_deps.log_view.append_log("apply tags", build_apply_summary(result, top_path));
 }
 
 void dict_operations_controller_t::on_remove_tags(dict_document_t * dict_doc)

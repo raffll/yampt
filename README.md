@@ -46,7 +46,7 @@ Qt6 GUI for interactive plugin translation.
 - Find/Replace in a dedicated left-panel tab
 
 **Analysis**
-- Multi-layer syntax highlighting: MWScript keywords, hyperlinks, glossary terms, forbidden characters
+- Multi-layer syntax highlighting: MWScript keywords, hyperlinks, glossary terms, forbidden characters, with per-kind toggles (hyperlink, inflection, glossary)
 - Spell checking with per-language Hunspell dictionaries
 - Annotation system: hyperlinks, gender info, glossary matches from loaded base dicts, and inflected topic forms from loaded localization files
 - Full script preview with sync scrolling between original and translation

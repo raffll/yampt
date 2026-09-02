@@ -238,12 +238,13 @@ void sidebar_view_t::show_dict_context_menu(const std::string & path, const QPoi
 	QMenu menu(this);
 	auto * save_action = menu.addAction(tr("Save"));
 	menu.addSeparator();
+	auto * generate_loc_action = menu.addAction(tr("Generate Localization Files"));
+	generate_loc_action->setToolTip(tr("Generate .cel/.top/.mrk for OpenMW"));
+	menu.addSeparator();
 	auto * apply_tags_action = menu.addAction(tr("Apply Topic Tags"));
 	apply_tags_action->setToolTip(tr("Refresh @...# topic tags on dialogue responses"));
 	auto * remove_tags_action = menu.addAction(tr("Remove Topic Tags"));
 	remove_tags_action->setToolTip(tr("Strip all @...# topic tags from dialogue responses"));
-	auto * generate_loc_action = menu.addAction(tr("Generate Localization Files"));
-	generate_loc_action->setToolTip(tr("Generate .cel/.top/.mrk for OpenMW"));
 	menu.addSeparator();
 	auto * delete_action = menu.addAction(tr("Delete"));
 

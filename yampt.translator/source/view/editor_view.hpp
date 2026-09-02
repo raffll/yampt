@@ -50,10 +50,17 @@ public:
 	std::set<highlight_kind_t> enabled_highlight_kinds() const;
 	void set_enabled_highlight_kinds(const std::set<highlight_kind_t> & kinds);
 
+	void set_spell_check_checked(bool checked);
+	void set_grammar_check_checked(bool checked);
+	void set_whitespace_checked(bool checked);
+
 signals:
 	void text_changed();
 	void apply_clicked();
 	void highlight_filter_changed();
+	void spell_check_toggled(bool checked);
+	void grammar_check_toggled(bool checked);
+	void whitespace_toggled(bool checked);
 
 private:
 	QWidget * setup_left_panel(QSplitter * parent_splitter);
@@ -75,6 +82,9 @@ private:
 	QPushButton * m_hyperlink_toggle = nullptr;
 	QPushButton * m_inflection_toggle = nullptr;
 	QPushButton * m_glossary_toggle = nullptr;
+	QPushButton * m_spell_toggle = nullptr;
+	QPushButton * m_grammar_toggle = nullptr;
+	QPushButton * m_whitespace_toggle = nullptr;
 
 	std::optional<script_template_t> m_script_template;
 	bool m_scroll_syncing = false;
