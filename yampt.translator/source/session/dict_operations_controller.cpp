@@ -1,6 +1,6 @@
 #include <resource_paths.hpp>
 #include "dict_operations_controller.hpp"
-#include "../dialog/merge_dialog.hpp"
+#include "../dialog/dict_selection_dialog.hpp"
 #include "../editor/edit_history.hpp"
 #include "../model/dict_document.hpp"
 #include "../view/log_view.hpp"
@@ -157,20 +157,23 @@ void dict_operations_controller_t::on_merge()
 {
 	const auto all_dicts = m_deps.session.all_dicts();
 
-	std::vector<merge_dialog_t::dict_entry_t> loaded_dicts;
+	std::vector<dict_selection_dialog_t::dict_entry_t> loaded_dicts;
 	for (const auto * dict_doc : all_dicts)
 	{
-		auto filename = std::string(string_utils::extract_filename(dict_doc->path()));
-		loaded_dicts.push_back({ filename, dict_doc->path(), dict_doc->dict_kind() });
+		const auto & path = dict_doc->path();
+		const auto filename = std::string(string_utils::extract_filename(path));
+		const auto sep = path.find_last_of("/\\");
+		const auto dir = sep != std::string::npos ? path.substr(0, sep) : path;
+		loaded_dicts.push_back({ filename, path, dict_doc->dict_kind(), dir, {}, true });
 	}
 
-	merge_dialog_t dialog(loaded_dicts, m_deps.parent_widget);
+	dict_selection_dialog_t dialog(loaded_dicts, {}, m_deps.parent_widget);
+	dialog.setWindowTitle(QCoreApplication::translate("yTranslator", "Dictionary Merger"));
+	dialog.set_minimum_selection(2);
 	if (dialog.exec() != QDialog::Accepted)
 		return;
 
-	const auto selected_paths = dialog.selected_paths();
-	if (selected_paths.size() < 2)
-		return;
+	const auto selected_paths = dialog.get_selected_paths();
 
 	app_logger_t::reset_log();
 

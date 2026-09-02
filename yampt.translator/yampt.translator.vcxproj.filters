@@ -39,7 +39,6 @@
     <ClCompile Include="source\editor\operation_executor.cpp" />
     <ClCompile Include="source\highlighter\grammar_checker.cpp" />
     <ClCompile Include="source\dialog\dict_selection_dialog.cpp" />
-    <ClCompile Include="source\dialog\merge_dialog.cpp" />
     <ClCompile Include="source\dialog\make_base_dialog.cpp" />
     <ClCompile Include="source\dialog\first_run_dialog.cpp" />
     <ClCompile Include="source\dialog\settings\translator_settings_dialog.cpp" />
