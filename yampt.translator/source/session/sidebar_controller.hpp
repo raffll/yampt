@@ -19,6 +19,7 @@ struct sidebar_controller_callbacks_t
 {
 	std::function<void(document_t *)> switch_document;
 	std::function<void()> rebuild_annotations;
+	std::function<void()> update_annotations;
 	std::function<void()> save_config;
 	std::function<void(bool)> set_unsaved_changes;
 };

@@ -20,6 +20,8 @@ struct dict_operations_deps_t
 	std::function<void()> rebuild_sidebar;
 	std::function<dict_document_t *()> active_dict_document;
 	std::function<void()> refresh_table;
+	std::function<void()> rebuild_annotations;
+	std::function<void()> update_annotations;
 };
 
 class dict_operations_controller_t
@@ -32,5 +34,7 @@ public:
 	void on_remove_tags(dict_document_t * dict_doc);
 
 private:
+	void refresh_after_tagging();
+
 	dict_operations_deps_t m_deps;
 };

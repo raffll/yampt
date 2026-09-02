@@ -375,7 +375,12 @@ void sidebar_controller_t::on_generate_loc_requested(const std::string & path)
 	m_deps.log_view.append_log("generate loc", app_logger_t::get_log());
 
 	scan_workspace();
+	m_deps.callbacks.rebuild_annotations();
+	m_deps.last_annotation_version = m_deps.session.dict_version();
 	reload_open_loc_documents(result);
+
+	if (m_deps.callbacks.update_annotations)
+		m_deps.callbacks.update_annotations();
 }
 
 void sidebar_controller_t::reload_open_loc_documents(const loc_generator::generation_result_t & result)

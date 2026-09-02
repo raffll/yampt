@@ -106,17 +106,26 @@ void annotations_view_t::update_annotations(
 {
 	m_tree->clear();
 
-	if (!enchantment.empty())
+	if (!speaker_name.empty())
 	{
-		auto * item = new QTreeWidgetItem(m_tree, { tr("Enchantment: %1").arg(QString::fromStdString(enchantment)) });
+		auto * header = new QTreeWidgetItem(m_tree, { tr("--- Speaker ---") });
+		header->setForeground(column_annotation, QColor(150, 90, 200));
+		header->setFlags(Qt::NoItemFlags);
+		header->setFirstColumnSpanned(true);
+
+		auto * item = new QTreeWidgetItem(
+		    m_tree, { tr("%1 (%2)").arg(QString::fromStdString(speaker_name), QString::fromStdString(gender)) });
 		item->setFirstColumnSpanned(true);
 	}
 
-	if (!speaker_name.empty())
+	if (!enchantment.empty())
 	{
-		auto * item = new QTreeWidgetItem(
-		    m_tree,
-		    { tr("Speaker: %1 (%2)").arg(QString::fromStdString(speaker_name), QString::fromStdString(gender)) });
+		auto * header = new QTreeWidgetItem(m_tree, { tr("--- Enchantment ---") });
+		header->setForeground(column_annotation, QColor(150, 90, 200));
+		header->setFlags(Qt::NoItemFlags);
+		header->setFirstColumnSpanned(true);
+
+		auto * item = new QTreeWidgetItem(m_tree, { QString::fromStdString(enchantment) });
 		item->setFirstColumnSpanned(true);
 	}
 

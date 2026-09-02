@@ -83,6 +83,7 @@ main_window_t::main_window_t(QWidget * parent)
 	                                this,
 	                                { [this](document_t * doc) { switch_document(doc); },
 	                                  [this]() { rebuild_annotations(); },
+	                                  [this]() { update_annotations(); },
 	                                  [this]() { save_config(); },
 	                                  [this](bool dirty) { set_unsaved_changes(dirty); } } });
 
@@ -106,7 +107,9 @@ main_window_t::main_window_t(QWidget * parent)
 	                             [this](document_t * doc) { switch_document(doc); },
 	                             [this]() { rebuild_sidebar(); },
 	                             [this]() { return dynamic_cast<dict_document_t *>(m_active_doc); },
-	                             [this]() { rebuild_table(); } });
+	                             [this]() { rebuild_table(); },
+	                             [this]() { rebuild_annotations(); },
+	                             [this]() { update_annotations(); } });
 
 	m_record_display_controller =
 	    std::make_unique<record_display_controller_t>(record_display_deps_t { *m_editor_view,

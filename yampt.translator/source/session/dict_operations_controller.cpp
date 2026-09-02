@@ -15,7 +15,6 @@
 #include <QCoreApplication>
 #include <QDateTime>
 #include <QDir>
-#include <QMessageBox>
 
 namespace
 {
@@ -157,14 +156,6 @@ dict_operations_controller_t::dict_operations_controller_t(dict_operations_deps_
 void dict_operations_controller_t::on_merge()
 {
 	const auto all_dicts = m_deps.session.all_dicts();
-	if (all_dicts.size() < 2)
-	{
-		QMessageBox::information(
-		    m_deps.parent_widget,
-		    QCoreApplication::translate("yTranslator", "Merge"),
-		    QCoreApplication::translate("yTranslator", "At least 2 dictionaries must be loaded to merge."));
-		return;
-	}
 
 	std::vector<merge_dialog_t::dict_entry_t> loaded_dicts;
 	for (const auto * dict_doc : all_dicts)
@@ -225,8 +216,8 @@ void dict_operations_controller_t::on_apply_tags(dict_document_t * dict_doc)
 
 	const auto result = process_all_info_records({ *dict_doc, m_deps.edit_history, tagger }, true);
 
-	if (result.entries_changed > 0 && m_deps.refresh_table)
-		m_deps.refresh_table();
+	if (result.entries_changed > 0)
+		refresh_after_tagging();
 
 	m_deps.log_view.append_log("apply tags", build_apply_summary(result, top_path));
 }
@@ -241,8 +232,20 @@ void dict_operations_controller_t::on_remove_tags(dict_document_t * dict_doc)
 
 	const auto result = process_all_info_records({ *dict_doc, m_deps.edit_history, tagger }, false);
 
-	if (result.entries_changed > 0 && m_deps.refresh_table)
-		m_deps.refresh_table();
+	if (result.entries_changed > 0)
+		refresh_after_tagging();
 
 	m_deps.log_view.append_log("remove tags", build_remove_summary(result));
+}
+
+void dict_operations_controller_t::refresh_after_tagging()
+{
+	if (m_deps.refresh_table)
+		m_deps.refresh_table();
+
+	if (m_deps.rebuild_annotations)
+		m_deps.rebuild_annotations();
+
+	if (m_deps.update_annotations)
+		m_deps.update_annotations();
 }
