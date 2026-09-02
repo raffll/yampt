@@ -75,8 +75,10 @@ const std::string & web_translator_config::default_system_prompt()
 	    "Preserve all HTML tags, line breaks, and formatting exactly as they appear.\n\n"
 	    "Examples:\n"
 	    "{{examples}}\n\n"
-	    "Some words are dialogue topics that must stay linked. When any of the terms below appears "
-	    "in the text, keep it exactly as written so the in-game link is preserved.\n\n"
+	    "In Morrowind dialogue, some words are clickable links to dialogue topics. For a link to work "
+	    "in-game, the word must match the topic's established name exactly. The list below pairs each "
+	    "topic with its agreed target-language form; whenever one of these topics appears in the text, "
+	    "translate it using the given form so the link is preserved.\n\n"
 	    "Hyperlinks:\n"
 	    "{{hyperlinks}}";
 	return prompt;
