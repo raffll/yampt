@@ -10,7 +10,7 @@
 merge_dialog_t::merge_dialog_t(const std::vector<dict_entry_t> & loaded_dicts, QWidget * parent)
     : QDialog(parent)
 {
-	setWindowTitle(tr("Merge Dictionaries"));
+	setWindowTitle(tr("Dictionary Merger"));
 	setModal(true);
 	resize(450, 400);
 

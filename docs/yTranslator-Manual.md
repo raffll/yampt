@@ -53,9 +53,9 @@ Works like Convert Plugin, but additionally inserts hyperlink markers around dia
 
 Works like Convert Plugin but the output file contains only the records that were actually modified. Use this to produce a lightweight translation patch.
 
-### Merge Dictionaries
+### Dictionary Merger
 
-Tools → Merge Dictionaries opens a dialog where you select multiple dictionaries and an output path. Dictionaries are merged in priority order — the last one in the list wins when entries conflict.
+Tools → Dictionary Merger opens a dialog where you select multiple dictionaries and an output path. Dictionaries are merged in priority order — the last one in the list wins when entries conflict.
 
 ### Generate Localization Files
 

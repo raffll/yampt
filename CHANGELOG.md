@@ -17,6 +17,7 @@
 - [CHANGE] Grammar issues in the translation editor are now marked with a wavy underline, like spell check (amber for grammar, red for spelling), instead of a background highlight
 - [CHANGE] The over-the-byte-limit part of a translation now uses the same highlight color as forbidden characters, so all validation problems share one color
 - [CHANGE] The @ character is no longer treated as a forbidden character, so translations containing topic tags no longer show a validation error
+- [CHANGE] The Tools menu entry and its dialog title "Merge Dictionaries" are now named "Dictionary Merger"
 - [FIX] The validation status now states the reason when a translation is invalid (for example the byte limit it exceeds, or the forbidden character it contains), instead of only the character count
 - [FIX] A translation is now propagated to other entries with the same source text even when the translation is identical to the original (a proper noun), while entries that already hold that text are left untouched
 - [FIX] An invalid translation (containing a forbidden character or exceeding the byte limit) is marked with the Error status and is no longer propagated to other entries; propagation also skips any entry whose record type cannot hold the text within its own byte limit

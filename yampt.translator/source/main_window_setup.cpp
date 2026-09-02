@@ -116,7 +116,7 @@ void main_window_t::setup_menu_bar()
 	view_menu->addAction(m_sync_scroll_check);
 
 	auto * tools_menu = menuBar()->addMenu(tr("&Tools"));
-	auto * merge_action = tools_menu->addAction(tr("&Merge Dictionaries..."));
+	auto * merge_action = tools_menu->addAction(tr("&Dictionary Merger..."));
 	merge_action->setToolTip(tr("Merge loaded dictionaries into one"));
 	connect(
 	    merge_action,

@@ -4,7 +4,7 @@
 #include <vector>
 #include <QWidget>
 
-class QVBoxLayout;
+class QListWidget;
 
 class history_view_t : public QWidget
 {
@@ -17,6 +17,5 @@ public:
 	void clear();
 
 private:
-	QWidget * m_scroll_content = nullptr;
-	QVBoxLayout * m_entries_layout = nullptr;
+	QListWidget * m_list = nullptr;
 };

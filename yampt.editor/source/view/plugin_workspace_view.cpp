@@ -477,6 +477,9 @@ void plugin_workspace_view_t::rebuild_nav_preserving_state()
 
 void plugin_workspace_view_t::on_nav_selection_changed(const nav_tree_model_t::node_info_t & info)
 {
+	if (m_preview)
+		m_preview->clear();
+
 	if (info.rec_type.empty())
 	{
 		m_record_view->clear();
@@ -571,8 +574,13 @@ void plugin_workspace_view_t::set_hide_duplicates(bool hide)
 		return;
 
 	const auto * entry = m_session->scan().find(info.rec_type, info.record_id);
-	if (entry)
-		display_record_in_view(*entry);
+	if (!entry)
+		return;
+
+	display_record_in_view(*entry);
+
+	if (m_preview)
+		m_preview->clear();
 }
 
 void plugin_workspace_view_t::set_preview_scroll_sync(bool enabled)
@@ -742,9 +750,6 @@ void plugin_workspace_view_t::display_record_in_view(const conflict_entry_t & en
 	}
 
 	m_editable_columns.set_merge_column(m_record_view->model()->merge_column());
-
-	if (m_preview)
-		m_preview->clear();
 }
 
 void plugin_workspace_view_t::update_status()
