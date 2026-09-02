@@ -9,7 +9,17 @@ loc_document_t::loc_document_t(const std::string & path, codepage_t codepage)
 
 document_kind_t loc_document_t::kind() const
 {
-	return document_kind_t::loc;
+	switch (m_file.file_kind)
+	{
+	case loc_types::loc_file_kind_t::cel:
+		return document_kind_t::loc_cel;
+	case loc_types::loc_file_kind_t::top:
+		return document_kind_t::loc_top;
+	case loc_types::loc_file_kind_t::mrk:
+		return document_kind_t::loc_mrk;
+	default:
+		return document_kind_t::loc_cel;
+	}
 }
 
 std::string loc_document_t::path() const

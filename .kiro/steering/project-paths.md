@@ -89,19 +89,19 @@ git submodule update --init external/dictionaries
 
 Visual Studio (v145 toolset). Open `yampt.sln` and build. Output: `x64/Debug/yampt.exe`, `x64/Debug/yTranslator.exe`, `x64/Debug/yEditor.exe`.
 
-MSBuild path:
-```
-C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe
+MSBuild path — do NOT hardcode the VS edition (Community/Professional/Enterprise differ per machine). Discover it with `vswhere`:
+```powershell
+$msbuild = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -requires Microsoft.Component.MSBuild -find "MSBuild\**\Bin\MSBuild.exe"
 ```
 
 Command-line build (Release x64):
 ```powershell
-& "C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe" yampt.sln /p:Configuration=Release /p:Platform=x64 /m
+& $msbuild yampt.sln /p:Configuration=Release /p:Platform=x64 /m
 ```
 
 Debug build:
 ```powershell
-& "C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe" yampt.sln /p:Configuration=Debug /p:Platform=x64 /m
+& $msbuild yampt.sln /p:Configuration=Debug /p:Platform=x64 /m
 ```
 
 ## Running Tests

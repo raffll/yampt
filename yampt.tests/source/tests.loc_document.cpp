@@ -45,13 +45,13 @@ TEST_CASE("loc_document_t::build_rows, maps entries to rows", "[i]")
 	std::filesystem::remove(path);
 }
 
-TEST_CASE("loc_document_t::kind, reports loc kind", "[i]")
+TEST_CASE("loc_document_t::kind, reports top kind", "[i]")
 {
 	const auto path = create_temp_loc("locdoc_kind.top", "szczura\tszczur\r\n");
 
 	loc_document_t document(path, codepage_t::windows_1250);
 
-	REQUIRE(document.kind() == document_kind_t::loc);
+	REQUIRE(document.kind() == document_kind_t::loc_top);
 
 	std::filesystem::remove(path);
 }

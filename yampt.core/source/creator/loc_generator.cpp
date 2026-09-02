@@ -162,13 +162,14 @@ static void insert_top_entry(top_build_context_t & context, const loc_types::loc
 	if (string_utils::to_lower(candidate.key) == string_utils::to_lower(candidate.value))
 		return;
 
-	const auto it_existing = context.dedup_map.find(candidate.key);
+	const auto lowercase_key = string_utils::to_lower(candidate.key);
+	const auto it_existing = context.dedup_map.find(lowercase_key);
 	if (it_existing != context.dedup_map.end())
 	{
 		if (it_existing->second != candidate.value)
 		{
 			app_logger_t::add_log(
-			    "[warning] top: collision \"" + candidate.key + "\" maps to \"" + it_existing->second + "\" and \"" +
+			    "[warning] top: collision \"" + lowercase_key + "\" maps to \"" + it_existing->second + "\" and \"" +
 			    candidate.value + "\"\r\n");
 			++context.collision_warnings;
 		}
@@ -176,15 +177,15 @@ static void insert_top_entry(top_build_context_t & context, const loc_types::loc
 		return;
 	}
 
-	loc_types::loc_entry_t entry = candidate;
+	loc_types::loc_entry_t entry { lowercase_key, candidate.value };
 	if (!try_encode_entry(entry, context.codepage))
 	{
-		app_logger_t::add_log("[warning] top: cannot encode form \"" + candidate.key + "\"\r\n");
+		app_logger_t::add_log("[warning] top: cannot encode form \"" + lowercase_key + "\"\r\n");
 		++context.skipped_count;
 		return;
 	}
 
-	context.dedup_map[candidate.key] = candidate.value;
+	context.dedup_map[lowercase_key] = candidate.value;
 	context.entries.push_back(std::move(entry));
 }
 
