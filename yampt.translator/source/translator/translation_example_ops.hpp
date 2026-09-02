@@ -7,7 +7,7 @@
 
 namespace translation_example_ops {
 
-std::string format_examples_prompt(const std::vector<translation_example_t> & examples);
+std::string format_examples_lines(const std::vector<translation_example_t> & examples);
 
 std::vector<translation_example_t> add_capped(
     const std::vector<translation_example_t> & examples,

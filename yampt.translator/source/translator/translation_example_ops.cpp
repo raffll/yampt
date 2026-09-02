@@ -13,21 +13,20 @@ bool contains_original(const std::vector<translation_example_t> & examples, cons
 	return false;
 }
 
-std::string format_examples_prompt(const std::vector<translation_example_t> & examples)
+std::string format_examples_lines(const std::vector<translation_example_t> & examples)
 {
-	if (examples.empty())
-		return {};
-
-	std::string prompt = "Examples:\n";
+	std::string lines;
 	for (const auto & example : examples)
 	{
-		prompt += example.original;
-		prompt += " -> ";
-		prompt += example.translation;
-		prompt += "\n";
+		if (!lines.empty())
+			lines += "\n";
+
+		lines += example.original;
+		lines += " -> ";
+		lines += example.translation;
 	}
 
-	return prompt;
+	return lines;
 }
 
 std::vector<translation_example_t> add_capped(

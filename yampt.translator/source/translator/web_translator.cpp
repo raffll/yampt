@@ -12,6 +12,22 @@
 #include <QUrl>
 #include <QUrlQuery>
 
+namespace {
+
+std::string replace_placeholder(std::string text, const std::string & placeholder, const std::string & value)
+{
+	size_t position = 0;
+	while ((position = text.find(placeholder, position)) != std::string::npos)
+	{
+		text.replace(position, placeholder.size(), value);
+		position += value.size();
+	}
+
+	return text;
+}
+
+} // namespace
+
 web_translator_t::web_translator_t(const web_translator_config_t & config, QObject * parent)
     : QObject(parent)
     , m_config(config)
@@ -200,12 +216,6 @@ std::string web_translator_t::expand_template(
 	replace_all("{{target_lang}}", target_lang);
 	replace_all("{{source_lang}}", m_source_language);
 
-	auto upper_lang = QString::fromStdString(target_lang).toUpper().toStdString();
-	replace_all("{{target_lang_upper}}", upper_lang);
-
-	auto upper_source = QString::fromStdString(m_source_language).toUpper().toStdString();
-	replace_all("{{source_lang_upper}}", upper_source);
-
 	for (const auto & [setting_key, setting_value] : m_settings)
 		replace_all("{{" + setting_key + "}}", setting_value);
 
@@ -289,15 +299,11 @@ void web_translator_t::send_chat_request(const std::string & text, const std::st
 
 	auto system_prompt = expand_template(m_config.system_prompt, text, target_lang);
 
-	if (m_glossary_fn)
-	{
-		const auto glossary_text = m_glossary_fn(text);
-		if (!glossary_text.empty())
-			system_prompt += "\n\nUse these established translations as reference:\n" + glossary_text;
-	}
+	const auto examples_text = translation_example_ops::format_examples_lines(m_examples);
+	system_prompt = replace_placeholder(system_prompt, "{{examples}}", examples_text);
 
-	if (!m_examples.empty())
-		system_prompt += translation_example_ops::format_examples_prompt(m_examples);
+	const auto glossary_text = m_glossary_fn ? m_glossary_fn(text) : std::string {};
+	system_prompt = replace_placeholder(system_prompt, "{{hyperlinks}}", glossary_text);
 
 	QJsonObject body_obj;
 	for (const auto & [field_name, field_template] : m_config.body_fields)

@@ -71,8 +71,14 @@ const std::string & web_translator_config::default_system_prompt()
 {
 	static const std::string prompt =
 	    "You are a translator for the video game Morrowind. Translate the given text from "
-	    "{{source_lang_upper}} to {{target_lang}}. Output only the translated text, nothing else. "
-	    "Preserve all HTML tags, line breaks, and formatting exactly as they appear.";
+	    "{{source_lang}} to {{target_lang}}. Output only the translated text, nothing else. "
+	    "Preserve all HTML tags, line breaks, and formatting exactly as they appear.\n\n"
+	    "Examples:\n"
+	    "{{examples}}\n\n"
+	    "Some words are dialogue topics that must stay linked. When any of the terms below appears "
+	    "in the text, keep it exactly as written so the in-game link is preserved.\n\n"
+	    "Hyperlinks:\n"
+	    "{{hyperlinks}}";
 	return prompt;
 }
 

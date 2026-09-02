@@ -35,9 +35,7 @@ Available in `headers`, `body`, and the system prompt:
 | `{{api_key}}` | User's API key from settings |
 | `{{text}}` | Source text to translate |
 | `{{target_lang}}` | Target language code (as-is from settings) |
-| `{{target_lang_upper}}` | Target language code uppercased |
 | `{{source_lang}}` | Source language from settings (foreign_language) |
-| `{{source_lang_upper}}` | Source language uppercased |
 | `{{<setting_key>}}` | Value of any provider setting by its `key` (e.g. `{{model}}`) |
 
 ## Source Language

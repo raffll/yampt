@@ -45,6 +45,8 @@ private:
 	};
 
 	void build_local_models_section(QVBoxLayout * parent, const std::string & models_dir);
+	void build_preview_tab(QVBoxLayout * parent);
+	void update_prompt_preview();
 	void build_provider_card(QVBoxLayout * parent, const web_translator_config_t & config);
 	void build_prompt_tab(QVBoxLayout * parent);
 	void build_examples_tab(QVBoxLayout * parent);
@@ -58,6 +60,9 @@ private:
 	std::vector<provider_card_t> m_provider_cards;
 
 	QPlainTextEdit * m_prompt_edit = nullptr;
+	QPlainTextEdit * m_prompt_preview = nullptr;
+	std::string m_preview_source_lang;
+	std::string m_preview_target_lang;
 
 	std::vector<translation_example_t> m_examples;
 	QTableWidget * m_examples_table = nullptr;

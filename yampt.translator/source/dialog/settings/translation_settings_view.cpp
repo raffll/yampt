@@ -1,4 +1,5 @@
 #include "translation_settings_view.hpp"
+#include "translator/translation_example_ops.hpp"
 #include <resource_paths.hpp>
 #include <settings_store.hpp>
 #include <utility/language_config.hpp>
@@ -63,11 +64,19 @@ translation_settings_view_t::translation_settings_view_t(
 	examples_layout->setSpacing(12);
 	build_examples_tab(examples_layout);
 
+	auto * preview_tab = new QWidget;
+	auto * preview_layout = new QVBoxLayout(preview_tab);
+	preview_layout->setSpacing(12);
+	build_preview_tab(preview_layout);
+
 	tabs->addTab(models_tab, tr("Local Models"));
 	tabs->addTab(providers_tab, tr("Web Providers"));
 	tabs->addTab(prompt_tab, tr("Prompt"));
 	tabs->addTab(examples_tab, tr("Examples"));
+	tabs->addTab(preview_tab, tr("Preview"));
 	layout->addWidget(tabs);
+
+	connect(tabs, &QTabWidget::currentChanged, this, [this]() { update_prompt_preview(); });
 }
 
 void translation_settings_view_t::build_local_models_section(QVBoxLayout * parent, const std::string & models_dir)
@@ -209,15 +218,13 @@ void translation_settings_view_t::build_prompt_tab(QVBoxLayout * parent)
 {
 	auto * description = new QLabel(
 	    tr("System prompt sent to AI translation providers. The glossary and examples are appended "
-	       "automatically. Available variables: {{source_lang}}, {{source_lang_upper}}, {{target_lang}}, "
-	       "{{target_lang_upper}}."),
+	       "automatically. Available variables: {{source_lang}}, {{target_lang}}."),
 	    this);
 	description->setStyleSheet("color: rgb(120, 120, 120); font-size: 11px;");
 	description->setWordWrap(true);
 	parent->addWidget(description);
 
 	m_prompt_edit = new QPlainTextEdit(this);
-	m_prompt_edit->setPlaceholderText(QString::fromStdString(web_translator_config::default_system_prompt()));
 	parent->addWidget(m_prompt_edit, 1);
 
 	auto * button_row = new QHBoxLayout;
@@ -234,6 +241,38 @@ void translation_settings_view_t::build_prompt_tab(QVBoxLayout * parent)
 	    this,
 	    [this]()
 	{ m_prompt_edit->setPlainText(QString::fromStdString(web_translator_config::default_system_prompt())); });
+}
+
+void translation_settings_view_t::build_preview_tab(QVBoxLayout * parent)
+{
+	auto * description = new QLabel(
+	    tr("The full prompt as sent to AI providers, with the source and target languages resolved "
+	       "and the examples appended. The glossary for the current entry is added at translation time."),
+	    this);
+	description->setStyleSheet("color: rgb(120, 120, 120); font-size: 11px;");
+	description->setWordWrap(true);
+	parent->addWidget(description);
+
+	m_prompt_preview = new QPlainTextEdit(this);
+	m_prompt_preview->setReadOnly(true);
+	parent->addWidget(m_prompt_preview, 1);
+}
+
+void translation_settings_view_t::update_prompt_preview()
+{
+	if (!m_prompt_preview || !m_prompt_edit)
+		return;
+
+	auto text = m_prompt_edit->toPlainText();
+	if (text.isEmpty())
+		text = QString::fromStdString(web_translator_config::default_system_prompt());
+
+	text.replace("{{source_lang}}", QString::fromStdString(m_preview_source_lang));
+	text.replace("{{target_lang}}", QString::fromStdString(m_preview_target_lang));
+	text.replace("{{examples}}", QString::fromStdString(translation_example_ops::format_examples_lines(m_examples)));
+	text.replace("{{hyperlinks}}", tr("[hyperlinks for the current entry are inserted here when translating]"));
+
+	m_prompt_preview->setPlainText(text);
 }
 
 void translation_settings_view_t::build_examples_tab(QVBoxLayout * parent)
@@ -331,10 +370,20 @@ void translation_settings_view_t::load(const settings_store_t & settings)
 		update_status(card);
 
 	if (m_prompt_edit)
-		m_prompt_edit->setPlainText(QString::fromStdString(settings.translation_prompt()));
+	{
+		auto stored = settings.translation_prompt();
+		if (stored.empty())
+			stored = web_translator_config::default_system_prompt();
+
+		m_prompt_edit->setPlainText(QString::fromStdString(stored));
+	}
 
 	m_examples = settings.translation_examples();
 	rebuild_examples_table();
+
+	m_preview_source_lang = settings.foreign_language();
+	m_preview_target_lang = settings.native_language();
+	update_prompt_preview();
 }
 
 void translation_settings_view_t::apply(settings_store_t & settings) const

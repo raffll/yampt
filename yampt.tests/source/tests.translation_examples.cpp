@@ -1,38 +1,36 @@
 #include <catch2/catch_all.hpp>
 #include <translator/translation_example_ops.hpp>
 
-TEST_CASE("translation_example_ops::format_examples_prompt, empty list yields empty string", "[u]")
+TEST_CASE("translation_example_ops::format_examples_lines, empty list yields empty string", "[u]")
 {
 	const std::vector<translation_example_t> examples;
 
-	const auto prompt = translation_example_ops::format_examples_prompt(examples);
+	const auto lines = translation_example_ops::format_examples_lines(examples);
 
-	REQUIRE(prompt.empty());
+	REQUIRE(lines.empty());
 }
 
-TEST_CASE("translation_example_ops::format_examples_prompt, one example yields labeled block", "[u]")
+TEST_CASE("translation_example_ops::format_examples_lines, one example yields a line", "[u]")
 {
 	const std::vector<translation_example_t> examples{{"Nerevarine", "Nerevaryn"}};
 
-	const auto prompt = translation_example_ops::format_examples_prompt(examples);
+	const auto lines = translation_example_ops::format_examples_lines(examples);
 
-	REQUIRE(prompt.find("Examples:") != std::string::npos);
-	REQUIRE(prompt.find("Nerevarine") != std::string::npos);
-	REQUIRE(prompt.find("Nerevaryn") != std::string::npos);
+	REQUIRE(lines == "Nerevarine -> Nerevaryn");
 }
 
-TEST_CASE("translation_example_ops::format_examples_prompt, three examples preserve order", "[u]")
+TEST_CASE("translation_example_ops::format_examples_lines, three examples preserve order", "[u]")
 {
 	const std::vector<translation_example_t> examples{
 	    {"Balmora", "Balmora"},
 	    {"Vivec", "Vivek"},
 	    {"Ald-ruhn", "Ald-ruhn"}};
 
-	const auto prompt = translation_example_ops::format_examples_prompt(examples);
+	const auto lines = translation_example_ops::format_examples_lines(examples);
 
-	const auto pos_first = prompt.find("Balmora");
-	const auto pos_second = prompt.find("Vivec");
-	const auto pos_third = prompt.find("Ald-ruhn");
+	const auto pos_first = lines.find("Balmora");
+	const auto pos_second = lines.find("Vivec");
+	const auto pos_third = lines.find("Ald-ruhn");
 
 	REQUIRE(pos_first != std::string::npos);
 	REQUIRE(pos_second != std::string::npos);
