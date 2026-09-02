@@ -929,6 +929,19 @@ void main_window_t::load_config()
 	m_bottom_panel_toggle->setChecked(m_settings.bottom_visible());
 	m_sync_scroll_check->setChecked(m_settings.sync_scroll_enabled());
 
+	const int highlight_mask = m_settings.highlight_kinds_mask();
+	std::set<highlight_kind_t> enabled_kinds;
+	if (highlight_mask & 0x1)
+		enabled_kinds.insert(highlight_kind_t::hyperlink);
+
+	if (highlight_mask & 0x2)
+		enabled_kinds.insert(highlight_kind_t::inflection);
+
+	if (highlight_mask & 0x4)
+		enabled_kinds.insert(highlight_kind_t::glossary);
+
+	m_editor_view->set_enabled_highlight_kinds(enabled_kinds);
+
 	const float split_ratio = m_settings.split_ratio();
 	if (split_ratio > 0.0f)
 		m_editor_view->set_split_ratio(split_ratio);

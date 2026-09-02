@@ -372,12 +372,7 @@ void sidebar_controller_t::on_generate_loc_requested(const std::string & path)
 	const loc_generator::generation_input_t input { dict, output_dir, esm_name, codepage, hunspell_aff, hunspell_dic };
 	const auto result = loc_generator::generate(input);
 
-	const auto summary = app_logger_t::get_log() +
-	                     "cel=" + std::to_string(result.cel_entries) + " mrk=" + std::to_string(result.mrk_entries) +
-	                     " top=" + std::to_string(result.top_entries) +
-	                     " skipped=" + std::to_string(result.skipped_entries) +
-	                     " collisions=" + std::to_string(result.collision_warnings) + "\r\n";
-	m_deps.log_view.append_log("generate loc", summary);
+	m_deps.log_view.append_log("generate loc", app_logger_t::get_log());
 
 	scan_workspace();
 	reload_open_loc_documents(result);

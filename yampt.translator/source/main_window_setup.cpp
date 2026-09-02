@@ -827,6 +827,29 @@ void main_window_t::connect_editor_signals()
 
 	connect(m_editor_view, &editor_view_t::text_changed, this, &main_window_t::on_translation_changed);
 
+	connect(
+	    m_editor_view,
+	    &editor_view_t::highlight_filter_changed,
+	    this,
+	    [this]()
+	{
+		const auto kinds = m_editor_view->enabled_highlight_kinds();
+		int mask = 0;
+		if (kinds.count(highlight_kind_t::hyperlink))
+			mask |= 0x1;
+
+		if (kinds.count(highlight_kind_t::inflection))
+			mask |= 0x2;
+
+		if (kinds.count(highlight_kind_t::glossary))
+			mask |= 0x4;
+
+		m_settings.set_highlight_kinds_mask(mask);
+
+		if (m_editor_controller.current_row() >= 0)
+			load_record(m_editor_controller.current_row());
+	});
+
 	connect(m_editor_view, &editor_view_t::apply_clicked, this, [this]() { advance_to_next_row(); });
 
 	connect(

@@ -113,6 +113,9 @@ public:
 	bool sync_scroll_enabled() const;
 	void set_sync_scroll_enabled(bool value);
 
+	int highlight_kinds_mask() const;
+	void set_highlight_kinds_mask(int mask);
+
 	int column_width(int index) const;
 	void set_column_width(int index, int value);
 

@@ -9,7 +9,8 @@
 
 QList<QTextEdit::ExtraSelection> highlight_applier_t::build_selections(
     translation_edit_view_t * editor,
-    const std::vector<highlight_position_t> & highlights)
+    const std::vector<highlight_position_t> & highlights,
+    const std::set<highlight_kind_t> & enabled_kinds)
 {
 	QList<QTextEdit::ExtraSelection> selections;
 	auto * plain_edit = static_cast<QPlainTextEdit *>(editor);
@@ -17,6 +18,9 @@ QList<QTextEdit::ExtraSelection> highlight_applier_t::build_selections(
 
 	for (const auto & highlight : highlights)
 	{
+		if (enabled_kinds.find(highlight.kind) == enabled_kinds.end())
+			continue;
+
 		QTextEdit::ExtraSelection sel;
 
 		const bool dark = theme_system_t::instance().active_theme() == theme_t::dark;

@@ -9,6 +9,7 @@
 #include <QPalette>
 #include <QPushButton>
 #include <QScrollBar>
+#include <QSignalBlocker>
 #include <QSplitter>
 #include <QString>
 #include <QTextEdit>
@@ -99,9 +100,38 @@ QWidget * editor_view_t::setup_right_panel(QSplitter * parent_splitter)
 	translation_hlayout->addWidget(new line_number_gutter_t(m_translation_editor, translation_container));
 	translation_hlayout->addWidget(m_translation_editor);
 
+	auto * apply_row = new QWidget(right_widget);
+	auto * apply_layout = new QHBoxLayout(apply_row);
+	apply_layout->setContentsMargins(0, 0, 0, 0);
+	apply_layout->setSpacing(4);
+
+	const int toggle_width = fontMetrics().averageCharWidth() * 4;
+
+	const auto make_toggle = [&](const QString & letter, const QString & tooltip, const QColor & color)
+	{
+		auto * button = new QPushButton(letter, apply_row);
+		button->setToolTip(tooltip);
+		button->setCheckable(true);
+		button->setChecked(true);
+		button->setFixedWidth(toggle_width);
+		button->setStyleSheet(
+		    QString("QPushButton:checked { background-color: %1; }").arg(color.name()));
+
+		return button;
+	};
+
+	m_hyperlink_toggle = make_toggle(tr("H"), tr("Show dialogue topic hyperlink highlights"), QColor(200, 220, 255));
+	m_inflection_toggle = make_toggle(tr("I"), tr("Show inflected topic form highlights"), QColor(210, 185, 235));
+	m_glossary_toggle = make_toggle(tr("G"), tr("Show glossary term highlights"), QColor(200, 240, 200));
+
+	apply_layout->addWidget(m_hyperlink_toggle);
+	apply_layout->addWidget(m_inflection_toggle);
+	apply_layout->addWidget(m_glossary_toggle);
+	apply_layout->addWidget(m_apply_button, 1);
+
 	right_layout->addWidget(m_translation_label);
 	right_layout->addWidget(translation_container);
-	right_layout->addWidget(m_apply_button);
+	right_layout->addWidget(apply_row);
 
 	return right_widget;
 }
@@ -116,6 +146,10 @@ void editor_view_t::setup_connections()
 
 	connect(m_translation_editor, &QPlainTextEdit::textChanged, this, &editor_view_t::text_changed);
 	connect(m_apply_button, &QPushButton::clicked, this, &editor_view_t::apply_clicked);
+
+	connect(m_hyperlink_toggle, &QPushButton::toggled, this, &editor_view_t::highlight_filter_changed);
+	connect(m_inflection_toggle, &QPushButton::toggled, this, &editor_view_t::highlight_filter_changed);
+	connect(m_glossary_toggle, &QPushButton::toggled, this, &editor_view_t::highlight_filter_changed);
 
 	auto sync_from = [this](QAbstractScrollArea * source_widget)
 	{
@@ -466,4 +500,30 @@ void editor_view_t::clear_script_template()
 void editor_view_t::set_scroll_sync(bool enabled)
 {
 	m_scroll_sync_enabled = enabled;
+}
+
+std::set<highlight_kind_t> editor_view_t::enabled_highlight_kinds() const
+{
+	std::set<highlight_kind_t> kinds;
+	if (m_hyperlink_toggle->isChecked())
+		kinds.insert(highlight_kind_t::hyperlink);
+
+	if (m_inflection_toggle->isChecked())
+		kinds.insert(highlight_kind_t::inflection);
+
+	if (m_glossary_toggle->isChecked())
+		kinds.insert(highlight_kind_t::glossary);
+
+	return kinds;
+}
+
+void editor_view_t::set_enabled_highlight_kinds(const std::set<highlight_kind_t> & kinds)
+{
+	const QSignalBlocker block_hyperlink(m_hyperlink_toggle);
+	const QSignalBlocker block_inflection(m_inflection_toggle);
+	const QSignalBlocker block_glossary(m_glossary_toggle);
+
+	m_hyperlink_toggle->setChecked(kinds.find(highlight_kind_t::hyperlink) != kinds.end());
+	m_inflection_toggle->setChecked(kinds.find(highlight_kind_t::inflection) != kinds.end());
+	m_glossary_toggle->setChecked(kinds.find(highlight_kind_t::glossary) != kinds.end());
 }

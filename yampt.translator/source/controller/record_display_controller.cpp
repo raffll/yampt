@@ -149,8 +149,10 @@ void record_display_controller_t::apply_initial_highlights(
 	const highlight_request_t orig_request { &annotations, true, highlight_sort_policy_t::length_first };
 	auto orig_highlights = highlight_coordinator_t::find_annotation_highlights(original_lower, orig_request);
 
+	const auto enabled_kinds = m_deps.editor_view.enabled_highlight_kinds();
+
 	m_deps.extra_sel_original.annotations =
-	    highlight_applier_t::build_selections(m_deps.editor_view.original_view(), orig_highlights);
+	    highlight_applier_t::build_selections(m_deps.editor_view.original_view(), orig_highlights, enabled_kinds);
 	m_deps.extra_sel_original.grammar.clear();
 	m_deps.extra_sel_original.adapted_diff.clear();
 	highlight_applier_t::apply(m_deps.editor_view.original_view(), m_deps.extra_sel_original);
@@ -159,7 +161,7 @@ void record_display_controller_t::apply_initial_highlights(
 	auto trans_highlights = highlight_coordinator_t::find_annotation_highlights(translation_lower, trans_request);
 
 	m_deps.extra_sel_translation.annotations =
-	    highlight_applier_t::build_selections(m_deps.editor_view.translation_editor(), trans_highlights);
+	    highlight_applier_t::build_selections(m_deps.editor_view.translation_editor(), trans_highlights, enabled_kinds);
 	m_deps.extra_sel_translation.grammar =
 	    m_deps.grammar_check_action.isChecked()
 	        ? m_deps.grammar_checker.check(m_deps.editor_view.translation_editor(), row_data->type)
@@ -238,8 +240,8 @@ void record_display_controller_t::apply_translation_highlights(const table_row_t
 	const highlight_request_t request { &annotations, false, highlight_sort_policy_t::hyperlink_first };
 	auto highlights = highlight_coordinator_t::find_annotation_highlights(current_text, request);
 
-	m_deps.extra_sel_translation.annotations =
-	    highlight_applier_t::build_selections(m_deps.editor_view.translation_editor(), highlights);
+	m_deps.extra_sel_translation.annotations = highlight_applier_t::build_selections(
+	    m_deps.editor_view.translation_editor(), highlights, m_deps.editor_view.enabled_highlight_kinds());
 
 	m_deps.extra_sel_translation.grammar =
 	    m_deps.grammar_check_action.isChecked()

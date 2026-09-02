@@ -1,7 +1,9 @@
 #pragma once
 
+#include "../highlighter/highlight_coordinator.hpp"
 #include "translation_edit_view.hpp"
 #include <optional>
+#include <set>
 #include <string>
 #include <vector>
 #include <QTextEdit>
@@ -45,9 +47,13 @@ public:
 	double get_split_ratio() const;
 	void set_scroll_sync(bool enabled);
 
+	std::set<highlight_kind_t> enabled_highlight_kinds() const;
+	void set_enabled_highlight_kinds(const std::set<highlight_kind_t> & kinds);
+
 signals:
 	void text_changed();
 	void apply_clicked();
+	void highlight_filter_changed();
 
 private:
 	QWidget * setup_left_panel(QSplitter * parent_splitter);
@@ -66,6 +72,9 @@ private:
 	QLabel * m_original_label = nullptr;
 	QLabel * m_translation_label = nullptr;
 	QPushButton * m_apply_button = nullptr;
+	QPushButton * m_hyperlink_toggle = nullptr;
+	QPushButton * m_inflection_toggle = nullptr;
+	QPushButton * m_glossary_toggle = nullptr;
 
 	std::optional<script_template_t> m_script_template;
 	bool m_scroll_syncing = false;

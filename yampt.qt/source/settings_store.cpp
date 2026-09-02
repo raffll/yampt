@@ -412,6 +412,16 @@ void settings_store_t::set_sync_scroll_enabled(bool value)
 	m_settings.setValue("Editor/SyncScroll", value);
 }
 
+int settings_store_t::highlight_kinds_mask() const
+{
+	return m_settings.value("Editor/HighlightKinds", 0x7).toInt();
+}
+
+void settings_store_t::set_highlight_kinds_mask(int mask)
+{
+	m_settings.setValue("Editor/HighlightKinds", mask);
+}
+
 int settings_store_t::column_width(int index) const
 {
 	const auto key = QString("Editor/Column%1").arg(index);
