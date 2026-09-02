@@ -380,10 +380,17 @@ void main_window_t::connect_menu_signals()
 	    this,
 	    [this](bool checked)
 	{
-		if (checked)
-			m_hl_translation->set_spell_checker(&m_spell_checker);
-		else
+		if (!checked)
+		{
 			m_hl_translation->set_spell_checker(nullptr);
+			return;
+		}
+
+		if (!m_spell_checker.is_loaded())
+			on_spell_lang_changed();
+
+		if (m_spell_checker.is_loaded())
+			m_hl_translation->set_spell_checker(&m_spell_checker);
 	});
 
 	connect(

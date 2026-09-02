@@ -184,8 +184,8 @@ main_window_t::main_window_t(QWidget * parent)
 				if (prefix.empty())
 					return;
 
-				const auto aff_path = dict_dir + prefix + ".aff";
-				const auto dic_path = dict_dir + prefix + ".dic";
+				const auto aff_path = string_utils::canonicalize_path(string_utils::join_path(dict_dir, prefix + ".aff"));
+				const auto dic_path = string_utils::canonicalize_path(string_utils::join_path(dict_dir, prefix + ".dic"));
 
 				if (!std::filesystem::exists(aff_path) || !std::filesystem::exists(dic_path))
 					return;
@@ -897,11 +897,22 @@ void main_window_t::on_spell_lang_changed()
 	if (aff_path.empty() || dic_path.empty())
 	{
 		m_hl_translation->set_spell_checker(nullptr);
+		if (m_log_view)
+			m_log_view->append_log("spelling", "[info] no spell dictionary configured\r\n");
+
 		return;
 	}
 
 	if (!m_spell_checker.load(aff_path, dic_path))
+	{
+		if (m_log_view)
+			m_log_view->append_log("spelling", "[warning] failed to load \"" + aff_path + "\"\r\n");
+
 		return;
+	}
+
+	if (m_log_view)
+		m_log_view->append_log("spelling", "[info] loaded \"" + aff_path + "\"\r\n");
 
 	if (m_spell_check && m_spell_check->isChecked())
 		m_hl_translation->set_spell_checker(&m_spell_checker);
