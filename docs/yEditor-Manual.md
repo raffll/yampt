@@ -16,7 +16,7 @@ If any loaded plugin has unsaved field edits, you are prompted before those edit
 
 ## Main Layout
 
-- **Left** — Navigation panel with two tabs. The Plugins tab shows the ESP/ESM record tree: plugins at the top level, records grouped by type under each plugin. The Lua tab shows OpenMW Lua handler registrations grouped by mod name.
+- **Left** — Navigation panel with two tabs. The Plugins tab shows the ESP/ESM record tree: plugins at the top level, records grouped by type under each plugin. The Lua tab shows OpenMW Lua handler registrations grouped by mod name, in a two-column tree that lists each handler's interface and method in the first column and its type argument in the second. It starts collapsed, showing only the mod names, and uses the same conflict colors as the Plugins tab, with a conflicting handler's color carried up to its mod name so a clash is visible without expanding the group.
 - **Right** — Record view. When you click a record in the nav tree, this area shows all sub-records in a multi-column tree. Each column represents one plugin's version of that record. The leftmost column is the master definition, subsequent columns are overrides in load order.
 - **Bottom** — Edit tab (field comparison and editing) and Log tab (operation output).
 
@@ -122,7 +122,9 @@ Press Escape to clear the search field and remove the text filter.
 
 The Edit panel at the bottom of the window serves two purposes: text comparison and field editing.
 
-When you click a cell in the record view that has a conflict with a previous column, the Edit panel shows both values side by side with character-level diff highlighting. Deleted text appears with a red background on the left, inserted text with a green background on the right.
+When you click a cell in the record view that has a conflict with a previous column, the Edit panel shows both values side by side. The lines that changed between the two versions are highlighted: removed lines have a red background on the left, added lines a green background on the right. The comparison ignores leading indentation, so a script that differs only in how its lines are indented reads as unchanged, while each pane still shows its own original layout with tabs rendered four characters wide.
+
+The Diff button below the comparison turns this highlighting on and off. With it off, both panes show plain text with no coloring, which is useful for reading the raw content of each version. Toggling it keeps your current scroll position rather than jumping back to the top.
 
 Editing is off whenever the application starts. Turn it on with the Enable Editing button on the toolbar; the choice is not remembered, so each new session begins with editing disabled to guard against accidental changes.
 
@@ -181,10 +183,12 @@ When loading via Open MO2 Profile, cleaned plugins are written to the MO2 overwr
 
 After plugins are loaded, the application scans all `.omwscripts` files in the data paths for OpenMW Lua handler registrations. It identifies cases where multiple mods register handlers on the same interface method (e.g. two mods both adding an `ItemUsage.addHandlerForType` for the same item type).
 
-The navigation panel has two tabs: **Plugins** (the ESP/ESM record tree) and **Lua** (handler registrations). After a scan completes, the Lua tab shows registrations grouped by mod name. Each registration shows the interface, method, and type argument. Registrations involved in a conflict are colored by severity:
+The navigation panel has two tabs: **Plugins** (the ESP/ESM record tree) and **Lua** (handler registrations). After a scan completes, the Lua tab shows registrations grouped by mod name, in a two-column tree: the first column gives each handler's interface and method, the second its type argument. The tree starts collapsed, showing only the mod names, so you can expand just the mods you want to inspect.
+
+Handlers involved in a conflict use the same colors as plugin record conflicts, and the color is carried up to the mod name so a clash is visible before you expand the group. The severity behind each color is:
 
 - **Red** — blocking conflict. One handler returns false (cancels the action) and another mod expects the action to proceed.
 - **Orange** — mutating conflict. Multiple handlers modify the same data in potentially incompatible ways.
 - **Green** — overlapping registration. Multiple mods register on the same hook but their behaviors are compatible.
 
-Clicking a conflicting registration displays all participating mods side by side in the record view, with cell-level highlighting on fields that differ between mods (same coloring style as ESP record conflicts).
+Clicking a conflicting handler shows the participating mods side by side in the record view. Two rows are listed: the handler's classification (blocking, mutating, or passive), colored by the conflict severity, and its handler body, shown without coloring so the code of each mod can be read plainly.
