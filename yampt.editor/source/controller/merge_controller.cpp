@@ -87,9 +87,9 @@ bool merge_controller_t::create_merged_patch()
 		save_all_dirty();
 	}
 
-	if (m_session.scan().plugin_count() < 2)
+	if (m_session.scan().plugin_count() < 1)
 	{
-		m_log("[error] need at least 2 plugins loaded to create a merged patch");
+		m_log("[error] no plugins loaded");
 		return false;
 	}
 
@@ -616,9 +616,6 @@ bool merge_controller_t::save_merge_to_file(
 	auto & builder = m_session.patch_builder();
 
 	if (!scan.has_merge())
-		return false;
-
-	if (scan.merge_record_count() == 0)
 		return false;
 
 	builder.clear();

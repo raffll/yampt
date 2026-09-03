@@ -1,5 +1,6 @@
 #include "sub_record_merge.hpp"
 #include "../decoder/sub_record_iter.hpp"
+#include "../decoder/sub_record_schema.hpp"
 #include "../utility/app_logger.hpp"
 #include "../utility/record_behavior.hpp"
 #include "../utility/string_utils.hpp"
@@ -104,6 +105,49 @@ std::string sub_record_merge_t::merge_bytes_three_way(
 	{
 		if (inter[offset] != first[offset] && winner[offset] == first[offset])
 			result[offset] = inter[offset];
+	}
+
+	return result;
+}
+
+static bool field_range_differs(
+    const char * lhs,
+    const char * rhs,
+    size_t offset,
+    size_t length,
+    size_t data_size)
+{
+	if (offset + length > data_size)
+		return false;
+
+	return std::memcmp(lhs + offset, rhs + offset, length) != 0;
+}
+
+std::string sub_record_merge_t::merge_fields_three_way(
+    const std::string & rec_type,
+    const std::string & sub_type,
+    const char * first,
+    const char * inter,
+    const char * winner,
+    size_t size)
+{
+	const auto * schema = find_schema(rec_type, sub_type, size);
+	if (!schema)
+		return merge_bytes_three_way(first, inter, winner, size);
+
+	std::string result(winner, size);
+
+	for (size_t field_index = 0; field_index < schema->field_count; ++field_index)
+	{
+		const auto & field = schema->fields[field_index];
+		if (field.offset + field.size > size)
+			continue;
+
+		const bool inter_changed = field_range_differs(inter, first, field.offset, field.size, size);
+		const bool winner_changed = field_range_differs(winner, first, field.offset, field.size, size);
+
+		if (inter_changed && !winner_changed)
+			std::memcpy(result.data() + field.offset, inter + field.offset, field.size);
 	}
 
 	return result;
@@ -305,7 +349,9 @@ void sub_record_merge_t::apply_intermediate(
 		    intermediate[i].data.size() == first[first_idx].data.size() &&
 		    winner[winner_idx].data.size() == first[first_idx].data.size())
 		{
-			output[output_idx].data = merge_bytes_three_way(
+			output[output_idx].data = merge_fields_three_way(
+			    rec_type,
+			    intermediate[i].type,
 			    first[first_idx].data.data(),
 			    intermediate[i].data.data(),
 			    winner[winner_idx].data.data(),

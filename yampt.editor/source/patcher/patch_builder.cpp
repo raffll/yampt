@@ -191,9 +191,6 @@ bool patch_builder_t::save(
     const std::string & description,
     const std::vector<master_entry_t> & masters)
 {
-	if (m_records.empty())
-		return false;
-
 	const auto header_content = build_tes3_header(author, description, m_records.size(), masters);
 
 	std::vector<record_t> records;

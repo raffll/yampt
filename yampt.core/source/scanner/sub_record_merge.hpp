@@ -76,6 +76,13 @@ public:
 
 	static bool needs_element_wise(const std::string & rec_type, const std::string & sub_type, size_t data_size);
 	static std::string merge_bytes_three_way(const char * first, const char * inter, const char * winner, size_t size);
+	static std::string merge_fields_three_way(
+	    const std::string & rec_type,
+	    const std::string & sub_type,
+	    const char * first,
+	    const char * inter,
+	    const char * winner,
+	    size_t size);
 
 	static std::vector<std::string> collect_enam_data(const sub_record_sequence_t & sequence);
 	static std::string merge_enam_slots(

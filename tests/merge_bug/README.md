@@ -7,13 +7,13 @@ merge splices them into a value neither mod set.
 
 ## Files
 
-- `Base.esp` — master. One weapon `repro_sword`, WPDT `Health` (u16 at offset 10) = **256** (bytes `00 01`).
-- `ModA_lowbyte.esp` — masters `Base.esp`. Same weapon, `Health` = **511** (`0x01FF`, bytes `ff 01`) — only the **low** byte changed vs base.
-- `ModB_highbyte.esp` — masters `Base.esp`. Same weapon, `Health` = **25600** (`0x6400`, bytes `00 64`) — only the **high** byte changed vs base.
+- `Base.esm` — master file (TES3 header master flag set). One weapon `repro_sword`, WPDT `Health` (u16 at offset 10) = **256** (bytes `00 01`).
+- `ModA_lowbyte.esp` — masters `Base.esm`. Same weapon, `Health` = **511** (`0x01FF`, bytes `ff 01`) — only the **low** byte changed vs base.
+- `ModB_highbyte.esp` — masters `Base.esm`. Same weapon, `Health` = **25600** (`0x6400`, bytes `00 64`) — only the **high** byte changed vs base.
 
 ## Reproduce in yEditor
 
-1. Load all three plugins (`Base.esp`, `ModA_lowbyte.esp`, `ModB_highbyte.esp`) in load order.
+1. Load all three plugins (`Base.esm`, `ModA_lowbyte.esp`, `ModB_highbyte.esp`) in load order.
 2. Create the merged patch (auto-merge). The weapon has a true 3-way conflict (base + two overrides), so WPDT is element-wise merged.
 3. Inspect `repro_sword`'s `Health` in the merged patch.
 

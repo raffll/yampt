@@ -72,32 +72,22 @@ static uint16_t read_merged_health(const std::string & merged_record)
 	return health;
 }
 
-TEST_CASE("sub_record_merge_t::merge_bytes_three_way, multi-byte field byte-splices between two edits", "[u]")
+TEST_CASE("sub_record_merge_t::merge_fields_three_way, multi-byte field is not spliced across two edits", "[u]")
 {
-	const std::string first(2, '\0');
-	std::string base = first;
-	base[0] = static_cast<char>(0x00);
-	base[1] = static_cast<char>(0x01);
-
-	std::string inter = base;
-	inter[0] = static_cast<char>(0xFF);
-
-	std::string winner = base;
-	winner[1] = static_cast<char>(0x64);
+	const auto base = make_wpdt(0x0100);
+	auto inter = make_wpdt(0x0100);
+	inter[10] = static_cast<char>(0xFF);   // low byte of Health only
+	auto winner = make_wpdt(0x0100);
+	winner[11] = static_cast<char>(0x64);  // high byte of Health only
 
 	const auto merged =
-	    sub_record_merge_t::merge_bytes_three_way(base.data(), inter.data(), winner.data(), base.size());
+	    sub_record_merge_t::merge_fields_three_way("WEAP", "WPDT", base.data(), inter.data(), winner.data(), base.size());
 
-	uint16_t merged_value = 0;
-	std::memcpy(&merged_value, merged.data(), 2);
+	uint16_t merged_health = 0;
+	std::memcpy(&merged_health, merged.data() + 10, 2);
 
-	uint16_t inter_value = 0;
-	uint16_t winner_value = 0;
-	std::memcpy(&inter_value, inter.data(), 2);
-	std::memcpy(&winner_value, winner.data(), 2);
-
-	REQUIRE(merged_value != 0x64FF);
-	REQUIRE((merged_value == inter_value || merged_value == winner_value));
+	REQUIRE(merged_health != 0x64FF);
+	REQUIRE(merged_health == 0x6400);
 }
 
 TEST_CASE("sub_record_merge_t::merge, WEAP u16 field is not byte-spliced across two mods", "[u]")

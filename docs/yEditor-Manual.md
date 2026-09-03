@@ -149,6 +149,8 @@ After auto-merge completes, the merged patch is saved automatically. The output 
 
 You can refine the auto-merge result manually. Use the record view context menu to copy individual sub-records from any plugin column into the merged patch, or remove sub-records that shouldn't be there. Changes are saved immediately.
 
+A merged patch can be created even with a single plugin loaded. With one plugin there is nothing to merge automatically, so the patch starts empty; it still gives you a merged-patch column to copy records into by hand, which is a convenient way to build a small patch from one mod. The empty patch is written to disk like any other, and it gains its master references as you copy records into it.
+
 ## Settings
 
 Open Settings via Ctrl+, or the Tools menu. Four pages are available:
