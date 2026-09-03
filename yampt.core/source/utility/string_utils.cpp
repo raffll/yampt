@@ -99,7 +99,7 @@ path_prefix_t parse_path_prefix(std::string_view path)
 
 	if (path.size() > drive_colon_position && path[drive_colon_position] == ':')
 	{
-		prefix.text += static_cast<char>(std::tolower(static_cast<unsigned char>(path[0])));
+		prefix.text += static_cast<char>(std::toupper(static_cast<unsigned char>(path[0])));
 		prefix.text += ':';
 		prefix.remainder_start = 2;
 		prefix.is_relative = false;

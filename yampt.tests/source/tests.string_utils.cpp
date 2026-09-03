@@ -190,19 +190,19 @@ TEST_CASE("string_utils::canonicalize_path, unix root", "[u]")
 	REQUIRE(string_utils::canonicalize_path("/") == "/");
 }
 
-TEST_CASE("string_utils::canonicalize_path, drive root lowercased", "[u]")
+TEST_CASE("string_utils::canonicalize_path, drive root uppercased", "[u]")
 {
-	REQUIRE(string_utils::canonicalize_path("C:/") == "c:/");
+	REQUIRE(string_utils::canonicalize_path("c:/") == "C:/");
 }
 
 TEST_CASE("string_utils::canonicalize_path, drive path with backslashes", "[u]")
 {
-	REQUIRE(string_utils::canonicalize_path("D:\\a\\b") == "d:/a/b");
+	REQUIRE(string_utils::canonicalize_path("d:\\a\\b") == "D:/a/b");
 }
 
 TEST_CASE("string_utils::canonicalize_path, backslashes double-dot and trailing slash", "[u]")
 {
-	REQUIRE(string_utils::canonicalize_path("C:\\Users\\..\\Users\\workspace\\") == "c:/Users/workspace");
+	REQUIRE(string_utils::canonicalize_path("C:\\Users\\..\\Users\\workspace\\") == "C:/Users/workspace");
 }
 
 TEST_CASE("string_utils::canonicalize_path, unc double-dot and trailing slash", "[u]")
@@ -222,7 +222,7 @@ TEST_CASE("string_utils::canonicalize_path, unix trailing slash", "[u]")
 
 TEST_CASE("string_utils::canonicalize_path, redundant separators collapsed", "[u]")
 {
-	REQUIRE(string_utils::canonicalize_path("C://Users///file") == "c:/Users/file");
+	REQUIRE(string_utils::canonicalize_path("C://Users///file") == "C:/Users/file");
 }
 
 TEST_CASE("string_utils::canonicalize_path, relative with double-dot", "[u]")

@@ -7,6 +7,7 @@
 #include "editor_delegates.hpp"
 #include <scanner/batch_cleaner.hpp>
 #include <scanner/record_conflict.hpp>
+#include <utility/string_utils.hpp>
 #include <set>
 #include <settings_store.hpp>
 #include <QApplication>
@@ -829,7 +830,9 @@ QString plugin_workspace_view_t::build_mode_prefix() const
 		return {};
 	}
 
-	return mode_tag + " | " + QString::fromStdString(m_session->load_base_path()) + " | ";
+	const auto canonical_base = string_utils::canonicalize_path(m_session->load_base_path());
+
+	return mode_tag + " | " + QString::fromStdString(canonical_base) + " | ";
 }
 
 void plugin_workspace_view_t::log_message(const std::string & msg)
