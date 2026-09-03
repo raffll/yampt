@@ -94,6 +94,36 @@ When a copy action fires and `!has_active_plugin()`:
 
 Subsequent copies now hit the active-plugin path (Component 3), deferred. The new plugin was written once at creation (it must exist on disk to be loaded); later copies mark it dirty and require Save.
 
+### Component 4b — Create a patch for two selected mods
+
+This is the same creation machinery as Component 4, triggered from a two-plugin nav selection instead of a no-active copy fallback. Factor the creation into one helper:
+
+```cpp
+// merge_controller_t
+struct new_plugin_spec_t
+{
+    std::string filename;                              // user-chosen
+    std::vector<int> master_plugin_indices;            // masters in load order
+    std::vector<std::pair<std::string, std::string>> seed_records; // (rec_type, record_id) to include, may be empty
+};
+
+bool merge_controller_t::create_new_plugin(const new_plugin_spec_t & spec);
+```
+
+- Component 4 (no-active copy fallback) calls it with masters = the copied record's source plugin(s) and one seed record (the copied content).
+- Component 4b (two-mod patch) calls it with masters = the two selected plugin indices (in load order) and **no** seed records (empty patch scaffold).
+
+`create_new_plugin`:
+1. Resolve path via `resolve_output_directory()` + filename; refuse on collision (R5.4).
+2. Build masters with `build_master_list` scoped to `spec.master_plugin_indices` (reuse the existing master-entry construction: filename + on-disk size per master).
+3. `patch_builder_t::save(path, "yEditor", "", masters)` with `spec.seed_records` added as records (none for the two-mod case → header-only plugin).
+4. `scan().load_plugin(path)`, `rebuild_conflicts()`.
+5. Map filename → loaded index, `scan().set_active_plugin(idx)`, `m_session.set_active_plugin(filename)`, persist session, rebuild nav.
+
+For the two-mod case, `patch_builder_t` must be able to write a header-only plugin (zero records). Confirm `patch_builder_t::save` accepts an empty record set and writes a valid TES3 header with the two MAST entries; if it currently early-returns on empty, add an allow-empty path (the patch scaffold is intentionally empty until the user copies into it).
+
+Master order (R5b.6): sort `master_plugin_indices` by their load-order position in `m_plugins` so the lower-priority plugin is listed first; the patch, loading last, overrides both.
+
 ## Component 5 — Session persistence (yampt.editor)
 
 `plugin_session_t`:
@@ -118,6 +148,7 @@ Add an "active plugin" marker to the plugin-icon precedence, updated in BOTH `na
 `view_context_menu_t`:
 
 - Nav menu (`build_source_file_menu`, alongside Exclude/Guard): add "Mark as Active Plugin" / "Unmark as Active Plugin". The handler sets/clears `m_session.set_active_plugin(filename)`, maps to the scan index (`set_active_plugin`/`clear_active_plugin`), persists session, and `rebuild_preserving_state()`. Reject marking active if the plugin is the merged patch (log message).
+- Nav menu, two-plugin selection: when the nav tree has exactly two non-merge plugins selected, offer "Create Patch for Selected…" which prompts for a filename and calls `create_new_plugin` with those two as masters and no seed records (Component 4b). Absent/disabled for any other selection count (R5b.5). This requires the nav view to expose the multi-selection; if the nav tree is currently single-select, the design enables extended selection on it (a small, contained change) or, as a fallback, offers the action from a single-plugin menu with a follow-up picker for the second plugin. Default: enable multi-select on the nav tree and read the two selected filenames.
 - Record-view menu (`show_view_menu`): the copy dispatch currently gates on `has_merge()`. Extend so that when the clicked column is a source plugin, the menu offers:
   - "Copy … to Active Plugin" when `has_active_plugin()` (routes to the active-plugin target), OR when no active plugin exists, a "Copy … to New Plugin…" action that triggers the Component 4 flow.
   - The existing "Copy … to Merged Patch" actions remain when `has_merge()` and the column is not the active plugin.
@@ -131,8 +162,9 @@ Modified (yampt.core):
 - `scanner/plugin_index` — a way to refresh/add an entry for the appended record (or full re-index via `refresh_index`).
 
 Modified (yampt.editor):
-- `controller/merge_controller.hpp/.cpp` — `copy_target_t`, `land_copied_record`, `ensure_active_record`; parameterize copy methods by target; new-plugin creation flow.
-- `controller/view_context_menu.hpp/.cpp` — Mark/Unmark Active in nav menu; target-parameterized copy actions and the no-active "Copy to New Plugin…" fallback.
+- `controller/merge_controller.hpp/.cpp` — `copy_target_t`, `land_copied_record`, `ensure_active_record`; parameterize copy methods by target; `new_plugin_spec_t` + `create_new_plugin` shared creation helper (used by both the no-active fallback and the two-mod patch flow).
+- `controller/view_context_menu.hpp/.cpp` — Mark/Unmark Active in nav menu; "Create Patch for Selected…" for a two-plugin nav selection; target-parameterized copy actions and the no-active "Copy to New Plugin…" fallback.
+- `view/nav_tree_view.*` — enable extended (multi) selection on the nav tree so two plugins can be selected for the two-mod patch action (if not already multi-select).
 - `session/plugin_session.hpp/.cpp` — `m_active_plugin` + accessors + save/restore.
 - `model/nav_tree_model.cpp` + `model/view_tree_model.cpp` — active-plugin icon in both header paths (consistent).
 - `view/plugin_workspace_view.cpp` — wire the active-plugin marker set into the nav model like excluded/patch/dirty sets are wired.

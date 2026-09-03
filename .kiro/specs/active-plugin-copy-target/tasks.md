@@ -24,10 +24,11 @@ Order: core designation + esm append first (with unit tests), then the editor co
 - [ ] 4.2 Add `ensure_active_record` (analogue of `ensure_merge_record`) that looks up / seeds the record in the active plugin's esm and returns current content to patch. (R3.5)
 - [ ] 4.3 Parameterize `copy_whole_record` / `copy_cell_record` / `copy_sub_record` / `copy_group` / `copy_field` by `copy_target_t`, routing the terminal step through `land_copied_record` and the "ensure base" step through the merge-store or active-plugin variant per target. Content production (`read_source_content`, `sub_record_merge_t`, `merge_patch_ops_t`) unchanged. (R3.1)
 
-## 5. Editor: no-active new-plugin fallback
+## 5. Editor: new-plugin creation (shared helper)
 
-- [ ] 5.1 Add a new-plugin creation flow in `merge_controller_t`: prompt filename (QInputDialog, translated), resolve path via `resolve_output_directory()`, refuse on collision (R5.4), build with `patch_builder_t::save` (one record + header + masters scoped to the copied record's source), `load_plugin`, `rebuild_conflicts`, set active (scan + session), persist, rebuild nav. (R5.1–R5.5)
-- [ ] 5.2 The record-view copy actions, when `!has_active_plugin()`, invoke this flow instead of the active-plugin landing. (R5)
+- [ ] 5.1 Add `new_plugin_spec_t { filename; master_plugin_indices; seed_records; }` and `merge_controller_t::create_new_plugin(spec)`: prompt/validate filename externally, resolve path via `resolve_output_directory()`, refuse on collision (R5.4), build masters via `build_master_list` scoped to `master_plugin_indices` (sorted by load order), `patch_builder_t::save` with `seed_records` (may be empty → header-only), `load_plugin`, `rebuild_conflicts`, set active (scan + session), persist, rebuild nav. Confirm/allow `patch_builder_t::save` writing a zero-record plugin. (R5.1–R5.5, R5b.2, R5b.6)
+- [ ] 5.2 No-active copy fallback: when a copy action fires and `!has_active_plugin()`, prompt for a filename and call `create_new_plugin` with masters = the copied record's source plugin(s) and one seed record (the copied content). (R5)
+- [ ] 5.3 Two-mod patch flow: from a two-plugin nav selection, prompt for a filename and call `create_new_plugin` with masters = the two selected plugin indices (load order) and no seed records (empty scaffold). (R5b.1–R5b.4, R5b.6)
 
 ## 6. Editor: session persistence
 
@@ -38,6 +39,7 @@ Order: core designation + esm append first (with unit tests), then the editor co
 
 - [ ] 7.1 `view_context_menu_t::build_source_file_menu`: add "Mark as Active Plugin" / "Unmark as Active Plugin" (reject if plugin is the merged patch, log). Handler sets/clears session + scan designation, persists, rebuilds nav. Tooltip per gui-tooltips. (R7, R1.4)
 - [ ] 7.2 `show_view_menu`: extend copy dispatch so a source column offers "Copy … to Active Plugin" (active set) or "Copy … to New Plugin…" (none set), alongside the existing "Copy … to Merged Patch" when `has_merge()`. Parameterize `build_copy_to_merge_menu` / `build_source_copy_menu` by `copy_target_t` + label to avoid duplication. (R4.3, R5.2, design Component 7)
+- [ ] 7.4 Two-mod patch action: enable multi-select on the nav tree; in the nav menu, when exactly two non-merge plugins are selected, offer "Create Patch for Selected…" → prompt filename → task 5.3 flow. Absent/disabled otherwise. Tooltip per gui-tooltips. (R5b.1, R5b.5, design Component 4b/7)
 - [ ] 7.3 Add an active-plugin icon/marker in the plugin-icon precedence, updated in BOTH `nav_tree_model.cpp` and `view_tree_model.cpp::headerData` (plugin-icons-consistent). Wire an active-plugin marker into the nav model in `plugin_workspace_view.cpp` like excluded/patch/dirty. (R4.2)
 
 ## 8. Documentation

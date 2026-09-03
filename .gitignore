@@ -15,7 +15,6 @@ external/*
 external/CTranslate2/build/
 /scripts/finetune_tmp
 /vcpkg_installed
-/tests
 /enc_temp_folder
 
 # CMake build artifacts
