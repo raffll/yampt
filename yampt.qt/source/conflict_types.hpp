@@ -1,4 +1,5 @@
 #pragma once
+#include <scanner/conflict_detector.hpp>
 #include <scanner/conflict_enums.hpp>
 #include <utility/color_palette.hpp>
 #include <utility/theme_enums.hpp>
@@ -91,4 +92,34 @@ inline QColor conflict_this_foreground(conflict_this_t ct, theme_t theme = theme
 	const auto index = static_cast<size_t>(name);
 	const auto & rgb = (theme == theme_t::dark) ? dark_palette[index] : light_palette[index];
 	return QColor(rgb.red, rgb.green, rgb.blue, rgb.alpha);
+}
+
+inline conflict_all_t severity_to_conflict_all(conflict_severity_t severity)
+{
+	switch (severity)
+	{
+	case conflict_severity_t::blocking:
+		return conflict_all_t::conflict;
+	case conflict_severity_t::mutating:
+		return conflict_all_t::override_benign;
+	case conflict_severity_t::overlapping:
+		return conflict_all_t::override_benign;
+	}
+
+	return conflict_all_t::no_conflict;
+}
+
+inline conflict_this_t severity_to_conflict_this(conflict_severity_t severity)
+{
+	switch (severity)
+	{
+	case conflict_severity_t::blocking:
+		return conflict_this_t::conflict_loses;
+	case conflict_severity_t::mutating:
+		return conflict_this_t::conflict_wins;
+	case conflict_severity_t::overlapping:
+		return conflict_this_t::override_wins;
+	}
+
+	return conflict_this_t::unknown;
 }

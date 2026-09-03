@@ -4,7 +4,9 @@
 #include <decoder/field_validator.hpp>
 #include <decoder/scvr_condition.hpp>
 #include <scanner/record_conflict.hpp>
-#include <utility/char_diff.hpp>
+#include <algorithm>
+#include <string>
+#include <vector>
 #include <QAbstractItemView>
 #include <QComboBox>
 #include <QEvent>
@@ -13,6 +15,8 @@
 #include <QMouseEvent>
 #include <QPushButton>
 #include <QScrollBar>
+#include <QStringList>
+#include <QTextCharFormat>
 #include <QTextEdit>
 #include <QVBoxLayout>
 
@@ -20,6 +24,130 @@ namespace {
 
 constexpr int controls_margin = 2;
 constexpr int control_character_width = 24;
+
+void set_plain_text_reset(QTextEdit * edit, const std::string & text)
+{
+	edit->clear();
+	edit->setCurrentCharFormat(QTextCharFormat {});
+	edit->setPlainText(QString::fromStdString(text));
+}
+
+std::vector<std::string> split_lines(const std::string & text)
+{
+	std::vector<std::string> lines;
+	std::string current;
+
+	for (const char character : text)
+	{
+		if (character != '\n')
+		{
+			current += character;
+			continue;
+		}
+
+		lines.push_back(current);
+		current.clear();
+	}
+
+	lines.push_back(current);
+
+	return lines;
+}
+
+std::string trim_indentation(const std::string & line)
+{
+	const auto start = line.find_first_not_of(" \t\r");
+	if (start == std::string::npos)
+		return {};
+
+	return line.substr(start);
+}
+
+QString line_to_html(const std::string & line, const char * background)
+{
+	const auto escaped = QString::fromStdString(line).toHtmlEscaped();
+	if (background == nullptr)
+		return escaped + "<br>";
+
+	return QString("<span style='background-color:%1;'>").arg(background) + escaped + "</span><br>";
+}
+
+std::vector<std::vector<int>> build_line_lcs(
+    const std::vector<std::string> & left_keys,
+    const std::vector<std::string> & right_keys)
+{
+	const auto rows = left_keys.size();
+	const auto cols = right_keys.size();
+	std::vector<std::vector<int>> matrix(rows + 1, std::vector<int>(cols + 1, 0));
+
+	for (size_t row = 1; row <= rows; ++row)
+	{
+		for (size_t col = 1; col <= cols; ++col)
+		{
+			if (left_keys[row - 1] == right_keys[col - 1])
+				matrix[row][col] = matrix[row - 1][col - 1] + 1;
+			else
+				matrix[row][col] = std::max(matrix[row - 1][col], matrix[row][col - 1]);
+		}
+	}
+
+	return matrix;
+}
+
+void build_line_diff_html(
+    const std::string & left_text,
+    const std::string & right_text,
+    QString & left_html,
+    QString & right_html)
+{
+	const auto left_lines = split_lines(left_text);
+	const auto right_lines = split_lines(right_text);
+
+	std::vector<std::string> left_keys;
+	std::vector<std::string> right_keys;
+	left_keys.reserve(left_lines.size());
+	right_keys.reserve(right_lines.size());
+
+	for (const auto & line : left_lines)
+		left_keys.push_back(trim_indentation(line));
+
+	for (const auto & line : right_lines)
+		right_keys.push_back(trim_indentation(line));
+
+	const auto matrix = build_line_lcs(left_keys, right_keys);
+
+	auto row = left_lines.size();
+	auto col = right_lines.size();
+	QStringList left_ordered;
+	QStringList right_ordered;
+
+	while (row > 0 || col > 0)
+	{
+		if (row > 0 && col > 0 && left_keys[row - 1] == right_keys[col - 1])
+		{
+			left_ordered.push_front(line_to_html(left_lines[row - 1], nullptr));
+			right_ordered.push_front(line_to_html(right_lines[col - 1], nullptr));
+			--row;
+			--col;
+
+			continue;
+		}
+
+		if (col > 0 && (row == 0 || matrix[row][col - 1] >= matrix[row - 1][col]))
+		{
+			right_ordered.push_front(line_to_html(right_lines[col - 1], "#ccffcc"));
+			--col;
+
+			continue;
+		}
+
+		left_ordered.push_front(line_to_html(left_lines[row - 1], "#ffcccc"));
+		--row;
+	}
+
+	left_html = left_ordered.join(QString {});
+	right_html = right_ordered.join(QString {});
+}
 
 } // namespace
 
@@ -53,9 +181,17 @@ preview_view_t::preview_view_t(QWidget * parent)
 	controls_layout->setContentsMargins(0, 0, controls_margin, controls_margin);
 	controls_layout->setSpacing(4);
 
-	controls_layout->addStretch(1);
-
 	const int control_width = fontMetrics().averageCharWidth() * control_character_width;
+	const int diff_toggle_width = fontMetrics().averageCharWidth() * 8;
+
+	m_diff_toggle_button = new QPushButton(tr("Diff"), m_controls_widget);
+	m_diff_toggle_button->setToolTip(tr("Toggle highlighting of differences between the two panels"));
+	m_diff_toggle_button->setCheckable(true);
+	m_diff_toggle_button->setChecked(true);
+	m_diff_toggle_button->setFixedWidth(diff_toggle_width);
+	controls_layout->addWidget(m_diff_toggle_button);
+
+	controls_layout->addStretch(1);
 
 	m_value_selector = new QComboBox(m_controls_widget);
 	m_value_selector->setVisible(false);
@@ -75,6 +211,7 @@ preview_view_t::preview_view_t(QWidget * parent)
 	connect(m_right_edit, &QTextEdit::textChanged, this, &preview_view_t::on_text_changed);
 	connect(m_apply_button, &QPushButton::clicked, this, &preview_view_t::on_apply_clicked);
 	connect(m_value_selector, &QComboBox::currentTextChanged, this, &preview_view_t::on_value_selector_changed);
+	connect(m_diff_toggle_button, &QPushButton::toggled, this, &preview_view_t::on_diff_toggled);
 
 	setup_scroll_sync();
 }
@@ -156,8 +293,16 @@ bool preview_view_t::eventFilter(QObject * watched, QEvent * event)
 
 void preview_view_t::show_comparison(const std::string & left_raw, const std::string & right_raw)
 {
-	const std::string left_text = (left_raw == non_existent_value) ? std::string {} : left_raw;
-	const std::string right_text = (right_raw == non_existent_value) ? std::string {} : right_raw;
+	m_left_cached = (left_raw == non_existent_value) ? std::string {} : left_raw;
+	m_right_cached = (right_raw == non_existent_value) ? std::string {} : right_raw;
+
+	render_comparison();
+}
+
+void preview_view_t::render_comparison()
+{
+	const auto & left_text = m_left_cached;
+	const auto & right_text = m_right_cached;
 
 	if (left_text.empty())
 	{
@@ -173,43 +318,31 @@ void preview_view_t::show_comparison(const std::string & left_raw, const std::st
 		return;
 	}
 
-	if (left_text == right_text)
+	if (!m_diff_coloring_enabled || left_text == right_text)
 	{
-		m_left_edit->setPlainText(QString::fromStdString(left_text));
-		m_right_edit->setPlainText(QString::fromStdString(right_text));
+		set_plain_text_reset(m_left_edit, left_text);
+		set_plain_text_reset(m_right_edit, right_text);
 		return;
 	}
 
-	const auto segments = compute_char_diff(left_text, right_text);
-
 	QString left_html;
 	QString right_html;
-
-	for (const auto & segment : segments)
-	{
-		auto escaped = QString::fromStdString(segment.text).toHtmlEscaped().replace("\n", "<br>");
-
-		switch (segment.operation)
-		{
-		case diff_op_t::unchanged:
-			left_html += escaped;
-			right_html += escaped;
-			break;
-		case diff_op_t::deleted:
-			left_html += "<span style='background-color:#ffcccc;'>" + escaped + "</span>";
-			break;
-		case diff_op_t::inserted:
-			right_html += "<span style='background-color:#ccffcc;'>" + escaped + "</span>";
-			break;
-		}
-	}
+	build_line_diff_html(left_text, right_text, left_html, right_html);
 
 	m_left_edit->setHtml(left_html);
 	m_right_edit->setHtml(right_html);
 }
 
+void preview_view_t::on_diff_toggled(bool enabled)
+{
+	m_diff_coloring_enabled = enabled;
+	render_comparison();
+}
+
 void preview_view_t::clear()
 {
+	m_left_cached.clear();
+	m_right_cached.clear();
 	m_left_edit->clear();
 	m_right_edit->clear();
 	set_editing_enabled(false);

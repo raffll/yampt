@@ -421,54 +421,41 @@ void view_tree_model_t::set_lua_conflict(const handler_conflict_t & conflict)
 		return;
 	}
 
+	const auto severity_foreground = severity_to_conflict_this(conflict.severity);
+	const auto severity_background = severity_to_conflict_all(conflict.severity);
+
 	for (const auto & reg : conflict.registrations)
 	{
 		m_column_names.push_back(reg.mod_name);
-
-		switch (reg.classification)
-		{
-		case handler_class_t::blocking:
-			m_plugin_conflict_this.push_back(conflict_this_t::conflict_wins);
-			break;
-
-		case handler_class_t::mutating:
-			m_plugin_conflict_this.push_back(conflict_this_t::override_wins);
-			break;
-
-		case handler_class_t::passive:
-			m_plugin_conflict_this.push_back(conflict_this_t::master);
-			break;
-		}
+		m_plugin_conflict_this.push_back(severity_foreground);
 	}
 
 	const auto col_count = conflict.registrations.size();
 
-	auto build_row = [&](const std::string & label, auto field_getter) -> view_node_t
+	auto build_values = [&](auto field_getter) -> std::vector<std::string>
 	{
-		view_node_t row;
-		row.label = label;
-		row.values.resize(col_count);
-
+		std::vector<std::string> values(col_count);
 		for (size_t col = 0; col < col_count; ++col)
-			row.values[col] = field_getter(conflict.registrations[col]);
+			values[col] = field_getter(conflict.registrations[col]);
 
-		row.all_identical = check_all_identical(row.values);
-		row.row_conflict_all = record_conflict::compute_conflict_all(row.values);
-		row.cell_conflict_this = record_conflict::compute_conflict_this(row.values);
-		return row;
+		return values;
 	};
 
-	m_rows.push_back(build_row("Interface", [](const handler_registration_t & r) { return r.interface_name; }));
-	m_rows.push_back(build_row("Method", [](const handler_registration_t & r) { return r.method_name; }));
-	m_rows.push_back(build_row("Type Argument", [](const handler_registration_t & r) { return r.type_argument; }));
+	view_node_t classification_row;
+	classification_row.label = "Classification";
+	classification_row.values =
+	    build_values([](const handler_registration_t & r) { return lua_classification_text(r.classification).toStdString(); });
+	classification_row.all_identical = check_all_identical(classification_row.values);
+	classification_row.row_conflict_all = severity_background;
+	classification_row.cell_conflict_this.assign(col_count, severity_foreground);
+	m_rows.push_back(std::move(classification_row));
 
-	m_rows.push_back(build_row(
-	    "Classification",
-	    [](const handler_registration_t & r) { return lua_classification_text(r.classification).toStdString(); }));
-
-	m_rows.push_back(build_row("Script Path", [](const handler_registration_t & r) { return r.script_path; }));
-	m_rows.push_back(build_row("Callback", [](const handler_registration_t & r) { return r.callback_expression; }));
-	m_rows.push_back(build_row("Handler Body", [](const handler_registration_t & r) { return r.handler_body; }));
+	view_node_t body_row;
+	body_row.label = "Handler Body";
+	body_row.values = build_values([](const handler_registration_t & r) { return r.handler_body; });
+	body_row.all_identical = true;
+	body_row.row_conflict_all = conflict_all_t::only_one;
+	m_rows.push_back(std::move(body_row));
 
 	endResetModel();
 }
