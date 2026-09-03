@@ -36,6 +36,7 @@
 - [NEW] Copy Record to Merged Patch is now also available by right-clicking a record in the navigation tree, copying the whole record into the merged patch
 - [NEW] Copy Bit to Merged Patch: right-click an individual flag (such as a body part's Female flag) to copy just that one bit into the merged patch, leaving the record's other flags untouched
 - [NEW] Selecting a response under the Dialogue Responses group now shows that response text in the Edit panel comparison, instead of clearing the panel
+- [NEW] Each dialogue condition now reads as a plain sentence (for example "Function Choice == 1"), with the raw condition text shown and editable underneath
 - [NEW] History tab: a tab beside the Edit and Log panels lists the field edits and record removals made during the current session, newest first. The history is not saved and resets when plugins are unloaded
 - [CHANGE] The dialogue INFO chain now shows each plugin's response text for every INFO and highlights conflicts where plugins give the same INFO different text, instead of only showing a checkmark for presence
 - [CHANGE] A merged patch can now be created with a single plugin loaded, instead of requiring at least two. With one plugin the patch starts empty and serves as a scaffold to copy records into by hand
@@ -43,10 +44,13 @@
 - [CHANGE] A flag sub-record's individual flags now appear directly under the sub-record row in the record view, without a redundant intermediate "Flags" grouping row
 - [CHANGE] A data sub-record that decodes to a single field now shows that field as a nested row under the sub-record instead of printing the value inline on the sub-record row
 - [CHANGE] The dialogue response list is now a single collapsible "Dialogue Responses" group in the record view instead of a flat separator followed by loose rows
+- [CHANGE] The status bar now reads "mode | path | plugin" (for example "MO2 | ...profiles/Default | Morrowind.esm") and no longer appends the selected record type and id
 - [FIX] The Edit panel comparison now leaves a pane blank when the corresponding plugin has no version of the selected sub-record, instead of showing stray placeholder characters
 - [FIX] Sub-records excluded from the merged patch now show their row text in the neutral color instead of the red, yellow, or orange conflict coloring, matching their greyed-out background
 - [FIX] Merging a record where two mods change different parts of the same multi-byte value (such as a weapon's stat) no longer produces a spliced value that neither mod set; each value is now taken whole from one mod
 - [FIX] Copy Field to Merged Patch now works for fields shown under a grouping heading (such as a class's major and minor skills); previously the copy silently failed for those fields
+- [FIX] Faction reaction values now line up by faction across plugin columns in the record view, instead of being matched by position so different factions shared a row
+- [FIX] Editing a dialogue condition now updates that condition in place instead of adding a duplicate condition
 
 ## [0.1060] - 2026-08-31
 

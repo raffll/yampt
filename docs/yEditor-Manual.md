@@ -53,7 +53,7 @@ When a plugin has field edits that have not yet been written to disk, an asteris
 
 ## Record View
 
-Clicking a record in the nav tree displays its full content in the record view. Sub-records are decoded into readable fields where the format is known (names, positions, flags, stats). Unknown or binary sub-records display as raw byte counts.
+Clicking a record in the nav tree displays its full content in the record view. Sub-records are decoded into readable fields where the format is known (names, positions, flags, stats). Unknown or binary sub-records display as raw byte counts. A dialogue condition reads as a plain sentence such as "Function Choice == 1", with its raw condition text shown and editable underneath.
 
 Each column represents one plugin's version. Column headers show the plugin filename, colored by that plugin's conflict status for this record. Cells with differing values across plugins are highlighted to make conflicts visible.
 
