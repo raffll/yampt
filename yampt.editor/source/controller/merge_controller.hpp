@@ -76,6 +76,8 @@ public:
 	bool save_plugin(int plugin_idx);
 	void save_all_dirty();
 
+	void debug_log(const std::string & message) const;
+
 private:
 	int create_merge_records();
 	std::string resolve_merge_output_path() const;

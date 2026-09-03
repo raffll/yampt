@@ -7,6 +7,7 @@
 #include <scanner/auto_merge.hpp>
 #include <scanner/merge_patch_ops.hpp>
 #include <scanner/sub_record_merge.hpp>
+#include <utility/app_logger.hpp>
 #include <utility/record_behavior.hpp>
 #include <filesystem>
 #include <set>
@@ -165,15 +166,28 @@ void merge_controller_t::copy_whole_record(int plugin_idx, const std::string & r
 {
 	const auto * entry = m_session.scan().find(rec_type, record_id);
 	if (!entry)
+	{
+		debug_log("copy_whole_record: no conflict entry for " + rec_type + ":" + record_id);
 		return;
+	}
 
+	bool copied = false;
 	for (const auto & version : entry->versions)
 	{
 		if (version.plugin_idx != plugin_idx)
 			continue;
 
 		m_session.scan().copy_record_to_merge(plugin_idx, version.record_index);
+		copied = true;
 		break;
+	}
+
+	if (!copied)
+	{
+		debug_log(
+		    "copy_whole_record: plugin " + std::to_string(plugin_idx) + " has no version of " + rec_type + ":" +
+		    record_id);
+		return;
 	}
 
 	m_log("[info] copied record to merge (" + rec_type + ":" + record_id + ")");
@@ -190,7 +204,12 @@ void merge_controller_t::copy_cell_record(
 {
 	const auto source_content = read_source_content(plugin_idx, rec_type, record_id);
 	if (source_content.empty())
+	{
+		debug_log(
+		    "copy_cell_record: empty source content for " + rec_type + ":" + record_id + " in plugin " +
+		    std::to_string(plugin_idx));
 		return;
+	}
 
 	auto partition = sub_record_merge_t::partition_cell(source_content);
 
@@ -254,15 +273,28 @@ void merge_controller_t::copy_sub_record(
 {
 	const auto source_content = read_source_content(plugin_idx, rec_type, record_id);
 	if (source_content.empty())
+	{
+		debug_log(
+		    "copy_sub_record: empty source content for " + rec_type + ":" + record_id + " in plugin " +
+		    std::to_string(plugin_idx));
 		return;
+	}
 
 	const auto merge_content = ensure_merge_record(plugin_idx, rec_type, record_id, source_content);
 	if (merge_content.empty())
+	{
+		debug_log("copy_sub_record: could not ensure merge record for " + rec_type + ":" + record_id);
 		return;
+	}
 
 	const auto result = merge_patch_ops_t::patch_sub_record(merge_content, source_content, sub_type, binary_idx);
 	if (!result.success)
+	{
+		debug_log(
+		    "copy_sub_record: patch_sub_record failed for " + sub_type + " (binary_idx=" +
+		    std::to_string(binary_idx) + ") in " + rec_type + ":" + record_id);
 		return;
+	}
 
 	m_session.scan().copy_record_to_merge_raw(rec_type, record_id, result.content);
 	m_log(
@@ -281,21 +313,37 @@ void merge_controller_t::copy_group(
 {
 	const auto source_content = read_source_content(plugin_idx, rec_type, record_id);
 	if (source_content.empty())
+	{
+		debug_log(
+		    "copy_group: empty source content for " + rec_type + ":" + record_id + " in plugin " +
+		    std::to_string(plugin_idx));
 		return;
+	}
 
 	const auto merge_content = ensure_merge_record(plugin_idx, rec_type, record_id, source_content);
 	if (merge_content.empty())
+	{
+		debug_log("copy_group: could not ensure merge record for " + rec_type + ":" + record_id);
 		return;
+	}
 
 	const int column = find_plugin_column(plugin_idx);
 	const auto & visible = m_record_view.model()->rows();
 	if (group_row_idx < 0 || group_row_idx >= static_cast<int>(visible.size()))
+	{
+		debug_log(
+		    "copy_group: group_row_idx " + std::to_string(group_row_idx) + " out of range (visible=" +
+		    std::to_string(visible.size()) + ")");
 		return;
+	}
 
 	const auto & group_row = visible[group_row_idx];
 
 	if (column < 0 || column >= static_cast<int>(group_row.binary_ranges.size()))
+	{
+		debug_log("copy_group: column " + std::to_string(column) + " out of range for group binary_ranges");
 		return;
+	}
 
 	const auto & source_range = group_row.binary_ranges[column];
 	if (source_range.start < 0)
@@ -339,16 +387,29 @@ void merge_controller_t::copy_field(
 {
 	const auto source_content = read_source_content(plugin_idx, rec_type, record_id);
 	if (source_content.empty())
+	{
+		debug_log(
+		    "copy_field: empty source content for " + rec_type + ":" + record_id + " in plugin " +
+		    std::to_string(plugin_idx));
 		return;
+	}
 
 	const auto merge_content = ensure_merge_record(plugin_idx, rec_type, record_id, source_content);
 	if (merge_content.empty())
+	{
+		debug_log("copy_field: could not ensure merge record for " + rec_type + ":" + record_id);
 		return;
+	}
 
 	const auto result = merge_patch_ops_t::patch_field(
 	    merge_content, source_content, rec_type, sub_type, sub_size, binary_idx, field_idx);
 	if (!result.success)
+	{
+		debug_log(
+		    "copy_field: patch_field failed for " + sub_type + " field_idx=" + std::to_string(field_idx) +
+		    " (binary_idx=" + std::to_string(binary_idx) + ") in " + rec_type + ":" + record_id);
 		return;
+	}
 
 	m_session.scan().copy_record_to_merge_raw(rec_type, record_id, result.content);
 	m_log(
@@ -367,7 +428,10 @@ void merge_controller_t::remove_sub_record(
 {
 	const auto * entry = m_session.scan().find(rec_type, record_id);
 	if (!entry)
+	{
+		debug_log("remove_sub_record: no conflict entry for " + rec_type + ":" + record_id);
 		return;
+	}
 
 	std::string merge_content;
 	for (const auto & version : entry->versions)
@@ -380,11 +444,19 @@ void merge_controller_t::remove_sub_record(
 	}
 
 	if (merge_content.empty())
+	{
+		debug_log("remove_sub_record: no merge content for " + rec_type + ":" + record_id);
 		return;
+	}
 
 	auto merge_subs = sub_record_merge_t::parse_sub_records(merge_content);
 	if (binary_idx >= static_cast<int>(merge_subs.size()))
+	{
+		debug_log(
+		    "remove_sub_record: binary_idx " + std::to_string(binary_idx) + " out of range (" +
+		    std::to_string(merge_subs.size()) + ") in " + rec_type + ":" + record_id);
 		return;
+	}
 
 	merge_subs.erase(merge_subs.begin() + binary_idx);
 
@@ -403,7 +475,10 @@ void merge_controller_t::remove_group(
 {
 	const auto * entry = m_session.scan().find(rec_type, record_id);
 	if (!entry)
+	{
+		debug_log("remove_group: no conflict entry for " + rec_type + ":" + record_id);
 		return;
+	}
 
 	std::string merge_content;
 	for (const auto & version : entry->versions)
@@ -416,11 +491,19 @@ void merge_controller_t::remove_group(
 	}
 
 	if (merge_content.empty())
+	{
+		debug_log("remove_group: no merge content for " + rec_type + ":" + record_id);
 		return;
+	}
 
 	auto merge_subs = sub_record_merge_t::parse_sub_records(merge_content);
 	if (range.end_pos > static_cast<int>(merge_subs.size()))
+	{
+		debug_log(
+		    "remove_group: range end " + std::to_string(range.end_pos) + " out of range (" +
+		    std::to_string(merge_subs.size()) + ") in " + rec_type + ":" + record_id);
 		return;
+	}
 
 	merge_subs.erase(merge_subs.begin() + range.start, merge_subs.begin() + range.end_pos);
 
@@ -736,7 +819,10 @@ std::string merge_controller_t::read_source_content(
 {
 	const auto * entry = m_session.scan().find(rec_type, record_id);
 	if (!entry)
+	{
+		debug_log("read_source_content: no conflict entry for " + rec_type + ":" + record_id);
 		return {};
+	}
 
 	for (const auto & version : entry->versions)
 	{
@@ -744,7 +830,18 @@ std::string merge_controller_t::read_source_content(
 			return m_session.scan().read_record_content(plugin_idx, version.record_index);
 	}
 
+	debug_log(
+	    "read_source_content: plugin " + std::to_string(plugin_idx) + " has no version of " + rec_type + ":" +
+	    record_id);
 	return {};
+}
+
+void merge_controller_t::debug_log(const std::string & message) const
+{
+	if (!app_logger_t::is_debug())
+		return;
+
+	m_log("[debug] " + message);
 }
 
 std::string merge_controller_t::ensure_merge_record(
@@ -759,7 +856,14 @@ std::string merge_controller_t::ensure_merge_record(
 		return *merge_content_ptr;
 
 	const auto header_only = sub_record_merge_t::reconstruct_record(source_content, {});
+	if (header_only.empty())
+	{
+		debug_log("ensure_merge_record: reconstruct_record produced empty content for " + rec_type + ":" + record_id);
+		return {};
+	}
+
 	m_session.scan().copy_record_to_merge_raw(rec_type, record_id, header_only);
+	debug_log("ensure_merge_record: seeded header-only merge record for " + rec_type + ":" + record_id);
 	return header_only;
 }
 

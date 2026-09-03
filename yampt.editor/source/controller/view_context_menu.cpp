@@ -184,6 +184,14 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 	                        ? row.binary_ranges[col].start
 	                        : -1;
 
+	m_merge.debug_log(
+	    "show_view_menu: label=\"" + row.label + "\" type=\"" + row.type + "\" is_field_row=" +
+	    std::to_string(is_field_row) + " parent_row_idx=" + std::to_string(parent_row_idx) + " visible=" +
+	    std::to_string(visible.size()) + " col=" + std::to_string(col) + " has_valid_column=" +
+	    std::to_string(has_valid_column) + " has_merge=" + std::to_string(m_session.scan().has_merge()) +
+	    " schema_field_index=" + std::to_string(row.schema_field_index) + " bit_index=" +
+	    std::to_string(row.bit_index));
+
 	const auto kind = [&]() -> row_kind_t
 	{
 		if (is_field_row && row.type.empty())
