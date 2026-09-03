@@ -9,13 +9,11 @@
 #include <QComboBox>
 #include <QEvent>
 #include <QHBoxLayout>
-#include <QLabel>
 #include <QModelIndex>
 #include <QMouseEvent>
 #include <QPushButton>
 #include <QScrollBar>
 #include <QTextEdit>
-#include <QToolTip>
 #include <QVBoxLayout>
 
 namespace {
@@ -56,10 +54,7 @@ preview_view_t::preview_view_t(QWidget * parent)
 	controls_layout->setContentsMargins(0, 0, controls_margin, controls_margin);
 	controls_layout->setSpacing(4);
 
-	m_validation_label = new QLabel(m_controls_widget);
-	m_validation_label->setStyleSheet("color: rgb(200, 60, 60);");
-	m_validation_label->setWordWrap(true);
-	controls_layout->addWidget(m_validation_label, 1);
+	controls_layout->addStretch(1);
 
 	const int control_width = fontMetrics().averageCharWidth() * control_character_width;
 
@@ -229,7 +224,7 @@ void preview_view_t::set_editing_enabled(bool enabled)
 	m_apply_button->setVisible(enabled);
 	m_editing_active = enabled;
 	m_user_has_typed = false;
-	m_validation_label->clear();
+	emit validation_message({});
 
 	if (!enabled)
 	{
@@ -360,12 +355,12 @@ void preview_view_t::on_text_changed()
 	if (!is_valid)
 	{
 		m_right_edit->setStyleSheet("background-color: #ffcccc;");
-		m_validation_label->setText(tr("Error: ") + QString::fromStdString(error_message));
+		emit validation_message(QString::fromStdString(error_message));
 	}
 	else
 	{
 		m_right_edit->setStyleSheet("");
-		m_validation_label->clear();
+		emit validation_message({});
 	}
 
 	const bool value_changed = (current_text != m_original_value);
@@ -387,7 +382,7 @@ void preview_view_t::on_apply_clicked()
 		return;
 	}
 
-	QToolTip::showText(m_apply_button->mapToGlobal(QPoint(0, 0)), QString::fromStdString(result.error_message));
+	emit validation_message(QString::fromStdString(result.error_message));
 }
 
 void preview_view_t::on_value_selector_changed()

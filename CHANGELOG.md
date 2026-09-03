@@ -31,7 +31,7 @@
 
 ### yEditor
 - [NEW] Sync Scrolling: a View menu toggle binds scrolling between the two comparison panes in the Edit panel, so both sides move together; the state persists between sessions
-- [NEW] When a field edit is invalid, the Edit panel now shows the reason next to the Apply button instead of only marking the field red
+- [NEW] When a field edit is invalid, the reason is shown in the status bar instead of only marking the field red
 - [NEW] Remove Record from Plugin: right-click a record in a loaded plugin to delete it from that plugin; the record is dropped when the plugin is saved. This cannot be undone. The option is greyed out unless editing is enabled
 - [NEW] Copy Record to Merged Patch is now also available by right-clicking a record in the navigation tree, copying the whole record into the merged patch
 - [NEW] Copy Bit to Merged Patch: right-click an individual flag (such as a body part's Female flag) to copy just that one bit into the merged patch, leaving the record's other flags untouched
@@ -42,6 +42,7 @@
 - [CHANGE] A flag sub-record's individual flags now appear directly under the sub-record row in the record view, without a redundant intermediate "Flags" grouping row
 - [CHANGE] A data sub-record that decodes to a single field now shows that field as a nested row under the sub-record instead of printing the value inline on the sub-record row
 - [CHANGE] A cell's persistent object references are now shown expanded by default in the record view; temporary references remain collapsed
+- [CHANGE] The dialogue response list is now a single collapsible "Dialogue Responses" group in the record view instead of a flat separator followed by loose rows
 - [FIX] The Edit panel comparison now leaves a pane blank when the corresponding plugin has no version of the selected sub-record, instead of showing stray placeholder characters
 - [FIX] Sub-records excluded from the merged patch now show their row text in the neutral color instead of the red, yellow, or orange conflict coloring, matching their greyed-out background
 - [FIX] Merging a record where two mods change different parts of the same multi-byte value (such as a weapon's stat) no longer produces a spliced value that neither mod set; each value is now taken whole from one mod

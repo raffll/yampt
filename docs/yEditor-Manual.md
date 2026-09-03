@@ -59,13 +59,13 @@ Each column represents one plugin's version. Column headers show the plugin file
 
 Empty cells mean that plugin does not include the sub-record. This happens when a plugin only modifies some fields of a record.
 
-## Dialogue INFO Chain
+## Dialogue Responses
 
-When you select a DIAL (dialogue topic) record, the record view shows an additional section below the sub-records: the INFO chain. This displays all INFO records belonging to the topic in their final merged order, resolved using the same algorithm as OpenMW.
+When you select a DIAL (dialogue topic) record, the record view shows an additional collapsible group below the sub-records: Dialogue Responses. Expand it to see all INFO records belonging to the topic in their final merged order, resolved using the same algorithm as OpenMW; collapse it to hide the list.
 
 Each INFO is positioned according to its PNAM (Previous Info) sub-record. When a plugin adds a new INFO with PNAM pointing to an existing INFO, the new one is inserted immediately after it. When a plugin redefines an existing INFO with a different PNAM, the INFO is moved to its new position in the chain.
 
-Each row in the INFO chain is labeled with the INFO's display name (typically the speaker NPC ID), and each plugin column shows that plugin's response text for the INFO. A column is left empty when the plugin does not contain the INFO. When two or more plugins define the same INFO with different response text, the row is highlighted as a conflict in the same way as any other differing sub-record, so you can see not only which plugin contributes each response and in what order the player encounters them, but also where plugins disagree on the wording.
+Each row is labeled with the INFO's display name (typically the speaker NPC ID), and each plugin column shows that plugin's response text for the INFO. A column is left empty when the plugin does not contain the INFO. When two or more plugins define the same INFO with different response text, the row is highlighted as a conflict in the same way as any other differing sub-record, so you can see not only which plugin contributes each response and in what order the player encounters them, but also where plugins disagree on the wording.
 
 ## Context Menus
 

@@ -1007,6 +1007,10 @@ static const field_def_t nnam_chance_fields[] = {
 	{ "Value", field_type_t::u8, 0, 1, nullptr, nullptr, 0, nullptr },
 };
 
+static const field_def_t info_nnam_fields[] = {
+	{ "Next Info", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
 static const std::vector<sub_record_schema_t> & build_schemas()
 {
 	static const std::vector<sub_record_schema_t> schemas = {
@@ -1112,6 +1116,7 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 		{ "*", "QSTR", 1, quest_marker_fields, ARRAY_COUNT(quest_marker_fields) },
 		{ "LEVC", "NNAM", 1, nnam_chance_fields, ARRAY_COUNT(nnam_chance_fields) },
 		{ "LEVI", "NNAM", 1, nnam_chance_fields, ARRAY_COUNT(nnam_chance_fields) },
+		{ "INFO", "NNAM", 0, info_nnam_fields, ARRAY_COUNT(info_nnam_fields) },
 		{ "CELL", "NAM5", 4, cell_nam5_fields, ARRAY_COUNT(cell_nam5_fields) },
 		{ "CELL", "FLTV", 4, cell_fltv_fields, ARRAY_COUNT(cell_fltv_fields) },
 		{ "CELL", "NAM9", 4, cell_nam9_fields, ARRAY_COUNT(cell_nam9_fields) },

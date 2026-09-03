@@ -274,6 +274,7 @@ void editor_window_t::setup_toolbar()
 
 	statusBar()->addWidget(m_plugin_workspace_view->status_label());
 	statusBar()->addPermanentWidget(m_plugin_workspace_view->count_label());
+	statusBar()->addPermanentWidget(m_plugin_workspace_view->validation_label());
 }
 
 void editor_window_t::load_config()

@@ -596,7 +596,8 @@ static bool hoists_single_leaf_child(const view_tree_model_t::view_node_t & node
 	const bool is_group = !node.type.empty() && node.size == 0 && !node.children.empty();
 	const bool single_leaf_child = node.children.size() == 1 && node.children[0].children.empty();
 	const bool child_is_flag_bit = single_leaf_child && node.children[0].bit_index >= 0;
-	return single_leaf_child && !is_group && !is_data_sub_record(node) && !child_is_flag_bit;
+	return single_leaf_child && !is_group && !is_data_sub_record(node) && !child_is_flag_bit &&
+	       !node.is_info_chain;
 }
 
 std::string view_tree_model_t::full_value_at(const QModelIndex & index) const

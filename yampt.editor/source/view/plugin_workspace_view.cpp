@@ -46,6 +46,9 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 
 	m_status_label = new QLabel(this);
 
+	m_validation_label = new QLabel(this);
+	m_validation_label->setStyleSheet("color: rgb(220, 50, 50);");
+
 	m_nav_tabs = new QTabWidget(this);
 	m_nav_tabs->setTabPosition(QTabWidget::North);
 
@@ -181,6 +184,13 @@ void plugin_workspace_view_t::setup_connections()
 	    &preview_view_t::edit_committed,
 	    this,
 	    [this]() { refresh_all_views(); });
+
+	connect(
+	    m_preview,
+	    &preview_view_t::validation_message,
+	    this,
+	    [this](const QString & message)
+	{ m_validation_label->setText(message.isEmpty() ? QString {} : tr("| %1").arg(message)); });
 }
 
 void plugin_workspace_view_t::load_plugins_from_paths(

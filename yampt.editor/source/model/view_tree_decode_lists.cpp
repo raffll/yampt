@@ -181,12 +181,12 @@ void view_tree_model_t::set_record_dial(
 	if (info_result.entries.empty())
 		return;
 
-	view_node_t separator_row;
-	separator_row.label = "--- INFO Chain ---";
-	separator_row.is_info_chain = true;
-	separator_row.values.resize(col_count);
-	separator_row.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
-	m_rows.push_back(std::move(separator_row));
+	view_node_t chain_group;
+	chain_group.label = "Dialogue Responses";
+	chain_group.is_info_chain = true;
+	chain_group.values.resize(col_count);
+	chain_group.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
+	chain_group.row_conflict_all = conflict_all_t::only_one;
 
 	for (const auto & info_entry : info_result.entries)
 	{
@@ -227,8 +227,20 @@ void view_tree_model_t::set_record_dial(
 		info_row.row_conflict_all = record_conflict::compute_conflict_all_skip_empty(info_row.values);
 		info_row.cell_conflict_this = record_conflict::compute_conflict_this_skip_empty(info_row.values);
 
-		m_rows.push_back(std::move(info_row));
+		if (info_row.row_conflict_all > chain_group.row_conflict_all)
+			chain_group.row_conflict_all = info_row.row_conflict_all;
+
+		for (size_t col = 0; col < col_count && col < info_row.cell_conflict_this.size(); ++col)
+		{
+			if (info_row.cell_conflict_this[col] > chain_group.cell_conflict_this[col])
+				chain_group.cell_conflict_this[col] = info_row.cell_conflict_this[col];
+		}
+
+		chain_group.children.push_back(std::move(info_row));
 	}
+
+	chain_group.all_identical = (chain_group.row_conflict_all <= conflict_all_t::no_conflict);
+	m_rows.push_back(std::move(chain_group));
 }
 
 void view_tree_model_t::set_record_generic(record_context_t & context, const conflict_entry_t & entry)

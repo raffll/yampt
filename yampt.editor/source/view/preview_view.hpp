@@ -34,6 +34,7 @@ protected:
 
 signals:
 	void edit_committed();
+	void validation_message(const QString & message);
 
 private slots:
 	void on_text_changed();
@@ -48,7 +49,6 @@ private:
 
 	QTextEdit * m_left_edit = nullptr;
 	QTextEdit * m_right_edit = nullptr;
-	QLabel * m_validation_label = nullptr;
 	QWidget * m_controls_widget = nullptr;
 	QComboBox * m_value_selector = nullptr;
 	QPushButton * m_apply_button = nullptr;
