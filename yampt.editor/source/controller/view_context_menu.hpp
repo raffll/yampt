@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../model/field_binary_resolver.hpp"
 #include "../model/nav_tree_model.hpp"
 #include "../model/view_tree_model.hpp"
 #include <functional>
@@ -60,6 +61,7 @@ private:
 	void build_copy_to_merge_menu(QMenu & menu, const view_menu_context_t & context);
 	void build_source_copy_menu(QMenu & menu, const view_menu_context_t & context);
 	void build_merge_remove_menu(QMenu & menu, const view_menu_context_t & context);
+	field_binary_resolver::resolved_field_t resolve_schema_field(const view_menu_context_t & context) const;
 
 	plugin_session_t & m_session;
 	record_view_t & m_record_view;

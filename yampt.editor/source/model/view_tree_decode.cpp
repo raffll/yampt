@@ -325,6 +325,7 @@ void view_tree_model_t::decode_schema_children(
 			group_node.values.resize(col_count);
 			group_node.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
 			group_node.row_conflict_all = conflict_all_t::only_one;
+			group_node.binary_ranges = parent_row.binary_ranges;
 			parent_row.children.push_back(std::move(group_node));
 			current_group = &parent_row.children.back();
 		}

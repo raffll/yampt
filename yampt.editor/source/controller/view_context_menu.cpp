@@ -306,6 +306,21 @@ void view_context_menu_t::build_copy_to_merge_menu(QMenu & menu, const view_menu
 	}
 }
 
+field_binary_resolver::resolved_field_t view_context_menu_t::resolve_schema_field(
+    const view_menu_context_t & context) const
+{
+	std::vector<const view_tree_model_t::view_node_t *> ancestors;
+	QModelIndex ancestor_index = context.index.parent();
+
+	while (ancestor_index.isValid())
+	{
+		ancestors.push_back(m_record_view.model()->node_from_index(ancestor_index));
+		ancestor_index = ancestor_index.parent();
+	}
+
+	return field_binary_resolver::resolve(ancestors, context.col, context.row.schema_field_index);
+}
+
 void view_context_menu_t::build_source_copy_menu(QMenu & menu, const view_menu_context_t & context)
 {
 	switch (context.kind)
@@ -333,27 +348,13 @@ void view_context_menu_t::build_source_copy_menu(QMenu & menu, const view_menu_c
 
 	case row_kind_t::field_of_schema:
 	{
-		QModelIndex sub_record_index = context.index.parent();
-		const auto * sub_record_node = m_record_view.model()->node_from_index(sub_record_index);
-
-		while (sub_record_node && sub_record_node->type.empty() && sub_record_index.parent().isValid())
-		{
-			sub_record_index = sub_record_index.parent();
-			sub_record_node = m_record_view.model()->node_from_index(sub_record_index);
-		}
-
-		if (!sub_record_node || sub_record_node->type.empty())
+		const auto resolved = resolve_schema_field(context);
+		if (!resolved.found)
 			break;
 
-		if (context.row.schema_field_index < 0)
-			break;
-
-		const auto sub_type = sub_record_node->type;
-		const auto sub_size = sub_record_node->size;
-		const int field_bin =
-		    (context.col >= 0 && context.col < static_cast<int>(sub_record_node->binary_ranges.size()))
-		        ? sub_record_node->binary_ranges[context.col].start
-		        : -1;
+		const auto sub_type = resolved.sub_type;
+		const auto sub_size = resolved.sub_size;
+		const int field_bin = resolved.binary_index;
 		const int child_field_idx = context.row.schema_field_index;
 
 		menu.addAction(
@@ -432,31 +433,16 @@ void view_context_menu_t::build_merge_remove_menu(QMenu & menu, const view_menu_
 
 	case row_kind_t::field_of_schema:
 	{
-		QModelIndex sub_record_index = context.index.parent();
-		const auto * sub_record_node = m_record_view.model()->node_from_index(sub_record_index);
-
-		while (sub_record_node && sub_record_node->type.empty() && sub_record_index.parent().isValid())
-		{
-			sub_record_index = sub_record_index.parent();
-			sub_record_node = m_record_view.model()->node_from_index(sub_record_index);
-		}
-
-		if (!sub_record_node || sub_record_node->type.empty())
+		const auto resolved = resolve_schema_field(context);
+		if (!resolved.found)
 			break;
 
-		const int merge_bin =
-		    (context.col >= 0 && context.col < static_cast<int>(sub_record_node->binary_ranges.size()))
-		        ? sub_record_node->binary_ranges[context.col].start
-		        : -1;
-
-		if (merge_bin >= 0)
-		{
-			const auto removed_type = sub_record_node->type;
-			menu.addAction(
-			    QCoreApplication::translate("yEditor", "Remove Sub-Record from Merged Patch"),
-			    [this, &context, merge_bin, removed_type]()
-			{ m_merge.remove_sub_record(context.rec_type, context.record_id, merge_bin, removed_type); });
-		}
+		const int merge_bin = resolved.binary_index;
+		const auto removed_type = resolved.sub_type;
+		menu.addAction(
+		    QCoreApplication::translate("yEditor", "Remove Sub-Record from Merged Patch"),
+		    [this, &context, merge_bin, removed_type]()
+		{ m_merge.remove_sub_record(context.rec_type, context.record_id, merge_bin, removed_type); });
 
 		break;
 	}
