@@ -6,10 +6,49 @@
 #include "merge_controller.hpp"
 #include <scanner/record_conflict.hpp>
 #include <utility/record_behavior.hpp>
+#include <set>
+#include <string>
+#include <QAction>
 #include <QCoreApplication>
 #include <QDir>
 #include <QMenu>
 #include <QMessageBox>
+
+static std::set<std::string> parse_ignore_rules(const std::string & serialized)
+{
+	std::set<std::string> rules;
+	size_t start = 0;
+
+	while (start < serialized.size())
+	{
+		auto comma = serialized.find(',', start);
+		if (comma == std::string::npos)
+			comma = serialized.size();
+
+		auto token = serialized.substr(start, comma - start);
+		auto trim_start = token.find_first_not_of(' ');
+		if (trim_start != std::string::npos)
+			rules.insert(token.substr(trim_start));
+
+		start = comma + 1;
+	}
+
+	return rules;
+}
+
+static std::string serialize_ignore_rules(const std::set<std::string> & rules)
+{
+	std::string result;
+	for (const auto & rule : rules)
+	{
+		if (!result.empty())
+			result += ", ";
+
+		result += rule;
+	}
+
+	return result;
+}
 
 view_context_menu_t::view_context_menu_t(
     plugin_session_t & session,
@@ -44,9 +83,18 @@ void view_context_menu_t::show_nav_menu(const QPoint & global_pos, const nav_tre
 	}
 	else if (!info.record_id.empty() && !is_merge)
 	{
-		menu.addAction(
+		const bool record_in_merge = m_session.scan().find_merge_content(info.rec_type, info.record_id) != nullptr;
+		auto * copy_action = menu.addAction(
+		    QCoreApplication::translate("yEditor", "Copy Record to Merged Patch"),
+		    [this, info]() { m_merge.copy_whole_record(info.plugin_idx, info.rec_type, info.record_id); });
+		copy_action->setEnabled(m_session.scan().has_merge() && !record_in_merge);
+
+		menu.addSeparator();
+
+		auto * remove_action = menu.addAction(
 		    QCoreApplication::translate("yEditor", "Remove Record from Plugin"),
 		    [this, info]() { confirm_remove_record_from_plugin(info); });
+		remove_action->setEnabled(m_record_view.model()->is_editing_enabled());
 	}
 	else if (info.rec_type.empty() && info.record_id.empty() && !is_merge)
 	{
@@ -235,53 +283,51 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 	}
 
 	if (kind == row_kind_t::sub_record || kind == row_kind_t::schema_record)
-	{
-		const auto sub_type = row.type;
-		const auto rule = rec_type + ":" + sub_type;
-
-		if (!menu.actions().isEmpty())
-			menu.addSeparator();
-
-		menu.addAction(
-		    QCoreApplication::translate("yEditor", "Exclude Sub-Record \"%1\"").arg(QString::fromStdString(rule)),
-		    [this, rule]()
-		{
-			auto current = m_settings.sub_record_ignore_conflict();
-
-			std::set<std::string> existing;
-			size_t start = 0;
-			while (start < current.size())
-			{
-				auto comma = current.find(',', start);
-				if (comma == std::string::npos)
-					comma = current.size();
-
-				auto token = current.substr(start, comma - start);
-				auto trim_start = token.find_first_not_of(" ");
-				if (trim_start != std::string::npos)
-					existing.insert(token.substr(trim_start));
-
-				start = comma + 1;
-			}
-
-			if (existing.count(rule))
-				return;
-
-			if (!current.empty())
-				current += ", ";
-
-			current += rule;
-			m_settings.set_sub_record_ignore_conflict(current);
-
-			if (m_on_settings_changed)
-				m_on_settings_changed();
-		});
-	}
+		build_sub_record_ignore_menu(menu, context);
 
 	if (menu.actions().isEmpty())
 		return;
 
 	menu.exec(global_pos);
+}
+
+void view_context_menu_t::build_sub_record_ignore_menu(QMenu & menu, const view_menu_context_t & context)
+{
+	const auto rule = context.rec_type + ":" + context.row.type;
+	const auto wildcard = context.rec_type + ":*";
+	const auto rules = parse_ignore_rules(m_settings.sub_record_ignore_conflict());
+
+	const bool excluded_by_rule = rules.count(rule) > 0;
+	const bool excluded_by_wildcard = rules.count(wildcard) > 0;
+	const bool already_excluded = excluded_by_rule || excluded_by_wildcard;
+
+	if (!menu.actions().isEmpty())
+		menu.addSeparator();
+
+	const auto label = already_excluded ? QCoreApplication::translate("yEditor", "Include Sub-Record \"%1\"")
+	                                     : QCoreApplication::translate("yEditor", "Exclude Sub-Record \"%1\"");
+
+	auto * action = menu.addAction(
+	    label.arg(QString::fromStdString(rule)),
+	    [this, rule, excluded_by_rule]() { toggle_ignore_rule(rule, excluded_by_rule); });
+
+	if (excluded_by_wildcard && !excluded_by_rule)
+		action->setEnabled(false);
+}
+
+void view_context_menu_t::toggle_ignore_rule(const std::string & rule, bool remove_rule)
+{
+	auto rules = parse_ignore_rules(m_settings.sub_record_ignore_conflict());
+
+	if (remove_rule)
+		rules.erase(rule);
+	else
+		rules.insert(rule);
+
+	m_settings.set_sub_record_ignore_conflict(serialize_ignore_rules(rules));
+
+	if (m_on_settings_changed)
+		m_on_settings_changed();
 }
 
 void view_context_menu_t::build_copy_to_merge_menu(QMenu & menu, const view_menu_context_t & context)

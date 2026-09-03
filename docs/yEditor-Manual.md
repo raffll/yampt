@@ -76,11 +76,13 @@ Right-click in the record view to access merge operations:
 - **Copy Field to Merged Patch** — copies a single decoded field within a sub-record from a plugin column.
 - **Copy Group to Merged Patch** — copies a group of related sub-records (e.g. all fields of a referenced object in a cell).
 - **Remove Sub-Record from Merged Patch** / **Remove Group from Merged Patch** — removes content from the merged patch column.
-- **Exclude Sub-Record** — adds the sub-record type to the exclusion list in settings. The sub-record will be hidden from conflict detection and excluded from the merged patch. The rule is stored as `RECORD:SUB` (e.g. `CELL:NAM0`) and can be reviewed in Settings. Exclusion applies only to top-level sub-records; sub-records nested inside a cell's referenced objects are never excluded, so a rule such as `CELL:DATA` affects the cell's own data and leaves the referenced objects intact. This option is offered only on top-level sub-record rows.
+- **Exclude Sub-Record** / **Include Sub-Record** — toggles the sub-record type in the exclusion list. When the type is already excluded, the action reads "Include Sub-Record" and removes the rule; when the whole record type is excluded by a wildcard rule, the include option is greyed out. Excluding adds the sub-record type to the exclusion list in settings. The sub-record will be hidden from conflict detection and excluded from the merged patch. The rule is stored as `RECORD:SUB` (e.g. `CELL:NAM0`) and can be reviewed in Settings. Exclusion applies only to top-level sub-records; sub-records nested inside a cell's referenced objects are never excluded, so a rule such as `CELL:DATA` affects the cell's own data and leaves the referenced objects intact. This option is offered only on top-level sub-record rows.
 
 Right-click a record node belonging to the merged patch in the navigation tree to see the **Remove Record from Merged Patch** option, which deletes that record from the merged patch entirely.
 
-Right-click a record node belonging to a loaded plugin to see the **Remove Record from Plugin** option. After a confirmation prompt, the record is dropped from that plugin in memory and the plugin is marked as having unsaved changes. The record disappears from the file the next time you save the plugin. This removal cannot be undone; the only way to recover the record is to close the plugin without saving.
+Right-click a record node belonging to a loaded plugin to see the **Copy Record to Merged Patch** option, which copies the whole record from that plugin into the merged patch. It is greyed out unless a merged patch exists and the record is not already in it.
+
+The same menu offers **Remove Record from Plugin**. After a confirmation prompt, the record is dropped from that plugin in memory and the plugin is marked as having unsaved changes. The record disappears from the file the next time you save the plugin. This removal cannot be undone; the only way to recover the record is to close the plugin without saving. The option is greyed out unless editing is enabled.
 
 Right-click a plugin node in the navigation tree for plugin-level options:
 

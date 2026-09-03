@@ -139,6 +139,7 @@ public:
 
 	const view_node_t * node_from_index(const QModelIndex & index) const;
 	std::string full_value_at(const QModelIndex & index) const;
+	bool is_editing_enabled() const;
 
 private:
 	static void compute_group_ranges(view_node_t & group_node, size_t col_count);
