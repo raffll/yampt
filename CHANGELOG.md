@@ -35,13 +35,13 @@
 - [NEW] Remove Record from Plugin: right-click a record in a loaded plugin to delete it from that plugin; the record is dropped when the plugin is saved. This cannot be undone. The option is greyed out unless editing is enabled
 - [NEW] Copy Record to Merged Patch is now also available by right-clicking a record in the navigation tree, copying the whole record into the merged patch
 - [NEW] Copy Bit to Merged Patch: right-click an individual flag (such as a body part's Female flag) to copy just that one bit into the merged patch, leaving the record's other flags untouched
+- [NEW] Selecting a response under the Dialogue Responses group now shows that response text in the Edit panel comparison, instead of clearing the panel
 - [NEW] History tab: a tab beside the Edit and Log panels lists the field edits and record removals made during the current session, newest first. The history is not saved and resets when plugins are unloaded
 - [CHANGE] The dialogue INFO chain now shows each plugin's response text for every INFO and highlights conflicts where plugins give the same INFO different text, instead of only showing a checkmark for presence
 - [CHANGE] A merged patch can now be created with a single plugin loaded, instead of requiring at least two. With one plugin the patch starts empty and serves as a scaffold to copy records into by hand
 - [CHANGE] Sub-record row labels in the record view no longer repeat the record type; a record's identifier and name rows now read "NAME - ID" and "FNAM - Name" instead of "NAME - Activator ID" and "FNAM - Activator Name"
 - [CHANGE] A flag sub-record's individual flags now appear directly under the sub-record row in the record view, without a redundant intermediate "Flags" grouping row
 - [CHANGE] A data sub-record that decodes to a single field now shows that field as a nested row under the sub-record instead of printing the value inline on the sub-record row
-- [CHANGE] A cell's persistent object references are now shown expanded by default in the record view; temporary references remain collapsed
 - [CHANGE] The dialogue response list is now a single collapsible "Dialogue Responses" group in the record view instead of a flat separator followed by loose rows
 - [FIX] The Edit panel comparison now leaves a pane blank when the corresponding plugin has no version of the selected sub-record, instead of showing stray placeholder characters
 - [FIX] Sub-records excluded from the merged patch now show their row text in the neutral color instead of the red, yellow, or orange conflict coloring, matching their greyed-out background

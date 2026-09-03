@@ -552,7 +552,8 @@ static const field_def_t land_binary_fields[] = {
 
 static const char * const info_gender[] = { "Male", "Female", nullptr };
 
-static const char * const info_rank_names[] = { nullptr };
+static const char * const info_rank_names[] = { "Rank 0", "Rank 1", "Rank 2", "Rank 3", "Rank 4",
+	                                            "Rank 5", "Rank 6", "Rank 7", "Rank 8", "Rank 9", nullptr };
 
 static const char * const info_types[] = { "Topic", "Voice", "Greeting", "Persuasion", "Journal", nullptr };
 
@@ -565,11 +566,7 @@ static const field_def_t info_data_fields[] = {
 };
 
 static const field_def_t info_scvr_fields[] = {
-	{ "Index", field_type_t::string_fixed, 0, 1, nullptr, nullptr, 0, nullptr },
-	{ "Type", field_type_t::scvr_type, 1, 1, nullptr, nullptr, 0, nullptr },
-	{ "Function", field_type_t::scvr_subject, 2, 2, nullptr, nullptr, 0, nullptr },
-	{ "Operator", field_type_t::scvr_operator, 4, 1, nullptr, nullptr, 0, nullptr },
-	{ "Name", field_type_t::string_var, 5, 0, nullptr, nullptr, 0, nullptr },
+	{ "Condition", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t regn_weat_fields[] = {

@@ -610,14 +610,9 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 		section.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
 		section.row_conflict_all = conflict_all_t::only_one;
 
-		const bool expand_children = (section_label == "Persistent");
-
 		for (const auto & obj_idx : indices)
 		{
 			auto ref_group = build_ref_group(obj_idx);
-			if (expand_children)
-				ref_group.start_collapsed = false;
-
 			propagate_conflict_upward(section, ref_group, col_count);
 			section.children.push_back(std::move(ref_group));
 		}

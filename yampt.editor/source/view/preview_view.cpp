@@ -48,7 +48,6 @@ preview_view_t::preview_view_t(QWidget * parent)
 	outer_layout->addLayout(comparison_layout);
 
 	m_controls_widget = new QWidget(this);
-	m_controls_widget->setVisible(false);
 
 	auto * controls_layout = new QHBoxLayout(m_controls_widget);
 	controls_layout->setContentsMargins(0, 0, controls_margin, controls_margin);
@@ -67,7 +66,7 @@ preview_view_t::preview_view_t(QWidget * parent)
 
 	m_apply_button = new QPushButton(tr("Apply"), m_controls_widget);
 	m_apply_button->setToolTip(tr("Apply field edit to the loaded plugin"));
-	m_apply_button->setVisible(false);
+	m_apply_button->setEnabled(false);
 	m_apply_button->setFixedWidth(control_width);
 	controls_layout->addWidget(m_apply_button);
 
@@ -220,8 +219,6 @@ void preview_view_t::clear()
 void preview_view_t::set_editing_enabled(bool enabled)
 {
 	m_right_edit->setReadOnly(!enabled);
-	m_controls_widget->setVisible(enabled);
-	m_apply_button->setVisible(enabled);
 	m_editing_active = enabled;
 	m_user_has_typed = false;
 	emit validation_message({});

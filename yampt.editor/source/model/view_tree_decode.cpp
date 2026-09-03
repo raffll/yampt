@@ -113,6 +113,7 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 	}
 
 	row.type = slot.type;
+	row.occurrence = slot.occurrence;
 	row.label = make_sub_label(slot.type, m_record_type, first_size);
 
 	bool all_same = true;
@@ -409,3 +410,4 @@ void view_tree_model_t::decode_hex_children(
 		parent_row.children.push_back(std::move(frow));
 	}
 }
+

@@ -720,7 +720,7 @@ void plugin_workspace_view_t::on_view_selection_changed(const QModelIndex & curr
 	}
 
 	const auto * node = model->node_from_index(current);
-	if (node != nullptr && node->is_info_chain)
+	if (node != nullptr && node->is_info_chain && !node->children.empty())
 	{
 		m_preview->clear();
 		return;
@@ -795,17 +795,16 @@ void plugin_workspace_view_t::update_status()
 
 	if (info.plugin_idx >= 0)
 	{
-		if (!info.record_id.empty())
-			m_status_label->setText(mode_prefix + QString::fromStdString(info.rec_type + " : " + info.record_id));
-		else if (!info.rec_type.empty())
-			m_status_label->setText(mode_prefix + QString::fromStdString(info.rec_type));
-		else
-			m_status_label->setText(
-			    mode_prefix + QString::fromStdString(m_session->scan().plugin_filename(info.plugin_idx)));
+		m_status_label->setText(
+		    mode_prefix + QString::fromStdString(m_session->scan().plugin_filename(info.plugin_idx)));
 	}
 	else
 	{
-		m_status_label->setText(mode_prefix.trimmed());
+		auto without_selection = mode_prefix.trimmed();
+		if (without_selection.endsWith("|"))
+			without_selection.chop(1);
+
+		m_status_label->setText(without_selection.trimmed());
 	}
 }
 
@@ -818,19 +817,19 @@ QString plugin_workspace_view_t::build_mode_prefix() const
 	switch (m_session->load_source())
 	{
 	case plugin_session_t::load_source_t::folder:
-		mode_tag = "[Folder]";
+		mode_tag = "Folder";
 		break;
 	case plugin_session_t::load_source_t::mo2_profile:
-		mode_tag = "[MO2]";
+		mode_tag = "MO2";
 		break;
 	case plugin_session_t::load_source_t::openmw_cfg:
-		mode_tag = "[OpenMW]";
+		mode_tag = "OpenMW";
 		break;
 	default:
 		return {};
 	}
 
-	return mode_tag + " " + QString::fromStdString(m_session->load_base_path()) + " : ";
+	return mode_tag + " | " + QString::fromStdString(m_session->load_base_path()) + " | ";
 }
 
 void plugin_workspace_view_t::log_message(const std::string & msg)

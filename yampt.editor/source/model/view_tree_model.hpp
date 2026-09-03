@@ -195,6 +195,7 @@ private:
 	    const std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_indices,
 	    const sub_slot_t & slot);
 
+
 	void decode_schema_children_ref(
 	    view_node_t & parent_row,
 	    const sub_record_schema_t * schema,
