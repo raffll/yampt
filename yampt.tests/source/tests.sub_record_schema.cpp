@@ -166,7 +166,7 @@ TEST_CASE("sub_record_schema_t::find_schema, SPEL ENAM 24-byte matches", "[u]")
 	const auto * schema = find_schema("SPEL", "ENAM", 24);
 	REQUIRE(schema != nullptr);
 	REQUIRE(schema->field_count > 0);
-	REQUIRE(std::string(schema->fields[0].name) == "Effect ID");
+	REQUIRE(std::string(schema->fields[0].name) == "Effect");
 }
 
 TEST_CASE("sub_record_schema_t::find_schema, CLOT ENAM does not match effect schema", "[u]")
@@ -185,7 +185,7 @@ TEST_CASE("sub_record_schema_t::find_schema, ENCH ENAM 24-byte matches", "[u]")
 {
 	const auto * schema = find_schema("ENCH", "ENAM", 24);
 	REQUIRE(schema != nullptr);
-	REQUIRE(std::string(schema->fields[0].name) == "Effect ID");
+	REQUIRE(std::string(schema->fields[0].name) == "Effect");
 }
 
 TEST_CASE("sub_record_schema_t::find_schema, INFO DATA has 5 fields", "[u]")
@@ -390,13 +390,37 @@ TEST_CASE("view_tree_format::make_sub_label, ARMO ENAM context override", "[u]")
 TEST_CASE("view_tree_format::make_sub_label, SPEL ENAM schema label", "[u]")
 {
 	auto label = make_sub_label("ENAM", "SPEL", 24);
-	REQUIRE(label == "ENAM - Spell Effect");
+	REQUIRE(label == "ENAM - Effect");
 }
 
 TEST_CASE("view_tree_format::make_sub_label, ENCH ENAM schema label", "[u]")
 {
 	auto label = make_sub_label("ENAM", "ENCH", 24);
-	REQUIRE(label == "ENAM - Enchantment Effect");
+	REQUIRE(label == "ENAM - Effect");
+}
+
+TEST_CASE("view_tree_format::make_sub_label, ACTI NAME no record name prefix", "[u]")
+{
+	auto label = make_sub_label("NAME", "ACTI", 8);
+	REQUIRE(label == "NAME - ID");
+}
+
+TEST_CASE("view_tree_format::make_sub_label, ACTI FNAM no record name prefix", "[u]")
+{
+	auto label = make_sub_label("FNAM", "ACTI", 8);
+	REQUIRE(label == "FNAM - Name");
+}
+
+TEST_CASE("view_tree_format::make_sub_label, ACTI MODL no record name prefix", "[u]")
+{
+	auto label = make_sub_label("MODL", "ACTI", 8);
+	REQUIRE(label == "MODL - Model");
+}
+
+TEST_CASE("view_tree_format::make_sub_label, unknown schema sub-type falls back to Data", "[u]")
+{
+	auto label = make_sub_label("ZZZZ", "ACTI", 8);
+	REQUIRE(label == "ZZZZ - Data");
 }
 
 TEST_CASE("view_tree_format::make_sub_label, GMST STRV context override", "[u]")

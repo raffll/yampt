@@ -579,6 +579,20 @@ const view_tree_model_t::view_node_t * view_tree_model_t::node_from_index(const 
 	return &parent_ptr->children[index.row()];
 }
 
+static bool is_data_sub_record(const view_tree_model_t::view_node_t & node)
+{
+	static const std::string data_suffix = " - Data";
+	return node.label.size() >= data_suffix.size() &&
+	       node.label.compare(node.label.size() - data_suffix.size(), data_suffix.size(), data_suffix) == 0;
+}
+
+static bool hoists_single_leaf_child(const view_tree_model_t::view_node_t & node)
+{
+	const bool is_group = !node.type.empty() && node.size == 0 && !node.children.empty();
+	const bool single_leaf_child = node.children.size() == 1 && node.children[0].children.empty();
+	return single_leaf_child && !is_group && !is_data_sub_record(node);
+}
+
 std::string view_tree_model_t::full_value_at(const QModelIndex & index) const
 {
 	const auto * node = node_from_index(index);
@@ -589,10 +603,7 @@ std::string view_tree_model_t::full_value_at(const QModelIndex & index) const
 	if (column < 1)
 		return {};
 
-	const bool is_group = !node->type.empty() && node->size == 0 && !node->children.empty();
-	const bool single_leaf_child = node->children.size() == 1 && node->children[0].children.empty();
-
-	if (single_leaf_child && !is_group)
+	if (hoists_single_leaf_child(*node))
 	{
 		const int col = column - 1;
 		if (col < 0 || col >= static_cast<int>(node->children[0].values.size()))
@@ -680,9 +691,7 @@ int view_tree_model_t::rowCount(const QModelIndex & parent) const
 	if (!node)
 		return 0;
 
-	const bool is_group = !node->type.empty() && node->size == 0 && !node->children.empty();
-	const bool single_leaf_child = node->children.size() == 1 && node->children[0].children.empty();
-	if (single_leaf_child && !is_group)
+	if (hoists_single_leaf_child(*node))
 		return 0;
 
 	return static_cast<int>(node->children.size());
@@ -720,10 +729,7 @@ static QVariant sub_record_display(const view_tree_model_t::view_node_t & row, i
 	if (column == 0)
 		return QString::fromStdString(row.label);
 
-	const bool is_group = !row.type.empty() && row.size == 0 && !row.children.empty();
-	const bool single_leaf_child = row.children.size() == 1 && row.children[0].children.empty();
-
-	if (single_leaf_child && !is_group)
+	if (hoists_single_leaf_child(row))
 	{
 		const int col = column - 1;
 		if (col < 0 || col >= static_cast<int>(row.children[0].values.size()))
@@ -863,7 +869,7 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 		std::string lookup_type = node->type;
 		size_t lookup_size = node->size;
 
-		if (node->children.size() == 1 && node->children[0].children.empty())
+		if (hoists_single_leaf_child(*node))
 			target = &node->children[0];
 
 		if (target->schema_field_index >= 0 && !target->type.empty())
