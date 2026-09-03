@@ -45,9 +45,15 @@ std::vector<std::string> split_lines(const std::string & text)
 			continue;
 		}
 
+		if (!current.empty() && current.back() == '\r')
+			current.pop_back();
+
 		lines.push_back(current);
 		current.clear();
 	}
+
+	if (!current.empty() && current.back() == '\r')
+		current.pop_back();
 
 	lines.push_back(current);
 
@@ -67,9 +73,9 @@ QString line_to_html(const std::string & line, const char * background)
 {
 	const auto escaped = QString::fromStdString(line).toHtmlEscaped();
 	if (background == nullptr)
-		return escaped + "<br>";
+		return escaped;
 
-	return QString("<span style='background-color:%1;'>").arg(background) + escaped + "</span><br>";
+	return QString("<span style='background-color:%1;'>").arg(background) + escaped + "</span>";
 }
 
 std::vector<std::vector<int>> build_line_lcs(
@@ -145,8 +151,13 @@ void build_line_diff_html(
 		--row;
 	}
 
-	left_html = left_ordered.join(QString {});
-	right_html = right_ordered.join(QString {});
+	const auto wrap = [](const QStringList & lines)
+	{
+		return QString("<div style='white-space:pre-wrap;'>") + lines.join(QString("\n")) + "</div>";
+	};
+
+	left_html = wrap(left_ordered);
+	right_html = wrap(right_ordered);
 }
 
 } // namespace
@@ -162,14 +173,18 @@ preview_view_t::preview_view_t(QWidget * parent)
 	comparison_layout->setContentsMargins(0, 0, 0, 0);
 	comparison_layout->setSpacing(4);
 
+	const qreal tab_stop_distance = fontMetrics().horizontalAdvance(QChar(' ')) * 4;
+
 	m_left_edit = new QTextEdit(this);
 	m_left_edit->setReadOnly(true);
 	m_left_edit->setPlaceholderText(tr("Previous plugin"));
+	m_left_edit->setTabStopDistance(tab_stop_distance);
 	comparison_layout->addWidget(m_left_edit);
 
 	m_right_edit = new QTextEdit(this);
 	m_right_edit->setReadOnly(true);
 	m_right_edit->setPlaceholderText(tr("Selected plugin"));
+	m_right_edit->setTabStopDistance(tab_stop_distance);
 	m_right_edit->installEventFilter(this);
 	comparison_layout->addWidget(m_right_edit);
 
@@ -336,7 +351,18 @@ void preview_view_t::render_comparison()
 void preview_view_t::on_diff_toggled(bool enabled)
 {
 	m_diff_coloring_enabled = enabled;
+
+	const int left_scroll = m_left_edit->verticalScrollBar()->value();
+	const int right_scroll = m_right_edit->verticalScrollBar()->value();
+	const int left_scroll_h = m_left_edit->horizontalScrollBar()->value();
+	const int right_scroll_h = m_right_edit->horizontalScrollBar()->value();
+
 	render_comparison();
+
+	m_left_edit->verticalScrollBar()->setValue(left_scroll);
+	m_right_edit->verticalScrollBar()->setValue(right_scroll);
+	m_left_edit->horizontalScrollBar()->setValue(left_scroll_h);
+	m_right_edit->horizontalScrollBar()->setValue(right_scroll_h);
 }
 
 void preview_view_t::clear()
