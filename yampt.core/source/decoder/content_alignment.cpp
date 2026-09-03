@@ -32,7 +32,11 @@ std::string content_alignment_t::extract_key(
 		}
 	}
 
-	return std::string(anchor.data, anchor.size);
+	std::string key(anchor.data, anchor.size);
+	while (!key.empty() && key.back() == '\0')
+		key.pop_back();
+
+	return key;
 }
 
 void content_alignment_t::collect_non_excluded(

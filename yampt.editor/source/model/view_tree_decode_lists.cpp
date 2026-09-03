@@ -393,11 +393,10 @@ void view_tree_model_t::collect_leveled_entries(record_context_t & context, slot
 void view_tree_model_t::collect_faction_entries(record_context_t & context, slot_build_context_t & build_ctx)
 {
 	alignment_rule_t rule;
-	rule.anchor_type = "INTV";
-	rule.anchor_size = 4;
-	rule.trailing_types = { "ANAM" };
-	rule.key_source = alignment_rule_t::key_from_t::next;
-	rule.key_neighbor_type = "ANAM";
+	rule.anchor_type = "ANAM";
+	rule.anchor_size = 0;
+	rule.trailing_types = { "INTV" };
+	rule.key_source = alignment_rule_t::key_from_t::anchor;
 
 	alignment_context_t align_ctx { context.all_sub_records, context.col_count, build_ctx.unified_slots, build_ctx.col_type_indices };
 	content_alignment_t::align(align_ctx, { rule });
