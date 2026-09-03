@@ -41,6 +41,7 @@
 - [CHANGE] Sub-record row labels in the record view no longer repeat the record type; a record's identifier and name rows now read "NAME - ID" and "FNAM - Name" instead of "NAME - Activator ID" and "FNAM - Activator Name"
 - [CHANGE] A flag sub-record's individual flags now appear directly under the sub-record row in the record view, without a redundant intermediate "Flags" grouping row
 - [CHANGE] A data sub-record that decodes to a single field now shows that field as a nested row under the sub-record instead of printing the value inline on the sub-record row
+- [CHANGE] A cell's persistent object references are now shown expanded by default in the record view; temporary references remain collapsed
 - [FIX] The Edit panel comparison now leaves a pane blank when the corresponding plugin has no version of the selected sub-record, instead of showing stray placeholder characters
 - [FIX] Sub-records excluded from the merged patch now show their row text in the neutral color instead of the red, yellow, or orange conflict coloring, matching their greyed-out background
 - [FIX] Merging a record where two mods change different parts of the same multi-byte value (such as a weapon's stat) no longer produces a spliced value that neither mod set; each value is now taken whole from one mod

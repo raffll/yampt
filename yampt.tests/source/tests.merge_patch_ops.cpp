@@ -371,6 +371,54 @@ TEST_CASE("merge_patch_ops_t::patch_bit, bit_index out of range fails", "[u]")
 	REQUIRE_FALSE(result.success);
 }
 
+TEST_CASE("merge_patch_ops_t::patch_field, copies bool_bit field as single bit", "[u]")
+{
+	static constexpr size_t cldt_size = 60;
+	static constexpr size_t playable_offset = 52;
+	static constexpr int playable_field_idx = 13;
+
+	std::string merge_data(cldt_size, '\0');
+	std::string source_data(cldt_size, '\0');
+	merge_data[playable_offset] = static_cast<char>(0x02);
+	source_data[playable_offset] = static_cast<char>(0x01);
+
+	auto merge = make_record("CLAS", make_sub("NAME", make_string("c")) + make_sub("CLDT", merge_data));
+	auto source = make_record("CLAS", make_sub("NAME", make_string("c")) + make_sub("CLDT", source_data));
+
+	auto result = merge_patch_ops_t::patch_field(merge, source, "CLAS", "CLDT", cldt_size, 1, playable_field_idx);
+
+	REQUIRE(result.success);
+
+	auto patched_subs = sub_record_merge_t::parse_sub_records(result.content);
+	const auto value = static_cast<unsigned char>(patched_subs[1].data[playable_offset]);
+	REQUIRE((value & 0x01) != 0);
+	REQUIRE((value & 0x02) != 0);
+}
+
+TEST_CASE("merge_patch_ops_t::patch_field, copies whole flags_u32 field", "[u]")
+{
+	static constexpr size_t cldt_size = 60;
+	static constexpr size_t services_offset = 56;
+	static constexpr int services_field_idx = 14;
+
+	std::string merge_data(cldt_size, '\0');
+	std::string source_data(cldt_size, '\0');
+	uint32_t source_services = 0x00000005;
+	std::memcpy(source_data.data() + services_offset, &source_services, 4);
+
+	auto merge = make_record("CLAS", make_sub("NAME", make_string("c")) + make_sub("CLDT", merge_data));
+	auto source = make_record("CLAS", make_sub("NAME", make_string("c")) + make_sub("CLDT", source_data));
+
+	auto result = merge_patch_ops_t::patch_field(merge, source, "CLAS", "CLDT", cldt_size, 1, services_field_idx);
+
+	REQUIRE(result.success);
+
+	auto patched_subs = sub_record_merge_t::parse_sub_records(result.content);
+	uint32_t patched_services = 0;
+	std::memcpy(&patched_services, patched_subs[1].data.data() + services_offset, 4);
+	REQUIRE(patched_services == source_services);
+}
+
 TEST_CASE("merge_patch_ops_t::patch_field, no schema returns failure", "[u]")
 {
 	auto merge = make_record("NPC_", make_sub("NAME", make_string("id")) + make_sub("XXXX", std::string(8, '\0')));

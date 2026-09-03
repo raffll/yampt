@@ -125,6 +125,23 @@ patch_result_t merge_patch_ops_t::patch_field(
 	{
 		merge_subs.push_back(source_subs[binary_idx]);
 	}
+	else if (field.type == field_type_t::bool_bit)
+	{
+		const auto & source_data = source_subs[binary_idx].data;
+		auto & merge_data = merge_subs[merge_idx].data;
+
+		if (field.offset >= source_data.size() || field.offset >= merge_data.size())
+			return { false, {}, "data too small for bit field" };
+
+		const unsigned char bit_mask = static_cast<unsigned char>(1u << (field.size % 8));
+
+		if (static_cast<unsigned char>(source_data[field.offset]) & bit_mask)
+			merge_data[field.offset] =
+			    static_cast<char>(static_cast<unsigned char>(merge_data[field.offset]) | bit_mask);
+		else
+			merge_data[field.offset] =
+			    static_cast<char>(static_cast<unsigned char>(merge_data[field.offset]) & ~bit_mask);
+	}
 	else
 	{
 		const auto & source_data = source_subs[binary_idx].data;

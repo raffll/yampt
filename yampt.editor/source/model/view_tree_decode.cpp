@@ -218,6 +218,7 @@ void view_tree_model_t::decode_schema_children(
 				flags_group.label = fdef.name;
 				flags_group.type = slot.type;
 				flags_group.size = schema->expected_size;
+				flags_group.schema_field_index = static_cast<int>(field_idx);
 				flags_group.values.resize(col_count);
 				flags_group.binary_ranges = parent_row.binary_ranges;
 				flags_group.cell_conflict_this.resize(col_count, conflict_this_t::unknown);

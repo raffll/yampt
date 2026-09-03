@@ -219,7 +219,7 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 	const int parent_row_idx = is_field_row ? index.parent().row() : index.row();
 
 	const auto & visible = m_record_view.model()->rows();
-	if (parent_row_idx < 0 || parent_row_idx >= static_cast<int>(visible.size()))
+	if (!is_field_row && (parent_row_idx < 0 || parent_row_idx >= static_cast<int>(visible.size())))
 		return;
 
 	const int col = index.column() - 1;
@@ -502,6 +502,10 @@ void view_context_menu_t::build_merge_remove_menu(QMenu & menu, const view_menu_
 	case row_kind_t::group:
 	case row_kind_t::field_of_group:
 	{
+		if (context.kind == row_kind_t::field_of_group &&
+		    (context.parent_row_idx < 0 || context.parent_row_idx >= static_cast<int>(visible.size())))
+			break;
+
 		const auto & target_row =
 		    (context.kind == row_kind_t::field_of_group) ? visible[context.parent_row_idx] : context.row;
 
