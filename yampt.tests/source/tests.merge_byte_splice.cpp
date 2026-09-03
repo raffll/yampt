@@ -1,3 +1,4 @@
+#include <catch2/catch_all.hpp>
 #include <scanner/sub_record_merge.hpp>
 #include <cstring>
 #include <string>
