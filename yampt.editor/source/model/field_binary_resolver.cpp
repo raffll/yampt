@@ -46,4 +46,20 @@ namespace field_binary_resolver
 
 		return { true, sub_record_node->type, sub_record_node->size, binary_index };
 	}
+
+	resolved_bit_t resolve_bit(
+	    const std::vector<const view_tree_model_t::view_node_t *> & ancestors_nearest_first,
+	    int column,
+	    int schema_field_index,
+	    int bit_index)
+	{
+		if (bit_index < 0)
+			return {};
+
+		const auto field = resolve(ancestors_nearest_first, column, schema_field_index);
+		if (!field.found)
+			return {};
+
+		return { true, field.sub_type, field.sub_size, field.binary_index, schema_field_index, bit_index };
+	}
 }

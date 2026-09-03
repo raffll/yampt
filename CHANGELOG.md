@@ -34,6 +34,7 @@
 - [NEW] When a field edit is invalid, the Edit panel now shows the reason next to the Apply button instead of only marking the field red
 - [NEW] Remove Record from Plugin: right-click a record in a loaded plugin to delete it from that plugin; the record is dropped when the plugin is saved. This cannot be undone. The option is greyed out unless editing is enabled
 - [NEW] Copy Record to Merged Patch is now also available by right-clicking a record in the navigation tree, copying the whole record into the merged patch
+- [NEW] Copy Bit to Merged Patch: right-click an individual flag (such as a body part's Female flag) to copy just that one bit into the merged patch, leaving the record's other flags untouched
 - [NEW] History tab: a tab beside the Edit and Log panels lists the field edits and record removals made during the current session, newest first. The history is not saved and resets when plugins are unloaded
 - [CHANGE] The dialogue INFO chain now shows each plugin's response text for every INFO and highlights conflicts where plugins give the same INFO different text, instead of only showing a checkmark for presence
 - [CHANGE] A merged patch can now be created with a single plugin loaded, instead of requiring at least two. With one plugin the patch starts empty and serves as a scaffold to copy records into by hand

@@ -63,7 +63,9 @@ private:
 	void build_merge_remove_menu(QMenu & menu, const view_menu_context_t & context);
 	void build_sub_record_ignore_menu(QMenu & menu, const view_menu_context_t & context);
 	void toggle_ignore_rule(const std::string & rule, bool remove_rule);
+	void add_copy_bit_action(QMenu & menu, const view_menu_context_t & context);
 	field_binary_resolver::resolved_field_t resolve_schema_field(const view_menu_context_t & context) const;
+	field_binary_resolver::resolved_bit_t resolve_schema_bit(const view_menu_context_t & context) const;
 
 	plugin_session_t & m_session;
 	record_view_t & m_record_view;

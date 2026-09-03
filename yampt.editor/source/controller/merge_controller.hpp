@@ -3,6 +3,7 @@
 #include "../model/edit_log.hpp"
 #include "../model/view_tree_model.hpp"
 #include "../patcher/patch_builder.hpp"
+#include <scanner/merge_patch_ops.hpp>
 #include <functional>
 #include <set>
 #include <string>
@@ -56,6 +57,16 @@ public:
 	    size_t sub_size,
 	    int binary_idx,
 	    int field_idx);
+
+	struct copy_bit_params_t
+	{
+		int plugin_idx = -1;
+		std::string rec_type;
+		std::string record_id;
+		merge_patch_ops_t::bit_patch_params_t bit;
+	};
+
+	void copy_bit(const copy_bit_params_t & params);
 
 	void remove_sub_record(
 	    const std::string & rec_type,

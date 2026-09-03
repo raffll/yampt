@@ -367,6 +367,44 @@ field_binary_resolver::resolved_field_t view_context_menu_t::resolve_schema_fiel
 	return field_binary_resolver::resolve(ancestors, context.col, context.row.schema_field_index);
 }
 
+field_binary_resolver::resolved_bit_t view_context_menu_t::resolve_schema_bit(
+    const view_menu_context_t & context) const
+{
+	std::vector<const view_tree_model_t::view_node_t *> ancestors;
+	QModelIndex ancestor_index = context.index.parent();
+
+	while (ancestor_index.isValid())
+	{
+		ancestors.push_back(m_record_view.model()->node_from_index(ancestor_index));
+		ancestor_index = ancestor_index.parent();
+	}
+
+	return field_binary_resolver::resolve_bit(
+	    ancestors, context.col, context.row.schema_field_index, context.row.bit_index);
+}
+
+void view_context_menu_t::add_copy_bit_action(QMenu & menu, const view_menu_context_t & context)
+{
+	const auto resolved = resolve_schema_bit(context);
+	if (!resolved.found)
+		return;
+
+	merge_controller_t::copy_bit_params_t params;
+	params.plugin_idx = context.plugin_idx;
+	params.rec_type = context.rec_type;
+	params.record_id = context.record_id;
+	params.bit.record_type = context.rec_type;
+	params.bit.sub_type = resolved.sub_type;
+	params.bit.sub_size = resolved.sub_size;
+	params.bit.binary_idx = resolved.binary_index;
+	params.bit.field_idx = resolved.field_index;
+	params.bit.bit_index = resolved.bit_index;
+
+	menu.addAction(
+	    QCoreApplication::translate("yEditor", "Copy Bit to Merged Patch"),
+	    [this, params]() { m_merge.copy_bit(params); });
+}
+
 void view_context_menu_t::build_source_copy_menu(QMenu & menu, const view_menu_context_t & context)
 {
 	switch (context.kind)
@@ -394,6 +432,12 @@ void view_context_menu_t::build_source_copy_menu(QMenu & menu, const view_menu_c
 
 	case row_kind_t::field_of_schema:
 	{
+		if (context.row.bit_index >= 0)
+		{
+			add_copy_bit_action(menu, context);
+			break;
+		}
+
 		const auto resolved = resolve_schema_field(context);
 		if (!resolved.found)
 			break;

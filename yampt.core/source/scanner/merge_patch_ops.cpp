@@ -143,6 +143,62 @@ patch_result_t merge_patch_ops_t::patch_field(
 	return { true, std::move(patched), std::string(field.name) };
 }
 
+patch_result_t merge_patch_ops_t::patch_bit(
+    const std::string & merge_content,
+    const std::string & source_content,
+    const bit_patch_params_t & params)
+{
+	const auto * schema = find_schema(params.record_type, params.sub_type, params.sub_size);
+	if (!schema)
+		return { false, {}, "no schema found" };
+
+	if (params.field_idx < 0 || params.field_idx >= static_cast<int>(schema->field_count))
+		return { false, {}, "field_idx out of range" };
+
+	const auto & field = schema->fields[params.field_idx];
+	if (params.bit_index < 0 || params.bit_index >= static_cast<int>(field.size) * 8)
+		return { false, {}, "bit_index out of range" };
+
+	auto merge_subs = sub_record_merge_t::parse_sub_records(merge_content);
+	const auto source_subs = sub_record_merge_t::parse_sub_records(source_content);
+
+	if (params.binary_idx < 0 || params.binary_idx >= static_cast<int>(source_subs.size()))
+		return { false, {}, "binary_idx out of range" };
+
+	int source_occurrence = 0;
+	for (int s = 0; s < params.binary_idx; ++s)
+	{
+		if (source_subs[s].type == params.sub_type)
+			++source_occurrence;
+	}
+
+	const auto merge_idx =
+	    sub_record_merge_t::find_by_type_and_occurrence(merge_subs, params.sub_type, source_occurrence);
+	if (merge_idx < 0)
+	{
+		merge_subs.push_back(source_subs[params.binary_idx]);
+		auto appended = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
+		return { true, std::move(appended), std::string(field.name) };
+	}
+
+	const auto & source_data = source_subs[params.binary_idx].data;
+	auto & merge_data = merge_subs[merge_idx].data;
+
+	const size_t byte_offset = field.offset + static_cast<size_t>(params.bit_index) / 8;
+	const unsigned char bit_mask = static_cast<unsigned char>(1u << (params.bit_index % 8));
+
+	if (byte_offset >= source_data.size() || byte_offset >= merge_data.size())
+		return { false, {}, "data too small for bit" };
+
+	if (static_cast<unsigned char>(source_data[byte_offset]) & bit_mask)
+		merge_data[byte_offset] = static_cast<char>(static_cast<unsigned char>(merge_data[byte_offset]) | bit_mask);
+	else
+		merge_data[byte_offset] = static_cast<char>(static_cast<unsigned char>(merge_data[byte_offset]) & ~bit_mask);
+
+	auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
+	return { true, std::move(patched), std::string(field.name) };
+}
+
 std::string merge_patch_ops_t::extract_sub_type_from_field_name(const std::string & field_name)
 {
 	if (field_name.size() < 4)

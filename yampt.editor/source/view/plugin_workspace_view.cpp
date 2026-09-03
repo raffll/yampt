@@ -444,9 +444,11 @@ void plugin_workspace_view_t::refresh_all_views()
 	const auto displayed_record_id = m_record_view->model()->record_id();
 
 	const auto current_cell = m_record_view->tree()->currentIndex();
-	const int cell_row = current_cell.row();
 	const int cell_column = current_cell.column();
-	const int cell_parent_row = current_cell.parent().isValid() ? current_cell.parent().row() : -1;
+
+	std::vector<int> ancestor_rows;
+	for (auto walk = current_cell; walk.isValid(); walk = walk.parent())
+		ancestor_rows.push_back(walk.row());
 
 	rebuild_nav_preserving_state();
 
@@ -461,8 +463,18 @@ void plugin_workspace_view_t::refresh_all_views()
 	display_record_in_view(*entry);
 
 	const auto * model = m_record_view->model();
-	const auto parent_index = cell_parent_row >= 0 ? model->index(cell_parent_row, 0, QModelIndex()) : QModelIndex();
-	const auto restored_cell = model->index(cell_row, cell_column, parent_index);
+	QModelIndex restored_cell;
+	for (size_t depth = 0; depth < ancestor_rows.size(); ++depth)
+	{
+		const int ancestor_row = ancestor_rows[ancestor_rows.size() - 1 - depth];
+		const bool is_leaf = depth + 1 == ancestor_rows.size();
+		const int column = is_leaf ? cell_column : 0;
+		restored_cell = model->index(ancestor_row, column, restored_cell);
+
+		if (!restored_cell.isValid())
+			return;
+	}
+
 	if (!restored_cell.isValid())
 		return;
 

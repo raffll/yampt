@@ -420,6 +420,42 @@ void merge_controller_t::copy_field(
 	save_merged_patch();
 }
 
+void merge_controller_t::copy_bit(const copy_bit_params_t & params)
+{
+	const auto source_content = read_source_content(params.plugin_idx, params.rec_type, params.record_id);
+	if (source_content.empty())
+	{
+		debug_log("copy_bit: empty source content for " + params.rec_type + ":" + params.record_id);
+		return;
+	}
+
+	const auto merge_content =
+	    ensure_merge_record(params.plugin_idx, params.rec_type, params.record_id, source_content);
+	if (merge_content.empty())
+	{
+		debug_log("copy_bit: could not ensure merge record for " + params.rec_type + ":" + params.record_id);
+		return;
+	}
+
+	const auto result = merge_patch_ops_t::patch_bit(merge_content, source_content, params.bit);
+	if (!result.success)
+	{
+		debug_log(
+		    "copy_bit: patch_bit failed for " + params.bit.sub_type + " bit=" + std::to_string(params.bit.bit_index) +
+		    " in " + params.rec_type + ":" + params.record_id);
+		return;
+	}
+
+	m_session.scan().copy_record_to_merge_raw(params.rec_type, params.record_id, result.content);
+	m_log(
+	    "[info] copied bit " + result.description + " of " + params.bit.sub_type + " from " +
+	    m_session.scan().plugin_filename(params.plugin_idx) + " to merge (" + params.rec_type + ":" +
+	    params.record_id + ")");
+
+	refresh_after_merge(params.rec_type, params.record_id);
+	save_merged_patch();
+}
+
 void merge_controller_t::remove_sub_record(
     const std::string & rec_type,
     const std::string & record_id,

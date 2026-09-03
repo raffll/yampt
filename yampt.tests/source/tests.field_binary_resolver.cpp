@@ -101,3 +101,31 @@ TEST_CASE("field_binary_resolver::binary_index_for_column, out-of-range column r
 	REQUIRE(field_binary_resolver::binary_index_for_column(sub_record, 5) == -1);
 	REQUIRE(field_binary_resolver::binary_index_for_column(sub_record, -1) == -1);
 }
+
+TEST_CASE("field_binary_resolver::resolve_bit, resolves bit row under sub-record", "[u]")
+{
+	static constexpr int column = 0;
+
+	auto sub_record = make_sub_record_node("BYDT", 4, column);
+
+	const std::vector<const view_node_t *> ancestors { &sub_record };
+
+	const auto resolved = field_binary_resolver::resolve_bit(ancestors, column, 2, 1);
+
+	REQUIRE(resolved.found);
+	REQUIRE(resolved.sub_type == "BYDT");
+	REQUIRE(resolved.binary_index == column);
+	REQUIRE(resolved.field_index == 2);
+	REQUIRE(resolved.bit_index == 1);
+}
+
+TEST_CASE("field_binary_resolver::resolve_bit, negative bit index fails", "[u]")
+{
+	auto sub_record = make_sub_record_node("BYDT", 4, 0);
+
+	const std::vector<const view_node_t *> ancestors { &sub_record };
+
+	const auto resolved = field_binary_resolver::resolve_bit(ancestors, 0, 2, -1);
+
+	REQUIRE_FALSE(resolved.found);
+}
