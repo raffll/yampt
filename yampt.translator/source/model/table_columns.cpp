@@ -88,7 +88,7 @@ QString table_columns_t::label_original() const
 	case document_kind_t::loc_top:
 		return translate("Topic Form");
 	case document_kind_t::loc_mrk:
-		return translate("Marker");
+		return translate("Translation");
 	default:
 		return translate("Original");
 	}
@@ -101,6 +101,7 @@ QString table_columns_t::label_translation() const
 	switch (m_kind)
 	{
 	case document_kind_t::loc_top:
+	case document_kind_t::loc_mrk:
 		return translate("Topic");
 	default:
 		return translate("Translation");
