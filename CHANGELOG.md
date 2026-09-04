@@ -52,9 +52,12 @@
 - [CHANGE] A data sub-record that decodes to a single field now shows that field as a nested row under the sub-record instead of printing the value inline on the sub-record row
 - [CHANGE] The dialogue response list is now a single collapsible "Dialogue Responses" group in the record view instead of a flat separator followed by loose rows
 - [CHANGE] The status bar now reads "mode | path | plugin" (for example "MO2 | ...profiles/Default | Morrowind.esm") and no longer appends the selected record type and id
+- [CHANGE] Each faction reaction now appears as a single collapsible "Faction Reaction" group in the record view, pairing the reacting faction with its reaction value, instead of separate loose rows
+- [CHANGE] Repeating sub-records in the record view (such as a container's items and an NPC's spells) are now numbered, so each row reads "NPCO - Item #0", "NPCO - Item #1", and so on
 - [FIX] The Edit panel comparison now leaves a pane blank when the corresponding plugin has no version of the selected sub-record, instead of showing stray placeholder characters
 - [FIX] Sub-records excluded from the merged patch now show their row text in the neutral color instead of the red, yellow, or orange conflict coloring, matching their greyed-out background
 - [FIX] Merging a record where two mods change different parts of the same multi-byte value (such as a weapon's stat) no longer produces a spliced value that neither mod set; each value is now taken whole from one mod
+- [FIX] Merging a faction where two mods change different rank requirements now keeps both changes, combining the requirement data field by field instead of taking the whole block from a single mod
 - [FIX] Copy Field to Merged Patch now works for fields shown under a grouping heading (such as a class's major and minor skills); previously the copy silently failed for those fields
 - [FIX] Faction reaction values now line up by faction across plugin columns in the record view, instead of being matched by position so different factions shared a row
 - [FIX] Editing a dialogue condition now updates that condition in place instead of adding a duplicate condition

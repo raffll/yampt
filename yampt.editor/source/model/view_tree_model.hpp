@@ -231,6 +231,7 @@ private:
 
 	void emit_slot_rows(record_context_t & context, slot_build_context_t & build_ctx);
 	void emit_leveled_rows(record_context_t & context, slot_build_context_t & build_ctx);
+	void emit_faction_rows(record_context_t & context, slot_build_context_t & build_ctx);
 
 	void finalize_header_conflict();
 

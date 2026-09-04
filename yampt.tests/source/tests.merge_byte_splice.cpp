@@ -107,3 +107,48 @@ TEST_CASE("sub_record_merge_t::merge, WEAP u16 field is not byte-spliced across 
 	REQUIRE(health != 0x64FF);
 	REQUIRE((health == 0x01FF || health == 0x6400));
 }
+
+static std::string make_fadt(uint32_t rank1_attr1, uint32_t rank2_attr1)
+{
+	std::string data(240, '\0');
+	std::memcpy(data.data() + 8, &rank1_attr1, 4);
+	std::memcpy(data.data() + 28, &rank2_attr1, 4);
+	return data;
+}
+
+static std::string make_fact(uint32_t rank1_attr1, uint32_t rank2_attr1)
+{
+	const auto subs =
+	    make_sub("NAME", make_cstr("test_faction")) + make_sub("FNAM", make_cstr("Test Faction")) +
+	    make_sub("FADT", make_fadt(rank1_attr1, rank2_attr1));
+	return make_record("FACT", subs);
+}
+
+static uint32_t read_fadt_field(const std::string & merged_record, size_t field_offset)
+{
+	const auto pos = merged_record.find("FADT");
+	REQUIRE(pos != std::string::npos);
+
+	const size_t data_offset = pos + 4 + 4 + field_offset;
+	uint32_t value = 0;
+	std::memcpy(&value, merged_record.data() + data_offset, 4);
+	return value;
+}
+
+TEST_CASE("sub_record_merge_t::merge, FACT FADT rank requirements merge per field across two mods", "[u]")
+{
+	const auto base = make_fact(10, 20);
+	const auto mod_rank1 = make_fact(50, 20);
+	const auto mod_rank2 = make_fact(10, 60);
+
+	merge_input_t input;
+	input.rec_type = "FACT";
+	input.record_id = "test_faction";
+	input.version_contents = { base, mod_rank1, mod_rank2 };
+
+	const auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(read_fadt_field(result.content, 8) == 50);
+	REQUIRE(read_fadt_field(result.content, 28) == 60);
+}

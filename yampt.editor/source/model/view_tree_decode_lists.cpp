@@ -54,7 +54,7 @@ void view_tree_model_t::set_record_faction(record_context_t & context, const con
 	slot_build_context_t build_ctx { unified_slots, col_type_indices };
 
 	collect_faction_entries(context, build_ctx);
-	emit_slot_rows(context, build_ctx);
+	emit_faction_rows(context, build_ctx);
 }
 
 void view_tree_model_t::set_record_container(record_context_t & context, const conflict_entry_t & entry)
@@ -423,7 +423,11 @@ void view_tree_model_t::collect_container_entries(record_context_t & context, sl
 void view_tree_model_t::emit_slot_rows(record_context_t & context, slot_build_context_t & build_ctx)
 {
 	for (const auto & slot : build_ctx.unified_slots)
-		m_rows.push_back(build_slot_row(context.col_count, context.all_sub_records, build_ctx.col_type_indices, slot));
+	{
+		auto row = build_slot_row(context.col_count, context.all_sub_records, build_ctx.col_type_indices, slot);
+		row.label += " #" + std::to_string(slot.occurrence);
+		m_rows.push_back(std::move(row));
+	}
 
 	m_col_type_indices = build_ctx.col_type_indices;
 }
@@ -495,6 +499,81 @@ void view_tree_model_t::emit_leveled_rows(record_context_t & context, slot_build
 
 		m_rows.push_back(std::move(group_row));
 		++entry_index;
+		++i;
+	}
+
+	m_col_type_indices = build_ctx.col_type_indices;
+}
+
+void view_tree_model_t::emit_faction_rows(record_context_t & context, slot_build_context_t & build_ctx)
+{
+	const auto & unified = build_ctx.unified_slots;
+	const auto col_count = context.col_count;
+	int reaction_index = 0;
+
+	for (size_t i = 0; i < unified.size(); ++i)
+	{
+		const bool is_pair =
+		    (unified[i].type == "ANAM") && (i + 1 < unified.size()) && (unified[i + 1].type == "INTV");
+
+		if (!is_pair)
+		{
+			m_rows.push_back(
+			    build_slot_row(col_count, context.all_sub_records, build_ctx.col_type_indices, unified[i]));
+			continue;
+		}
+
+		auto faction_row = build_slot_row(col_count, context.all_sub_records, build_ctx.col_type_indices, unified[i]);
+		auto value_row =
+		    build_slot_row(col_count, context.all_sub_records, build_ctx.col_type_indices, unified[i + 1]);
+
+		view_node_t group_row;
+		group_row.type = "ANAM";
+		group_row.size = 0;
+		group_row.values = faction_row.values;
+		group_row.all_identical = faction_row.all_identical && value_row.all_identical;
+		group_row.label = "Faction Reaction #" + std::to_string(reaction_index);
+
+		view_node_t faction_field;
+		faction_field.label = "ANAM - Reaction Faction";
+		faction_field.type = faction_row.type;
+		faction_field.size = faction_row.size;
+		faction_field.values = faction_row.values;
+		faction_field.binary_ranges = faction_row.binary_ranges;
+		faction_field.all_identical = faction_row.all_identical;
+		faction_field.row_conflict_all = faction_row.row_conflict_all;
+		faction_field.cell_conflict_this = faction_row.cell_conflict_this;
+
+		view_node_t value_field;
+		value_field.label = "INTV - Reaction Value";
+		value_field.type = value_row.type;
+		value_field.size = value_row.size;
+		value_field.binary_ranges = value_row.binary_ranges;
+		value_field.values = value_row.children.empty() ? value_row.values : value_row.children[0].values;
+		value_field.all_identical = value_row.all_identical;
+		value_field.row_conflict_all = value_row.row_conflict_all;
+		value_field.cell_conflict_this = value_row.cell_conflict_this;
+
+		group_row.children.push_back(std::move(faction_field));
+		group_row.children.push_back(std::move(value_field));
+
+		group_row.row_conflict_all = std::max(faction_row.row_conflict_all, value_row.row_conflict_all);
+		group_row.cell_conflict_this.resize(col_count);
+		for (size_t col = 0; col < col_count; ++col)
+		{
+			const conflict_this_t faction_ct = (col < faction_row.cell_conflict_this.size())
+			    ? faction_row.cell_conflict_this[col]
+			    : conflict_this_t::unknown;
+			const conflict_this_t value_ct = (col < value_row.cell_conflict_this.size())
+			    ? value_row.cell_conflict_this[col]
+			    : conflict_this_t::unknown;
+			group_row.cell_conflict_this[col] = std::max(faction_ct, value_ct);
+		}
+
+		compute_group_ranges(group_row, col_count);
+
+		m_rows.push_back(std::move(group_row));
+		++reaction_index;
 		++i;
 	}
 

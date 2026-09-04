@@ -193,7 +193,7 @@ preview_view_t::preview_view_t(QWidget * parent)
 	m_controls_widget = new QWidget(this);
 
 	auto * controls_layout = new QHBoxLayout(m_controls_widget);
-	controls_layout->setContentsMargins(0, 0, controls_margin, controls_margin);
+	controls_layout->setContentsMargins(controls_margin, 0, controls_margin, controls_margin);
 	controls_layout->setSpacing(4);
 
 	const int control_width = fontMetrics().averageCharWidth() * control_character_width;
