@@ -44,6 +44,47 @@ std::string sub_record_merge_t::reconstruct_record(
 	return result;
 }
 
+std::string sub_record_merge_t::filter_sub_records_by_rules(
+    const std::string & rec_type,
+    const std::string & content,
+    const std::set<std::string> & ignored_sub_records)
+{
+	if (ignored_sub_records.empty())
+		return content;
+
+	const auto subs = parse_sub_records(content);
+	sub_record_sequence_t filtered;
+	bool in_reference_group = false;
+
+	const auto specific_key = rec_type + ":";
+	const auto wildcard_key = rec_type + ":*";
+
+	for (const auto & entry : subs)
+	{
+		if (entry.type == "FRMR")
+			in_reference_group = true;
+
+		if (in_reference_group)
+		{
+			filtered.push_back(entry);
+			continue;
+		}
+
+		if (ignored_sub_records.count(specific_key + entry.type) > 0)
+			continue;
+
+		if (ignored_sub_records.count(wildcard_key) > 0)
+			continue;
+
+		filtered.push_back(entry);
+	}
+
+	if (filtered.size() == subs.size())
+		return content;
+
+	return reconstruct_record(content, filtered);
+}
+
 size_t sub_record_merge_t::find_occurrence_index(const sub_record_sequence_t & sequence, size_t index)
 {
 	size_t count = 0;

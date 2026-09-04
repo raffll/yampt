@@ -1183,3 +1183,79 @@ TEST_CASE("leveled_list_merge_t::merge, LEVC creature list", "[u]")
 	REQUIRE(result.content.find("skeleton") != std::string::npos);
 	REQUIRE(result.content.find("wolf") != std::string::npos);
 }
+
+TEST_CASE("sub_record_merge_t::filter_sub_records_by_rules, empty rules returns content unchanged", "[u]")
+{
+	const auto content = make_record(
+	    "LTEX",
+	    make_sub("NAME", make_string("AI_Grass_Dirt")) + make_sub("INTV", make_uint32(36)) +
+	        make_sub("DATA", make_string("Tx_AI_grass_dirt_01.tga")));
+
+	const auto filtered = sub_record_merge_t::filter_sub_records_by_rules("LTEX", content, {});
+
+	REQUIRE(filtered == content);
+}
+
+TEST_CASE("sub_record_merge_t::filter_sub_records_by_rules, drops specific ignored sub-record", "[u]")
+{
+	const auto content = make_record(
+	    "LTEX",
+	    make_sub("NAME", make_string("AI_Grass_Dirt")) + make_sub("INTV", make_uint32(36)) +
+	        make_sub("DATA", make_string("Tx_AI_grass_dirt_01.tga")));
+
+	const auto filtered = sub_record_merge_t::filter_sub_records_by_rules("LTEX", content, { "LTEX:INTV" });
+
+	const auto subs = sub_record_merge_t::parse_sub_records(filtered);
+	REQUIRE(subs.size() == 2);
+	REQUIRE(subs[0].type == "NAME");
+	REQUIRE(subs[1].type == "DATA");
+}
+
+TEST_CASE("sub_record_merge_t::filter_sub_records_by_rules, wildcard drops all matching types", "[u]")
+{
+	const auto content = make_record(
+	    "LTEX", make_sub("NAME", make_string("AI_Grass_Dirt")) + make_sub("INTV", make_uint32(36)));
+
+	const auto filtered = sub_record_merge_t::filter_sub_records_by_rules("LTEX", content, { "LTEX:*" });
+
+	const auto subs = sub_record_merge_t::parse_sub_records(filtered);
+	REQUIRE(subs.empty());
+}
+
+TEST_CASE("sub_record_merge_t::filter_sub_records_by_rules, rule for other record type is ignored", "[u]")
+{
+	const auto content = make_record(
+	    "LTEX", make_sub("NAME", make_string("AI_Grass_Dirt")) + make_sub("INTV", make_uint32(36)));
+
+	const auto filtered = sub_record_merge_t::filter_sub_records_by_rules("LTEX", content, { "CELL:INTV" });
+
+	REQUIRE(filtered == content);
+}
+
+TEST_CASE("sub_record_merge_t::filter_sub_records_by_rules, excluded winner filters to merge equivalent", "[u]")
+{
+	const auto winner = make_record(
+	    "LTEX",
+	    make_sub("NAME", make_string("AI_Grass_Dirt")) + make_sub("INTV", make_uint32(36)) +
+	        make_sub("DATA", make_string("Tx_AI_grass_dirt_01.tga")));
+
+	const auto merge_after_filter = sub_record_merge_t::reconstruct_record(
+	    winner,
+	    { { "NAME", make_string("AI_Grass_Dirt") }, { "DATA", make_string("Tx_AI_grass_dirt_01.tga") } });
+
+	const auto filtered_winner = sub_record_merge_t::filter_sub_records_by_rules("LTEX", winner, { "LTEX:INTV" });
+
+	REQUIRE(filtered_winner == merge_after_filter);
+}
+
+TEST_CASE("sub_record_merge_t::filter_sub_records_by_rules, reference-group sub-records are preserved", "[u]")
+{
+	const auto content = make_record(
+	    "CELL",
+	    make_sub("NAME", make_string("Balmora")) + make_sub("FRMR", make_uint32(1)) +
+	        make_sub("INTV", make_uint32(5)));
+
+	const auto filtered = sub_record_merge_t::filter_sub_records_by_rules("CELL", content, { "CELL:INTV" });
+
+	REQUIRE(filtered == content);
+}

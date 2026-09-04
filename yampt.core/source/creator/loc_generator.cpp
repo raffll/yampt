@@ -79,7 +79,7 @@ struct build_context_t
 	int collision_warnings = 0;
 };
 
-[[maybe_unused]] static std::vector<loc_types::loc_entry_t> build_cel_entries(build_context_t & context)
+static std::vector<loc_types::loc_entry_t> build_cel_entries(build_context_t & context)
 {
 	std::vector<loc_types::loc_entry_t> entries;
 	const auto it_cell = context.dict.find(rec_type_t::cell);
@@ -117,7 +117,7 @@ static bool should_skip_dial_entry(const record_entry_t & entry, codepage_t code
 	return false;
 }
 
-[[maybe_unused]] static std::vector<loc_types::loc_entry_t> build_mrk_entries(build_context_t & context)
+static std::vector<loc_types::loc_entry_t> build_mrk_entries(build_context_t & context)
 {
 	std::vector<loc_types::loc_entry_t> entries;
 	const auto it_dial = context.dict.find(rec_type_t::dial);
@@ -285,15 +285,20 @@ loc_generator::generation_result_t loc_generator::generate(const generation_inpu
 
 	build_context_t context { input.dict, input.codepage, 0 };
 
+	auto cel_entries = build_cel_entries(context);
+	auto mrk_entries = build_mrk_entries(context);
+
 	top_input_t top_input { input.hunspell_aff_path, input.hunspell_dic_path };
 	auto top_entries = build_top_entries(context, top_input);
 
-	result.cel_entries = 0;
-	result.mrk_entries = 0;
+	result.cel_entries = static_cast<int>(cel_entries.size());
+	result.mrk_entries = static_cast<int>(mrk_entries.size());
 	result.top_entries = static_cast<int>(top_entries.size());
 	result.skipped_entries = context.skipped_count;
 	result.collision_warnings = context.collision_warnings;
 
+	loc_file_writer::write(result.cel_path, cel_entries);
+	loc_file_writer::write(result.mrk_path, mrk_entries);
 	loc_file_writer::write(result.top_path, top_entries);
 
 	app_logger_t::add_log(

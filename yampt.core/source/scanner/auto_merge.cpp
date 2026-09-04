@@ -428,8 +428,9 @@ void auto_merge_t::prune_unchanged()
 
 		const auto & last_ver = it_found->second->versions.back();
 		const auto winning = m_scan.read_record_content(last_ver.plugin_idx, last_ver.record_index);
+		const auto filtered_winning = filter_ignored_sub_records(rec_type, winning);
 
-		if (merge_content == winning)
+		if (merge_content == filtered_winning)
 			to_remove.emplace_back(rec_type, record_id);
 	}
 
@@ -469,35 +470,5 @@ void auto_merge_t::add_log(const std::string & message)
 
 std::string auto_merge_t::filter_ignored_sub_records(const std::string & rec_type, const std::string & content) const
 {
-	if (m_config.ignored_sub_records.empty())
-		return content;
-
-	const auto subs = sub_record_merge_t::parse_sub_records(content);
-	sub_record_sequence_t filtered;
-	bool in_reference_group = false;
-
-	for (const auto & entry : subs)
-	{
-		if (entry.type == "FRMR")
-			in_reference_group = true;
-
-		if (!in_reference_group)
-		{
-			const auto specific_key = rec_type + ":" + entry.type;
-			const auto wildcard_key = rec_type + ":*";
-
-			if (m_config.ignored_sub_records.count(specific_key) > 0)
-				continue;
-
-			if (m_config.ignored_sub_records.count(wildcard_key) > 0)
-				continue;
-		}
-
-		filtered.push_back(entry);
-	}
-
-	if (filtered.size() == subs.size())
-		return content;
-
-	return sub_record_merge_t::reconstruct_record(content, filtered);
+	return sub_record_merge_t::filter_sub_records_by_rules(rec_type, content, m_config.ignored_sub_records);
 }

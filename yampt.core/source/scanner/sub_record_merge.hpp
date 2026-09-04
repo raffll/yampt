@@ -54,6 +54,11 @@ public:
 	static std::string serialize_sub_record(const sub_record_entry_t & entry);
 	static std::string reconstruct_record(const std::string & winner_content, const sub_record_sequence_t & output);
 
+	static std::string filter_sub_records_by_rules(
+	    const std::string & rec_type,
+	    const std::string & content,
+	    const std::set<std::string> & ignored_sub_records);
+
 	static size_t find_occurrence_index(const sub_record_sequence_t & sequence, size_t index);
 	static int find_by_type_and_occurrence(
 	    const sub_record_sequence_t & sequence,
