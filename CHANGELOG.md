@@ -55,6 +55,7 @@
 - [FIX] Copy Field to Merged Patch now works for fields shown under a grouping heading (such as a class's major and minor skills); previously the copy silently failed for those fields
 - [FIX] Faction reaction values now line up by faction across plugin columns in the record view, instead of being matched by position so different factions shared a row
 - [FIX] Editing a dialogue condition now updates that condition in place instead of adding a duplicate condition
+- [FIX] The merged patch is now always loaded last, regardless of where MO2 or OpenMW places it in the load order, so its column stays at the far right and it wins over the plugins it merges
 
 ## [0.1060] - 2026-08-31
 

@@ -10,6 +10,8 @@ Open File menu and choose one of three loading methods:
 - **Open MO2 Profile** — select a Mod Organizer 2 profile directory. The application reads loadorder.txt and modlist.txt to determine which plugins to load and in what order. Plugins are resolved through MO2's virtual filesystem (overwrite folder, mod folders).
 - **Open OpenMW Config** — select an openmw.cfg file. The application reads all `data=` and `content=` lines to build the load order.
 
+When a merged patch is present, it is always loaded last, after every other plugin, no matter where MO2 or OpenMW places it in the sort order. This keeps its column at the far right of the record view so it always wins over the plugins it merges.
+
 Use **Unload All** to close everything and start fresh.
 
 If any loaded plugin has unsaved field edits, you are prompted before those edits would be lost. Loading a new set of plugins, unloading everything, cleaning, and closing the application each offer to save the pending changes, discard them, or cancel the action and keep everything as it is.

@@ -498,20 +498,24 @@ QString plugin_session_t::resolve_game_data_path(const QString & mo2_root_path)
 	return result;
 }
 
-void plugin_session_t::append_merge_patch(std::vector<std::string> & paths, const QString & overwrite_path)
+void plugin_session_t::append_merge_patch(std::vector<std::string> & paths, const QString & merge_dir)
 {
-	const auto merge_full_path = overwrite_path + "/Merged Patch.esp";
+	static const QString merge_filename = "Merged Patch.esp";
+
+	const auto is_merge_path = [](const std::string & path)
+	{
+		auto separator_pos = path.find_last_of("/\\");
+		auto filename = (separator_pos != std::string::npos) ? path.substr(separator_pos + 1) : path;
+		return QString::fromStdString(filename).compare(merge_filename, Qt::CaseInsensitive) == 0;
+	};
+
+	std::erase_if(paths, is_merge_path);
+
+	const auto merge_full_path = merge_dir + "/" + merge_filename;
 	if (!QFile::exists(merge_full_path))
 		return;
 
-	const auto merge_std = merge_full_path.toStdString();
-	for (const auto & resolved : paths)
-	{
-		if (resolved == merge_std)
-			return;
-	}
-
-	paths.push_back(merge_std);
+	paths.push_back(merge_full_path.toStdString());
 }
 
 std::vector<std::string> plugin_session_t::resolve_mo2_plugins(
@@ -593,7 +597,26 @@ std::vector<std::string> plugin_session_t::parse_openmw_cfg(const QString & cfg_
 	}
 	cfg_file.close();
 
-	return resolve_openmw_content(content_names, data_dirs);
+	auto paths = resolve_openmw_content(content_names, data_dirs);
+	append_merge_patch_from_data_dirs(paths, data_dirs);
+	return paths;
+}
+
+void plugin_session_t::append_merge_patch_from_data_dirs(
+    std::vector<std::string> & paths,
+    const std::vector<std::string> & data_dirs)
+{
+	for (auto it_dir = data_dirs.rbegin(); it_dir != data_dirs.rend(); ++it_dir)
+	{
+		const auto candidate = QString::fromStdString(*it_dir) + "/Merged Patch.esp";
+		if (!QFile::exists(candidate))
+			continue;
+
+		append_merge_patch(paths, QString::fromStdString(*it_dir));
+		return;
+	}
+
+	append_merge_patch(paths, {});
 }
 
 std::vector<std::string> plugin_session_t::resolve_openmw_content(

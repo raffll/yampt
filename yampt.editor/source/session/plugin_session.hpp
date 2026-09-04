@@ -71,7 +71,8 @@ private:
 	std::vector<std::string> parse_mo2_profile(const QString & profile_dir);
 	std::vector<std::string> read_load_order(const QString & profile_dir);
 	QString resolve_game_data_path(const QString & mo2_root_path);
-	void append_merge_patch(std::vector<std::string> & paths, const QString & overwrite_path);
+	void append_merge_patch(std::vector<std::string> & paths, const QString & merge_dir);
+	void append_merge_patch_from_data_dirs(std::vector<std::string> & paths, const std::vector<std::string> & data_dirs);
 	std::vector<std::string> parse_openmw_cfg(const QString & cfg_path);
 	std::vector<std::string> resolve_mo2_plugins(
 	    const std::vector<std::string> & plugin_names,
