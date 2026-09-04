@@ -58,7 +58,7 @@
     </ItemGroup>
     <Copy SourceFiles="%(DictAff.SourcePath)" DestinationFiles="%(DictAff.DestPath)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="%(DictDic.SourcePath)" DestinationFiles="%(DictDic.DestPath)" SkipUnchangedFiles="true" />
-    <Copy SourceFiles="$(SolutionDir)dictionaries\LICENSE" DestinationFolder="$(OutDir)dictionaries" SkipUnchangedFiles="true" Condition="Exists('$(SolutionDir)dictionaries\LICENSE')" />
+    <Copy SourceFiles="$(SolutionDir)docs\dictionaries\LICENSE" DestinationFolder="$(OutDir)dictionaries" SkipUnchangedFiles="true" Condition="Exists('$(SolutionDir)docs\dictionaries\LICENSE')" />
   </Target>
 
 </Project>

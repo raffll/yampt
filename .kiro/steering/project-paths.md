@@ -50,7 +50,7 @@ yampt/
 ├── external/               # Third-party submodules (CTranslate2, dictionaries) + local-only build artifacts/models
 ├── models/                 # CTranslate2 translation models
 ├── scripts/                # PowerShell/Python automation scripts
-├── dictionaries/           # Holds only LICENSE; .aff/.dic generated at build from external/dictionaries submodule
+├── docs/dictionaries/      # Holds only LICENSE; .aff/.dic generated at build from external/dictionaries submodule
 ├── x64/Debug/              # Build output
 ├── yampt.sln               # VS 2026 solution
 └── vcpkg.json              # vcpkg manifest
