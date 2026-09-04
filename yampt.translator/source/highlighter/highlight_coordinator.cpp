@@ -7,8 +7,44 @@ struct highlight_candidate_t
 {
 	int start;
 	int length;
-	bool is_hyperlink;
+	highlight_kind_t kind;
 };
+
+static int kind_priority(highlight_kind_t kind)
+{
+	switch (kind)
+	{
+	case highlight_kind_t::hyperlink:
+		return 0;
+	case highlight_kind_t::inflection:
+		return 1;
+	case highlight_kind_t::glossary:
+		return 2;
+	}
+
+	return 3;
+}
+
+static highlight_kind_t kind_for_annotation(const annotation_t & annotation)
+{
+	if (annotation.kind == annotation_t::dial_topic)
+		return highlight_kind_t::hyperlink;
+
+	if (annotation.kind == annotation_t::inflection_form)
+		return highlight_kind_t::inflection;
+
+	return highlight_kind_t::glossary;
+}
+
+std::vector<annotation_t> highlight_coordinator_t::combine_translation_annotations(
+    const std::vector<annotation_t> & glossary_annotations,
+    const std::vector<annotation_t> & inflection_annotations)
+{
+	std::vector<annotation_t> combined = glossary_annotations;
+	combined.insert(combined.end(), inflection_annotations.begin(), inflection_annotations.end());
+
+	return combined;
+}
 
 std::vector<highlight_position_t> highlight_coordinator_t::find_annotation_highlights(
     const std::string & text_lower,
@@ -18,18 +54,23 @@ std::vector<highlight_position_t> highlight_coordinator_t::find_annotation_highl
 
 	for (const auto & annotation : *request.annotations)
 	{
-		const auto & raw = request.use_old_text ? annotation.old_text : annotation.new_text;
+		const auto kind = kind_for_annotation(annotation);
+		if (request.enabled_kinds.find(kind) == request.enabled_kinds.end())
+			continue;
+
+		const auto & raw =
+		    kind == highlight_kind_t::inflection ? annotation.old_text
+		                                         : (request.use_old_text ? annotation.old_text : annotation.new_text);
 		if (raw.empty())
 			continue;
 
-		const bool is_hyperlink = (annotation.kind == annotation_t::dial_topic);
 		const auto term = string_utils::to_lower_utf8(raw);
 		const auto term_length = static_cast<int>(term.length());
 
 		size_t pos = 0;
 		while ((pos = text_lower.find(term, pos)) != std::string::npos)
 		{
-			candidates.push_back({ static_cast<int>(pos), term_length, is_hyperlink });
+			candidates.push_back({ static_cast<int>(pos), term_length, kind });
 			pos += static_cast<size_t>(term_length);
 		}
 	}
@@ -41,8 +82,8 @@ std::vector<highlight_position_t> highlight_coordinator_t::find_annotation_highl
 		    candidates.end(),
 		    [](const highlight_candidate_t & first, const highlight_candidate_t & second)
 		{
-			if (first.is_hyperlink != second.is_hyperlink)
-				return first.is_hyperlink;
+			if (kind_priority(first.kind) != kind_priority(second.kind))
+				return kind_priority(first.kind) < kind_priority(second.kind);
 
 			if (first.length != second.length)
 				return first.length > second.length;
@@ -60,8 +101,8 @@ std::vector<highlight_position_t> highlight_coordinator_t::find_annotation_highl
 			if (first.length != second.length)
 				return first.length > second.length;
 
-			if (first.is_hyperlink != second.is_hyperlink)
-				return first.is_hyperlink;
+			if (kind_priority(first.kind) != kind_priority(second.kind))
+				return kind_priority(first.kind) < kind_priority(second.kind);
 
 			return first.start < second.start;
 		});
@@ -88,7 +129,7 @@ std::vector<highlight_position_t> highlight_coordinator_t::find_annotation_highl
 		for (int i = candidate.start; i < candidate.start + candidate.length; ++i)
 			covered[static_cast<size_t>(i)] = true;
 
-		results.push_back({ candidate.start, candidate.length, candidate.is_hyperlink });
+		results.push_back({ candidate.start, candidate.length, candidate.kind });
 	}
 
 	return results;
@@ -106,7 +147,7 @@ std::vector<highlight_position_t> highlight_coordinator_t::find_grammar_highligh
 		if (range_start < 0 || range_end <= range_start || range_end > text_length)
 			continue;
 
-		results.push_back({ range_start, range_end - range_start, false });
+		results.push_back({ range_start, range_end - range_start, highlight_kind_t::glossary });
 	}
 
 	return results;

@@ -168,3 +168,33 @@ TEST_CASE("esm_reader_t::set_value, resets counter to zero", "[i]")
 	REQUIRE(reader.get_value().counter == 0);
 	REQUIRE(reader.get_value().text == "First");
 }
+
+TEST_CASE("esm_reader_t::remove_record, erases record and shifts indices", "[i]")
+{
+	auto tes3 = make_record("TES3", make_sub_record("HEDR", std::string(300, '\0')));
+	auto gmst_a = make_record("GMST", make_sub_record("NAME", std::string("sAlpha\0", 7)));
+	auto gmst_b = make_record("GMST", make_sub_record("NAME", std::string("sBeta\0", 6)));
+	auto gmst_c = make_record("GMST", make_sub_record("NAME", std::string("sGamma\0", 7)));
+
+	std::string file_content = tes3 + gmst_a + gmst_b + gmst_c;
+
+	const auto temp_path = get_temp_path("yampt_test_remove_record.esm");
+	binary_file_io::write_text(file_content, temp_path);
+	esm_reader_t reader(temp_path);
+	std::filesystem::remove(temp_path);
+
+	REQUIRE(reader.is_loaded());
+	REQUIRE(reader.get_records().size() == 4);
+
+	reader.remove_record(2);
+
+	REQUIRE(reader.get_records().size() == 3);
+	REQUIRE(reader.get_records()[0].id == "TES3");
+	REQUIRE(reader.get_records()[1].id == "GMST");
+	REQUIRE(reader.get_records()[2].id == "GMST");
+
+	reader.select_record(2);
+	reader.set_key("NAME");
+	REQUIRE(reader.get_key().exist == true);
+	REQUIRE(reader.get_key().text == "sGamma");
+}

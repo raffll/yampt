@@ -106,7 +106,7 @@ const std::set<std::string> & plugin_scan_t::user_ignore_conflict() const
 	return m_user_ignore_conflict;
 }
 
-void plugin_scan_t::rebuild_conflicts()
+void plugin_scan_t::rebuild_conflicts(const conflict_progress_fn_t & progress_fn)
 {
 	m_entries.clear();
 	m_entry_lookup.clear();
@@ -152,11 +152,21 @@ void plugin_scan_t::rebuild_conflicts()
 		}
 	}
 
-	for (auto & entry : m_entries)
+	const size_t total_entries = m_entries.size();
+	constexpr size_t progress_stride = 256;
+
+	for (size_t entry_index = 0; entry_index < total_entries; ++entry_index)
 	{
+		auto & entry = m_entries[entry_index];
 		if (entry.versions.size() >= 2)
 			compute_conflict(entry);
+
+		if (progress_fn && entry_index % progress_stride == 0)
+			progress_fn(entry_index, total_entries);
 	}
+
+	if (progress_fn)
+		progress_fn(total_entries, total_entries);
 }
 
 struct conflict_accumulator_t
@@ -518,6 +528,37 @@ void plugin_scan_t::pin_record_to_merge(
 bool plugin_scan_t::is_merge_pinned(const std::string & rec_type, const std::string & record_id) const
 {
 	return m_merge_store.is_pinned(rec_type, record_id);
+}
+
+void plugin_scan_t::add_merge_lock(const merge_lock_t & lock)
+{
+	m_merge_store.add_lock(lock);
+}
+
+void plugin_scan_t::remove_merge_lock(const merge_lock_t & lock)
+{
+	m_merge_store.remove_lock(lock);
+}
+
+bool plugin_scan_t::has_merge_lock(const merge_lock_t & lock) const
+{
+	return m_merge_store.has_lock(lock);
+}
+
+std::vector<merge_lock_t> plugin_scan_t::merge_locks_for(const std::string & rec_type, const std::string & record_id)
+    const
+{
+	return m_merge_store.locks_for(rec_type, record_id);
+}
+
+const std::vector<merge_lock_t> & plugin_scan_t::merge_locks() const
+{
+	return m_merge_store.locks();
+}
+
+void plugin_scan_t::set_merge_locks(const std::vector<merge_lock_t> & locks)
+{
+	m_merge_store.set_locks(locks);
 }
 
 const std::string * plugin_scan_t::find_merge_content(const std::string & rec_type, const std::string & record_id) const

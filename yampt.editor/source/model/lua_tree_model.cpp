@@ -1,8 +1,9 @@
 #include "lua_tree_model.hpp"
+#include <conflict_types.hpp>
+#include <theme_system.hpp>
 #include <map>
 #include <set>
 #include <QBrush>
-#include <QColor>
 #include <QString>
 
 lua_tree_model_t::lua_tree_model_t(QObject * parent)
@@ -81,7 +82,7 @@ void lua_tree_model_t::build_groups()
 
 QModelIndex lua_tree_model_t::index(int row, int column, const QModelIndex & parent) const
 {
-	if (column < 0 || column >= 1)
+	if (column < 0 || column >= 2)
 		return {};
 
 	if (!parent.isValid())
@@ -144,7 +145,21 @@ int lua_tree_model_t::rowCount(const QModelIndex & parent) const
 
 int lua_tree_model_t::columnCount(const QModelIndex &) const
 {
-	return 1;
+	return 2;
+}
+
+QVariant lua_tree_model_t::headerData(int section, Qt::Orientation orientation, int role) const
+{
+	if (orientation != Qt::Horizontal || role != Qt::DisplayRole)
+		return {};
+
+	if (section == 0)
+		return tr("Handler");
+
+	if (section == 1)
+		return tr("Type");
+
+	return {};
 }
 
 QVariant lua_tree_model_t::data(const QModelIndex & index, int role) const
@@ -210,13 +225,28 @@ QVariant lua_tree_model_t::data_for_group(int row, int column, int role) const
 	if (row < 0 || row >= static_cast<int>(m_groups.size()))
 		return {};
 
-	if (role != Qt::DisplayRole || column != 0)
-		return {};
-
 	const auto & group = m_groups[static_cast<size_t>(row)];
-	return QString("%1 [%2]")
-	    .arg(QString::fromStdString(group.group_name))
-	    .arg(group.leaf_indices.size());
+
+	if (role == Qt::DisplayRole)
+	{
+		if (column != 0)
+			return {};
+
+		return QString("%1 [%2]")
+		    .arg(QString::fromStdString(group.group_name))
+		    .arg(group.leaf_indices.size());
+	}
+
+	if ((role == Qt::ForegroundRole || role == Qt::BackgroundRole) && m_conflicts_mode)
+	{
+		conflict_severity_t worst;
+		if (!worst_severity_for_group(group, worst))
+			return {};
+
+		return severity_brush(worst, role);
+	}
+
+	return {};
 }
 
 QVariant lua_tree_model_t::data_for_leaf(void * ptr, int row, int column, int role) const
@@ -231,10 +261,18 @@ QVariant lua_tree_model_t::data_for_leaf(void * ptr, int row, int column, int ro
 
 	size_t leaf_idx = group.leaf_indices[static_cast<size_t>(row)];
 
-	if (role == Qt::DisplayRole && column == 0)
-		return leaf_display_text(leaf_idx);
+	if (role == Qt::DisplayRole)
+	{
+		if (column == 0)
+			return leaf_handler_text(leaf_idx);
 
-	if (role == Qt::ForegroundRole && m_conflicts_mode)
+		if (column == 1)
+			return leaf_type_text(leaf_idx);
+
+		return {};
+	}
+
+	if ((role == Qt::ForegroundRole || role == Qt::BackgroundRole) && m_conflicts_mode)
 	{
 		if (leaf_idx >= m_scan_result.registrations.size())
 			return {};
@@ -244,41 +282,95 @@ QVariant lua_tree_model_t::data_for_leaf(void * ptr, int row, int column, int ro
 			return {};
 
 		const auto severity = find_severity_for_registration(registration);
-
-		switch (severity)
-		{
-		case conflict_severity_t::blocking:
-			return QBrush(QColor(200, 50, 50));
-
-		case conflict_severity_t::mutating:
-			return QBrush(QColor(180, 120, 0));
-
-		case conflict_severity_t::overlapping:
-			return QBrush(QColor(100, 140, 0));
-		}
+		return severity_brush(severity, role);
 	}
 
 	return {};
 }
 
-QVariant lua_tree_model_t::leaf_display_text(size_t leaf_idx) const
+QVariant lua_tree_model_t::leaf_handler_text(size_t leaf_idx) const
 {
 	if (leaf_idx >= m_scan_result.registrations.size())
 		return {};
 
 	const auto & registration = m_scan_result.registrations[leaf_idx];
 
-	if (registration.type_argument.empty())
+	return QString("%1.%2")
+	    .arg(QString::fromStdString(registration.interface_name))
+	    .arg(QString::fromStdString(registration.method_name));
+}
+
+QVariant lua_tree_model_t::leaf_type_text(size_t leaf_idx) const
+{
+	if (leaf_idx >= m_scan_result.registrations.size())
+		return {};
+
+	const auto & registration = m_scan_result.registrations[leaf_idx];
+
+	return QString::fromStdString(registration.type_argument);
+}
+
+static int severity_priority(conflict_severity_t severity)
+{
+	switch (severity)
 	{
-		return QString("%1.%2")
-		    .arg(QString::fromStdString(registration.interface_name))
-		    .arg(QString::fromStdString(registration.method_name));
+	case conflict_severity_t::blocking:
+		return 3;
+	case conflict_severity_t::mutating:
+		return 2;
+	case conflict_severity_t::overlapping:
+		return 1;
 	}
 
-	return QString("%1.%2 [%3]")
-	    .arg(QString::fromStdString(registration.interface_name))
-	    .arg(QString::fromStdString(registration.method_name))
-	    .arg(QString::fromStdString(registration.type_argument));
+	return 0;
+}
+
+QVariant lua_tree_model_t::severity_brush(conflict_severity_t severity, int role) const
+{
+	if (role == Qt::BackgroundRole)
+	{
+		const auto conflict_all = severity_to_conflict_all(severity);
+		if (conflict_all < conflict_all_t::no_conflict)
+			return {};
+
+		return QBrush(theme_system_t::instance().conflict_all_background(conflict_all));
+	}
+
+	const auto conflict_this = severity_to_conflict_this(severity);
+	if (conflict_this == conflict_this_t::unknown)
+		return {};
+
+	return QBrush(theme_system_t::instance().conflict_this_foreground(conflict_this));
+}
+
+bool lua_tree_model_t::worst_severity_for_group(
+    const lua_group_t & group,
+    conflict_severity_t & out_severity) const
+{
+	bool found = false;
+	int best_priority = 0;
+
+	for (const auto leaf_idx : group.leaf_indices)
+	{
+		if (leaf_idx >= m_scan_result.registrations.size())
+			continue;
+
+		const auto & registration = m_scan_result.registrations[leaf_idx];
+		if (!is_in_conflict(registration))
+			continue;
+
+		const auto severity = find_severity_for_registration(registration);
+		const auto priority = severity_priority(severity);
+
+		if (priority <= best_priority)
+			continue;
+
+		best_priority = priority;
+		out_severity = severity;
+		found = true;
+	}
+
+	return found;
 }
 
 conflict_severity_t lua_tree_model_t::find_severity_for_registration(

@@ -85,11 +85,22 @@ yampt.exe --make-loc -d "base.json" --language DE --esm-name "Morrowind"
 
 The `--language` option specifies the target language code (determines codepage and which Hunspell dictionary to use for inflection). The `--esm-name` option overrides the ESM name used in the output filenames — by default it is derived from the dictionary filename.
 
+### --apply-tags
+
+Wraps dialogue topic references inside a dictionary's translated text in hyperlink tags, so the game shows those phrases as clickable dialogue links. The list of topics is taken from the dictionary's own dialogue topic entries, and every translated entry is scanned for phrases that match a topic. Matching phrases are wrapped, respecting word boundaries and preferring the longest match when several topics overlap.
+
+```
+yampt.exe --apply-tags -d "dict.json"
+yampt.exe --apply-tags -d "dict.json" -o "tagged.json"
+```
+
+The operation is a refresh: any tags already present in the translated text are removed first, then reinserted from the current set of topics. Running it more than once produces the same result and never nests or duplicates tags. If `-o` is omitted, the result is written back over the input dictionary; otherwise it is written to the given path. A summary of how many entries changed and how many tags were inserted is logged.
+
 ## Options
 
 - `-f <path>` — input plugin file. Can be specified multiple times for --make and --convert.
-- `-d <path>` — dictionary file. Can be specified multiple times (merged internally).
-- `-o <path>` — output path (required for --merge, optional for --make).
+- `-d <path>` — dictionary file. Can be specified multiple times (merged internally). For --apply-tags it is the dictionary to tag.
+- `-o <path>` — output path (required for --merge, optional for --make and --apply-tags; when omitted for --apply-tags the input dictionary is overwritten).
 - `-s <suffix>` — filename suffix appended to the output (used with --convert).
 - `--translate <model_dir>` — load a translation model for heuristic cell matching during --make-base.
 - `--partial` — use partial mode for --make-base (check identical entries against English dictionary).
@@ -145,4 +156,10 @@ Generate localization files for Polish:
 
 ```
 yampt.exe --make-loc -d "Morrowind_en_pl.json" --language PL
+```
+
+Apply dialogue topic tags to a dictionary in place:
+
+```
+yampt.exe --apply-tags -d "Morrowind_en_pl.json"
 ```

@@ -83,7 +83,7 @@ main_window_t::main_window_t(QWidget * parent)
 	                                this,
 	                                { [this](document_t * doc) { switch_document(doc); },
 	                                  [this]() { rebuild_annotations(); },
-	                                  [this](const loc_entries_t & entries) { m_glossary.set_loc_entries(entries); },
+	                                  [this]() { update_annotations(); },
 	                                  [this]() { save_config(); },
 	                                  [this](bool dirty) { set_unsaved_changes(dirty); } } });
 
@@ -94,7 +94,6 @@ main_window_t::main_window_t(QWidget * parent)
 	                               m_executor,
 	                               *m_log_view,
 	                               *m_translation_tab,
-	                               *m_record_tabs,
 	                               this,
 	                               { [this]() { m_sidebar_controller->scan_workspace(); },
 	                                 [this](const std::string & path) { return show_make_base_dialog(path); } } });
@@ -102,17 +101,22 @@ main_window_t::main_window_t(QWidget * parent)
 	m_dict_ops_controller = std::make_unique<dict_operations_controller_t>(
 	    dict_operations_deps_t { m_session,
 	                             *m_log_view,
-	                             *m_record_tabs,
 	                             this,
+	                             m_edit_history,
 	                             [this]() { m_sidebar_controller->scan_workspace(); },
 	                             [this](document_t * doc) { switch_document(doc); },
-	                             [this]() { rebuild_sidebar(); } });
+	                             [this]() { rebuild_sidebar(); },
+	                             [this]() { return dynamic_cast<dict_document_t *>(m_active_doc); },
+	                             [this]() { rebuild_table(); },
+	                             [this]() { rebuild_annotations(); },
+	                             [this]() { update_annotations(); } });
 
 	m_record_display_controller =
 	    std::make_unique<record_display_controller_t>(record_display_deps_t { *m_editor_view,
 	                                                                          *m_table_model,
 	                                                                          m_editor_controller,
 	                                                                          m_glossary,
+	                                                                          m_inflection_store,
 	                                                                          m_grammar_checker,
 	                                                                          m_byte_limit_validator,
 	                                                                          m_edit_history,
@@ -183,8 +187,8 @@ main_window_t::main_window_t(QWidget * parent)
 				if (prefix.empty())
 					return;
 
-				const auto aff_path = dict_dir + prefix + ".aff";
-				const auto dic_path = dict_dir + prefix + ".dic";
+				const auto aff_path = string_utils::canonicalize_path(string_utils::join_path(dict_dir, prefix + ".aff"));
+				const auto dic_path = string_utils::canonicalize_path(string_utils::join_path(dict_dir, prefix + ".dic"));
 
 				if (!std::filesystem::exists(aff_path) || !std::filesystem::exists(dic_path))
 					return;
@@ -475,20 +479,20 @@ void main_window_t::on_translation_changed()
 		return;
 
 	const auto current_text = m_editor_view->translation_editor()->toPlainText();
-	if (current_text == m_editor_controller.loaded_text())
-		return;
+	const bool text_matches_loaded = (current_text == m_editor_controller.loaded_text());
 
-	if (!m_active_doc->is_dirty())
+	if (!text_matches_loaded)
 	{
-		m_active_doc->set_dirty(true);
-		update_sidebar_item(m_active_doc->path());
+		if (!m_active_doc->is_dirty())
+		{
+			m_active_doc->set_dirty(true);
+			update_sidebar_item(m_active_doc->path());
+		}
+
+		set_unsaved_changes(true);
 	}
 
-	set_unsaved_changes(true);
 	update_validation();
-
-	if (m_editor_controller.current_row() < 0)
-		return;
 
 	const auto * row_data = m_table_model->row_at(m_editor_controller.current_row());
 	if (!row_data)
@@ -777,6 +781,21 @@ void main_window_t::rebuild_annotations()
 		sources.push_back({ &dict_doc->data(), dict_doc->path() });
 
 	m_glossary.rebuild(sources);
+
+	std::vector<std::string> loc_paths;
+	for (const auto * entry : m_file_list.workspace_files())
+	{
+		if (entry->type != file_type_t::loc_file)
+			continue;
+
+		const auto extension = string_utils::to_lower(string_utils::extract_filename(entry->path));
+		if (extension.find(".top") == std::string::npos && extension.find(".mrk") == std::string::npos)
+			continue;
+
+		loc_paths.push_back(entry->path);
+	}
+
+	m_inflection_store.rebuild(loc_paths, m_current_codepage);
 }
 
 void main_window_t::save_current_filter_state()
@@ -881,11 +900,22 @@ void main_window_t::on_spell_lang_changed()
 	if (aff_path.empty() || dic_path.empty())
 	{
 		m_hl_translation->set_spell_checker(nullptr);
+		if (m_log_view)
+			m_log_view->append_log("spelling", "[info] no spell dictionary configured\r\n");
+
 		return;
 	}
 
 	if (!m_spell_checker.load(aff_path, dic_path))
+	{
+		if (m_log_view)
+			m_log_view->append_log("spelling", "[warning] failed to load \"" + aff_path + "\"\r\n");
+
 		return;
+	}
+
+	if (m_log_view)
+		m_log_view->append_log("spelling", "[info] loaded \"" + aff_path + "\"\r\n");
 
 	if (m_spell_check && m_spell_check->isChecked())
 		m_hl_translation->set_spell_checker(&m_spell_checker);
@@ -905,11 +935,30 @@ void main_window_t::load_config()
 
 	m_session.set_codepage(m_current_codepage);
 	m_session.set_native_language(m_settings.native_language());
+	m_byte_limit_validator.set_codepage(m_current_codepage);
 
 	m_translation_tab->apply_provider_settings(m_settings);
 
 	m_sidebar_toggle->setChecked(m_settings.sidebar_visible());
 	m_bottom_panel_toggle->setChecked(m_settings.bottom_visible());
+	m_sync_scroll_check->setChecked(m_settings.sync_scroll_enabled());
+
+	const int highlight_mask = m_settings.highlight_kinds_mask();
+	std::set<highlight_kind_t> enabled_kinds;
+	if (highlight_mask & 0x1)
+		enabled_kinds.insert(highlight_kind_t::hyperlink);
+
+	if (highlight_mask & 0x2)
+		enabled_kinds.insert(highlight_kind_t::inflection);
+
+	if (highlight_mask & 0x4)
+		enabled_kinds.insert(highlight_kind_t::glossary);
+
+	m_editor_view->set_enabled_highlight_kinds(enabled_kinds);
+
+	m_editor_view->set_spell_check_checked(m_spell_check->isChecked());
+	m_editor_view->set_grammar_check_checked(m_grammar_check->isChecked());
+	m_editor_view->set_whitespace_checked(m_whitespace_check->isChecked());
 
 	const float split_ratio = m_settings.split_ratio();
 	if (split_ratio > 0.0f)
@@ -940,10 +989,10 @@ void main_window_t::load_config()
 
 	const auto workspace = resource_paths::workspace_dir();
 	std::vector<std::string> roots = { workspace };
-	for (const auto & r : m_settings.workspace_roots())
+	for (const auto & saved_root : m_settings.workspace_roots())
 	{
-		if (r != workspace)
-			roots.push_back(r);
+		if (!string_utils::paths_equal(saved_root, workspace))
+			roots.push_back(saved_root);
 	}
 	m_file_list.scan_roots(roots);
 	scan_workspace();
@@ -975,6 +1024,7 @@ void main_window_t::save_config()
 
 	m_settings.set_sidebar_visible(m_sidebar_toggle->isChecked());
 	m_settings.set_bottom_visible(m_bottom_panel_toggle->isChecked());
+	m_settings.set_sync_scroll_enabled(m_sync_scroll_check->isChecked());
 
 	m_settings.set_split_ratio(static_cast<float>(m_editor_view->get_split_ratio()));
 

@@ -1,17 +1,15 @@
 #pragma once
 
 #include "document.hpp"
-#include <algorithm>
+#include <utility/string_utils.hpp>
 #include <string>
 
 class plugin_document_t : public document_t
 {
 public:
 	explicit plugin_document_t(const std::string & path)
-	    : m_path(path)
-	{
-		std::replace(m_path.begin(), m_path.end(), '\\', '/');
-	}
+	    : m_path(string_utils::canonicalize_path(path))
+	{}
 
 	document_kind_t kind() const override
 	{

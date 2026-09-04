@@ -32,6 +32,7 @@ public:
 	void set_dirty(bool dirty) override;
 
 	loc_types::loc_file_kind_t file_kind() const;
+	const std::vector<loc_types::loc_entry_t> & entries() const;
 	void reload();
 
 private:

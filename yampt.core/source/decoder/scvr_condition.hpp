@@ -43,3 +43,5 @@ bool scvr_type_uses_variable_storage(const std::string & type_name);
 std::string scvr_subject_display(const char * data, size_t size);
 
 std::string scvr_subject_label(const char * data, size_t size);
+
+

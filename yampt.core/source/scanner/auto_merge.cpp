@@ -3,6 +3,8 @@
 #include "fog_fixer.hpp"
 #include "plugin_scan.hpp"
 #include "summon_fixer.hpp"
+#include "../utility/app_logger.hpp"
+#include <cstring>
 #include <map>
 #include <regex>
 #include <unordered_map>
@@ -14,6 +16,11 @@ auto_merge_t::auto_merge_t(plugin_scan_t & scan)
 void auto_merge_t::set_config(const merge_config_t & config)
 {
 	m_config = config;
+}
+
+void auto_merge_t::set_progress_callback(progress_fn_t progress_fn)
+{
+	m_progress_fn = std::move(progress_fn);
 }
 
 merge_counters_t auto_merge_t::execute()
@@ -113,8 +120,15 @@ void auto_merge_t::process_groups(merge_counters_t & counters)
 		}
 	}
 
+	const int total_groups = static_cast<int>(m_groups.size());
+	int processed_groups = 0;
+
 	for (const auto & group : m_groups)
 	{
+		++processed_groups;
+		if (m_progress_fn)
+			m_progress_fn(processed_groups, total_groups);
+
 		if (should_skip_group(group, exclusion_regex, has_exclusion))
 			continue;
 
@@ -291,6 +305,39 @@ void auto_merge_t::process_three_way(const record_group_t & group, merge_counter
 	}
 
 	const auto result = sub_record_merge_t::merge(input);
+
+	if (app_logger_t::is_debug() && group.rec_type == "CREA")
+	{
+		std::string note = "[debug] merge CREA \"" + group.record_id +
+		    "\": versions=" + std::to_string(input.version_contents.size()) +
+		    " changed=" + (result.changed ? "yes" : "no");
+
+		const auto read_npdt_level = [](const std::string & content) -> int
+		{
+			const auto subs = sub_record_merge_t::parse_sub_records(content);
+			for (const auto & entry : subs)
+			{
+				if (entry.type != "NPDT" || entry.data.size() < 8)
+					continue;
+
+				uint32_t level = 0;
+				std::memcpy(&level, entry.data.data() + 4, 4);
+				return static_cast<int>(level);
+			}
+
+			return -1;
+		};
+
+		for (size_t v = 0; v < input.version_contents.size(); ++v)
+			note += " | v" + std::to_string(v) + "(" + m_scan.plugin_filename(group.versions[v].plugin_idx) +
+			    ") level=" + std::to_string(read_npdt_level(input.version_contents[v]));
+
+		if (result.changed)
+			note += " | merged level=" + std::to_string(read_npdt_level(result.content));
+
+		add_log(note);
+	}
+
 	if (!result.changed)
 		return;
 
@@ -428,8 +475,9 @@ void auto_merge_t::prune_unchanged()
 
 		const auto & last_ver = it_found->second->versions.back();
 		const auto winning = m_scan.read_record_content(last_ver.plugin_idx, last_ver.record_index);
+		const auto filtered_winning = filter_ignored_sub_records(rec_type, winning);
 
-		if (merge_content == winning)
+		if (merge_content == filtered_winning)
 			to_remove.emplace_back(rec_type, record_id);
 	}
 
@@ -469,35 +517,5 @@ void auto_merge_t::add_log(const std::string & message)
 
 std::string auto_merge_t::filter_ignored_sub_records(const std::string & rec_type, const std::string & content) const
 {
-	if (m_config.ignored_sub_records.empty())
-		return content;
-
-	const auto subs = sub_record_merge_t::parse_sub_records(content);
-	sub_record_sequence_t filtered;
-	bool in_reference_group = false;
-
-	for (const auto & entry : subs)
-	{
-		if (entry.type == "FRMR")
-			in_reference_group = true;
-
-		if (!in_reference_group)
-		{
-			const auto specific_key = rec_type + ":" + entry.type;
-			const auto wildcard_key = rec_type + ":*";
-
-			if (m_config.ignored_sub_records.count(specific_key) > 0)
-				continue;
-
-			if (m_config.ignored_sub_records.count(wildcard_key) > 0)
-				continue;
-		}
-
-		filtered.push_back(entry);
-	}
-
-	if (filtered.size() == subs.size())
-		return content;
-
-	return sub_record_merge_t::reconstruct_record(content, filtered);
+	return sub_record_merge_t::filter_sub_records_by_rules(rec_type, content, m_config.ignored_sub_records);
 }

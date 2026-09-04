@@ -246,6 +246,179 @@ TEST_CASE("merge_patch_ops_t::patch_field, copies whole sub-record if not in mer
 	REQUIRE(patched_subs[1].data == source_data);
 }
 
+TEST_CASE("merge_patch_ops_t::patch_field, patches grouped CLDT major skill field", "[u]")
+{
+	static constexpr size_t cldt_size = 60;
+	static constexpr size_t major_three_offset = 32;
+	static constexpr int major_three_field_idx = 5;
+
+	std::string merge_data(cldt_size, '\0');
+	std::string source_data(cldt_size, '\0');
+	uint32_t merge_skill = 3;
+	uint32_t source_skill = 11;
+	std::memcpy(merge_data.data() + major_three_offset, &merge_skill, 4);
+	std::memcpy(source_data.data() + major_three_offset, &source_skill, 4);
+
+	auto merge = make_record("CLAS", make_sub("NAME", make_string("test_class")) + make_sub("CLDT", merge_data));
+	auto source = make_record("CLAS", make_sub("NAME", make_string("test_class")) + make_sub("CLDT", source_data));
+
+	auto result = merge_patch_ops_t::patch_field(merge, source, "CLAS", "CLDT", cldt_size, 1, major_three_field_idx);
+
+	REQUIRE(result.success);
+
+	auto patched_subs = sub_record_merge_t::parse_sub_records(result.content);
+	REQUIRE(patched_subs.size() == 2);
+
+	uint32_t patched_skill = 0;
+	std::memcpy(&patched_skill, patched_subs[1].data.data() + major_three_offset, 4);
+	REQUIRE(patched_skill == source_skill);
+}
+
+TEST_CASE("merge_patch_ops_t::patch_bit, sets flag bit from source", "[u]")
+{
+	std::string merge_data(4, '\0');
+	std::string source_data(4, '\0');
+	source_data[2] = static_cast<char>(0x01);
+
+	auto merge = make_record("BODY", make_sub("NAME", make_string("id")) + make_sub("BYDT", merge_data));
+	auto source = make_record("BODY", make_sub("NAME", make_string("id")) + make_sub("BYDT", source_data));
+
+	merge_patch_ops_t::bit_patch_params_t params;
+	params.record_type = "BODY";
+	params.sub_type = "BYDT";
+	params.sub_size = 4;
+	params.binary_idx = 1;
+	params.field_idx = 2;
+	params.bit_index = 0;
+
+	auto result = merge_patch_ops_t::patch_bit(merge, source, params);
+
+	REQUIRE(result.success);
+
+	auto patched_subs = sub_record_merge_t::parse_sub_records(result.content);
+	REQUIRE((static_cast<unsigned char>(patched_subs[1].data[2]) & 0x01) != 0);
+}
+
+TEST_CASE("merge_patch_ops_t::patch_bit, clears flag bit and preserves others", "[u]")
+{
+	std::string merge_data(4, '\0');
+	merge_data[2] = static_cast<char>(0x03);
+	std::string source_data(4, '\0');
+	source_data[2] = static_cast<char>(0x02);
+
+	auto merge = make_record("BODY", make_sub("NAME", make_string("id")) + make_sub("BYDT", merge_data));
+	auto source = make_record("BODY", make_sub("NAME", make_string("id")) + make_sub("BYDT", source_data));
+
+	merge_patch_ops_t::bit_patch_params_t params;
+	params.record_type = "BODY";
+	params.sub_type = "BYDT";
+	params.sub_size = 4;
+	params.binary_idx = 1;
+	params.field_idx = 2;
+	params.bit_index = 0;
+
+	auto result = merge_patch_ops_t::patch_bit(merge, source, params);
+
+	REQUIRE(result.success);
+
+	auto patched_subs = sub_record_merge_t::parse_sub_records(result.content);
+	const auto flags = static_cast<unsigned char>(patched_subs[1].data[2]);
+	REQUIRE((flags & 0x01) == 0);
+	REQUIRE((flags & 0x02) != 0);
+}
+
+TEST_CASE("merge_patch_ops_t::patch_bit, copies whole sub-record if not in merge", "[u]")
+{
+	std::string source_data(4, '\0');
+	source_data[2] = static_cast<char>(0x01);
+
+	auto merge = make_record("BODY", make_sub("NAME", make_string("id")));
+	auto source = make_record("BODY", make_sub("NAME", make_string("id")) + make_sub("BYDT", source_data));
+
+	merge_patch_ops_t::bit_patch_params_t params;
+	params.record_type = "BODY";
+	params.sub_type = "BYDT";
+	params.sub_size = 4;
+	params.binary_idx = 1;
+	params.field_idx = 2;
+	params.bit_index = 0;
+
+	auto result = merge_patch_ops_t::patch_bit(merge, source, params);
+
+	REQUIRE(result.success);
+
+	auto patched_subs = sub_record_merge_t::parse_sub_records(result.content);
+	REQUIRE(patched_subs.size() == 2);
+	REQUIRE(patched_subs[1].type == "BYDT");
+}
+
+TEST_CASE("merge_patch_ops_t::patch_bit, bit_index out of range fails", "[u]")
+{
+	std::string data(4, '\0');
+	auto merge = make_record("BODY", make_sub("NAME", make_string("id")) + make_sub("BYDT", data));
+	auto source = make_record("BODY", make_sub("NAME", make_string("id")) + make_sub("BYDT", data));
+
+	merge_patch_ops_t::bit_patch_params_t params;
+	params.record_type = "BODY";
+	params.sub_type = "BYDT";
+	params.sub_size = 4;
+	params.binary_idx = 1;
+	params.field_idx = 2;
+	params.bit_index = 99;
+
+	auto result = merge_patch_ops_t::patch_bit(merge, source, params);
+
+	REQUIRE_FALSE(result.success);
+}
+
+TEST_CASE("merge_patch_ops_t::patch_field, copies bool_bit field as single bit", "[u]")
+{
+	static constexpr size_t cldt_size = 60;
+	static constexpr size_t playable_offset = 52;
+	static constexpr int playable_field_idx = 13;
+
+	std::string merge_data(cldt_size, '\0');
+	std::string source_data(cldt_size, '\0');
+	merge_data[playable_offset] = static_cast<char>(0x02);
+	source_data[playable_offset] = static_cast<char>(0x01);
+
+	auto merge = make_record("CLAS", make_sub("NAME", make_string("c")) + make_sub("CLDT", merge_data));
+	auto source = make_record("CLAS", make_sub("NAME", make_string("c")) + make_sub("CLDT", source_data));
+
+	auto result = merge_patch_ops_t::patch_field(merge, source, "CLAS", "CLDT", cldt_size, 1, playable_field_idx);
+
+	REQUIRE(result.success);
+
+	auto patched_subs = sub_record_merge_t::parse_sub_records(result.content);
+	const auto value = static_cast<unsigned char>(patched_subs[1].data[playable_offset]);
+	REQUIRE((value & 0x01) != 0);
+	REQUIRE((value & 0x02) != 0);
+}
+
+TEST_CASE("merge_patch_ops_t::patch_field, copies whole flags_u32 field", "[u]")
+{
+	static constexpr size_t cldt_size = 60;
+	static constexpr size_t services_offset = 56;
+	static constexpr int services_field_idx = 14;
+
+	std::string merge_data(cldt_size, '\0');
+	std::string source_data(cldt_size, '\0');
+	uint32_t source_services = 0x00000005;
+	std::memcpy(source_data.data() + services_offset, &source_services, 4);
+
+	auto merge = make_record("CLAS", make_sub("NAME", make_string("c")) + make_sub("CLDT", merge_data));
+	auto source = make_record("CLAS", make_sub("NAME", make_string("c")) + make_sub("CLDT", source_data));
+
+	auto result = merge_patch_ops_t::patch_field(merge, source, "CLAS", "CLDT", cldt_size, 1, services_field_idx);
+
+	REQUIRE(result.success);
+
+	auto patched_subs = sub_record_merge_t::parse_sub_records(result.content);
+	uint32_t patched_services = 0;
+	std::memcpy(&patched_services, patched_subs[1].data.data() + services_offset, 4);
+	REQUIRE(patched_services == source_services);
+}
+
 TEST_CASE("merge_patch_ops_t::patch_field, no schema returns failure", "[u]")
 {
 	auto merge = make_record("NPC_", make_sub("NAME", make_string("id")) + make_sub("XXXX", std::string(8, '\0')));

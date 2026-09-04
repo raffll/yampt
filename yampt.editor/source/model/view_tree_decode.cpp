@@ -113,6 +113,7 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 	}
 
 	row.type = slot.type;
+	row.occurrence = slot.occurrence;
 	row.label = make_sub_label(slot.type, m_record_type, first_size);
 
 	bool all_same = true;
@@ -208,13 +209,22 @@ void view_tree_model_t::decode_schema_children(
 		{
 			current_group = nullptr;
 
-			view_node_t flags_group;
-			flags_group.label = fdef.name;
-			flags_group.type = slot.type;
-			flags_group.size = schema->expected_size;
-			flags_group.values.resize(col_count);
-			flags_group.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
-			flags_group.row_conflict_all = conflict_all_t::only_one;
+			const bool flags_are_whole_sub_record = (schema->field_count == 1);
+
+			view_node_t standalone_flags_group;
+			view_node_t & flags_group = flags_are_whole_sub_record ? parent_row : standalone_flags_group;
+
+			if (!flags_are_whole_sub_record)
+			{
+				flags_group.label = fdef.name;
+				flags_group.type = slot.type;
+				flags_group.size = schema->expected_size;
+				flags_group.schema_field_index = static_cast<int>(field_idx);
+				flags_group.values.resize(col_count);
+				flags_group.binary_ranges = parent_row.binary_ranges;
+				flags_group.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
+				flags_group.row_conflict_all = conflict_all_t::only_one;
+			}
 
 			for (int bit = 0; bit < fdef.flag_count; ++bit)
 			{
@@ -262,6 +272,9 @@ void view_tree_model_t::decode_schema_children(
 
 				flags_group.children.push_back(std::move(frow));
 			}
+
+			if (flags_are_whole_sub_record)
+				continue;
 
 			flags_group.all_identical = (flags_group.row_conflict_all <= conflict_all_t::no_conflict);
 			parent_row.children.push_back(std::move(flags_group));
@@ -325,6 +338,7 @@ void view_tree_model_t::decode_schema_children(
 			group_node.values.resize(col_count);
 			group_node.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
 			group_node.row_conflict_all = conflict_all_t::only_one;
+			group_node.binary_ranges = parent_row.binary_ranges;
 			parent_row.children.push_back(std::move(group_node));
 			current_group = &parent_row.children.back();
 		}
@@ -396,3 +410,4 @@ void view_tree_model_t::decode_hex_children(
 		parent_row.children.push_back(std::move(frow));
 	}
 }
+

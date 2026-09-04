@@ -1,4 +1,5 @@
 #include "translation_settings_view.hpp"
+#include "translator/translation_example_ops.hpp"
 #include <resource_paths.hpp>
 #include <settings_store.hpp>
 #include <utility/language_config.hpp>
@@ -10,6 +11,7 @@
 #include <QHeaderView>
 #include <QLabel>
 #include <QLineEdit>
+#include <QPlainTextEdit>
 #include <QPushButton>
 #include <QTableWidget>
 #include <QTabWidget>
@@ -52,15 +54,29 @@ translation_settings_view_t::translation_settings_view_t(
 		build_provider_card(providers_layout, config);
 	providers_layout->addStretch();
 
+	auto * prompt_tab = new QWidget;
+	auto * prompt_layout = new QVBoxLayout(prompt_tab);
+	prompt_layout->setSpacing(12);
+	build_prompt_tab(prompt_layout);
+
 	auto * examples_tab = new QWidget;
 	auto * examples_layout = new QVBoxLayout(examples_tab);
 	examples_layout->setSpacing(12);
 	build_examples_tab(examples_layout);
 
+	auto * preview_tab = new QWidget;
+	auto * preview_layout = new QVBoxLayout(preview_tab);
+	preview_layout->setSpacing(12);
+	build_preview_tab(preview_layout);
+
 	tabs->addTab(models_tab, tr("Local Models"));
 	tabs->addTab(providers_tab, tr("Web Providers"));
+	tabs->addTab(prompt_tab, tr("Prompt"));
 	tabs->addTab(examples_tab, tr("Examples"));
+	tabs->addTab(preview_tab, tr("Preview"));
 	layout->addWidget(tabs);
+
+	connect(tabs, &QTabWidget::currentChanged, this, [this]() { update_prompt_preview(); });
 }
 
 void translation_settings_view_t::build_local_models_section(QVBoxLayout * parent, const std::string & models_dir)
@@ -198,6 +214,67 @@ void translation_settings_view_t::build_provider_card(QVBoxLayout * parent, cons
 	parent->addWidget(card);
 }
 
+void translation_settings_view_t::build_prompt_tab(QVBoxLayout * parent)
+{
+	auto * description = new QLabel(
+	    tr("System prompt sent to AI translation providers. The glossary and examples are appended "
+	       "automatically. Available variables: {{source_lang}}, {{target_lang}}."),
+	    this);
+	description->setStyleSheet("color: rgb(120, 120, 120); font-size: 11px;");
+	description->setWordWrap(true);
+	parent->addWidget(description);
+
+	m_prompt_edit = new QPlainTextEdit(this);
+	parent->addWidget(m_prompt_edit, 1);
+
+	auto * button_row = new QHBoxLayout;
+	button_row->addStretch();
+
+	auto * reset_button = new QPushButton(tr("Reset to Default"), this);
+	reset_button->setToolTip(tr("Restore the built-in translation prompt"));
+	button_row->addWidget(reset_button);
+	parent->addLayout(button_row);
+
+	connect(
+	    reset_button,
+	    &QPushButton::clicked,
+	    this,
+	    [this]()
+	{ m_prompt_edit->setPlainText(QString::fromStdString(web_translator_config::default_system_prompt())); });
+}
+
+void translation_settings_view_t::build_preview_tab(QVBoxLayout * parent)
+{
+	auto * description = new QLabel(
+	    tr("The full prompt as sent to AI providers, with the source and target languages resolved "
+	       "and the examples appended. The glossary for the current entry is added at translation time."),
+	    this);
+	description->setStyleSheet("color: rgb(120, 120, 120); font-size: 11px;");
+	description->setWordWrap(true);
+	parent->addWidget(description);
+
+	m_prompt_preview = new QPlainTextEdit(this);
+	m_prompt_preview->setReadOnly(true);
+	parent->addWidget(m_prompt_preview, 1);
+}
+
+void translation_settings_view_t::update_prompt_preview()
+{
+	if (!m_prompt_preview || !m_prompt_edit)
+		return;
+
+	auto text = m_prompt_edit->toPlainText();
+	if (text.isEmpty())
+		text = QString::fromStdString(web_translator_config::default_system_prompt());
+
+	text.replace("{{source_lang}}", QString::fromStdString(m_preview_source_lang));
+	text.replace("{{target_lang}}", QString::fromStdString(m_preview_target_lang));
+	text.replace("{{examples}}", QString::fromStdString(translation_example_ops::format_examples_lines(m_examples)));
+	text.replace("{{hyperlinks}}", tr("[hyperlinks for the current entry are inserted here when translating]"));
+
+	m_prompt_preview->setPlainText(text);
+}
+
 void translation_settings_view_t::build_examples_tab(QVBoxLayout * parent)
 {
 	m_examples_empty_label = new QLabel(tr("No examples marked. Right-click a record and choose \"Mark as Example\"."), this);
@@ -292,8 +369,21 @@ void translation_settings_view_t::load(const settings_store_t & settings)
 	for (const auto & card : m_provider_cards)
 		update_status(card);
 
+	if (m_prompt_edit)
+	{
+		auto stored = settings.translation_prompt();
+		if (stored.empty())
+			stored = web_translator_config::default_system_prompt();
+
+		m_prompt_edit->setPlainText(QString::fromStdString(stored));
+	}
+
 	m_examples = settings.translation_examples();
 	rebuild_examples_table();
+
+	m_preview_source_lang = settings.foreign_language();
+	m_preview_target_lang = settings.native_language();
+	update_prompt_preview();
 }
 
 void translation_settings_view_t::apply(settings_store_t & settings) const
@@ -303,6 +393,9 @@ void translation_settings_view_t::apply(settings_store_t & settings) const
 		const auto value = read_widget_value(entry);
 		settings.set_web_provider_setting(entry.provider_id, entry.setting_key, value);
 	}
+
+	if (m_prompt_edit)
+		settings.set_translation_prompt(m_prompt_edit->toPlainText().toStdString());
 
 	settings.set_translation_examples(m_examples);
 }

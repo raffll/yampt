@@ -19,10 +19,19 @@ QList<QTextEdit::ExtraSelection> highlight_applier_t::build_selections(
 	{
 		QTextEdit::ExtraSelection sel;
 
-		if (theme_system_t::instance().active_theme() == theme_t::dark)
-			sel.format.setBackground(highlight.is_hyperlink ? QColor(40, 55, 75) : QColor(35, 60, 40));
-		else
-			sel.format.setBackground(highlight.is_hyperlink ? QColor(200, 220, 255) : QColor(200, 240, 200));
+		const bool dark = theme_system_t::instance().active_theme() == theme_t::dark;
+		switch (highlight.kind)
+		{
+		case highlight_kind_t::hyperlink:
+			sel.format.setBackground(dark ? QColor(40, 55, 75) : QColor(200, 220, 255));
+			break;
+		case highlight_kind_t::inflection:
+			sel.format.setBackground(dark ? QColor(60, 45, 70) : QColor(210, 185, 235));
+			break;
+		case highlight_kind_t::glossary:
+			sel.format.setBackground(dark ? QColor(35, 60, 40) : QColor(200, 240, 200));
+			break;
+		}
 
 		const int char_start = string_utils::utf8_byte_to_char_offset(text_utf8, highlight.start);
 		const int char_end = string_utils::utf8_byte_to_char_offset(text_utf8, highlight.start + highlight.length);

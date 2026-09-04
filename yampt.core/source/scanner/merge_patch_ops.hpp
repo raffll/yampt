@@ -35,6 +35,21 @@ public:
 	    int binary_idx,
 	    int field_idx);
 
+	struct bit_patch_params_t
+	{
+		std::string record_type;
+		std::string sub_type;
+		size_t sub_size = 0;
+		int binary_idx = -1;
+		int field_idx = -1;
+		int bit_index = -1;
+	};
+
+	static patch_result_t patch_bit(
+	    const std::string & merge_content,
+	    const std::string & source_content,
+	    const bit_patch_params_t & params);
+
 	static std::string extract_sub_type_from_field_name(const std::string & field_name);
 	static bool is_content_matched_type(const std::string & sub_type);
 };

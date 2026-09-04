@@ -11,6 +11,7 @@
 #include <QSettings>
 #include <QShortcut>
 #include <QStatusBar>
+#include <QTimer>
 #include <QToolBar>
 #include <QToolButton>
 #include <QVBoxLayout>
@@ -36,6 +37,8 @@ editor_window_t::editor_window_t(QWidget * parent)
 	setup_menu_bar();
 	setup_toolbar();
 	restore_panel_state();
+
+	QTimer::singleShot(0, this, [this]() { m_plugin_workspace_view->restore_session_state(); });
 
 	connect(
 	    &theme_system_t::instance(),
@@ -133,6 +136,19 @@ void editor_window_t::setup_menu_bar()
 	    m_plugin_workspace_view,
 	    &plugin_workspace_view_t::set_show_deleted_strikeout);
 
+	view_menu->addSeparator();
+
+	m_sync_scroll_toggle = new QAction(tr("S&ync Scrolling"), this);
+	m_sync_scroll_toggle->setCheckable(true);
+	m_sync_scroll_toggle->setChecked(true);
+	m_sync_scroll_toggle->setToolTip(tr("Sync scrolling between the two comparison panes"));
+	view_menu->addAction(m_sync_scroll_toggle);
+	connect(
+	    m_sync_scroll_toggle,
+	    &QAction::toggled,
+	    m_plugin_workspace_view,
+	    &plugin_workspace_view_t::set_preview_scroll_sync);
+
 	auto * tools_menu = menuBar()->addMenu(tr("&Tools"));
 	auto * settings_action = new QAction(tr("&Preferences..."), this);
 	settings_action->setShortcut(QKeySequence("Ctrl+,"));
@@ -159,20 +175,6 @@ void editor_window_t::setup_toolbar()
 	clean_btn->setToolTip(tr("Remove evil GMSTs and junk cells from all plugins"));
 	toolbar->addWidget(clean_btn);
 	connect(clean_btn, &QToolButton::clicked, m_plugin_workspace_view, &plugin_workspace_view_t::on_clean_all);
-
-	toolbar->addSeparator();
-
-	m_editing_btn = new QToolButton(this);
-	m_editing_btn->setText(tr("Enable Editing"));
-	m_editing_btn->setToolTip(tr("Allow editing decoded fields directly in all plugins"));
-	m_editing_btn->setCheckable(true);
-	m_editing_btn->setChecked(false);
-	toolbar->addWidget(m_editing_btn);
-	connect(
-	    m_editing_btn,
-	    &QToolButton::toggled,
-	    this,
-	    [this](bool checked) { m_plugin_workspace_view->set_editing_enabled(checked); });
 
 	toolbar->addSeparator();
 
@@ -261,6 +263,7 @@ void editor_window_t::setup_toolbar()
 
 	statusBar()->addWidget(m_plugin_workspace_view->status_label());
 	statusBar()->addPermanentWidget(m_plugin_workspace_view->count_label());
+	statusBar()->addPermanentWidget(m_plugin_workspace_view->validation_label());
 }
 
 void editor_window_t::load_config()
@@ -273,8 +276,6 @@ void editor_window_t::load_config()
 	auto state = settings.value("window/state").toByteArray();
 	if (!state.isEmpty())
 		restoreState(state);
-
-	m_plugin_workspace_view->restore_session_state();
 }
 
 void editor_window_t::save_config()
@@ -285,6 +286,7 @@ void editor_window_t::save_config()
 
 	m_settings.set_sidebar_visible(m_sidebar_toggle->isChecked());
 	m_settings.set_bottom_visible(m_bottom_toggle->isChecked());
+	m_settings.set_sync_scroll_enabled(m_sync_scroll_toggle->isChecked());
 
 	m_plugin_workspace_view->save_session_state();
 }
@@ -293,6 +295,7 @@ void editor_window_t::restore_panel_state()
 {
 	m_sidebar_toggle->setChecked(m_settings.sidebar_visible());
 	m_bottom_toggle->setChecked(m_settings.bottom_visible());
+	m_sync_scroll_toggle->setChecked(m_settings.sync_scroll_enabled());
 }
 
 void editor_window_t::on_search_apply()

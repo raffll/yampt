@@ -566,68 +566,13 @@ static const std::map<std::pair<std::string, std::string>, const char *> & conte
 	return descs;
 }
 
-static const std::map<std::string, const char *> & record_display_names()
+static std::string build_schema_label(const std::string & sub_type, const std::map<std::string, const char *> & descs)
 {
-	static const std::map<std::string, const char *> names = {
-		{ "ACTI", "Activator" },
-		{ "ALCH", "Potion" },
-		{ "APPA", "Apparatus" },
-		{ "ARMO", "Armor" },
-		{ "BODY", "Body Part" },
-		{ "BOOK", "Book" },
-		{ "BSGN", "Birthsign" },
-		{ "CELL", "Cell" },
-		{ "CLAS", "Class" },
-		{ "CLOT", "Clothing" },
-		{ "CONT", "Container" },
-		{ "CREA", "Creature" },
-		{ "DIAL", "Dialogue" },
-		{ "DOOR", "Door" },
-		{ "ENCH", "Enchantment" },
-		{ "FACT", "Faction" },
-		{ "GLOB", "Global" },
-		{ "GMST", "Game Setting" },
-		{ "INFO", "Info" },
-		{ "INGR", "Ingredient" },
-		{ "LAND", "Landscape" },
-		{ "LEVI", "Leveled Item" },
-		{ "LEVC", "Leveled Creature" },
-		{ "LIGH", "Light" },
-		{ "LOCK", "Lockpick" },
-		{ "LTEX", "Land Texture" },
-		{ "MGEF", "Magic Effect" },
-		{ "MISC", "Misc Item" },
-		{ "NPC_", "NPC" },
-		{ "PGRD", "Pathgrid" },
-		{ "PROB", "Probe" },
-		{ "RACE", "Race" },
-		{ "REGN", "Region" },
-		{ "REPA", "Repair Item" },
-		{ "SCPT", "Script" },
-		{ "SKIL", "Skill" },
-		{ "SNDG", "Sound Generator" },
-		{ "SOUN", "Sound" },
-		{ "SPEL", "Spell" },
-		{ "STAT", "Static" },
-		{ "WEAP", "Weapon" },
-	};
-	return names;
-}
-
-static std::string build_schema_label(
-    const std::string & sub_type,
-    const std::string & record_type,
-    const std::map<std::string, const char *> & descs)
-{
-	const auto & names = record_display_names();
-	auto rit = names.find(record_type);
-	const auto & parent_name = (rit != names.end()) ? std::string(rit->second) : record_type;
-
 	auto it = descs.find(sub_type);
 	if (it != descs.end())
-		return sub_type + " - " + parent_name + " " + it->second;
+		return sub_type + " - " + it->second;
 
-	return sub_type + " - " + parent_name + " Data";
+	return sub_type + " - Data";
 }
 
 std::string make_sub_label(const std::string & sub_type, const std::string & record_type, size_t data_size)
@@ -641,7 +586,7 @@ std::string make_sub_label(const std::string & sub_type, const std::string & rec
 	const auto * schema = find_schema(record_type, sub_type, data_size);
 
 	if (schema)
-		return build_schema_label(sub_type, record_type, descs);
+		return build_schema_label(sub_type, descs);
 
 	auto it = descs.find(sub_type);
 	if (it != descs.end())

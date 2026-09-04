@@ -117,10 +117,9 @@ void dict_selection_dialog_t::populate_order_list(
 	{
 		for (const auto & saved_path : saved_order)
 		{
-			const auto normalized = string_utils::normalize_path(saved_path);
 			for (const auto & entry : entries)
 			{
-				if (string_utils::normalize_path(entry.path) != normalized)
+				if (!string_utils::paths_equal(entry.path, saved_path))
 					continue;
 
 				display_name_t dname(entry.name);
@@ -186,6 +185,12 @@ void dict_selection_dialog_t::set_allow_empty_selection(bool allowed)
 	update_ok_button();
 }
 
+void dict_selection_dialog_t::set_minimum_selection(int minimum)
+{
+	m_minimum_selection = minimum;
+	update_ok_button();
+}
+
 void dict_selection_dialog_t::on_tree_item_changed(QTreeWidgetItem * item, int)
 {
 	const auto & path_data = item->data(0, Qt::UserRole).toString();
@@ -243,5 +248,6 @@ void dict_selection_dialog_t::on_move_down()
 
 void dict_selection_dialog_t::update_ok_button()
 {
-	m_button_box->button(QDialogButtonBox::Ok)->setEnabled(m_allow_empty_selection || m_order_list->count() > 0);
+	m_button_box->button(QDialogButtonBox::Ok)
+	    ->setEnabled(m_allow_empty_selection || m_order_list->count() >= m_minimum_selection);
 }

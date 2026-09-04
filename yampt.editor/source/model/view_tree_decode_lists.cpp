@@ -54,7 +54,7 @@ void view_tree_model_t::set_record_faction(record_context_t & context, const con
 	slot_build_context_t build_ctx { unified_slots, col_type_indices };
 
 	collect_faction_entries(context, build_ctx);
-	emit_slot_rows(context, build_ctx);
+	emit_faction_rows(context, build_ctx);
 }
 
 void view_tree_model_t::set_record_container(record_context_t & context, const conflict_entry_t & entry)
@@ -181,12 +181,12 @@ void view_tree_model_t::set_record_dial(
 	if (info_result.entries.empty())
 		return;
 
-	view_node_t separator_row;
-	separator_row.label = "--- INFO Chain ---";
-	separator_row.is_info_chain = true;
-	separator_row.values.resize(col_count);
-	separator_row.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
-	m_rows.push_back(std::move(separator_row));
+	view_node_t chain_group;
+	chain_group.label = "Dialogue Responses";
+	chain_group.is_info_chain = true;
+	chain_group.values.resize(col_count);
+	chain_group.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
+	chain_group.row_conflict_all = conflict_all_t::only_one;
 
 	for (const auto & info_entry : info_result.entries)
 	{
@@ -196,41 +196,51 @@ void view_tree_model_t::set_record_dial(
 		info_row.values.resize(col_count);
 		info_row.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
 
-		bool all_same = true;
-		bool any_present = false;
-
 		for (size_t col = 0; col < col_count; ++col)
 		{
 			const int plugin_idx = (col < m_column_plugin_indices.size()) ? m_column_plugin_indices[col] : -1;
 
-			if (plugin_idx < 0 || plugin_idx >= static_cast<int>(info_entry.present_in_plugin.size()))
+			const bool present = plugin_idx >= 0 &&
+			    plugin_idx < static_cast<int>(info_entry.present_in_plugin.size()) &&
+			    info_entry.present_in_plugin[plugin_idx];
+
+			if (!present)
 			{
 				info_row.values[col] = non_existent_value;
 				continue;
 			}
 
-			if (info_entry.present_in_plugin[plugin_idx])
-			{
-				info_row.values[col] = "\xE2\x9C\x93";
-				any_present = true;
-			}
-			else
-			{
-				info_row.values[col] = non_existent_value;
-				all_same = false;
-			}
+			info_row.values[col] = info_entry.text_in_plugin[plugin_idx];
 		}
 
+		bool all_same = true;
+		for (size_t col = 1; col < col_count; ++col)
+		{
+			if (info_row.values[col] != info_row.values[0])
+			{
+				all_same = false;
+				break;
+			}
+		}
 		info_row.all_identical = all_same;
 
-		if (col_count <= 1)
-			info_row.row_conflict_all = conflict_all_t::only_one;
-		else
-			info_row.row_conflict_all =
-			    (any_present && !all_same) ? conflict_all_t::override_benign : conflict_all_t::no_conflict;
+		info_row.row_conflict_all = record_conflict::compute_conflict_all_skip_empty(info_row.values);
+		info_row.cell_conflict_this = record_conflict::compute_conflict_this_skip_empty(info_row.values);
 
-		m_rows.push_back(std::move(info_row));
+		if (info_row.row_conflict_all > chain_group.row_conflict_all)
+			chain_group.row_conflict_all = info_row.row_conflict_all;
+
+		for (size_t col = 0; col < col_count && col < info_row.cell_conflict_this.size(); ++col)
+		{
+			if (info_row.cell_conflict_this[col] > chain_group.cell_conflict_this[col])
+				chain_group.cell_conflict_this[col] = info_row.cell_conflict_this[col];
+		}
+
+		chain_group.children.push_back(std::move(info_row));
 	}
+
+	chain_group.all_identical = (chain_group.row_conflict_all <= conflict_all_t::no_conflict);
+	m_rows.push_back(std::move(chain_group));
 }
 
 void view_tree_model_t::set_record_generic(record_context_t & context, const conflict_entry_t & entry)
@@ -383,11 +393,10 @@ void view_tree_model_t::collect_leveled_entries(record_context_t & context, slot
 void view_tree_model_t::collect_faction_entries(record_context_t & context, slot_build_context_t & build_ctx)
 {
 	alignment_rule_t rule;
-	rule.anchor_type = "INTV";
-	rule.anchor_size = 4;
-	rule.trailing_types = { "ANAM" };
-	rule.key_source = alignment_rule_t::key_from_t::next;
-	rule.key_neighbor_type = "ANAM";
+	rule.anchor_type = "ANAM";
+	rule.anchor_size = 0;
+	rule.trailing_types = { "INTV" };
+	rule.key_source = alignment_rule_t::key_from_t::anchor;
 
 	alignment_context_t align_ctx { context.all_sub_records, context.col_count, build_ctx.unified_slots, build_ctx.col_type_indices };
 	content_alignment_t::align(align_ctx, { rule });
@@ -413,8 +422,19 @@ void view_tree_model_t::collect_container_entries(record_context_t & context, sl
 
 void view_tree_model_t::emit_slot_rows(record_context_t & context, slot_build_context_t & build_ctx)
 {
+	std::unordered_map<std::string, int> type_counts;
 	for (const auto & slot : build_ctx.unified_slots)
-		m_rows.push_back(build_slot_row(context.col_count, context.all_sub_records, build_ctx.col_type_indices, slot));
+		++type_counts[slot.type];
+
+	for (const auto & slot : build_ctx.unified_slots)
+	{
+		auto row = build_slot_row(context.col_count, context.all_sub_records, build_ctx.col_type_indices, slot);
+
+		if (type_counts[slot.type] > 1)
+			row.label += " #" + std::to_string(slot.occurrence);
+
+		m_rows.push_back(std::move(row));
+	}
 
 	m_col_type_indices = build_ctx.col_type_indices;
 }
@@ -486,6 +506,81 @@ void view_tree_model_t::emit_leveled_rows(record_context_t & context, slot_build
 
 		m_rows.push_back(std::move(group_row));
 		++entry_index;
+		++i;
+	}
+
+	m_col_type_indices = build_ctx.col_type_indices;
+}
+
+void view_tree_model_t::emit_faction_rows(record_context_t & context, slot_build_context_t & build_ctx)
+{
+	const auto & unified = build_ctx.unified_slots;
+	const auto col_count = context.col_count;
+	int reaction_index = 0;
+
+	for (size_t i = 0; i < unified.size(); ++i)
+	{
+		const bool is_pair =
+		    (unified[i].type == "ANAM") && (i + 1 < unified.size()) && (unified[i + 1].type == "INTV");
+
+		if (!is_pair)
+		{
+			m_rows.push_back(
+			    build_slot_row(col_count, context.all_sub_records, build_ctx.col_type_indices, unified[i]));
+			continue;
+		}
+
+		auto faction_row = build_slot_row(col_count, context.all_sub_records, build_ctx.col_type_indices, unified[i]);
+		auto value_row =
+		    build_slot_row(col_count, context.all_sub_records, build_ctx.col_type_indices, unified[i + 1]);
+
+		view_node_t group_row;
+		group_row.type = "ANAM";
+		group_row.size = 0;
+		group_row.values = faction_row.values;
+		group_row.all_identical = faction_row.all_identical && value_row.all_identical;
+		group_row.label = "Faction Reaction #" + std::to_string(reaction_index);
+
+		view_node_t faction_field;
+		faction_field.label = "ANAM - Reaction Faction";
+		faction_field.type = faction_row.type;
+		faction_field.size = faction_row.size;
+		faction_field.values = faction_row.values;
+		faction_field.binary_ranges = faction_row.binary_ranges;
+		faction_field.all_identical = faction_row.all_identical;
+		faction_field.row_conflict_all = faction_row.row_conflict_all;
+		faction_field.cell_conflict_this = faction_row.cell_conflict_this;
+
+		view_node_t value_field;
+		value_field.label = "INTV - Reaction Value";
+		value_field.type = value_row.type;
+		value_field.size = value_row.size;
+		value_field.binary_ranges = value_row.binary_ranges;
+		value_field.values = value_row.children.empty() ? value_row.values : value_row.children[0].values;
+		value_field.all_identical = value_row.all_identical;
+		value_field.row_conflict_all = value_row.row_conflict_all;
+		value_field.cell_conflict_this = value_row.cell_conflict_this;
+
+		group_row.children.push_back(std::move(faction_field));
+		group_row.children.push_back(std::move(value_field));
+
+		group_row.row_conflict_all = std::max(faction_row.row_conflict_all, value_row.row_conflict_all);
+		group_row.cell_conflict_this.resize(col_count);
+		for (size_t col = 0; col < col_count; ++col)
+		{
+			const conflict_this_t faction_ct = (col < faction_row.cell_conflict_this.size())
+			    ? faction_row.cell_conflict_this[col]
+			    : conflict_this_t::unknown;
+			const conflict_this_t value_ct = (col < value_row.cell_conflict_this.size())
+			    ? value_row.cell_conflict_this[col]
+			    : conflict_this_t::unknown;
+			group_row.cell_conflict_this[col] = std::max(faction_ct, value_ct);
+		}
+
+		compute_group_ranges(group_row, col_count);
+
+		m_rows.push_back(std::move(group_row));
+		++reaction_index;
 		++i;
 	}
 

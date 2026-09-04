@@ -1,14 +1,25 @@
 #include "model/loc_document.hpp"
+#include <utility/string_utils.hpp>
 
 loc_document_t::loc_document_t(const std::string & path, codepage_t codepage)
-    : m_path(path)
+    : m_path(string_utils::canonicalize_path(path))
     , m_codepage(codepage)
     , m_file(loc_file_reader::read(path, codepage))
 {}
 
 document_kind_t loc_document_t::kind() const
 {
-	return document_kind_t::loc;
+	switch (m_file.file_kind)
+	{
+	case loc_types::loc_file_kind_t::cel:
+		return document_kind_t::loc_cel;
+	case loc_types::loc_file_kind_t::top:
+		return document_kind_t::loc_top;
+	case loc_types::loc_file_kind_t::mrk:
+		return document_kind_t::loc_mrk;
+	default:
+		return document_kind_t::loc_cel;
+	}
 }
 
 std::string loc_document_t::path() const
@@ -91,7 +102,7 @@ std::set<rec_type_t> loc_document_t::supported_types() const
 
 std::set<status_t> loc_document_t::supported_statuses() const
 {
-	return { status_t::translated };
+	return {};
 }
 
 void loc_document_t::set_dirty(bool)
@@ -100,6 +111,11 @@ void loc_document_t::set_dirty(bool)
 loc_types::loc_file_kind_t loc_document_t::file_kind() const
 {
 	return m_file.file_kind;
+}
+
+const std::vector<loc_types::loc_entry_t> & loc_document_t::entries() const
+{
+	return m_file.entries;
 }
 
 void loc_document_t::reload()

@@ -139,6 +139,7 @@ public:
 
 	const view_node_t * node_from_index(const QModelIndex & index) const;
 	std::string full_value_at(const QModelIndex & index) const;
+	bool is_editing_enabled() const;
 
 private:
 	static void compute_group_ranges(view_node_t & group_node, size_t col_count);
@@ -194,6 +195,7 @@ private:
 	    const std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_indices,
 	    const sub_slot_t & slot);
 
+
 	void decode_schema_children_ref(
 	    view_node_t & parent_row,
 	    const sub_record_schema_t * schema,
@@ -229,6 +231,7 @@ private:
 
 	void emit_slot_rows(record_context_t & context, slot_build_context_t & build_ctx);
 	void emit_leveled_rows(record_context_t & context, slot_build_context_t & build_ctx);
+	void emit_faction_rows(record_context_t & context, slot_build_context_t & build_ctx);
 
 	void finalize_header_conflict();
 
@@ -240,11 +243,14 @@ private:
 	std::set<std::string> m_user_ignore_conflict;
 	int m_merge_col_index = -1;
 	bool m_is_merge_pinned = false;
+	std::vector<merge_lock_t> m_record_locks;
 	std::string m_record_type;
 	std::string m_record_id;
 	std::vector<int> m_column_plugin_indices;
 	std::vector<record_version_t> m_record_versions;
 	std::vector<std::unordered_map<std::string, std::vector<size_t>>> m_col_type_indices;
+
+	bool row_is_locked(const view_node_t & row, const QModelIndex & index) const;
 
 	const std::vector<view_node_t> & visible_rows() const;
 	mutable std::vector<view_node_t> m_filtered_rows;

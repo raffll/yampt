@@ -103,6 +103,33 @@ TEST_CASE("dict_document_t::commit, second commit without explicit intent defaul
 	cleanup_test_dict(path);
 }
 
+TEST_CASE("dict_document_t::commit, does not propagate to targets already holding the same text", "[i]")
+{
+	const auto data = make_dict_with_entries();
+	const auto path = create_test_dict(data);
+	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
+
+	table_row_t row;
+	row.type = rec_type_t::info;
+	row.key_text = "key_a";
+	row.old_text = "Hello traveler";
+	row.new_text = "Hello traveler";
+	row.status = status_t::untranslated;
+	row.record_index = 0;
+
+	const auto result = doc.commit(row, "Hello traveler", status_t::translated);
+
+	REQUIRE(result.success);
+	REQUIRE(result.propagated_count == 0);
+	REQUIRE(result.status == status_t::translated);
+
+	const auto & chapter = doc.data().at(rec_type_t::info);
+	REQUIRE(chapter.records[1].status == status_t::untranslated);
+	REQUIRE(chapter.records[1].new_text == "Hello traveler");
+
+	cleanup_test_dict(path);
+}
+
 TEST_CASE("dict_document_t::commit, model status skips propagation", "[i]")
 {
 	const auto data = make_dict_with_entries();
@@ -120,6 +147,32 @@ TEST_CASE("dict_document_t::commit, model status skips propagation", "[i]")
 	const auto result = doc.commit(row, "Witaj podrozniku", status_t::model);
 
 	REQUIRE(result.propagated_count == 0);
+
+	const auto & chapter = doc.data().at(rec_type_t::info);
+	REQUIRE(chapter.records[1].status == status_t::untranslated);
+	REQUIRE(chapter.records[1].new_text == "Hello traveler");
+
+	cleanup_test_dict(path);
+}
+
+TEST_CASE("dict_document_t::commit, error status skips propagation", "[i]")
+{
+	const auto data = make_dict_with_entries();
+	const auto path = create_test_dict(data);
+	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
+
+	table_row_t row;
+	row.type = rec_type_t::info;
+	row.key_text = "key_a";
+	row.old_text = "Hello traveler";
+	row.new_text = "Hello traveler";
+	row.status = status_t::untranslated;
+	row.record_index = 0;
+
+	const auto result = doc.commit(row, "Zle tlumaczenie", status_t::error);
+
+	REQUIRE(result.propagated_count == 0);
+	REQUIRE(result.status == status_t::error);
 
 	const auto & chapter = doc.data().at(rec_type_t::info);
 	REQUIRE(chapter.records[1].status == status_t::untranslated);

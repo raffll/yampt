@@ -4,6 +4,7 @@
     <ClCompile Include="source\utility\domain_types.cpp" />
     <ClCompile Include="source\utility\app_logger.cpp" />
     <ClCompile Include="source\utility\string_utils.cpp" />
+    <ClCompile Include="source\utility\case_fold.cpp" />
     <ClCompile Include="source\io\codepage.cpp" />
     <ClCompile Include="source\io\dict_reader.cpp" />
     <ClCompile Include="source\io\dict_writer.cpp" />
@@ -26,7 +27,10 @@
     <ClCompile Include="source\creator\creator_ordered.cpp" />
     <ClCompile Include="source\creator\inflection.cpp" />
     <ClCompile Include="source\creator\loc_generator.cpp" />
+    <ClCompile Include="source\creator\phrase_form_builder.cpp" />
     <ClCompile Include="source\creator\text_match_index.cpp" />
+    <ClCompile Include="source\creator\topic_link_splitter.cpp" />
+    <ClCompile Include="source\creator\topic_tagger.cpp" />
     <ClCompile Include="source\creator\word_match_utils.cpp" />
     <ClCompile Include="source\merger\dict_merger.cpp" />
     <ClCompile Include="source\converter\esm_converter.cpp" />
@@ -68,6 +72,7 @@
     <ClInclude Include="source\utility\domain_types.hpp" />
     <ClInclude Include="source\utility\app_logger.hpp" />
     <ClInclude Include="source\utility\string_utils.hpp" />
+    <ClInclude Include="source\utility\case_fold.hpp" />
     <ClInclude Include="source\utility\record_types.hpp" />
     <ClInclude Include="source\utility\status_types.hpp" />
     <ClInclude Include="source\utility\char_diff.hpp" />
@@ -96,7 +101,10 @@
     <ClInclude Include="source\creator\creator_ordered.hpp" />
     <ClInclude Include="source\creator\inflection.hpp" />
     <ClInclude Include="source\creator\loc_generator.hpp" />
+    <ClInclude Include="source\creator\phrase_form_builder.hpp" />
     <ClInclude Include="source\creator\text_match_index.hpp" />
+    <ClInclude Include="source\creator\topic_link_splitter.hpp" />
+    <ClInclude Include="source\creator\topic_tagger.hpp" />
     <ClInclude Include="source\creator\word_match_utils.hpp" />
     <ClInclude Include="source\merger\dict_merger.hpp" />
     <ClInclude Include="source\converter\esm_converter.hpp" />

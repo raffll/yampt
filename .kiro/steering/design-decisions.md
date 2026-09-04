@@ -32,17 +32,11 @@ Ambiguous entries behave like untranslated during convert/create (the converter 
 
 ## Annotation/Glossary Status Filter
 
-The glossary in `annotation_manager_t::rebuild()` only includes entries with trusted statuses. Excluded statuses:
-- `changed` — translation carried over but original text differs, may be wrong
-- `ambiguous` — conflicting translations, unreliable
-- `in_progress` — user is still editing
-- `propagated` — auto-filled, may not be verified
-- `model` — machine translated, not human-verified
-- `error` — has validation issues
+Both glossary terms and DIAL topics (hyperlinks) are built only from entries with status `translated`. Every other status — `changed`, `ambiguous`, `in_progress`, `propagated`, `model`, `reused`, `adapted`, `error`, `untranslated` — is excluded. Unverified translations do not contribute topic links or glossary terms.
 
-Included statuses (glossary sources): `translated`, `reused`, `adapted`.
+This applies to both `glossary_t::collect_dial_entries` (hyperlinks) and `glossary_t::collect_glossary_entries` (FNAM/CELL/RNAM/INDX terms): each skips any entry whose `status != status_t::translated`.
 
-DIAL topics (hyperlinks) have NO status filter — all DIAL entries contribute regardless of status.
+Inflection annotations are separate — they come from loaded `.top`/`.mrk` localization files via `inflection_store_t`, not from dictionary record status.
 
 ## Glossary Sources
 

@@ -14,10 +14,16 @@ validation_view_t::validation_view_t(QWidget * parent)
 
 void validation_view_t::update_validation(const validation_result_t & result)
 {
+	QString text;
 	if (result.limit == 0)
-		m_label->setText(tr("| chars: %1").arg(result.byte_count));
+		text = tr("| chars: %1").arg(result.byte_count);
 	else
-		m_label->setText(tr("| chars: %1 / %2").arg(result.byte_count).arg(result.limit));
+		text = tr("| chars: %1 / %2").arg(result.byte_count).arg(result.limit);
+
+	if (result.level == validation_level_t::error && !result.reason.empty())
+		text += tr(" | %1").arg(QString::fromStdString(result.reason));
+
+	m_label->setText(text);
 
 	switch (result.level)
 	{

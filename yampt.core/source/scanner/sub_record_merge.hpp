@@ -45,6 +45,20 @@ struct cell_partition_t
 
 using frmr_map_t = std::map<uint32_t, frmr_group_t>;
 
+struct armor_part_group_t
+{
+	uint32_t armor_index;
+	sub_record_sequence_t sub_records;
+};
+
+struct armor_partition_t
+{
+	sub_record_sequence_t header;
+	std::vector<armor_part_group_t> groups;
+};
+
+using armor_part_map_t = std::map<uint32_t, armor_part_group_t>;
+
 class sub_record_merge_t
 {
 public:
@@ -53,6 +67,16 @@ public:
 	static sub_record_sequence_t parse_sub_records(const std::string & content);
 	static std::string serialize_sub_record(const sub_record_entry_t & entry);
 	static std::string reconstruct_record(const std::string & winner_content, const sub_record_sequence_t & output);
+
+	static std::string filter_sub_records_by_rules(
+	    const std::string & rec_type,
+	    const std::string & content,
+	    const std::set<std::string> & ignored_sub_records);
+
+	static std::vector<std::pair<std::string, int>> group_members_in_range(
+	    const std::string & content,
+	    int group_start,
+	    int group_end);
 
 	static size_t find_occurrence_index(const sub_record_sequence_t & sequence, size_t index);
 	static int find_by_type_and_occurrence(
@@ -76,6 +100,13 @@ public:
 
 	static bool needs_element_wise(const std::string & rec_type, const std::string & sub_type, size_t data_size);
 	static std::string merge_bytes_three_way(const char * first, const char * inter, const char * winner, size_t size);
+	static std::string merge_fields_three_way(
+	    const std::string & rec_type,
+	    const std::string & sub_type,
+	    const char * first,
+	    const char * inter,
+	    const char * winner,
+	    size_t size);
 
 	static std::vector<std::string> collect_enam_data(const sub_record_sequence_t & sequence);
 	static std::string merge_enam_slots(
@@ -131,6 +162,24 @@ private:
 	    const std::vector<std::string> & versions,
 	    const frmr_map_t & first_map,
 	    const frmr_map_t & winner_map);
+
+	static merge_result_t merge_armor_parts(const merge_input_t & input);
+	static armor_partition_t partition_armor(const std::string & content);
+	static armor_part_map_t build_armor_part_map(const std::vector<armor_part_group_t> & groups);
+	static std::string reconstruct_armor(
+	    const std::string & winner_content,
+	    const sub_record_sequence_t & header,
+	    const std::vector<armor_part_group_t> & groups);
+	static void merge_winner_armor_groups(
+	    std::vector<armor_part_group_t> & merged_groups,
+	    const std::vector<std::string> & versions,
+	    const armor_part_map_t & first_map,
+	    const armor_part_map_t & winner_map);
+	static void collect_intermediate_armor_additions(
+	    std::vector<armor_part_group_t> & merged_groups,
+	    const std::vector<std::string> & versions,
+	    const armor_part_map_t & first_map,
+	    const armor_part_map_t & winner_map);
 };
 
 class leveled_list_merge_t

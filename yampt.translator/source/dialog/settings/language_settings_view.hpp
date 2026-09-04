@@ -20,6 +20,7 @@ public:
 
 private:
 	void on_native_language_changed(int index);
+	void update_spell_status();
 	void on_foreign_language_changed(int index);
 	void scan_dictionaries(const std::string & directory);
 	void update_spell_combo(QComboBox * combo, const std::string & prefix);
@@ -29,6 +30,7 @@ private:
 	QComboBox * m_foreign_spell_combo = nullptr;
 	QComboBox * m_native_spell_combo = nullptr;
 	QLabel * m_encoding_note = nullptr;
+	QLabel * m_spell_status_note = nullptr;
 	QLineEdit * m_foreign_tag_edit = nullptr;
 	QLineEdit * m_native_tag_edit = nullptr;
 	std::string m_dictionaries_dir;

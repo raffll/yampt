@@ -11,7 +11,9 @@ enum class document_kind_t
 	dict,
 	yaml,
 	plugin,
-	loc,
+	loc_cel,
+	loc_top,
+	loc_mrk,
 	eet
 };
 

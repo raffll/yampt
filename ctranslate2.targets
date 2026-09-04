@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!--
+    Builds the CTranslate2 static lib (ctranslate2.lib + ctranslate2.dll) from the
+    external/CTranslate2 git submodule, on demand, when the lib is not present.
+
+    CTranslate2 is built separately via CMake (Ruy backend, Release) and is NOT
+    produced by the MSBuild solution itself. This target bootstraps that one-time
+    build so opening the solution and pressing Build works from a fresh clone.
+
+    It runs only when ctranslate2.lib is missing, so normal incremental builds are
+    not slowed down. The CMake executable path can be overridden with the
+    CTranslate2CMake property (default matches the build steering).
+
+    Submodule init after a fresh clone:
+      git submodule update (init) (recursive) external/CTranslate2
+  -->
+
+  <PropertyGroup>
+    <CTranslate2Root>$(MSBuildThisFileDirectory)</CTranslate2Root>
+    <CTranslate2Source>$(CTranslate2Root)external\CTranslate2</CTranslate2Source>
+    <CTranslate2Build>$(CTranslate2Source)\build</CTranslate2Build>
+    <CTranslate2Lib>$(CTranslate2Build)\Release\ctranslate2.lib</CTranslate2Lib>
+    <CTranslate2Dll>$(CTranslate2Build)\Release\ctranslate2.dll</CTranslate2Dll>
+    <!-- CMake resolution order: explicit CTranslate2CMake override, then the
+         CMake bundled with Visual Studio (resolved relative to the VS install
+         root, no machine-specific path), then plain "cmake" from PATH. -->
+    <VsBundledCMake>$(VsInstallRoot)\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe</VsBundledCMake>
+    <CTranslate2CMake Condition="'$(CTranslate2CMake)' == '' And Exists('$(VsBundledCMake)')">$(VsBundledCMake)</CTranslate2CMake>
+    <CTranslate2CMake Condition="'$(CTranslate2CMake)' == ''">cmake.exe</CTranslate2CMake>
+  </PropertyGroup>
+
+  <Target Name="BuildCTranslate2"
+          BeforeTargets="ClCompile"
+          Inputs="$(CTranslate2Source)\CMakeLists.txt"
+          Outputs="$(CTranslate2Lib)"
+          Condition="!Exists('$(CTranslate2Lib)') And Exists('$(CTranslate2Source)\CMakeLists.txt')">
+
+    <Error Condition="'$(CTranslate2CMake)' != 'cmake.exe' And !Exists('$(CTranslate2CMake)')"
+           Text="CTranslate2 needs to be built but CMake was not found at '$(CTranslate2CMake)'. Set the CTranslate2CMake property (or MSBuild property /p:CTranslate2CMake=path\to\cmake.exe) to your CMake executable, or ensure cmake is on PATH." />
+
+    <Message Importance="high" Text="Building CTranslate2 (one-time) — this can take several minutes..." />
+
+    <Exec Command="&quot;$(CTranslate2CMake)&quot; -S &quot;$(CTranslate2Source)&quot; -B &quot;$(CTranslate2Build)&quot; -G &quot;Visual Studio 18 2026&quot; -A x64 -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DWITH_MKL=OFF -DWITH_CUDA=OFF -DWITH_CUDNN=OFF -DWITH_DNNL=OFF -DWITH_OPENBLAS=OFF -DWITH_RUY=ON -DBUILD_CLI=OFF -DBUILD_TESTS=OFF -DOPENMP_RUNTIME=NONE" />
+
+    <Exec Command="&quot;$(CTranslate2CMake)&quot; --build &quot;$(CTranslate2Build)&quot; --config Release" />
+
+    <Error Condition="!Exists('$(CTranslate2Lib)')"
+           Text="CTranslate2 build finished but '$(CTranslate2Lib)' was not produced." />
+  </Target>
+
+</Project>

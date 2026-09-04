@@ -1,6 +1,7 @@
 #include "editor_settings_dialog.hpp"
 #include "appearance_settings_view.hpp"
 #include "cleaning_settings_view.hpp"
+#include "editing_settings_view.hpp"
 #include "editor_paths_view.hpp"
 #include "merge_settings_view.hpp"
 #include <settings_store.hpp>
@@ -27,16 +28,19 @@ editor_settings_dialog_t::editor_settings_dialog_t(settings_store_t & settings, 
 	m_paths_view = new editor_paths_view_t(this);
 	m_appearance_view = new editor_appearance_settings_view_t(this);
 	m_merge_view = new merge_settings_view_t(this);
+	m_editing_view = new editing_settings_view_t(this);
 	m_cleaning_view = new cleaning_settings_view_t(this);
 
 	m_category_list->addItem(tr("Appearance"));
 	m_category_list->addItem(tr("Output Paths"));
 	m_category_list->addItem(tr("Merged Patch"));
+	m_category_list->addItem(tr("Editing"));
 	m_category_list->addItem(tr("Cleaning"));
 
 	m_content_stack->addWidget(wrap_in_scroll_area(m_appearance_view));
 	m_content_stack->addWidget(wrap_in_scroll_area(m_paths_view));
 	m_content_stack->addWidget(wrap_in_scroll_area(m_merge_view));
+	m_content_stack->addWidget(wrap_in_scroll_area(m_editing_view));
 	m_content_stack->addWidget(wrap_in_scroll_area(m_cleaning_view));
 
 	connect(m_category_list, &QListWidget::currentRowChanged, m_content_stack, &QStackedWidget::setCurrentIndex);
@@ -79,6 +83,7 @@ editor_settings_dialog_t::editor_settings_dialog_t(settings_store_t & settings, 
 	m_paths_view->load(m_settings);
 	m_appearance_view->load(m_settings);
 	m_merge_view->load(m_settings);
+	m_editing_view->load(m_settings);
 	m_cleaning_view->load(m_settings);
 	m_category_list->setCurrentRow(0);
 }
@@ -88,6 +93,7 @@ void editor_settings_dialog_t::apply_all()
 	m_paths_view->apply(m_settings);
 	m_appearance_view->save(m_settings);
 	m_merge_view->save(m_settings);
+	m_editing_view->save(m_settings);
 	m_cleaning_view->save(m_settings);
 	m_settings.sync();
 }

@@ -1,14 +1,13 @@
 #include "io/loc_file_reader.hpp"
 #include "utility/string_utils.hpp"
 #include <fstream>
-#include <stdexcept>
 
 static std::string read_file_bytes(const std::string & path)
 {
 	std::ifstream stream(path, std::ios::binary);
 
 	if (!stream.is_open())
-		throw std::runtime_error("cannot open file for reading: " + path);
+		return {};
 
 	return std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
 }

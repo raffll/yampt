@@ -90,7 +90,6 @@ Create a new JSON file in this folder. The schema:
 | `headers` | HTTP headers as key/value pairs |
 | `body` | Request body fields (or query parameters when `body_format` is `"query"`) |
 | `response_path` | Dot-separated path to the translated text in the JSON response |
-| `system_prompt` | System prompt for `chat_completion` kind (ignored for `simple`) |
 | `quota_limit` | Character limit for status display (0 = unlimited/not tracked) |
 | `models_endpoint` | Optional GET URL that returns the provider's available models. When set, a Refresh control appears in the Auto Translate panel to fetch the current model list. Supports the same template variables and `headers` as translation requests, so the API key header applies. Omit for static model lists only. |
 | `models_path` | Dot-separated path to the array of model entries in the `models_endpoint` response (e.g. `data` for `{"data": [ ... ]}`). Only used when `models_endpoint` is set. |
@@ -98,7 +97,7 @@ Create a new JSON file in this folder. The schema:
 
 ### Template Variables
 
-Available in `endpoint`, `headers`, `body`, and `system_prompt`:
+Available in `endpoint`, `headers`, `body`, and the system prompt:
 
 | Variable | Value |
 |----------|-------|
@@ -122,7 +121,7 @@ Examples:
 ### Chat Completion Kind
 
 For LLM providers (Claude, GPT), set `kind` to `"chat_completion"`. The provider builds the request with:
-- `system_prompt` expanded with template variables and glossary terms appended
+- A system prompt (set in Settings → Auto Translation → Prompt, shared across all chat providers) expanded with template variables, with glossary terms and examples appended
 - A user message containing the source text
 - Body fields from `body` merged into the request
 

@@ -66,15 +66,13 @@ encode_result_t encode_from_utf8_checked(const std::string & utf8_text, codepage
 	std::wstring wide(wide_len, L'\0');
 	MultiByteToWideChar(CP_UTF8, 0, utf8_text.data(), static_cast<int>(utf8_text.size()), wide.data(), wide_len);
 
-	BOOL used_default = FALSE;
-	int mb_len = WideCharToMultiByte(
-	    cp, WC_NO_BEST_FIT_CHARS, wide.data(), wide_len, nullptr, 0, nullptr, &used_default);
+	int mb_len = WideCharToMultiByte(cp, WC_NO_BEST_FIT_CHARS, wide.data(), wide_len, nullptr, 0, nullptr, nullptr);
 
 	if (mb_len <= 0)
 		return { utf8_text, true };
 
 	std::string result(mb_len, '\0');
-	used_default = FALSE;
+	BOOL used_default = FALSE;
 	WideCharToMultiByte(cp, WC_NO_BEST_FIT_CHARS, wide.data(), wide_len, result.data(), mb_len, nullptr, &used_default);
 
 	return { result, used_default != FALSE };

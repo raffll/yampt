@@ -1,7 +1,9 @@
 #pragma once
 
+#include "../model/field_binary_resolver.hpp"
 #include "../model/nav_tree_model.hpp"
 #include "../model/view_tree_model.hpp"
+#include <scanner/merge_patch_store.hpp>
 #include <functional>
 #include <QModelIndex>
 #include <QPoint>
@@ -56,9 +58,17 @@ private:
 	};
 
 	void build_source_file_menu(QMenu & menu, const nav_tree_model_t::node_info_t & info);
+	void confirm_remove_record_from_plugin(const nav_tree_model_t::node_info_t & info);
 	void build_copy_to_merge_menu(QMenu & menu, const view_menu_context_t & context);
 	void build_source_copy_menu(QMenu & menu, const view_menu_context_t & context);
 	void build_merge_remove_menu(QMenu & menu, const view_menu_context_t & context);
+	void build_lock_menu(QMenu & menu, const view_menu_context_t & context);
+	merge_lock_t build_lock_for(const view_menu_context_t & context) const;
+	void build_sub_record_ignore_menu(QMenu & menu, const view_menu_context_t & context);
+	void toggle_ignore_rule(const std::string & rule, bool remove_rule);
+	void add_copy_bit_action(QMenu & menu, const view_menu_context_t & context);
+	field_binary_resolver::resolved_field_t resolve_schema_field(const view_menu_context_t & context) const;
+	field_binary_resolver::resolved_bit_t resolve_schema_bit(const view_menu_context_t & context) const;
 
 	plugin_session_t & m_session;
 	record_view_t & m_record_view;

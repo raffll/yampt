@@ -2,6 +2,7 @@
 #include <converter/esm_converter.hpp>
 #include <creator/dict_creator.hpp>
 #include <creator/loc_generator.hpp>
+#include <creator/topic_tagger.hpp>
 #include <io/binary_file_io.hpp>
 #include <io/codepage.hpp>
 #include <io/dict_reader.hpp>
@@ -96,6 +97,10 @@ void user_interface_t::run_command()
 		else if (args[1] == "--make-loc" && dict_paths.size() > 0)
 		{
 			make_loc();
+		}
+		else if (args[1] == "--apply-tags" && dict_paths.size() > 0)
+		{
+			apply_tags();
 		}
 		else
 		{
@@ -312,5 +317,28 @@ void user_interface_t::make_loc()
 	if (result.collision_warnings > 0)
 		app_logger_t::add_log("[warning] collisions: " + std::to_string(result.collision_warnings) + "\r\n");
 
+	app_logger_t::add_log("[info] done!\r\n");
+}
+
+void user_interface_t::apply_tags()
+{
+	app_logger_t::add_log("[info] applying topic tags...\r\n");
+
+	dict_reader_t reader(dict_paths[0]);
+	if (!reader.is_loaded())
+	{
+		app_logger_t::add_log("[error] cannot load dictionary: " + dict_paths[0] + "\r\n");
+		return;
+	}
+
+	auto dict = reader.get_dict();
+	const auto result = apply_topic_tags(dict);
+
+	const auto & out_path = output.empty() ? dict_paths[0] : output;
+	dict_writer_t::write(dict, out_path);
+
+	app_logger_t::add_log(
+	    "[info] apply-tags: entries changed=" + std::to_string(result.entries_changed) +
+	    ", tags inserted=" + std::to_string(result.tags_inserted) + "\r\n");
 	app_logger_t::add_log("[info] done!\r\n");
 }

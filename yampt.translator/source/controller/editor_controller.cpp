@@ -56,7 +56,7 @@ editor_load_result_t editor_controller_t::load(document_t & doc, const table_row
 	result.new_text = row.new_text;
 	result.status = row.status;
 	result.is_read_only = doc.is_read_only();
-	result.annotations = m_annotations.annotate(row.old_text, row.type);
+	result.annotations = m_annotations.annotate(row.old_text);
 
 	auto * dict_doc = dynamic_cast<dict_document_t *>(&doc);
 	if (!dict_doc)

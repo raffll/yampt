@@ -43,7 +43,7 @@ TEST_CASE("glossary_t::annotate, finds dial topic in text", "[u]")
 	glossary_t manager;
 	manager.rebuild({ { &dict, "test.json" } });
 
-	const auto results = manager.annotate("I saw a kwama forager today", rec_type_t::info);
+	const auto results = manager.annotate("I saw a kwama forager today");
 
 	REQUIRE(results.size() == 1);
 	REQUIRE(results[0].start == 8);
@@ -59,7 +59,7 @@ TEST_CASE("glossary_t::annotate, case insensitive matching", "[u]")
 	glossary_t manager;
 	manager.rebuild({ { &dict, "base.json" } });
 
-	const auto results = manager.annotate("Welcome to balmora", rec_type_t::info);
+	const auto results = manager.annotate("Welcome to balmora");
 
 	REQUIRE(results.size() == 1);
 	REQUIRE(results[0].start == 11);
@@ -72,7 +72,7 @@ TEST_CASE("glossary_t::annotate, no match inside word", "[u]")
 	glossary_t manager;
 	manager.rebuild({ { &dict, "base.json" } });
 
-	const auto results = manager.annotate("He started running", rec_type_t::info);
+	const auto results = manager.annotate("He started running");
 
 	REQUIRE(results.empty());
 }
@@ -83,7 +83,7 @@ TEST_CASE("glossary_t::annotate, empty text returns empty", "[u]")
 	glossary_t manager;
 	manager.rebuild({ { &dict, "base.json" } });
 
-	const auto results = manager.annotate("", rec_type_t::info);
+	const auto results = manager.annotate("");
 
 	REQUIRE(results.empty());
 }
@@ -109,7 +109,7 @@ TEST_CASE("glossary_t::annotate, glossary does not overlap hyperlinks", "[u]")
 	glossary_t manager;
 	manager.rebuild({ { &dict, "base.json" } });
 
-	const auto results = manager.annotate("the kwama forager attacks", rec_type_t::info);
+	const auto results = manager.annotate("the kwama forager attacks");
 
 	bool has_topic = false;
 	bool has_glossary_overlap = false;
@@ -132,7 +132,7 @@ TEST_CASE("glossary_t::annotate, multiple matches in text", "[u]")
 	glossary_t manager;
 	manager.rebuild({ { &dict, "base.json" } });
 
-	const auto results = manager.annotate("test and test again", rec_type_t::info);
+	const auto results = manager.annotate("test and test again");
 
 	REQUIRE(results.size() == 2);
 	REQUIRE(results[0].start == 0);
@@ -145,7 +145,7 @@ TEST_CASE("glossary_t::annotate, skips excluded statuses for glossary", "[u]")
 	glossary_t manager;
 	manager.rebuild({ { &dict, "base.json" } });
 
-	const auto results = manager.annotate("the Sword is sharp", rec_type_t::info);
+	const auto results = manager.annotate("the Sword is sharp");
 
 	REQUIRE(results.empty());
 }
@@ -156,7 +156,7 @@ TEST_CASE("glossary_t::annotate, includes adapted status in glossary", "[u]")
 	glossary_t manager;
 	manager.rebuild({ { &dict, "base.json" } });
 
-	const auto results = manager.annotate("the Sword is sharp", rec_type_t::info);
+	const auto results = manager.annotate("the Sword is sharp");
 
 	REQUIRE(results.size() == 1);
 	REQUIRE(results[0].kind == annotation_t::glossary_term);
@@ -252,7 +252,7 @@ TEST_CASE("glossary_t::update_term, adds new dial topic", "[u]")
 	manager.rebuild({ { &dict, "base.json" } });
 
 	manager.update_term(rec_type_t::dial, "thieves guild", "gildia zlodziei");
-	const auto results = manager.annotate("join the thieves guild", rec_type_t::info);
+	const auto results = manager.annotate("join the thieves guild");
 
 	REQUIRE(results.size() == 1);
 	REQUIRE(results[0].kind == annotation_t::dial_topic);
@@ -279,7 +279,7 @@ TEST_CASE("glossary_t::rebuild, longer terms match first", "[u]")
 	glossary_t manager;
 	manager.rebuild({ { &dict, "base.json" } });
 
-	const auto results = manager.annotate("use the battle ax", rec_type_t::info);
+	const auto results = manager.annotate("use the battle ax");
 
 	bool found_long = false;
 	for (const auto & result : results)

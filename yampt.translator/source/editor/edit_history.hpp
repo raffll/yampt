@@ -2,7 +2,6 @@
 
 #include <utility/domain_types.hpp>
 #include <utility/status_types.hpp>
-#include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -33,12 +32,6 @@ public:
 	std::vector<history_entry_t> get_history(rec_type_t type, const std::string & key) const;
 	revert_result_t revert(rec_type_t type, const std::string & key, size_t history_index);
 
-	void load_from_file(const std::string & path);
-	void save_to_file(const std::string & path) const;
-
-	bool is_modified_this_session(rec_type_t type, const std::string & key) const;
-
 private:
 	std::unordered_map<std::string, std::vector<history_entry_t>> m_entries;
-	std::set<std::string> m_session_modified;
 };

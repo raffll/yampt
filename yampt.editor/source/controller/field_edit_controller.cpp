@@ -1,5 +1,6 @@
 #include "controller/field_edit_controller.hpp"
 #include "session/plugin_session.hpp"
+#include <utility/app_logger.hpp>
 #include <decoder/field_encoder.hpp>
 #include <decoder/field_validator.hpp>
 #include <decoder/sub_record_iter.hpp>
@@ -105,7 +106,16 @@ edit_result_t field_edit_controller_t::commit_field_edit(const field_edit_reques
 	const auto & content = *content_ptr;
 	const auto sub_result = find_sub_record_offset(content, request);
 	if (!sub_result.found)
+	{
+		app_logger_t::add_log(
+		    "[debug] commit_field_edit: " + request.sub_type + " not found at occurrence " +
+		        std::to_string(request.occurrence) + " (object_ref_index " +
+		        std::to_string(request.object_ref_index) + ") in " + request.record_type + ":" + request.record_id +
+		        "\r\n",
+		    true);
+
 		return { false, "sub-record not found at expected occurrence" };
+	}
 
 	if (request.field.name == nullptr)
 		return { false, "no schema defined for this sub-record" };
@@ -164,6 +174,15 @@ edit_result_t field_edit_controller_t::commit_to_source(
 	m_session.scan().recompute_single_conflict(request.record_type, request.record_id);
 
 	const auto & plugin_path = m_session.scan().plugin_path(request.plugin_idx);
+
+	const std::string field_name = request.field.name != nullptr ? request.field.name : std::string {};
+	emit field_edited(
+	    { m_session.scan().plugin_filename(request.plugin_idx),
+	      request.record_type,
+	      request.record_id,
+	      field_name,
+	      request.input_text });
+
 	emit record_modified(false, plugin_path);
 	return { true, {} };
 }

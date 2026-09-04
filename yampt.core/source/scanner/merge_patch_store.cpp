@@ -114,3 +114,53 @@ void merge_patch_store_t::restore_pinned(const std::vector<merge_record_t> & pin
 			m_records.push_back(pinned_record);
 	}
 }
+
+void merge_patch_store_t::add_lock(const merge_lock_t & lock)
+{
+	for (auto & existing : m_locks)
+	{
+		if (existing.same_target(lock))
+		{
+			existing = lock;
+			return;
+		}
+	}
+
+	m_locks.push_back(lock);
+}
+
+void merge_patch_store_t::remove_lock(const merge_lock_t & lock)
+{
+	auto it = std::remove_if(
+	    m_locks.begin(), m_locks.end(), [&](const merge_lock_t & existing) { return existing.same_target(lock); });
+	m_locks.erase(it, m_locks.end());
+}
+
+bool merge_patch_store_t::has_lock(const merge_lock_t & lock) const
+{
+	for (const auto & existing : m_locks)
+	{
+		if (existing.same_target(lock))
+			return true;
+	}
+
+	return false;
+}
+
+std::vector<merge_lock_t> merge_patch_store_t::locks_for(const std::string & rec_type, const std::string & record_id)
+    const
+{
+	std::vector<merge_lock_t> result;
+	for (const auto & lock : m_locks)
+	{
+		if (lock.rec_type == rec_type && lock.record_id == record_id)
+			result.push_back(lock);
+	}
+
+	return result;
+}
+
+void merge_patch_store_t::set_locks(const std::vector<merge_lock_t> & locks)
+{
+	m_locks = locks;
+}

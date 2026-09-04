@@ -1,5 +1,6 @@
 #include "settings_store.hpp"
 #include "resource_paths.hpp"
+#include <utility/string_utils.hpp>
 #include <algorithm>
 #include <QCoreApplication>
 #include <QDir>
@@ -10,7 +11,7 @@ QString settings_store_t::settings_dir()
 }
 
 settings_store_t::settings_store_t(const QString & filename)
-    : m_settings(settings_dir() + filename, QSettings::IniFormat)
+    : m_settings(QDir(settings_dir()).filePath(filename), QSettings::IniFormat)
 {}
 
 int settings_store_t::encoding_index() const
@@ -170,6 +171,16 @@ void settings_store_t::set_translation_language_index(int index)
 	m_settings.setValue("Translation/LanguageIndex", index);
 }
 
+std::string settings_store_t::translation_prompt() const
+{
+	return m_settings.value("Translation/SystemPrompt", "").toString().toStdString();
+}
+
+void settings_store_t::set_translation_prompt(const std::string & prompt)
+{
+	m_settings.setValue("Translation/SystemPrompt", QString::fromStdString(prompt));
+}
+
 std::string settings_store_t::shortcut(const std::string & action_name) const
 {
 	const auto key = QString("Shortcuts/") + QString::fromStdString(action_name);
@@ -190,7 +201,8 @@ std::vector<std::string> settings_store_t::workspace_roots() const
 	for (int i = 0; i < count; ++i)
 	{
 		const auto key = QString("WorkspaceRoots/Path%1").arg(i);
-		roots.push_back(m_settings.value(key, "").toString().toStdString());
+		const auto stored = m_settings.value(key, "").toString().toStdString();
+		roots.push_back(string_utils::canonicalize_path(stored));
 	}
 	return roots;
 }
@@ -201,7 +213,8 @@ void settings_store_t::set_workspace_roots(const std::vector<std::string> & root
 	for (int i = 0; i < static_cast<int>(roots.size()); ++i)
 	{
 		const auto key = QString("WorkspaceRoots/Path%1").arg(i);
-		m_settings.setValue(key, QString::fromStdString(roots[i]));
+		const auto canonical = string_utils::canonicalize_path(roots[i]);
+		m_settings.setValue(key, QString::fromStdString(canonical));
 	}
 }
 
@@ -389,6 +402,26 @@ void settings_store_t::set_bottom_visible(bool value)
 	m_settings.setValue("Editor/BottomVisible", value);
 }
 
+bool settings_store_t::sync_scroll_enabled() const
+{
+	return m_settings.value("Editor/SyncScroll", true).toBool();
+}
+
+void settings_store_t::set_sync_scroll_enabled(bool value)
+{
+	m_settings.setValue("Editor/SyncScroll", value);
+}
+
+int settings_store_t::highlight_kinds_mask() const
+{
+	return m_settings.value("Editor/HighlightKinds", 0x7).toInt();
+}
+
+void settings_store_t::set_highlight_kinds_mask(int mask)
+{
+	m_settings.setValue("Editor/HighlightKinds", mask);
+}
+
 int settings_store_t::column_width(int index) const
 {
 	const auto key = QString("Editor/Column%1").arg(index);
@@ -524,6 +557,16 @@ int settings_store_t::display_codepage() const
 void settings_store_t::set_display_codepage(int value)
 {
 	m_settings.setValue("Editor/DisplayCodepage", value);
+}
+
+bool settings_store_t::editing_enabled() const
+{
+	return m_settings.value("Editing/DirectEditing", false).toBool();
+}
+
+void settings_store_t::set_editing_enabled(bool value)
+{
+	m_settings.setValue("Editing/DirectEditing", value);
 }
 
 bool settings_store_t::clean_evil_gmst_enabled() const

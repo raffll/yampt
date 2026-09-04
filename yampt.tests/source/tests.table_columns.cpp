@@ -25,17 +25,17 @@ TEST_CASE("table_columns_t::columns_for_kind, yaml omits id and key", "[u]")
 	REQUIRE(columns == std::vector<table_col_t> { col_original, col_translation, col_status });
 }
 
-TEST_CASE("table_columns_t::columns_for_kind, loc omits id and key", "[u]")
+TEST_CASE("table_columns_t::columns_for_kind, loc omits id, key, and status", "[u]")
 {
-	const auto columns = table_columns_t::columns_for_kind(document_kind_t::loc);
-	REQUIRE(columns == std::vector<table_col_t> { col_original, col_translation, col_status });
+	const auto columns = table_columns_t::columns_for_kind(document_kind_t::loc_cel);
+	REQUIRE(columns == std::vector<table_col_t> { col_original, col_translation });
 }
 
 TEST_CASE("table_columns_t::count, reflects kind", "[u]")
 {
 	REQUIRE(table_columns_t(document_kind_t::dict).count() == 5);
 	REQUIRE(table_columns_t(document_kind_t::yaml).count() == 3);
-	REQUIRE(table_columns_t(document_kind_t::loc).count() == 3);
+	REQUIRE(table_columns_t(document_kind_t::loc_cel).count() == 2);
 }
 
 TEST_CASE("table_columns_t::at, dict position maps to logical column", "[u]")
@@ -104,9 +104,10 @@ TEST_CASE("table_columns_t::set_for_kind, switches layout", "[u]")
 	table_columns_t columns(document_kind_t::dict);
 	REQUIRE(columns.count() == 5);
 
-	columns.set_for_kind(document_kind_t::loc);
-	REQUIRE(columns.count() == 3);
+	columns.set_for_kind(document_kind_t::loc_cel);
+	REQUIRE(columns.count() == 2);
 	REQUIRE(columns.contains(col_key) == false);
+	REQUIRE(columns.contains(col_status) == false);
 
 	columns.set_for_kind(document_kind_t::dict);
 	REQUIRE(columns.count() == 5);

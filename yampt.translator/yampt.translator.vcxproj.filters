@@ -33,12 +33,12 @@
     <ClCompile Include="source\editor\byte_limit_validator.cpp" />
     <ClCompile Include="source\editor\commit_orchestrator.cpp" />
     <ClCompile Include="source\editor\glossary.cpp" />
+    <ClCompile Include="source\editor\inflection_store.cpp" />
     <ClCompile Include="source\editor\edit_history.cpp" />
     <ClCompile Include="source\editor\find_replace.cpp" />
     <ClCompile Include="source\editor\operation_executor.cpp" />
     <ClCompile Include="source\highlighter\grammar_checker.cpp" />
     <ClCompile Include="source\dialog\dict_selection_dialog.cpp" />
-    <ClCompile Include="source\dialog\merge_dialog.cpp" />
     <ClCompile Include="source\dialog\make_base_dialog.cpp" />
     <ClCompile Include="source\dialog\first_run_dialog.cpp" />
     <ClCompile Include="source\dialog\settings\translator_settings_dialog.cpp" />
@@ -95,6 +95,7 @@
     <ClInclude Include="source\highlighter\highlight_coordinator.hpp" />
     <ClInclude Include="source\highlighter\highlight_applier.hpp" />
     <ClInclude Include="source\model\loc_document.hpp" />
+    <ClInclude Include="source\editor\inflection_store.hpp" />
     <ClInclude Include="source\model\eet_document.hpp" />
     <ClInclude Include="source\model\table_columns.hpp" />
     <ClInclude Include="source\translator\model_list_utils.hpp" />

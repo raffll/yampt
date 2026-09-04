@@ -4,6 +4,7 @@
 #include "status_filter_view.hpp"
 #include <QAbstractButton>
 #include <QCoreApplication>
+#include <utility/string_utils.hpp>
 #include <QLabel>
 #include <QLineEdit>
 #include <QString>
@@ -36,7 +37,7 @@ table_view_t::table_view_t(
 void table_view_t::apply(table_build_result_t result, const std::string & file_path, dict_kind_t kind)
 {
 	(void)kind;
-	m_file_label.setText(QString::fromStdString(file_path));
+	m_file_label.setText(QString::fromStdString(string_utils::canonicalize_path(file_path)));
 	m_filter_tree.setEnabled(true);
 	m_filter_tree.set_display_mode(filter_tree_view_t::display_mode_t::full);
 	set_enabled(true);
@@ -83,7 +84,7 @@ void table_view_t::apply_yaml(
     const std::map<status_t, size_t> & filtered_status_counts,
     const std::map<status_t, size_t> & total_status_counts)
 {
-	m_file_label.setText(QString::fromStdString(file_path));
+	m_file_label.setText(QString::fromStdString(string_utils::canonicalize_path(file_path)));
 	m_filter_tree.setEnabled(true);
 	m_filter_tree.set_display_mode(filter_tree_view_t::display_mode_t::all_only);
 	m_filter_tree.update_counts({}, {});

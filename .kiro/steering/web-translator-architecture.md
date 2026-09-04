@@ -6,14 +6,13 @@ Translation providers are defined as JSON files in `providers/` next to the exec
 
 Config schema:
 - `name` — display name in the UI
-- `kind` — `"simple"` (direct translation API) or `"chat_completion"` (LLM with system prompt + messages)
+- `kind` — `"simple"` (direct translation API) or `"chat_completion"` (LLM with a system prompt + messages; the prompt is NOT in the config — see System Prompt below)
 - `message_style` — only for `chat_completion` kind: `"openai"` (default, system role in messages array) or `"anthropic"` (top-level system field, user-only messages)
 - `endpoint` — API URL
 - `body_format` — `"json"`, `"form"` (URL-encoded), or `"query"` (URL query parameters, uses GET)
 - `headers` — key/value map, supports template variables
 - `body` — key/value map of request body fields, supports template variables
 - `response_path` — dot-separated JSON path with array indexing (e.g. `translations[0].text`, `content[0].text`)
-- `system_prompt` — only used for `chat_completion` kind
 - `quota_limit` — optional character limit (0 = unlimited)
 - `settings` — array of provider-specific settings (see below)
 
@@ -29,21 +28,32 @@ Each provider can define user-configurable settings via the `settings` array. Ea
 
 ## Template Variables
 
-Available in `headers`, `body`, and `system_prompt` fields:
+Available in `headers`, `body`, and the system prompt:
 
 | Variable | Expands to |
 |----------|-----------|
 | `{{api_key}}` | User's API key from settings |
 | `{{text}}` | Source text to translate |
 | `{{target_lang}}` | Target language code (as-is from settings) |
-| `{{target_lang_upper}}` | Target language code uppercased |
 | `{{source_lang}}` | Source language from settings (foreign_language) |
-| `{{source_lang_upper}}` | Source language uppercased |
 | `{{<setting_key>}}` | Value of any provider setting by its `key` (e.g. `{{model}}`) |
+| `{{examples}}` | System prompt only: marked example lines (`original -> translation`) |
+| `{{hyperlinks}}` | System prompt only: per-entry glossary/topic terms from `m_glossary_fn` |
 
 ## Source Language
 
 The source language is read from `settings.foreign_language()` and set on each `web_translator_t` instance via `set_source_language()`. It is NOT hardcoded in provider configs — configs use `{{source_lang}}` placeholders.
+
+## System Prompt
+
+The `chat_completion` system prompt is NOT stored in provider JSON configs. There is a single shared, user-editable prompt for all chat providers:
+
+- The canonical default lives in code: `web_translator_config::default_system_prompt()`.
+- The user override is stored globally under `[Translation]/SystemPrompt` (`settings.translation_prompt()` / `set_translation_prompt()`), not per provider.
+- It is edited in Settings → Auto Translation → **Prompt** tab (a single multi-line box with a "Reset to Default" button).
+- At runtime, `translation_suggestion_view_t::apply_provider_settings` calls `web_translator_t::set_system_prompt(shared_prompt)` on every `chat_completion` provider. An empty override falls back to `default_system_prompt()`.
+- The prompt supports the same language template variables as headers/body. It is a template with two extra placeholders resolved in `send_chat_request` by in-place substitution (NOT appended): `{{examples}}` is replaced with the marked example lines (`original -> translation`, no header), and `{{hyperlinks}}` with the per-entry glossary/topic terms from `m_glossary_fn(text)`. If a placeholder is absent from the prompt, that content is omitted. The default prompt writes its own "Examples:" and "Hyperlinks:" section headers around these placeholders.
+- The Preview tab (Settings → Auto Translation → **Preview**, read-only) shows the resolved prompt: languages and `{{examples}}` filled in; `{{hyperlinks}}` shown as a note since it depends on the entry being translated.
 
 ## Settings Storage
 

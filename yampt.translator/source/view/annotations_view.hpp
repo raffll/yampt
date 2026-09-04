@@ -5,8 +5,8 @@
 #include <vector>
 #include <QWidget>
 
-class QListWidget;
-class QListWidgetItem;
+class QTreeWidget;
+class QTreeWidgetItem;
 
 class annotations_view_t : public QWidget
 {
@@ -26,7 +26,7 @@ signals:
 	void annotation_clicked(const std::string & new_text);
 
 private:
-	void on_item_clicked(QListWidgetItem * item);
+	void on_item_clicked(QTreeWidgetItem * item, int column);
 
-	QListWidget * m_list = nullptr;
+	QTreeWidget * m_tree = nullptr;
 };

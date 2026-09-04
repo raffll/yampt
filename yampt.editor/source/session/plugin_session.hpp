@@ -8,6 +8,7 @@
 #include <QObject>
 
 class patch_builder_t;
+class QSettings;
 
 class plugin_session_t : public QObject
 {
@@ -36,6 +37,8 @@ public:
 
 	void save_session_state(const QString & ini_path);
 	void restore_session_state(const QString & ini_path);
+	void save_merge_locks(QSettings & settings) const;
+	std::vector<merge_lock_t> load_merge_locks(QSettings & settings) const;
 
 	const std::set<std::string> & excluded_plugins() const;
 	void set_excluded_plugins(const std::set<std::string> & excluded);
@@ -58,6 +61,8 @@ signals:
 	void plugins_loaded();
 	void plugins_unloaded();
 	void log_message(const std::string & message);
+	void load_progress(int done, int total);
+	void load_phase(const std::string & label);
 
 private:
 	struct mo2_resolve_context_t
@@ -71,7 +76,8 @@ private:
 	std::vector<std::string> parse_mo2_profile(const QString & profile_dir);
 	std::vector<std::string> read_load_order(const QString & profile_dir);
 	QString resolve_game_data_path(const QString & mo2_root_path);
-	void append_merge_patch(std::vector<std::string> & paths, const QString & overwrite_path);
+	void append_merge_patch(std::vector<std::string> & paths, const QString & merge_dir);
+	void append_merge_patch_from_data_dirs(std::vector<std::string> & paths, const std::vector<std::string> & data_dirs);
 	std::vector<std::string> parse_openmw_cfg(const QString & cfg_path);
 	std::vector<std::string> resolve_mo2_plugins(
 	    const std::vector<std::string> & plugin_names,

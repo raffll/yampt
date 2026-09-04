@@ -39,7 +39,7 @@ private:
 	QAction * m_conflicts_action = nullptr;
 	QAction * m_sidebar_toggle = nullptr;
 	QAction * m_bottom_toggle = nullptr;
-	QToolButton * m_editing_btn = nullptr;
+	QAction * m_sync_scroll_toggle = nullptr;
 	QToolButton * m_no_filters_btn = nullptr;
 	QLineEdit * m_search_field = nullptr;
 	QToolButton * m_case_sensitive_btn = nullptr;

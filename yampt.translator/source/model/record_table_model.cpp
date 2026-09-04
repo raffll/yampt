@@ -151,21 +151,7 @@ QVariant record_table_model_t::headerData(int section, Qt::Orientation orientati
 	if (orientation != Qt::Horizontal || role != Qt::DisplayRole)
 		return {};
 
-	switch (m_columns.at(section))
-	{
-	case col_id:
-		return tr("ID");
-	case col_key:
-		return tr("Key");
-	case col_original:
-		return tr("Original");
-	case col_translation:
-		return tr("Translation");
-	case col_status:
-		return tr("Status");
-	default:
-		return {};
-	}
+	return m_columns.label_for(m_columns.at(section));
 }
 
 void record_table_model_t::sort(int column, Qt::SortOrder order)

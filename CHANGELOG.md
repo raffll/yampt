@@ -1,5 +1,72 @@
 # Changelog
 
+## [0.1135] - 2026-09-04
+
+### yTranslator
+- [NEW] Added Spanish and Portuguese, plus Czech, Slovak, Slovenian, Croatian, Romanian, Ukrainian, Bulgarian, Serbian, Dutch, Swedish, Danish, Norwegian Bokmal, Finnish, Catalan, and Galician as target languages; Finnish can be translated but has no spell-check dictionary
+- [NEW] Apply Topic Tags in a dictionary's right-click menu: wraps dialogue topics found in the text of dialogue responses in hyperlink tags so they appear as clickable links in-game. It also tags inflected forms of topics (read from the dictionary's generated .top file) where they do not collide with a direct topic link. All dialogue responses are tagged regardless of their status, excluding voice lines. Changes are recorded in history and can be reverted, and re-running refreshes the tags rather than duplicating them
+- [NEW] Remove Topic Tags in a dictionary's right-click menu: strips all topic hyperlink tags from dialogue responses; the change is recorded in history and can be reverted
+- [NEW] While editing a dictionary, the Annotations tab lists the inflected topic forms (from loaded .top and .mrk files) related to the current entry's translation, under an Inflection section. When any form of a topic appears in the text, every known form of that topic is listed, not only the one present. The tab is now a two-column table showing each annotation and its source file, with resizable columns
+- [NEW] Editable AI translation prompt: a Prompt tab in the Auto Translation settings holds a single system prompt shared by all AI providers, with a Reset to Default button to restore the built-in prompt. The prompt is a template with placeholders for the source and target languages, the marked examples, and the known dialogue topics, so you control where each part appears. A read-only Preview tab shows the full prompt as it will be sent, with the languages and examples filled in
+- [NEW] Toggle buttons beside the Next button control what is marked in the translation editor: H, I, and G turn hyperlink, inflection, and glossary highlights on or off, and S, Gr, and W toggle spell check, grammar check, and whitespace markers. Turning a highlight off lets a lower-priority one take over the same word — for example disabling hyperlinks reveals the inflection highlight underneath. The S, Gr, and W buttons stay in sync with the matching View menu items, and the highlight choices are remembered between sessions
+- [NEW] Language settings show whether the native spell-check dictionary loads and which one, so a missing or broken dictionary is visible at a glance
+- [CHANGE] Inflected topic forms are highlighted in the editor with their own color, distinct from dialogue topics and glossary terms
+- [CHANGE] Localization files (.cel, .top, .mrk) no longer show the Status column or the Statuses filter, since their entries have no status
+- [CHANGE] Language settings now list the foreign and native languages in alphabetical order
+- [CHANGE] The Encoding line in Language settings is now shown in the normal text color instead of a greyed-out note
+- [CHANGE] Sync Scrolling now remembers its on/off state between sessions instead of always starting enabled
+- [CHANGE] The History panel now lists the selected entry's changes as a plain list; right-click a change and choose Revert to restore it, instead of a Revert button on every row
+- [CHANGE] Grammar issues in the translation editor are now marked with a wavy underline, like spell check (amber for grammar, red for spelling), instead of a background highlight
+- [CHANGE] The over-the-byte-limit part of a translation now uses the same highlight color as forbidden characters, so all validation problems share one color
+- [CHANGE] The @ character is no longer treated as a forbidden character, so translations containing topic tags no longer show a validation error
+- [CHANGE] The Tools menu entry and its dialog title "Merge Dictionaries" are now named "Dictionary Merger"
+- [CHANGE] Hyperlink and glossary annotations are now built only from entries with the Translated status, so unverified translations no longer contribute topic links or glossary terms
+- [CHANGE] When editing a localization file, the two columns are now labelled for the file type: Cell and Translation for .cel, Topic Form and Topic for .top, and Translation and Topic for .mrk
+- [CHANGE] History entries now show the status in square brackets to match the timestamp style
+- [FIX] The validation status now states the reason when a translation is invalid (for example the byte limit it exceeds, or the forbidden character it contains), instead of only the character count
+- [FIX] A translation is now propagated to other entries with the same source text even when the translation is identical to the original (a proper noun), while entries that already hold that text are left untouched
+- [FIX] An invalid translation (containing a forbidden character or exceeding the byte limit) is marked with the Error status and is no longer propagated to other entries; propagation also skips any entry whose record type cannot hold the text within its own byte limit
+- [FIX] Topic tag markers in the editor are no longer shown as underlined colored web-style links; the tagged text now renders normally while recognized topics keep their background highlight
+- [FIX] Grammar and topic highlights in the translation editor now refresh correctly when text is edited back to its original value — removing a double space now clears the grammar mark, and reverting a broken topic tag to a valid form restores its highlight
+
+### yEditor
+- [NEW] Sync Scrolling: a View menu toggle binds scrolling between the two comparison panes in the Edit panel, so both sides move together; the state persists between sessions
+- [NEW] When a field edit is invalid, the reason is shown in the status bar instead of only marking the field red
+- [NEW] Remove Record from Plugin: right-click a record in a loaded plugin to delete it from that plugin; the record is dropped when the plugin is saved. This cannot be undone. The option is greyed out unless editing is enabled
+- [NEW] Copy Record to Merged Patch is now also available by right-clicking a record in the navigation tree, copying the whole record into the merged patch
+- [NEW] Copy Bit to Merged Patch: right-click an individual flag (such as a body part's Female flag) to copy just that one bit into the merged patch, leaving the record's other flags untouched
+- [NEW] Selecting a response under the Dialogue Responses group now shows that response text in the Edit panel comparison, instead of clearing the panel
+- [NEW] Each dialogue condition now reads as a plain sentence (for example "Function Choice == 1"), with the raw condition text shown and editable underneath
+- [NEW] History tab: a tab beside the Edit and Log panels lists the field edits and record removals made during the current session, newest first. The history is not saved and resets when plugins are unloaded
+- [NEW] Diff button in the Edit panel toggles the difference highlighting between the two comparison panes. When on, lines that changed between the plugins are highlighted (removed text on the left, added text on the right); when off, both panes show plain text. Differences are compared ignoring leading indentation, so a script that differs only in spacing shows as unchanged while each pane keeps its original layout
+- [NEW] The main window now opens immediately at startup, with a progress dialog shown while the previous session is restored and while plugins are loaded or a merged patch is created, instead of a blank wait until everything is in memory
+- [NEW] Lock in Merged Patch: right-click a cell in the merged patch column to lock a whole record, a sub-record, a decoded field, or a single flag bit. A locked cell shows a lock icon, keeps its current value, and is re-applied unchanged after you regenerate the merged patch, so the auto-merge cannot overwrite it. Locks are remembered between sessions. Right-click again to unlock
+- [CHANGE] Direct editing of loaded plugins is now turned on from a new Editing page in Settings (with a warning that it can break a plugin) instead of the toolbar button, and the choice is remembered between sessions. The merged patch remains editable at all times regardless of this setting
+- [CHANGE] The Lua tab's conflict list is now a two-column tree, showing the handler as interface and method in the first column and its type argument in the second, and it starts collapsed so only the mod names are shown
+- [CHANGE] Lua handler conflicts now use the same conflict colors as plugin records, with the color carried up to the mod name so a conflicting mod is visible without expanding it
+- [CHANGE] Selecting a Lua handler conflict now shows only its Classification and Handler Body in the Edit panel, colored by the conflict severity; the interface, method, type, script path, and callback rows are no longer listed since they added no comparison value
+- [CHANGE] The dialogue INFO chain now shows each plugin's response text for every INFO and highlights conflicts where plugins give the same INFO different text, instead of only showing a checkmark for presence
+- [CHANGE] A merged patch can now be created with a single plugin loaded, instead of requiring at least two. With one plugin the patch starts empty and serves as a scaffold to copy records into by hand
+- [CHANGE] Sub-record row labels in the record view no longer repeat the record type; a record's identifier and name rows now read "NAME - ID" and "FNAM - Name" instead of "NAME - Activator ID" and "FNAM - Activator Name"
+- [CHANGE] A flag sub-record's individual flags now appear directly under the sub-record row in the record view, without a redundant intermediate "Flags" grouping row
+- [CHANGE] A data sub-record that decodes to a single field now shows that field as a nested row under the sub-record instead of printing the value inline on the sub-record row
+- [CHANGE] The dialogue response list is now a single collapsible "Dialogue Responses" group in the record view instead of a flat separator followed by loose rows
+- [CHANGE] The status bar now reads "mode | path | plugin" (for example "MO2 | ...profiles/Default | Morrowind.esm") and no longer appends the selected record type and id
+- [CHANGE] Each faction reaction now appears as a single collapsible "Faction Reaction" group in the record view, pairing the reacting faction with its reaction value, instead of separate loose rows
+- [CHANGE] Sub-records that repeat within a record (such as a container's items and an NPC's spells) are now numbered in the record view, so each row reads "NPCO - Item #0", "NPCO - Item #1", and so on; sub-records that appear only once are left unnumbered
+- [FIX] The Edit panel comparison now leaves a pane blank when the corresponding plugin has no version of the selected sub-record, instead of showing stray placeholder characters
+- [FIX] Sub-records excluded from the merged patch now show their row text in the neutral color instead of the red, yellow, or orange conflict coloring, matching their greyed-out background
+- [FIX] Merging a record where two mods change different parts of the same multi-byte value (such as a weapon's stat) no longer produces a spliced value that neither mod set; each value is now taken whole from one mod
+- [FIX] Merging a faction where two mods change different rank requirements now keeps both changes, combining the requirement data field by field instead of taking the whole block from a single mod
+- [FIX] Copy Field to Merged Patch now works for fields shown under a grouping heading (such as a class's major and minor skills); previously the copy silently failed for those fields
+- [FIX] Faction reaction values now line up by faction across plugin columns in the record view, instead of being matched by position so different factions shared a row
+- [FIX] Editing a dialogue condition now updates that condition in place instead of adding a duplicate condition
+- [FIX] The merged patch is now always loaded last, regardless of where MO2 or OpenMW places it in the load order, so its column stays at the far right and it wins over the plugins it merges
+- [FIX] When several plugins each change the same field of a record and the last plugin reverts it to the original, the merged patch now keeps the change from the latest plugin that made one, instead of the earliest
+- [FIX] Armor and clothing body-part records now merge correctly: a female or male body-part name added by one plugin is carried into the merged patch in its own body-part slot, instead of being dropped or attached to the wrong body part
+- [FIX] Creature attack damage values (minimum and maximum for each of the three attacks) now merge as whole values, so a merged creature no longer ends up with a corrupted attack range
+- [FIX] The Edit panel Diff highlighting now colors both comparison panes as soon as a record is selected, instead of coloring only the left pane until the Diff button was toggled off and back on
+
 ## [0.1060] - 2026-08-31
 
 ### yEditor

@@ -35,6 +35,7 @@ public:
 
 	std::vector<std::string> get_selected_paths() const;
 	void set_allow_empty_selection(bool allowed);
+	void set_minimum_selection(int minimum);
 
 private:
 	struct root_content_t
@@ -61,4 +62,5 @@ private:
 	QPushButton * m_down_button = nullptr;
 	QDialogButtonBox * m_button_box = nullptr;
 	bool m_allow_empty_selection = false;
+	int m_minimum_selection = 1;
 };

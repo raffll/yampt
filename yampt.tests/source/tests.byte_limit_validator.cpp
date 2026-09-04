@@ -66,6 +66,14 @@ TEST_CASE("byte_limit_validator_t::validate, forbidden character tilde", "[u]")
 	REQUIRE(result.level == validation_level_t::error);
 }
 
+TEST_CASE("byte_limit_validator_t::validate, topic tag delimiters allowed", "[u]")
+{
+	byte_limit_validator_t validator;
+
+	const auto result = validator.validate(rec_type_t::info, "Talk to @Caius Cosades# now");
+	REQUIRE(result.level == validation_level_t::ok);
+}
+
 TEST_CASE("byte_limit_validator_t::validate, forbidden control char", "[u]")
 {
 	byte_limit_validator_t validator;

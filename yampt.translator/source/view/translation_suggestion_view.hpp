@@ -2,6 +2,7 @@
 
 #include "../translator/translator.hpp"
 #include "../translator/web_translator_config.hpp"
+#include <creator/topic_link_splitter.hpp>
 #include <functional>
 #include <memory>
 #include <string>
@@ -45,12 +46,14 @@ public:
 
 	void request_translation(const std::string & text);
 	void request_translation_lines(const std::vector<std::string> & lines);
+	void request_translation_segments(const std::string & source_line);
 	bool is_translating() const;
 
 signals:
 	void translate_all_requested();
 	void translation_committed(const std::string & result_text);
 	void translation_lines_committed(const std::vector<std::string> & result_lines);
+	void translation_segments_committed(const std::string & reassembled_text);
 	void translation_failed(const std::string & error_message);
 
 private:
@@ -60,6 +63,9 @@ private:
 	void rebuild_web_providers();
 	void on_provider_result(const translation_suggestion_t & result);
 	void advance_line_queue();
+	void emit_queue_result();
+	std::vector<std::string> build_segment_sources() const;
+	std::string reassemble_segment_results() const;
 	void update_model_controls();
 	web_translator_t * active_web_provider() const;
 	void populate_model_combo(const std::vector<std::string> & models, const std::string & selected);
@@ -88,6 +94,9 @@ private:
 
 	std::vector<std::string> m_line_queue;
 	std::vector<std::string> m_line_results;
+
+	std::vector<link_segment_t> m_segments;
+	bool m_segment_mode = false;
 
 	struct lang_entry_t
 	{

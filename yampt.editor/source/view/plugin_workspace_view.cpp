@@ -7,6 +7,7 @@
 #include "editor_delegates.hpp"
 #include <scanner/batch_cleaner.hpp>
 #include <scanner/record_conflict.hpp>
+#include <utility/string_utils.hpp>
 #include <set>
 #include <settings_store.hpp>
 #include <QApplication>
@@ -18,6 +19,8 @@
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QMessageBox>
+#include <QProgressDialog>
+#include <QScreen>
 #include <QSettings>
 #include <QShortcut>
 #include <QTreeView>
@@ -45,6 +48,9 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 	main_layout->addWidget(m_main_splitter, 1);
 
 	m_status_label = new QLabel(this);
+
+	m_validation_label = new QLabel(this);
+	m_validation_label->setStyleSheet("color: rgb(220, 50, 50);");
 
 	m_nav_tabs = new QTabWidget(this);
 	m_nav_tabs->setTabPosition(QTabWidget::North);
@@ -77,6 +83,18 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 
 	m_merge_controller->set_refresh_callback([this]() { refresh_all_views(); });
 
+	m_merge_controller->set_record_removal_callback(
+	    [this](const record_removal_record_t & removal)
+	{
+		m_edit_history.record_record_removal(removal);
+		m_history_view->update_history(m_edit_history.entries());
+	});
+
+	m_merge_controller->set_progress_callback([this](int done, int total) { update_progress(done, total); });
+
+	m_merge_controller->set_phase_callback(
+	    [this](const std::string & label) { set_progress_phase(QString::fromStdString(label)); });
+
 	m_context_menu = new view_context_menu_t(
 	    *m_session,
 	    *m_record_view,
@@ -99,7 +117,9 @@ void plugin_workspace_view_t::setup_views()
 	m_bottom_tabs = new QTabWidget(m_main_splitter);
 	m_messages = new messages_view_t(m_bottom_tabs);
 	m_preview = new preview_view_t(m_bottom_tabs);
+	m_history_view = new history_view_t(m_bottom_tabs);
 	m_bottom_tabs->addTab(m_preview, tr("Edit"));
+	m_bottom_tabs->addTab(m_history_view, tr("History"));
 	m_bottom_tabs->addTab(m_messages, tr("Log"));
 
 	m_main_splitter->addWidget(m_content_splitter);
@@ -133,9 +153,21 @@ void plugin_workspace_view_t::setup_connections()
 		m_lua_view->clear();
 		m_record_view->clear();
 		m_nav_view->rebuild();
+		m_edit_history.clear();
+		m_history_view->clear();
 		update_status();
 	});
 	connect(m_session, &plugin_session_t::log_message, this, &plugin_workspace_view_t::log_message);
+	connect(
+	    m_session,
+	    &plugin_session_t::load_progress,
+	    this,
+	    [this](int done, int total) { update_progress(done, total); });
+	connect(
+	    m_session,
+	    &plugin_session_t::load_phase,
+	    this,
+	    [this](const std::string & label) { set_progress_phase(QString::fromStdString(label)); });
 
 	connect(m_lua_scan_worker, &lua_scan_worker_t::scan_complete, this, &plugin_workspace_view_t::on_lua_scan_complete);
 
@@ -156,10 +188,27 @@ void plugin_workspace_view_t::setup_connections()
 	});
 
 	connect(
+	    m_edit_controller,
+	    &field_edit_controller_t::field_edited,
+	    this,
+	    [this](const field_edit_record_t & edit)
+	{
+		m_edit_history.record_field_edit(edit);
+		m_history_view->update_history(m_edit_history.entries());
+	});
+
+	connect(
 	    m_preview,
 	    &preview_view_t::edit_committed,
 	    this,
 	    [this]() { refresh_all_views(); });
+
+	connect(
+	    m_preview,
+	    &preview_view_t::validation_message,
+	    this,
+	    [this](const QString & message)
+	{ m_validation_label->setText(message.isEmpty() ? QString {} : tr("| %1").arg(message)); });
 }
 
 void plugin_workspace_view_t::load_plugins_from_paths(
@@ -174,7 +223,9 @@ void plugin_workspace_view_t::load_plugins_from_paths(
 	if (selected.empty())
 		return;
 
+	show_progress(tr("Loading plugins..."));
 	m_session->load_from_folder(selected, base_path);
+	hide_progress();
 }
 
 void plugin_workspace_view_t::on_load_data_files()
@@ -229,7 +280,9 @@ void plugin_workspace_view_t::on_load_mo2_profile()
 	if (profile_dir.isEmpty())
 		return;
 
+	show_progress(tr("Loading plugins..."));
 	m_session->load_from_mo2_profile(profile_dir);
+	hide_progress();
 	m_settings.set_last_directory(profile_dir.toStdString());
 }
 
@@ -246,7 +299,9 @@ void plugin_workspace_view_t::on_load_openmw_cfg()
 	if (cfg_path.isEmpty())
 		return;
 
+	show_progress(tr("Loading plugins..."));
 	m_session->load_from_openmw_cfg(cfg_path);
+	hide_progress();
 	const auto cfg_dir = QFileInfo(cfg_path).absolutePath();
 	m_settings.set_last_directory(cfg_dir.toStdString());
 }
@@ -317,7 +372,12 @@ void plugin_workspace_view_t::on_save_all()
 
 void plugin_workspace_view_t::on_create_merged_patch()
 {
-	if (!m_merge_controller->create_merged_patch())
+	m_progress_label = tr("Creating merged patch...");
+	const bool created = m_merge_controller->create_merged_patch();
+	hide_progress();
+	m_progress_label.clear();
+
+	if (!created)
 		return;
 
 	refresh_all_views();
@@ -404,6 +464,7 @@ void plugin_workspace_view_t::apply_user_conflict_rules()
 void plugin_workspace_view_t::on_settings_changed()
 {
 	apply_user_conflict_rules();
+	m_editable_columns.set_editing_enabled(m_settings.editing_enabled());
 
 	const auto codepage = static_cast<codepage_t>(m_settings.display_codepage());
 	m_record_view->model()->set_display_codepage(codepage);
@@ -415,6 +476,10 @@ void plugin_workspace_view_t::on_settings_changed()
 		m_session->scan().rebuild_conflicts();
 		refresh_all_views();
 	}
+
+	const auto current = m_record_view->tree()->currentIndex();
+	if (current.isValid())
+		on_view_selection_changed(current);
 }
 
 void plugin_workspace_view_t::refresh_all_views()
@@ -423,9 +488,11 @@ void plugin_workspace_view_t::refresh_all_views()
 	const auto displayed_record_id = m_record_view->model()->record_id();
 
 	const auto current_cell = m_record_view->tree()->currentIndex();
-	const int cell_row = current_cell.row();
 	const int cell_column = current_cell.column();
-	const int cell_parent_row = current_cell.parent().isValid() ? current_cell.parent().row() : -1;
+
+	std::vector<int> ancestor_rows;
+	for (auto walk = current_cell; walk.isValid(); walk = walk.parent())
+		ancestor_rows.push_back(walk.row());
 
 	rebuild_nav_preserving_state();
 
@@ -440,8 +507,18 @@ void plugin_workspace_view_t::refresh_all_views()
 	display_record_in_view(*entry);
 
 	const auto * model = m_record_view->model();
-	const auto parent_index = cell_parent_row >= 0 ? model->index(cell_parent_row, 0, QModelIndex()) : QModelIndex();
-	const auto restored_cell = model->index(cell_row, cell_column, parent_index);
+	QModelIndex restored_cell;
+	for (size_t depth = 0; depth < ancestor_rows.size(); ++depth)
+	{
+		const int ancestor_row = ancestor_rows[ancestor_rows.size() - 1 - depth];
+		const bool is_leaf = depth + 1 == ancestor_rows.size();
+		const int column = is_leaf ? cell_column : 0;
+		restored_cell = model->index(ancestor_row, column, restored_cell);
+
+		if (!restored_cell.isValid())
+			return;
+	}
+
 	if (!restored_cell.isValid())
 		return;
 
@@ -456,6 +533,9 @@ void plugin_workspace_view_t::rebuild_nav_preserving_state()
 
 void plugin_workspace_view_t::on_nav_selection_changed(const nav_tree_model_t::node_info_t & info)
 {
+	if (m_preview)
+		m_preview->clear();
+
 	if (info.rec_type.empty())
 	{
 		m_record_view->clear();
@@ -521,15 +601,6 @@ void plugin_workspace_view_t::set_show_deleted_strikeout(bool value)
 	m_nav_view->set_show_deleted_strikeout(value);
 }
 
-void plugin_workspace_view_t::set_editing_enabled(bool value)
-{
-	m_editable_columns.set_editing_enabled(value);
-
-	const auto current = m_record_view->tree()->currentIndex();
-	if (current.isValid())
-		on_view_selection_changed(current);
-}
-
 bool plugin_workspace_view_t::is_show_deleted_strikeout() const
 {
 	return m_record_view->model()->show_deleted_strikeout();
@@ -550,8 +621,19 @@ void plugin_workspace_view_t::set_hide_duplicates(bool hide)
 		return;
 
 	const auto * entry = m_session->scan().find(info.rec_type, info.record_id);
-	if (entry)
-		display_record_in_view(*entry);
+	if (!entry)
+		return;
+
+	display_record_in_view(*entry);
+
+	if (m_preview)
+		m_preview->clear();
+}
+
+void plugin_workspace_view_t::set_preview_scroll_sync(bool enabled)
+{
+	if (m_preview)
+		m_preview->set_scroll_sync(enabled);
 }
 
 void plugin_workspace_view_t::on_advanced_filter()
@@ -663,7 +745,7 @@ void plugin_workspace_view_t::on_view_selection_changed(const QModelIndex & curr
 	}
 
 	const auto * node = model->node_from_index(current);
-	if (node != nullptr && node->is_info_chain)
+	if (node != nullptr && node->is_info_chain && !node->children.empty())
 	{
 		m_preview->clear();
 		return;
@@ -679,11 +761,13 @@ void plugin_workspace_view_t::on_view_selection_changed(const QModelIndex & curr
 		left_text = model->full_value_at(left_index);
 
 	if (right_text == non_existent_value && (left_text.empty() || left_text == non_existent_value))
+	{
 		m_preview->clear();
-	else
-		m_preview->show_comparison(left_text, right_text);
+		return;
+	}
 
 	m_preview->update_selection(current, model, right_text);
+	m_preview->show_comparison(left_text, right_text);
 }
 
 void plugin_workspace_view_t::display_record_in_view(const conflict_entry_t & entry)
@@ -715,9 +799,6 @@ void plugin_workspace_view_t::display_record_in_view(const conflict_entry_t & en
 	}
 
 	m_editable_columns.set_merge_column(m_record_view->model()->merge_column());
-
-	if (m_preview)
-		m_preview->clear();
 }
 
 void plugin_workspace_view_t::update_status()
@@ -741,17 +822,16 @@ void plugin_workspace_view_t::update_status()
 
 	if (info.plugin_idx >= 0)
 	{
-		if (!info.record_id.empty())
-			m_status_label->setText(mode_prefix + QString::fromStdString(info.rec_type + " : " + info.record_id));
-		else if (!info.rec_type.empty())
-			m_status_label->setText(mode_prefix + QString::fromStdString(info.rec_type));
-		else
-			m_status_label->setText(
-			    mode_prefix + QString::fromStdString(m_session->scan().plugin_filename(info.plugin_idx)));
+		m_status_label->setText(
+		    mode_prefix + QString::fromStdString(m_session->scan().plugin_filename(info.plugin_idx)));
 	}
 	else
 	{
-		m_status_label->setText(mode_prefix.trimmed());
+		auto without_selection = mode_prefix.trimmed();
+		if (without_selection.endsWith("|"))
+			without_selection.chop(1);
+
+		m_status_label->setText(without_selection.trimmed());
 	}
 }
 
@@ -764,19 +844,21 @@ QString plugin_workspace_view_t::build_mode_prefix() const
 	switch (m_session->load_source())
 	{
 	case plugin_session_t::load_source_t::folder:
-		mode_tag = "[Folder]";
+		mode_tag = "Folder";
 		break;
 	case plugin_session_t::load_source_t::mo2_profile:
-		mode_tag = "[MO2]";
+		mode_tag = "MO2";
 		break;
 	case plugin_session_t::load_source_t::openmw_cfg:
-		mode_tag = "[OpenMW]";
+		mode_tag = "OpenMW";
 		break;
 	default:
 		return {};
 	}
 
-	return mode_tag + " " + QString::fromStdString(m_session->load_base_path()) + " : ";
+	const auto canonical_base = string_utils::canonicalize_path(m_session->load_base_path());
+
+	return mode_tag + " | " + QString::fromStdString(canonical_base) + " | ";
 }
 
 void plugin_workspace_view_t::log_message(const std::string & msg)
@@ -786,7 +868,7 @@ void plugin_workspace_view_t::log_message(const std::string & msg)
 
 void plugin_workspace_view_t::save_session_state()
 {
-	const auto ini_path = settings_store_t::settings_dir() + "yEditor.ini";
+	const auto ini_path = QDir(settings_store_t::settings_dir()).filePath("yEditor.ini");
 
 	m_session->save_session_state(ini_path);
 
@@ -814,10 +896,12 @@ void plugin_workspace_view_t::save_session_state()
 
 void plugin_workspace_view_t::restore_session_state()
 {
-	QSettings settings(settings_store_t::settings_dir() + "yEditor.ini", QSettings::IniFormat);
+	const auto ini_path = QDir(settings_store_t::settings_dir()).filePath("yEditor.ini");
+	QSettings settings(ini_path, QSettings::IniFormat);
 
 	m_conflicts_only = settings.value("view/conflicts_only", false).toBool();
 	m_hide_duplicates = settings.value("view/hide_duplicates", false).toBool();
+	m_editable_columns.set_editing_enabled(m_settings.editing_enabled());
 
 	m_record_view->model()->set_show_deleted_strikeout(settings.value("view/show_deleted_strikeout", false).toBool());
 	m_nav_view->set_show_deleted_strikeout(m_record_view->model()->show_deleted_strikeout());
@@ -835,7 +919,9 @@ void plugin_workspace_view_t::restore_session_state()
 	if (!content_state.isEmpty())
 		m_content_splitter->restoreState(content_state);
 
-	m_session->restore_session_state(settings_store_t::settings_dir() + "yEditor.ini");
+	show_progress(tr("Loading plugins..."));
+	m_session->restore_session_state(ini_path);
+	hide_progress();
 
 	auto rec_type = settings.value("session/nav_rec_type").toString().toStdString();
 	auto record_id = settings.value("session/nav_record_id").toString().toStdString();
@@ -859,6 +945,76 @@ void plugin_workspace_view_t::restore_session_state()
 
 	m_nav_view->tree_widget()->setCurrentIndex(target_index);
 	m_nav_view->tree_widget()->scrollTo(target_index);
+}
+
+void plugin_workspace_view_t::show_progress(const QString & label)
+{
+	if (!m_progress_dialog)
+	{
+		m_progress_dialog = new QProgressDialog(this);
+		m_progress_dialog->setWindowModality(Qt::WindowModal);
+		m_progress_dialog->setCancelButton(nullptr);
+		m_progress_dialog->setMinimumDuration(0);
+		m_progress_dialog->setAutoClose(false);
+		m_progress_dialog->setAutoReset(false);
+
+		const auto * target_screen = screen();
+		if (target_screen)
+		{
+			const int quarter_width = target_screen->availableGeometry().width() / 4;
+			m_progress_dialog->setFixedWidth(quarter_width);
+		}
+	}
+
+	m_progress_label = label;
+	m_progress_dialog->setWindowTitle(label);
+	m_progress_dialog->setLabelText(label);
+	m_progress_dialog->setRange(0, 0);
+	m_progress_dialog->setValue(0);
+	m_progress_dialog->show();
+	QApplication::processEvents();
+}
+
+void plugin_workspace_view_t::update_progress(int done, int total)
+{
+	if (!m_progress_dialog || !m_progress_dialog->isVisible())
+		show_progress(m_progress_label.isEmpty() ? tr("Working...") : m_progress_label);
+
+	if (total > 0 && done < total)
+	{
+		m_progress_dialog->setRange(0, total);
+		m_progress_dialog->setValue(done);
+	}
+	else
+	{
+		m_progress_dialog->setRange(0, 0);
+	}
+
+	QApplication::processEvents();
+}
+
+void plugin_workspace_view_t::set_progress_phase(const QString & label)
+{
+	m_progress_label = label;
+
+	if (!m_progress_dialog || !m_progress_dialog->isVisible())
+	{
+		show_progress(label);
+
+		return;
+	}
+
+	m_progress_dialog->setLabelText(label);
+	QApplication::processEvents();
+}
+
+void plugin_workspace_view_t::hide_progress()
+{
+	if (!m_progress_dialog)
+		return;
+
+	m_progress_dialog->hide();
+	QApplication::processEvents();
 }
 
 void plugin_workspace_view_t::refresh_views()
@@ -898,7 +1054,7 @@ void plugin_workspace_view_t::on_lua_scan_complete(const lua_scan_result_t & res
 	    " conflicts");
 
 	for (const auto & warning : result.warnings)
-		log_message("[warning] " + warning);
+		log_message(warning);
 
 	m_lua_view->set_scan_result(result);
 	update_status();

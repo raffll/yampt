@@ -2,21 +2,20 @@
 
 ## Quick Reproduction (From Scratch)
 
-1. **Clone CTranslate2** into `external/CTranslate2/` with submodules
-2. **Build CTranslate2**:
+1. **Init submodules** (CTranslate2 source + Hunspell dictionaries):
    ```powershell
-   $cmake = "C:\OMEN\Morrowind\vcpkg\downloads\tools\cmake-4.3.2-windows\cmake-4.3.2-windows-x86_64\bin\cmake.exe"
-   cd external/CTranslate2
-   & $cmake -S . -B build -G "Visual Studio 18 2026" -A x64 -DWITH_MKL=OFF -DWITH_CUDA=OFF -DWITH_CUDNN=OFF -DWITH_DNNL=OFF -DWITH_OPENBLAS=OFF -DWITH_RUY=ON -DBUILD_CLI=OFF -DBUILD_TESTS=OFF -DOPENMP_RUNTIME=NONE
-   & $cmake --build build --config Release
+   git submodule update --init --recursive external/CTranslate2
+   git submodule update --init external/dictionaries
    ```
+   CTranslate2 is pinned to a release tag (currently v4.8.1). The dictionaries submodule is copied into `x64\Release\dictionaries\` automatically via `dictionaries.targets`.
+2. **Build CTranslate2** — automatic. The `ctranslate2.targets` file (imported by `yampt.core.vcxproj`) builds the CTranslate2 static lib on the first solution build, when `external/CTranslate2/build/Release/ctranslate2.lib` is missing. It resolves CMake automatically (the CMake bundled with Visual Studio, or `cmake` on PATH) and passes the required flags, including `-DCMAKE_POLICY_VERSION_MINIMUM=3.5` for the old sub-project CMakeLists. Override the CMake executable with the MSBuild property `/p:CTranslate2CMake=path\to\cmake.exe` if needed. To build it manually anyway, invoke the target directly: `msbuild yampt.core\yampt.core.vcxproj /t:BuildCTranslate2 /p:Configuration=Release /p:Platform=x64` (see MSBuild discovery in `project-paths.md`).
 3. **vcpkg install** — just build the solution in VS, vcpkg manifest mode restores packages automatically using the default `x64-windows` triplet
 4. **Download models**:
    ```powershell
    python -m pip install torch transformers ctranslate2 huggingface_hub sentencepiece
    python download_models.py
    ```
-5. **Copy DLL**: `copy external\CTranslate2\build\Release\ctranslate2.dll x64\Release\`
+5. **Copy DLL** — automatic. Each executable project (`yampt.translator`, `yampt.cli`, `yampt.tests`) copies `ctranslate2.dll` into its output directory via a `CopyCTranslate2Dll` post-build target.
 6. **Build solution** in VS (Release x64)
 7. **Run** from repo root (so `models/` relative path works)
 
@@ -38,7 +37,7 @@ Uses the default `x64-windows` triplet. No custom triplet or overlay-triplets co
 
 ## CTranslate2
 
-- Source at `external/CTranslate2/`
+- Git submodule at `external/CTranslate2` (upstream `OpenNMT/CTranslate2`), pinned to a release tag (currently v4.8.1). Init with `git submodule update --init --recursive external/CTranslate2`.
 - Built separately via CMake (VS 18 2026 generator, Release, Ruy backend)
 - Produces `ctranslate2.dll` + `ctranslate2.lib` at `external/CTranslate2/build/Release/`
 - Must copy `ctranslate2.dll` to output dir (`x64/Debug/` or `x64/Release/`) for runtime

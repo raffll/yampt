@@ -21,7 +21,7 @@ validation_result_t byte_limit_validator_t::validate(rec_type_t type, const std:
 	for (size_t i = 0; i < utf8_value.size(); ++i)
 	{
 		unsigned char ch = static_cast<unsigned char>(utf8_value[i]);
-		if (ch == '|' || ch == '~' || ch == '@' || ch == '{' || ch == '}')
+		if (ch == '|' || ch == '~' || ch == '{' || ch == '}')
 			return { validation_level_t::error, byte_count, 0, "forbidden character: " + std::string(1, static_cast<char>(ch)) };
 
 		if (ch <= 0x1F && ch != 0x09 && ch != 0x0D && ch != 0x0A)

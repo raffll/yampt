@@ -143,22 +143,20 @@ TEST_CASE("sub_record_schema_t::find_schema, generic INDX 4-byte has no enum", "
 	REQUIRE(schema->fields[0].enum_names == nullptr);
 }
 
-TEST_CASE("sub_record_schema_t::find_schema, BODY BYDT has 5 fields from 4 bytes", "[u]")
+TEST_CASE("sub_record_schema_t::find_schema, BODY BYDT flags byte", "[u]")
 {
 	const auto * schema = find_schema("BODY", "BYDT", 4);
 	REQUIRE(schema != nullptr);
-	REQUIRE(schema->field_count == 5);
+	REQUIRE(schema->field_count == 4);
 	REQUIRE(std::string(schema->fields[0].name) == "Part");
 	REQUIRE(std::string(schema->fields[1].name) == "Vampire");
-	REQUIRE(std::string(schema->fields[2].name) == "Female");
-	REQUIRE(schema->fields[2].type == field_type_t::bool_bit);
+	REQUIRE(std::string(schema->fields[2].name) == "Flags");
+	REQUIRE(schema->fields[2].type == field_type_t::flags_u8);
 	REQUIRE(schema->fields[2].offset == 2);
-	REQUIRE(schema->fields[2].size == 0);
-	REQUIRE(std::string(schema->fields[3].name) == "Playable");
-	REQUIRE(schema->fields[3].type == field_type_t::bool_bit);
-	REQUIRE(schema->fields[3].offset == 2);
-	REQUIRE(schema->fields[3].size == 1);
-	REQUIRE(std::string(schema->fields[4].name) == "Part Type");
+	REQUIRE(schema->fields[2].flag_count == 2);
+	REQUIRE(std::string(schema->fields[2].flag_names[0]) == "Female");
+	REQUIRE(std::string(schema->fields[2].flag_names[1]) == "Not Playable");
+	REQUIRE(std::string(schema->fields[3].name) == "Part Type");
 }
 
 TEST_CASE("sub_record_schema_t::find_schema, SPEL ENAM 24-byte matches", "[u]")
@@ -166,7 +164,7 @@ TEST_CASE("sub_record_schema_t::find_schema, SPEL ENAM 24-byte matches", "[u]")
 	const auto * schema = find_schema("SPEL", "ENAM", 24);
 	REQUIRE(schema != nullptr);
 	REQUIRE(schema->field_count > 0);
-	REQUIRE(std::string(schema->fields[0].name) == "Effect ID");
+	REQUIRE(std::string(schema->fields[0].name) == "Effect");
 }
 
 TEST_CASE("sub_record_schema_t::find_schema, CLOT ENAM does not match effect schema", "[u]")
@@ -185,7 +183,7 @@ TEST_CASE("sub_record_schema_t::find_schema, ENCH ENAM 24-byte matches", "[u]")
 {
 	const auto * schema = find_schema("ENCH", "ENAM", 24);
 	REQUIRE(schema != nullptr);
-	REQUIRE(std::string(schema->fields[0].name) == "Effect ID");
+	REQUIRE(std::string(schema->fields[0].name) == "Effect");
 }
 
 TEST_CASE("sub_record_schema_t::find_schema, INFO DATA has 5 fields", "[u]")
@@ -390,13 +388,37 @@ TEST_CASE("view_tree_format::make_sub_label, ARMO ENAM context override", "[u]")
 TEST_CASE("view_tree_format::make_sub_label, SPEL ENAM schema label", "[u]")
 {
 	auto label = make_sub_label("ENAM", "SPEL", 24);
-	REQUIRE(label == "ENAM - Spell Effect");
+	REQUIRE(label == "ENAM - Effect");
 }
 
 TEST_CASE("view_tree_format::make_sub_label, ENCH ENAM schema label", "[u]")
 {
 	auto label = make_sub_label("ENAM", "ENCH", 24);
-	REQUIRE(label == "ENAM - Enchantment Effect");
+	REQUIRE(label == "ENAM - Effect");
+}
+
+TEST_CASE("view_tree_format::make_sub_label, ACTI NAME no record name prefix", "[u]")
+{
+	auto label = make_sub_label("NAME", "ACTI", 8);
+	REQUIRE(label == "NAME - ID");
+}
+
+TEST_CASE("view_tree_format::make_sub_label, ACTI FNAM no record name prefix", "[u]")
+{
+	auto label = make_sub_label("FNAM", "ACTI", 8);
+	REQUIRE(label == "FNAM - Name");
+}
+
+TEST_CASE("view_tree_format::make_sub_label, ACTI MODL no record name prefix", "[u]")
+{
+	auto label = make_sub_label("MODL", "ACTI", 8);
+	REQUIRE(label == "MODL - Model");
+}
+
+TEST_CASE("view_tree_format::make_sub_label, unknown schema sub-type falls back to Data", "[u]")
+{
+	auto label = make_sub_label("ZZZZ", "ACTI", 8);
+	REQUIRE(label == "ZZZZ - Data");
 }
 
 TEST_CASE("view_tree_format::make_sub_label, GMST STRV context override", "[u]")
@@ -445,6 +467,12 @@ TEST_CASE("view_tree_format::make_sub_label, SCPT SCDT context override", "[u]")
 {
 	auto label = make_sub_label("SCDT", "SCPT", 100);
 	REQUIRE(label == "SCDT - Bytecode");
+}
+
+TEST_CASE("view_tree_format::make_sub_label, SCPT SCTX no parent name doubling", "[u]")
+{
+	auto label = make_sub_label("SCTX", "SCPT", 100);
+	REQUIRE(label == "SCTX - Script Source");
 }
 
 TEST_CASE("view_tree_format::make_sub_label, ALCH TEXT context override", "[u]")

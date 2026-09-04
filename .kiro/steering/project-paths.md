@@ -47,10 +47,10 @@ yampt/
 ├── yampt.tests/            # Catch2 unit tests
 │   ├── source/
 │   └── yampt.tests.vcxproj
-├── external/               # Third-party (CTranslate2, yyjson) — read only
+├── external/               # Third-party submodules (CTranslate2, dictionaries) + local-only build artifacts/models
 ├── models/                 # CTranslate2 translation models
 ├── scripts/                # PowerShell/Python automation scripts
-├── dictionaries/           # Hunspell spell check dictionaries
+├── dictionaries/           # Holds only LICENSE; .aff/.dic generated at build from external/dictionaries submodule
 ├── x64/Debug/              # Build output
 ├── yampt.sln               # VS 2026 solution
 └── vcpkg.json              # vcpkg manifest
@@ -77,25 +77,31 @@ Never use relative paths like `../../yampt/...` or `../yampt.translator/...` in 
 
 ## External Dependencies — Read Only
 
-NEVER modify files directly in the `external/` folder. These are upstream third-party sources and must remain byte-for-byte identical to their original releases. You can only add new files/folders or remove them entirely. If a library needs patching, do it via wrapper code in the project source files or `imconfig.h` overrides.
+The `external/` folder holds third-party git submodules — `external/CTranslate2` (`OpenNMT/CTranslate2`, pinned release tag) and `external/dictionaries` (`wooorm/dictionaries`) — plus local-only, gitignored content (the built CTranslate2 artifacts under `external/CTranslate2/build/`, translation models, `7za.exe`). NEVER modify files inside a submodule; they must remain byte-for-byte identical to upstream. To change a pinned version, update the submodule and commit the new gitlink. If a library needs patching, do it via wrapper code in the project source files. Other libraries (yyjson, nlohmann-json, sentencepiece, hunspell, Qt, Catch2) come from vcpkg — see `vcpkg.json` — not from `external/`.
+
+Init the submodules after cloning:
+```powershell
+git submodule update --init --recursive external/CTranslate2
+git submodule update --init external/dictionaries
+```
 
 ## Build
 
 Visual Studio (v145 toolset). Open `yampt.sln` and build. Output: `x64/Debug/yampt.exe`, `x64/Debug/yTranslator.exe`, `x64/Debug/yEditor.exe`.
 
-MSBuild path:
-```
-C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe
+MSBuild path — do NOT hardcode the VS edition (Community/Professional/Enterprise differ per machine). Discover it with `vswhere`:
+```powershell
+$msbuild = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -requires Microsoft.Component.MSBuild -find "MSBuild\**\Bin\MSBuild.exe"
 ```
 
 Command-line build (Release x64):
 ```powershell
-& "C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe" yampt.sln /p:Configuration=Release /p:Platform=x64 /m
+& $msbuild yampt.sln /p:Configuration=Release /p:Platform=x64 /m
 ```
 
 Debug build:
 ```powershell
-& "C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe" yampt.sln /p:Configuration=Debug /p:Platform=x64 /m
+& $msbuild yampt.sln /p:Configuration=Debug /p:Platform=x64 /m
 ```
 
 ## Running Tests

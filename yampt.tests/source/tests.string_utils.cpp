@@ -10,6 +10,17 @@ TEST_CASE("string_utils::to_lower, ascii mixed case", "[u]")
 	REQUIRE(string_utils::to_lower("") == "");
 }
 
+TEST_CASE("string_utils::join_path, single separator regardless of trailing or leading slash", "[u]")
+{
+	REQUIRE(string_utils::join_path("dir", "file.txt") == "dir/file.txt");
+	REQUIRE(string_utils::join_path("dir/", "file.txt") == "dir/file.txt");
+	REQUIRE(string_utils::join_path("dir", "/file.txt") == "dir/file.txt");
+	REQUIRE(string_utils::join_path("dir/", "/file.txt") == "dir/file.txt");
+	REQUIRE(string_utils::join_path("a/b/", "c/d") == "a/b/c/d");
+	REQUIRE(string_utils::join_path("", "file.txt") == "file.txt");
+	REQUIRE(string_utils::join_path("dir", "") == "dir");
+}
+
 TEST_CASE("string_utils::normalize_path, backslash to forward slash", "[u]")
 {
 	REQUIRE(string_utils::normalize_path("C:\\Users\\test\\file.txt") == "C:/Users/test/file.txt");
@@ -73,20 +84,20 @@ TEST_CASE("string_utils::to_lower, preserves byte length on accented input", "[u
 	REQUIRE(lowered.size() == upper.size());
 }
 
-TEST_CASE("string_utils::paths_equivalent, same directory different spelling", "[u]")
+TEST_CASE("string_utils::paths_equal, same directory different spelling", "[u]")
 {
-	REQUIRE(string_utils::paths_equivalent("C:\\OMEN\\workspace", "C:/OMEN/workspace") == true);
-	REQUIRE(string_utils::paths_equivalent("C:/OMEN/workspace", "c:/omen/workspace") == true);
-	REQUIRE(string_utils::paths_equivalent("C:\\OMEN\\workspace\\", "C:/OMEN/workspace") == true);
-	REQUIRE(string_utils::paths_equivalent("C:\\OMEN\\Workspace\\", "c:/omen/workspace") == true);
-	REQUIRE(string_utils::paths_equivalent("", "") == true);
+	REQUIRE(string_utils::paths_equal("C:\\OMEN\\workspace", "C:/OMEN/workspace") == true);
+	REQUIRE(string_utils::paths_equal("C:/OMEN/workspace", "c:/omen/workspace") == true);
+	REQUIRE(string_utils::paths_equal("C:\\OMEN\\workspace\\", "C:/OMEN/workspace") == true);
+	REQUIRE(string_utils::paths_equal("C:\\OMEN\\Workspace\\", "c:/omen/workspace") == true);
+	REQUIRE(string_utils::paths_equal("", "") == true);
 }
 
-TEST_CASE("string_utils::paths_equivalent, different directories", "[u]")
+TEST_CASE("string_utils::paths_equal, different directories", "[u]")
 {
-	REQUIRE(string_utils::paths_equivalent("C:/OMEN/workspace", "C:/OMEN/other") == false);
-	REQUIRE(string_utils::paths_equivalent("C:/OMEN/workspace", "C:/OMEN/workspace/sub") == false);
-	REQUIRE(string_utils::paths_equivalent("D:/workspace", "C:/workspace") == false);
+	REQUIRE(string_utils::paths_equal("C:/OMEN/workspace", "C:/OMEN/other") == false);
+	REQUIRE(string_utils::paths_equal("C:/OMEN/workspace", "C:/OMEN/workspace/sub") == false);
+	REQUIRE(string_utils::paths_equal("D:/workspace", "C:/workspace") == false);
 }
 
 TEST_CASE("string_utils::erase_null_chars, removes from first null", "[u]")
@@ -168,4 +179,93 @@ TEST_CASE("string_utils::utf8_to_path, round-trips through path_to_utf8", "[u]")
 
 	const auto path = string_utils::utf8_to_path(utf8_text);
 	REQUIRE(string_utils::path_to_utf8(path) == utf8_text);
+}
+TEST_CASE("string_utils::canonicalize_path, empty input", "[u]")
+{
+	REQUIRE(string_utils::canonicalize_path("") == "");
+}
+
+TEST_CASE("string_utils::canonicalize_path, unix root", "[u]")
+{
+	REQUIRE(string_utils::canonicalize_path("/") == "/");
+}
+
+TEST_CASE("string_utils::canonicalize_path, drive root uppercased", "[u]")
+{
+	REQUIRE(string_utils::canonicalize_path("c:/") == "C:/");
+}
+
+TEST_CASE("string_utils::canonicalize_path, drive path with backslashes", "[u]")
+{
+	REQUIRE(string_utils::canonicalize_path("d:\\a\\b") == "D:/a/b");
+}
+
+TEST_CASE("string_utils::canonicalize_path, backslashes double-dot and trailing slash", "[u]")
+{
+	REQUIRE(string_utils::canonicalize_path("C:\\Users\\..\\Users\\workspace\\") == "C:/Users/workspace");
+}
+
+TEST_CASE("string_utils::canonicalize_path, unc double-dot and trailing slash", "[u]")
+{
+	REQUIRE(string_utils::canonicalize_path("//server/share/../share/folder/") == "//server/share/folder");
+}
+
+TEST_CASE("string_utils::canonicalize_path, dot and double-dot segments", "[u]")
+{
+	REQUIRE(string_utils::canonicalize_path("/home/./user/../user/docs/") == "/home/user/docs");
+}
+
+TEST_CASE("string_utils::canonicalize_path, unix trailing slash", "[u]")
+{
+	REQUIRE(string_utils::canonicalize_path("/a/b/") == "/a/b");
+}
+
+TEST_CASE("string_utils::canonicalize_path, redundant separators collapsed", "[u]")
+{
+	REQUIRE(string_utils::canonicalize_path("C://Users///file") == "C:/Users/file");
+}
+
+TEST_CASE("string_utils::canonicalize_path, relative with double-dot", "[u]")
+{
+	REQUIRE(string_utils::canonicalize_path("relative/../other") == "other");
+}
+
+TEST_CASE("string_utils::canonicalize_path, leading double-dot preserved in relative path", "[u]")
+{
+	REQUIRE(string_utils::canonicalize_path("../../up") == "../../up");
+}
+
+TEST_CASE("string_utils::paths_equal, identical paths equal", "[u]")
+{
+	REQUIRE(string_utils::paths_equal("C:/Users/x", "C:/Users/x") == true);
+}
+
+TEST_CASE("string_utils::paths_equal, separator differences equal", "[u]")
+{
+	REQUIRE(string_utils::paths_equal("C:\\Users\\x", "C:/Users/x") == true);
+}
+
+TEST_CASE("string_utils::paths_equal, trailing slash differences equal", "[u]")
+{
+	REQUIRE(string_utils::paths_equal("C:/Users/x/", "C:/Users/x") == true);
+}
+
+TEST_CASE("string_utils::paths_equal, case differences equal on windows", "[u]")
+{
+	REQUIRE(string_utils::paths_equal("C:/Users/Workspace", "c:/users/workspace") == true);
+}
+
+TEST_CASE("string_utils::paths_equal, dot and double-dot equivalence", "[u]")
+{
+	REQUIRE(string_utils::paths_equal("C:/Users/../Users/x", "C:/Users/x") == true);
+}
+
+TEST_CASE("string_utils::paths_equal, redundant separators equal", "[u]")
+{
+	REQUIRE(string_utils::paths_equal("C://Users///x", "C:/Users/x") == true);
+}
+
+TEST_CASE("string_utils::paths_equal, genuinely different paths not equal", "[u]")
+{
+	REQUIRE(string_utils::paths_equal("C:/Users/a", "C:/Users/b") == false);
 }

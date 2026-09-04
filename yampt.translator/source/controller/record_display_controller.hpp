@@ -3,6 +3,7 @@
 #include "../editor/byte_limit_validator.hpp"
 #include "../editor/edit_history.hpp"
 #include "../editor/glossary.hpp"
+#include "../editor/inflection_store.hpp"
 #include "../highlighter/grammar_checker.hpp"
 #include "../highlighter/highlight_applier.hpp"
 #include "../highlighter/highlight_coordinator.hpp"
@@ -27,6 +28,7 @@ struct record_display_deps_t
 	record_table_model_t & table_model;
 	editor_controller_t & editor_controller;
 	glossary_t & glossary;
+	inflection_store_t & inflection_store;
 	grammar_checker_t & grammar_checker;
 	byte_limit_validator_t & byte_limit_validator;
 	edit_history_t & edit_history;
@@ -48,6 +50,7 @@ public:
 
 	void load_record(int row, document_t * active_doc);
 	void apply_translation_highlights(const table_row_t * row_data);
+	void refresh_highlight_filter(const table_row_t * row_data);
 	void update_validation();
 	void update_annotations(document_t * active_doc);
 

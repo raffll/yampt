@@ -18,7 +18,7 @@ Open File → Add Folder and point it to a directory containing your plugins and
 
 Files are color-coded by type: green for plugins, gold for base dictionaries, blue for user dictionaries, purple for YAML localization files. An asterisk prefix indicates unsaved changes.
 
-Right-click a file or folder to access its context menu. Plugins offer Make Dictionary, Make Base Dictionary, Convert Plugin, Convert Plugin with Hyperlinks, Create Patch Plugin, and Delete. Dictionaries offer Save, Generate Localization Files, and Delete. YAML foreign files offer Make Translation (creates a native scaffold) and Delete. YAML native files offer Save and Delete. Localization files (.cel, .mrk, .top) offer Delete. Folders offer Remove Folder (unload from sidebar) and Delete Folder (remove from disk).
+Right-click a file or folder to access its context menu. Plugins offer Make Dictionary, Make Base Dictionary, Convert Plugin, Convert Plugin with Hyperlinks, Create Patch Plugin, and Delete. Dictionaries offer Save, Apply Topic Tags, Remove Topic Tags, Generate Localization Files, and Delete. YAML foreign files offer Make Translation (creates a native scaffold) and Delete. YAML native files offer Save and Delete. Localization files (.cel, .mrk, .top) offer Delete. Folders offer Remove Folder (unload from sidebar) and Delete Folder (remove from disk).
 
 ## Operations
 
@@ -53,9 +53,9 @@ Works like Convert Plugin, but additionally inserts hyperlink markers around dia
 
 Works like Convert Plugin but the output file contains only the records that were actually modified. Use this to produce a lightweight translation patch.
 
-### Merge Dictionaries
+### Dictionary Merger
 
-Tools → Merge Dictionaries opens a dialog where you select multiple dictionaries and an output path. Dictionaries are merged in priority order — the last one in the list wins when entries conflict.
+Tools → Dictionary Merger opens a dialog where you select multiple dictionaries and an output path. Dictionaries are merged in priority order — the last one in the list wins when entries conflict.
 
 ### Generate Localization Files
 
@@ -67,6 +67,18 @@ Right-click a dictionary in the sidebar and select Generate Localization Files. 
 
 Only entries with status Translated and where the original differs from the translation are included. The output files use the codepage set in Language settings.
 
+### Apply Topic Tags
+
+Right-click a dictionary in the sidebar and select Apply Topic Tags. This scans the text of every dialogue response in that dictionary, regardless of its status, and wraps any dialogue topic it finds with hyperlink tags, so the topics appear as clickable links in-game. Only dialogue responses are tagged; voice lines are left untouched.
+
+Alongside the canonical topic names, it also tags inflected forms of those topics, so a topic mentioned in a declined form is still linked. These forms are read from the dictionary's generated .top file, so run Generate Localization Files first if you want inflected forms tagged. An inflected form is only tagged where it does not overlap a direct topic link, which always takes priority.
+
+It is a refresh: existing tags are removed first and re-inserted from the current set of topics, so running it again does not nest or duplicate tags. Each changed entry is recorded in history and can be reverted, and a summary of the changes is written to the log. The action is offered only for dictionaries, not for localization files.
+
+### Remove Topic Tags
+
+Right-click a dictionary in the sidebar and select Remove Topic Tags. This strips all topic hyperlink tags from the translated text of every dialogue response in that dictionary, leaving the plain text. Each changed entry is recorded in history and can be reverted, and a summary is written to the log.
+
 ### Find/Replace
 
 Find/Replace is a dedicated tab in the left panel, alongside Files, Filters, and Statuses. Type the text to find in the Search field and the replacement in the Replace field below it. Use the Aa button for case-sensitive matching or the .* button for regular expression mode. Replacement always operates on the translation field.
@@ -75,7 +87,7 @@ Replace All replaces the search term in all currently visible entries. Only entr
 
 Entries modified by Replace All receive the status Replaced. This makes it easy to filter and review all changes after a batch operation.
 
-Each replacement is recorded individually in the edit history. To undo a replacement, select the affected entries in the Records table, right-click, and choose Revert. This restores the text and status each entry had before the replacement. You can also view and revert individual entries from the History panel.
+Each replacement is recorded individually in the edit history. To undo a replacement, select the affected entries in the Records table, right-click, and choose Revert. This restores the text and status each entry had before the replacement. You can also revert from the History panel: it lists the recorded changes for the selected entry with the most recent at the top. Right-click a change and choose Revert to restore the entry to that state.
 
 ### EET Import
 
@@ -107,6 +119,8 @@ Press Escape to clear the search and show all rows again.
 
 The Statuses tab shows a list of all statuses present in the current dictionary, each with a colored bullet and a count. Click a status to solo it (show only entries with that status). Right-click to toggle individual statuses on or off. Click "All" to reset and show everything. The status filter operates independently from the type filter.
 
+Localization files (.cel, .top, .mrk) have no status, so their entries show only the Original and Translation columns, and the Statuses tab is empty while such a file is open.
+
 ## Type Filter (Filters tab)
 
 The Filters tab shows record types present in the current dictionary (CELL, DIAL, INFO, FNAM, TEXT, GMST, etc.). Click a type to solo it. Right-click to toggle. Works independently from the status filter.
@@ -116,9 +130,9 @@ The Filters tab shows record types present in the current dictionary (CELL, DIAL
 - **Toggle Sidebar** — show or hide the left panel entirely.
 - **Toggle Bottom Panel** — show or hide the editor area.
 - **Spell Check** — when enabled, misspelled words in the Translation panel are underlined in red. Uses Hunspell dictionaries configured in Settings → Language.
-- **Grammar Check** — highlights common issues: double spaces, unmatched quotes or parentheses, missing terminal punctuation. Quoted text within entries is shown in a lighter color for visual distinction.
+- **Grammar Check** — marks common issues with an amber wavy underline (distinct from the red wavy underline used for spelling): double spaces, unmatched quotes or parentheses, missing terminal punctuation. Quoted text within entries is shown in a lighter color for visual distinction.
 - **Whitespace Markers** — renders spaces as dots and line endings as paragraph marks in the editor panels.
-- **Sync Scrolling** — locks the scroll position between the Original and Translation panels so they stay aligned as you scroll either one.
+- **Sync Scrolling** — locks the scroll position between the Original and Translation panels so they stay aligned as you scroll either one. The setting is remembered between sessions.
 
 ## Keyboard Shortcuts
 
@@ -138,13 +152,15 @@ The Annotations tab shows contextual information about the currently selected en
 
 For INFO entries, the panel shows the speaker's NPC name and gender when available. For FNAM entries belonging to weapons, armor, clothing, or books, it shows the enchantment ID if the item is enchanted. These metadata fields help translators choose correct grammatical forms in languages where gender or item properties affect the translation.
 
-The Original and Translation panels also highlight recognized terms inline: dialog topic names appear in blue (matching known DIAL entries), and glossary terms from loaded base dictionaries appear in green.
+The Original and Translation panels also highlight recognized terms inline: dialog topic names appear in blue (matching known DIAL entries), glossary terms from loaded base dictionaries appear in green, and inflected topic forms appear in their own distinct color. Only entries marked Translated contribute topic links and glossary terms. Toggle buttons beside the Next button control what is marked in the translation editor. H, I, and G turn the hyperlink, inflection, and glossary highlights on or off; turning one off lets a lower-priority highlight take over the same word, so disabling hyperlinks reveals the inflection highlight on a word that is both a topic and an inflected form, and these choices are remembered between sessions. S, Gr, and W toggle spell check, grammar check, and whitespace markers, mirroring the matching entries in the View menu so either place stays in step with the other.
+
+When one or more localization files (.top or .mrk) are loaded in the workspace, the Annotations tab adds an Inflection section related to the current entry's translation. When any form of a topic appears in the text, every known form of that topic is listed, not only the one present, so you can see the full set of declensions at a glance. The tab is a two-column table: the first column shows each annotation and the second shows the source file it came from, and the columns can be resized. Clicking an entry copies the standard form. This section appears whether you are editing a dictionary or viewing a localization file.
 
 ## Auto Translate
 
 The Auto Translate tab at the bottom-left provides machine translation. Select a provider from the combo box, then click Translate to fill the translation field with a suggestion.
 
-- **CTranslate2** — an offline translation model that runs locally. Supports Polish, German, French, Russian, Italian, and Hungarian. Does not require an internet connection. The model must be present in the `models/` folder next to the application.
+- **CTranslate2** — an offline translation model that runs locally. Supports Polish, German, French, Russian, Italian, Hungarian, Spanish, Portuguese, Czech, Slovak, Slovenian, Croatian, Romanian, Ukrainian, Bulgarian, Serbian, Dutch, Swedish, Danish, Norwegian Bokmal, Finnish, Catalan, and Galician. Finnish can be translated but has no spell-check dictionary. Does not require an internet connection. The model must be present in the `models/` folder next to the application.
 - **Web providers** — online services like DeepL, Google Translate, and Claude. Each requires an API key configured in Settings → Auto Translation. The source language is read from your Language settings automatically.
 
 When the selected provider is an AI service that offers a choice of models, a model combo box appears on the row below the provider selector. It lets you pick which model performs the translation from the list the provider offers. The chosen model is remembered separately for each provider and restored the next time you select that provider. Providers without a model choice (CTranslate2 and simple translation services) do not show this control.
@@ -171,13 +187,13 @@ The context menu also lets you teach an AI provider your preferred style. Right-
 - **Outdated** — like Changed, but the entry had not been approved as Translated before the source text changed.
 - **Ambiguous** — multiple entries in the base dictionary offer different translations for the same original text. The Details panel lists all candidates. Pick the correct one and set to Translated.
 - **Reused** — the base dictionary contained a matching original text under a different key. The translation was copied from that entry.
-- **Propagated** — after you committed a translation, all entries sharing the same original text (including the committed entry itself) were updated to match. Both the source and all targets receive this status.
+- **Propagated** — after you committed a translation, all entries sharing the same original text (including the committed entry itself) were updated to match. Both the source and all targets receive this status. Propagation applies even when the translation is identical to the original (a proper noun). Entries that already hold the same translation are left untouched, and an entry is skipped if its record type cannot hold the text within its byte limit (for example a long translation is not propagated to a short-limit name field).
 - **Replaced** — the translation was modified by a Replace All operation. Review the result and set to Translated when satisfied.
 - **Missing** — during Make Base Dictionary, this record existed in the foreign file but no corresponding record was found in the native file. Requires manual translation.
 - **Heuristic** — during Make Base Dictionary, this cell or topic was matched by the translation engine heuristic rather than by exact record pairing. The match may be incorrect. Verify the translation and set to Translated if correct.
 - **Duplicate** — the same key appeared more than once in the source plugin. Only the first occurrence is stored.
 - **Mismatch** — during Make Base Dictionary, a record existed in the native file with no corresponding record in the foreign file. Informational; no action needed.
-- **Error** — the translation exceeds the maximum byte length allowed for this sub-record type and cannot be written to the plugin. Shorten the translation.
+- **Error** — the translation cannot be written to the plugin, either because it exceeds the maximum byte length for this sub-record type, contains a forbidden character, or contains a character not representable in the plugin's codepage. The validation line at the bottom states the specific reason. An entry with this status is not propagated to other entries. Fix the translation to clear it.
 
 ## Settings
 
@@ -185,5 +201,5 @@ Open Settings via Ctrl+, or the Tools menu. Four pages are available:
 
 - **Appearance** — choose between light and dark theme.
 - **Shortcuts** — customize keyboard shortcuts for all actions. Conflicts are highlighted in red.
-- **Language** — set the foreign language (source) and native language (target). Choose a spell check dictionary for the Translation panel. Configure the English dictionary used for partial mode in Make Base Dictionary. The Encoding line shows which byte encoding the selected native language uses for reading and writing plugin text (Polish and Hungarian use Windows-1250, Russian uses Windows-1251, the others use Windows-1252). This is determined by the language and is shown for reference.
-- **Auto Translation** — three tabs. Local Models shows installed offline translation models and their supported languages. Web Providers shows all discovered online services with a field for each API key and an indicator of whether the provider is configured and ready to use; model selection lives in the Auto Translate panel, not here. Examples lists the translation pairs you have marked as AI style references, each with its original and translation and a Remove control to delete it. When you have not marked any examples the tab shows a message saying so, and the list holds at most twenty examples.
+- **Language** — set the foreign language (source) and native language (target); both lists are ordered alphabetically. Choose a spell check dictionary for the Translation panel. Configure the English dictionary used for partial mode in Make Base Dictionary. The Encoding line shows which byte encoding the selected native language uses for reading and writing plugin text (Central and Eastern European languages such as Polish, Hungarian, Czech, Slovak, Slovenian, Croatian, and Romanian use Windows-1250; Cyrillic languages such as Russian, Ukrainian, Bulgarian, and Serbian use Windows-1251; the Western European languages use Windows-1252). This is determined by the language and is shown for reference. A Spell Check line below it reports whether the chosen native dictionary loads and which one, so a missing or unreadable dictionary is visible without leaving the page.
+- **Auto Translation** — five tabs. Local Models shows installed offline translation models and their supported languages. Web Providers shows all discovered online services with a field for each API key and an indicator of whether the provider is configured and ready to use; model selection lives in the Auto Translate panel, not here. Prompt holds the system prompt sent to AI providers; it is a single instruction shared by every AI provider, and a Reset to Default button restores the built-in prompt. The prompt is a template: it may include placeholders for the source and target languages, for the marked examples, and for the known dialogue topics, and each placeholder is filled in when a translation is requested. If you remove a placeholder, that part is simply left out. Preview is a read-only tab showing the full prompt exactly as it will be sent, with the languages and examples resolved; the dialogue topics depend on the entry being translated and are noted rather than listed. Examples lists the translation pairs you have marked as AI style references, each with its original and translation and a Remove control to delete it. When you have not marked any examples the tab shows a message saying so, and the list holds at most twenty examples.

@@ -116,7 +116,7 @@ void main_window_t::setup_menu_bar()
 	view_menu->addAction(m_sync_scroll_check);
 
 	auto * tools_menu = menuBar()->addMenu(tr("&Tools"));
-	auto * merge_action = tools_menu->addAction(tr("&Merge Dictionaries..."));
+	auto * merge_action = tools_menu->addAction(tr("&Dictionary Merger..."));
 	merge_action->setToolTip(tr("Merge loaded dictionaries into one"));
 	connect(
 	    merge_action,
@@ -192,7 +192,7 @@ void main_window_t::setup_replace_toolbar()
 	m_replace_toolbar = new QWidget(this);
 
 	auto * layout = new QVBoxLayout(m_replace_toolbar);
-	layout->setContentsMargins(4, 4, 4, 4);
+	layout->setContentsMargins(2, 2, 2, 2);
 	layout->setSpacing(4);
 
 	m_find_field = new QLineEdit(this);
@@ -380,10 +380,17 @@ void main_window_t::connect_menu_signals()
 	    this,
 	    [this](bool checked)
 	{
-		if (checked)
-			m_hl_translation->set_spell_checker(&m_spell_checker);
-		else
+		if (!checked)
+		{
 			m_hl_translation->set_spell_checker(nullptr);
+			return;
+		}
+
+		if (!m_spell_checker.is_loaded())
+			on_spell_lang_changed();
+
+		if (m_spell_checker.is_loaded())
+			m_hl_translation->set_spell_checker(&m_spell_checker);
 	});
 
 	connect(
@@ -456,7 +463,7 @@ void main_window_t::connect_menu_signals()
 
 		const auto archive_name = QFileInfo(archive_path).completeBaseName();
 		const auto target_dir =
-		    QString::fromStdString(resource_paths::workspace_dir()) + archive_name;
+		    QDir(QString::fromStdString(resource_paths::workspace_dir())).filePath(archive_name);
 		QDir().mkpath(target_dir);
 
 		QProcess proc;
@@ -487,7 +494,7 @@ void main_window_t::connect_menu_signals()
 			const auto path = m_active_doc->path();
 			switch_document(nullptr);
 			m_session.close(path);
-			m_filter_states.erase(path);
+			m_filter_states.erase(string_utils::canonicalize_path(path));
 			rebuild_annotations();
 			m_last_annotation_version = m_session.dict_version();
 		}
@@ -567,6 +574,38 @@ void main_window_t::connect_sidebar_signals()
 	    &sidebar_view_t::generate_loc_requested,
 	    this,
 	    [this](const std::string & path) { m_sidebar_controller->on_generate_loc_requested(path); });
+
+	connect(
+	    m_sidebar,
+	    &sidebar_view_t::apply_tags_requested,
+	    this,
+	    [this](const std::string & path)
+	{
+		auto * doc = m_session.open(path);
+		auto * dict_doc = dynamic_cast<dict_document_t *>(doc);
+		if (!dict_doc)
+			return;
+
+		switch_document(dict_doc);
+		if (m_dict_ops_controller)
+			m_dict_ops_controller->on_apply_tags(dict_doc);
+	});
+
+	connect(
+	    m_sidebar,
+	    &sidebar_view_t::remove_tags_requested,
+	    this,
+	    [this](const std::string & path)
+	{
+		auto * doc = m_session.open(path);
+		auto * dict_doc = dynamic_cast<dict_document_t *>(doc);
+		if (!dict_doc)
+			return;
+
+		switch_document(dict_doc);
+		if (m_dict_ops_controller)
+			m_dict_ops_controller->on_remove_tags(dict_doc);
+	});
 
 	connect(
 	    m_sidebar,
@@ -795,6 +834,41 @@ void main_window_t::connect_editor_signals()
 
 	connect(m_editor_view, &editor_view_t::text_changed, this, &main_window_t::on_translation_changed);
 
+	connect(
+	    m_editor_view,
+	    &editor_view_t::highlight_filter_changed,
+	    this,
+	    [this]()
+	{
+		const auto kinds = m_editor_view->enabled_highlight_kinds();
+		int mask = 0;
+		if (kinds.count(highlight_kind_t::hyperlink))
+			mask |= 0x1;
+
+		if (kinds.count(highlight_kind_t::inflection))
+			mask |= 0x2;
+
+		if (kinds.count(highlight_kind_t::glossary))
+			mask |= 0x4;
+
+		m_settings.set_highlight_kinds_mask(mask);
+
+		if (m_editor_controller.current_row() < 0)
+			return;
+
+		const auto * row_data = m_table_model->row_at(m_editor_controller.current_row());
+		if (row_data)
+			m_record_display_controller->refresh_highlight_filter(row_data);
+	});
+
+	connect(m_editor_view, &editor_view_t::spell_check_toggled, m_spell_check, &QAction::setChecked);
+	connect(m_editor_view, &editor_view_t::grammar_check_toggled, m_grammar_check, &QAction::setChecked);
+	connect(m_editor_view, &editor_view_t::whitespace_toggled, m_whitespace_check, &QAction::setChecked);
+
+	connect(m_spell_check, &QAction::toggled, m_editor_view, &editor_view_t::set_spell_check_checked);
+	connect(m_grammar_check, &QAction::toggled, m_editor_view, &editor_view_t::set_grammar_check_checked);
+	connect(m_whitespace_check, &QAction::toggled, m_editor_view, &editor_view_t::set_whitespace_checked);
+
 	connect(m_editor_view, &editor_view_t::apply_clicked, this, [this]() { advance_to_next_row(); });
 
 	connect(
@@ -882,8 +956,7 @@ void main_window_t::connect_editor_signals()
 		}
 		else
 		{
-			const auto prepared = m_glossary.apply_glossary(row_data->old_text);
-			m_translation_tab->request_translation(prepared);
+			m_translation_tab->request_translation_segments(row_data->old_text);
 		}
 	});
 
@@ -909,6 +982,17 @@ void main_window_t::connect_editor_signals()
 			joined.append(QString::fromStdString(line));
 
 		m_editor_view->translation_editor()->setPlainText(joined.join('\n'));
+		m_editor_controller.set_pending_status(status_t::model);
+		advance_to_next_row();
+	});
+
+	connect(
+	    m_translation_tab,
+	    &translation_suggestion_view_t::translation_segments_committed,
+	    this,
+	    [this](const std::string & reassembled_text)
+	{
+		m_editor_view->translation_editor()->setPlainText(QString::fromStdString(reassembled_text));
 		m_editor_controller.set_pending_status(status_t::model);
 		advance_to_next_row();
 	});

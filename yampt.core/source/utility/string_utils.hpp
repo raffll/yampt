@@ -47,6 +47,27 @@ inline std::filesystem::path utf8_to_path(std::string_view utf8_text)
 	return std::filesystem::path(utf8_bytes);
 }
 
+inline std::string join_path(std::string_view base, std::string_view leaf)
+{
+	if (base.empty())
+		return std::string(leaf);
+
+	if (leaf.empty())
+		return std::string(base);
+
+	std::string result(base);
+	if (result.back() == '/' || result.back() == '\\')
+		result.pop_back();
+
+	result += '/';
+
+	if (leaf.front() == '/' || leaf.front() == '\\')
+		leaf.remove_prefix(1);
+
+	result += leaf;
+	return result;
+}
+
 inline std::string_view extract_filename(std::string_view path)
 {
 	const auto pos = path.find_last_of("\\/");
@@ -100,10 +121,9 @@ std::string to_lower_utf8(std::string_view input);
 
 bool case_insensitive_equal_utf8(std::string_view lhs, std::string_view rhs);
 
-inline bool paths_equivalent(std::string_view lhs, std::string_view rhs)
-{
-	return case_insensitive_equal(normalize_path(lhs), normalize_path(rhs));
-}
+std::string canonicalize_path(std::string_view input);
+
+bool paths_equal(std::string_view lhs, std::string_view rhs);
 
 inline std::string erase_null_chars(std::string str)
 {

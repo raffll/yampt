@@ -6,8 +6,49 @@
 #include "merge_controller.hpp"
 #include <scanner/record_conflict.hpp>
 #include <utility/record_behavior.hpp>
+#include <set>
+#include <string>
+#include <QAction>
 #include <QCoreApplication>
+#include <QDir>
 #include <QMenu>
+#include <QMessageBox>
+
+static std::set<std::string> parse_ignore_rules(const std::string & serialized)
+{
+	std::set<std::string> rules;
+	size_t start = 0;
+
+	while (start < serialized.size())
+	{
+		auto comma = serialized.find(',', start);
+		if (comma == std::string::npos)
+			comma = serialized.size();
+
+		auto token = serialized.substr(start, comma - start);
+		auto trim_start = token.find_first_not_of(' ');
+		if (trim_start != std::string::npos)
+			rules.insert(token.substr(trim_start));
+
+		start = comma + 1;
+	}
+
+	return rules;
+}
+
+static std::string serialize_ignore_rules(const std::set<std::string> & rules)
+{
+	std::string result;
+	for (const auto & rule : rules)
+	{
+		if (!result.empty())
+			result += ", ";
+
+		result += rule;
+	}
+
+	return result;
+}
 
 view_context_menu_t::view_context_menu_t(
     plugin_session_t & session,
@@ -39,6 +80,21 @@ void view_context_menu_t::show_nav_menu(const QPoint & global_pos, const nav_tre
 		menu.addAction(
 		    QCoreApplication::translate("yEditor", "Remove Record from Merged Patch"),
 		    [this, info]() { m_merge.remove_record_from_merge(info.rec_type, info.record_id); });
+	}
+	else if (!info.record_id.empty() && !is_merge)
+	{
+		const bool record_in_merge = m_session.scan().find_merge_content(info.rec_type, info.record_id) != nullptr;
+		auto * copy_action = menu.addAction(
+		    QCoreApplication::translate("yEditor", "Copy Record to Merged Patch"),
+		    [this, info]() { m_merge.copy_whole_record(info.plugin_idx, info.rec_type, info.record_id); });
+		copy_action->setEnabled(m_session.scan().has_merge() && !record_in_merge);
+
+		menu.addSeparator();
+
+		auto * remove_action = menu.addAction(
+		    QCoreApplication::translate("yEditor", "Remove Record from Plugin"),
+		    [this, info]() { confirm_remove_record_from_plugin(info); });
+		remove_action->setEnabled(m_record_view.model()->is_editing_enabled());
 	}
 	else if (info.rec_type.empty() && info.record_id.empty() && !is_merge)
 	{
@@ -92,7 +148,7 @@ void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_mo
 		}
 
 		m_session.set_excluded_plugins(excluded_copy);
-		m_session.save_session_state(settings_store_t::settings_dir() + "yEditor.ini");
+		m_session.save_session_state(QDir(settings_store_t::settings_dir()).filePath("yEditor.ini"));
 		m_nav_view.rebuild_preserving_state();
 	});
 
@@ -116,9 +172,35 @@ void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_mo
 		}
 
 		m_session.set_patch_plugins(patch_copy);
-		m_session.save_session_state(settings_store_t::settings_dir() + "yEditor.ini");
+		m_session.save_session_state(QDir(settings_store_t::settings_dir()).filePath("yEditor.ini"));
 		m_nav_view.rebuild_preserving_state();
 	});
+}
+
+void view_context_menu_t::confirm_remove_record_from_plugin(const nav_tree_model_t::node_info_t & info)
+{
+	const auto & filename = m_session.scan().plugin_filename(info.plugin_idx);
+
+	const auto title = QCoreApplication::translate("yEditor", "Remove Record");
+	const auto message = QCoreApplication::translate(
+	                         "yEditor",
+	                         "Remove record %1:%2 from \"%3\"?\n\nThis cannot be undone. The record is dropped from the "
+	                         "plugin in memory and disappears from the file when you save it.")
+	                         .arg(QString::fromStdString(info.rec_type))
+	                         .arg(QString::fromStdString(info.record_id))
+	                         .arg(QString::fromStdString(filename));
+
+	const auto choice =
+	    QMessageBox::question(nullptr, title, message, QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+
+	if (choice != QMessageBox::Yes)
+		return;
+
+	if (!m_merge.remove_record_from_plugin(info.plugin_idx, info.rec_type, info.record_id))
+		return;
+
+	if (m_on_unsaved_changed)
+		m_on_unsaved_changed(m_session.has_any_unsaved());
 }
 
 void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModelIndex & index)
@@ -137,7 +219,7 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 	const int parent_row_idx = is_field_row ? index.parent().row() : index.row();
 
 	const auto & visible = m_record_view.model()->rows();
-	if (parent_row_idx < 0 || parent_row_idx >= static_cast<int>(visible.size()))
+	if (!is_field_row && (parent_row_idx < 0 || parent_row_idx >= static_cast<int>(visible.size())))
 		return;
 
 	const int col = index.column() - 1;
@@ -149,6 +231,14 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 	const int bin_idx = (has_valid_column && col < static_cast<int>(row.binary_ranges.size()))
 	                        ? row.binary_ranges[col].start
 	                        : -1;
+
+	m_merge.debug_log(
+	    "show_view_menu: label=\"" + row.label + "\" type=\"" + row.type + "\" is_field_row=" +
+	    std::to_string(is_field_row) + " parent_row_idx=" + std::to_string(parent_row_idx) + " visible=" +
+	    std::to_string(visible.size()) + " col=" + std::to_string(col) + " has_valid_column=" +
+	    std::to_string(has_valid_column) + " has_merge=" + std::to_string(m_session.scan().has_merge()) +
+	    " schema_field_index=" + std::to_string(row.schema_field_index) + " bit_index=" +
+	    std::to_string(row.bit_index));
 
 	const auto kind = [&]() -> row_kind_t
 	{
@@ -185,7 +275,10 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 		const bool record_in_merge = m_session.scan().find_merge_content(rec_type, record_id) != nullptr;
 
 		if (is_on_merge)
+		{
 			build_merge_remove_menu(menu, context);
+			build_lock_menu(menu, context);
+		}
 		else if (!record_in_merge)
 			build_copy_to_merge_menu(menu, context);
 		else
@@ -193,53 +286,51 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 	}
 
 	if (kind == row_kind_t::sub_record || kind == row_kind_t::schema_record)
-	{
-		const auto sub_type = row.type;
-		const auto rule = rec_type + ":" + sub_type;
-
-		if (!menu.actions().isEmpty())
-			menu.addSeparator();
-
-		menu.addAction(
-		    QCoreApplication::translate("yEditor", "Exclude Sub-Record \"%1\"").arg(QString::fromStdString(rule)),
-		    [this, rule]()
-		{
-			auto current = m_settings.sub_record_ignore_conflict();
-
-			std::set<std::string> existing;
-			size_t start = 0;
-			while (start < current.size())
-			{
-				auto comma = current.find(',', start);
-				if (comma == std::string::npos)
-					comma = current.size();
-
-				auto token = current.substr(start, comma - start);
-				auto trim_start = token.find_first_not_of(" ");
-				if (trim_start != std::string::npos)
-					existing.insert(token.substr(trim_start));
-
-				start = comma + 1;
-			}
-
-			if (existing.count(rule))
-				return;
-
-			if (!current.empty())
-				current += ", ";
-
-			current += rule;
-			m_settings.set_sub_record_ignore_conflict(current);
-
-			if (m_on_settings_changed)
-				m_on_settings_changed();
-		});
-	}
+		build_sub_record_ignore_menu(menu, context);
 
 	if (menu.actions().isEmpty())
 		return;
 
 	menu.exec(global_pos);
+}
+
+void view_context_menu_t::build_sub_record_ignore_menu(QMenu & menu, const view_menu_context_t & context)
+{
+	const auto rule = context.rec_type + ":" + context.row.type;
+	const auto wildcard = context.rec_type + ":*";
+	const auto rules = parse_ignore_rules(m_settings.sub_record_ignore_conflict());
+
+	const bool excluded_by_rule = rules.count(rule) > 0;
+	const bool excluded_by_wildcard = rules.count(wildcard) > 0;
+	const bool already_excluded = excluded_by_rule || excluded_by_wildcard;
+
+	if (!menu.actions().isEmpty())
+		menu.addSeparator();
+
+	const auto label = already_excluded ? QCoreApplication::translate("yEditor", "Include Sub-Record \"%1\"")
+	                                     : QCoreApplication::translate("yEditor", "Exclude Sub-Record \"%1\"");
+
+	auto * action = menu.addAction(
+	    label.arg(QString::fromStdString(rule)),
+	    [this, rule, excluded_by_rule]() { toggle_ignore_rule(rule, excluded_by_rule); });
+
+	if (excluded_by_wildcard && !excluded_by_rule)
+		action->setEnabled(false);
+}
+
+void view_context_menu_t::toggle_ignore_rule(const std::string & rule, bool remove_rule)
+{
+	auto rules = parse_ignore_rules(m_settings.sub_record_ignore_conflict());
+
+	if (remove_rule)
+		rules.erase(rule);
+	else
+		rules.insert(rule);
+
+	m_settings.set_sub_record_ignore_conflict(serialize_ignore_rules(rules));
+
+	if (m_on_settings_changed)
+		m_on_settings_changed();
 }
 
 void view_context_menu_t::build_copy_to_merge_menu(QMenu & menu, const view_menu_context_t & context)
@@ -262,6 +353,59 @@ void view_context_menu_t::build_copy_to_merge_menu(QMenu & menu, const view_menu
 		    QCoreApplication::translate("yEditor", "Copy Record to Merged Patch"),
 		    [this, &context]() { m_merge.copy_whole_record(context.plugin_idx, context.rec_type, context.record_id); });
 	}
+}
+
+field_binary_resolver::resolved_field_t view_context_menu_t::resolve_schema_field(
+    const view_menu_context_t & context) const
+{
+	std::vector<const view_tree_model_t::view_node_t *> ancestors;
+	QModelIndex ancestor_index = context.index.parent();
+
+	while (ancestor_index.isValid())
+	{
+		ancestors.push_back(m_record_view.model()->node_from_index(ancestor_index));
+		ancestor_index = ancestor_index.parent();
+	}
+
+	return field_binary_resolver::resolve(ancestors, context.col, context.row.schema_field_index);
+}
+
+field_binary_resolver::resolved_bit_t view_context_menu_t::resolve_schema_bit(
+    const view_menu_context_t & context) const
+{
+	std::vector<const view_tree_model_t::view_node_t *> ancestors;
+	QModelIndex ancestor_index = context.index.parent();
+
+	while (ancestor_index.isValid())
+	{
+		ancestors.push_back(m_record_view.model()->node_from_index(ancestor_index));
+		ancestor_index = ancestor_index.parent();
+	}
+
+	return field_binary_resolver::resolve_bit(
+	    ancestors, context.col, context.row.schema_field_index, context.row.bit_index);
+}
+
+void view_context_menu_t::add_copy_bit_action(QMenu & menu, const view_menu_context_t & context)
+{
+	const auto resolved = resolve_schema_bit(context);
+	if (!resolved.found)
+		return;
+
+	merge_controller_t::copy_bit_params_t params;
+	params.plugin_idx = context.plugin_idx;
+	params.rec_type = context.rec_type;
+	params.record_id = context.record_id;
+	params.bit.record_type = context.rec_type;
+	params.bit.sub_type = resolved.sub_type;
+	params.bit.sub_size = resolved.sub_size;
+	params.bit.binary_idx = resolved.binary_index;
+	params.bit.field_idx = resolved.field_index;
+	params.bit.bit_index = resolved.bit_index;
+
+	menu.addAction(
+	    QCoreApplication::translate("yEditor", "Copy Bit to Merged Patch"),
+	    [this, params]() { m_merge.copy_bit(params); });
 }
 
 void view_context_menu_t::build_source_copy_menu(QMenu & menu, const view_menu_context_t & context)
@@ -291,27 +435,19 @@ void view_context_menu_t::build_source_copy_menu(QMenu & menu, const view_menu_c
 
 	case row_kind_t::field_of_schema:
 	{
-		QModelIndex sub_record_index = context.index.parent();
-		const auto * sub_record_node = m_record_view.model()->node_from_index(sub_record_index);
-
-		while (sub_record_node && sub_record_node->type.empty() && sub_record_index.parent().isValid())
+		if (context.row.bit_index >= 0)
 		{
-			sub_record_index = sub_record_index.parent();
-			sub_record_node = m_record_view.model()->node_from_index(sub_record_index);
+			add_copy_bit_action(menu, context);
+			break;
 		}
 
-		if (!sub_record_node || sub_record_node->type.empty())
+		const auto resolved = resolve_schema_field(context);
+		if (!resolved.found)
 			break;
 
-		if (context.row.schema_field_index < 0)
-			break;
-
-		const auto sub_type = sub_record_node->type;
-		const auto sub_size = sub_record_node->size;
-		const int field_bin =
-		    (context.col >= 0 && context.col < static_cast<int>(sub_record_node->binary_ranges.size()))
-		        ? sub_record_node->binary_ranges[context.col].start
-		        : -1;
+		const auto sub_type = resolved.sub_type;
+		const auto sub_size = resolved.sub_size;
+		const int field_bin = resolved.binary_index;
 		const int child_field_idx = context.row.schema_field_index;
 
 		menu.addAction(
@@ -369,6 +505,10 @@ void view_context_menu_t::build_merge_remove_menu(QMenu & menu, const view_menu_
 	case row_kind_t::group:
 	case row_kind_t::field_of_group:
 	{
+		if (context.kind == row_kind_t::field_of_group &&
+		    (context.parent_row_idx < 0 || context.parent_row_idx >= static_cast<int>(visible.size())))
+			break;
+
 		const auto & target_row =
 		    (context.kind == row_kind_t::field_of_group) ? visible[context.parent_row_idx] : context.row;
 
@@ -390,31 +530,16 @@ void view_context_menu_t::build_merge_remove_menu(QMenu & menu, const view_menu_
 
 	case row_kind_t::field_of_schema:
 	{
-		QModelIndex sub_record_index = context.index.parent();
-		const auto * sub_record_node = m_record_view.model()->node_from_index(sub_record_index);
-
-		while (sub_record_node && sub_record_node->type.empty() && sub_record_index.parent().isValid())
-		{
-			sub_record_index = sub_record_index.parent();
-			sub_record_node = m_record_view.model()->node_from_index(sub_record_index);
-		}
-
-		if (!sub_record_node || sub_record_node->type.empty())
+		const auto resolved = resolve_schema_field(context);
+		if (!resolved.found)
 			break;
 
-		const int merge_bin =
-		    (context.col >= 0 && context.col < static_cast<int>(sub_record_node->binary_ranges.size()))
-		        ? sub_record_node->binary_ranges[context.col].start
-		        : -1;
-
-		if (merge_bin >= 0)
-		{
-			const auto removed_type = sub_record_node->type;
-			menu.addAction(
-			    QCoreApplication::translate("yEditor", "Remove Sub-Record from Merged Patch"),
-			    [this, &context, merge_bin, removed_type]()
-			{ m_merge.remove_sub_record(context.rec_type, context.record_id, merge_bin, removed_type); });
-		}
+		const int merge_bin = resolved.binary_index;
+		const auto removed_type = resolved.sub_type;
+		menu.addAction(
+		    QCoreApplication::translate("yEditor", "Remove Sub-Record from Merged Patch"),
+		    [this, &context, merge_bin, removed_type]()
+		{ m_merge.remove_sub_record(context.rec_type, context.record_id, merge_bin, removed_type); });
 
 		break;
 	}
@@ -422,4 +547,96 @@ void view_context_menu_t::build_merge_remove_menu(QMenu & menu, const view_menu_
 	case row_kind_t::other:
 		break;
 	}
+}
+
+merge_lock_t view_context_menu_t::build_lock_for(const view_menu_context_t & context) const
+{
+	merge_lock_t lock;
+	lock.rec_type = context.rec_type;
+	lock.record_id = context.record_id;
+
+	switch (context.kind)
+	{
+	case row_kind_t::sub_record:
+	case row_kind_t::schema_record:
+		lock.scope = lock_scope_t::sub_record;
+		lock.sub_type = context.row.type;
+		lock.occurrence = context.row.occurrence;
+		lock.sub_size = context.row.size;
+		break;
+
+	case row_kind_t::field_of_schema:
+	{
+		if (context.row.bit_index >= 0)
+		{
+			const auto resolved = resolve_schema_bit(context);
+			lock.scope = lock_scope_t::bit;
+			lock.sub_type = resolved.sub_type;
+			lock.sub_size = resolved.sub_size;
+			lock.field_index = resolved.field_index;
+			lock.bit_index = resolved.bit_index;
+			break;
+		}
+
+		const auto resolved = resolve_schema_field(context);
+		lock.scope = lock_scope_t::field;
+		lock.sub_type = resolved.sub_type;
+		lock.sub_size = resolved.sub_size;
+		lock.field_index = context.row.schema_field_index;
+		break;
+	}
+
+	case row_kind_t::group:
+	case row_kind_t::field_of_group:
+	{
+		const auto & visible = m_record_view.model()->rows();
+		const bool valid_parent = context.kind == row_kind_t::field_of_group &&
+		    context.parent_row_idx >= 0 && context.parent_row_idx < static_cast<int>(visible.size());
+		const auto & group_row =
+		    (context.kind == row_kind_t::field_of_group && valid_parent) ? visible[context.parent_row_idx]
+		                                                                 : context.row;
+
+		if (context.col >= 0 && context.col < static_cast<int>(group_row.binary_ranges.size()))
+		{
+			const auto & range = group_row.binary_ranges[context.col];
+			lock.scope = lock_scope_t::group;
+			lock.group_start = range.start;
+			lock.group_end = range.end_pos;
+		}
+		else
+		{
+			lock.scope = lock_scope_t::whole_record;
+		}
+
+		break;
+	}
+
+	case row_kind_t::other:
+		lock.scope = lock_scope_t::whole_record;
+		break;
+	}
+
+	return lock;
+}
+
+void view_context_menu_t::build_lock_menu(QMenu & menu, const view_menu_context_t & context)
+{
+	const auto lock = build_lock_for(context);
+	const bool needs_sub_type =
+	    lock.scope == lock_scope_t::sub_record || lock.scope == lock_scope_t::field || lock.scope == lock_scope_t::bit;
+	if (needs_sub_type && lock.sub_type.empty())
+		return;
+
+	if (lock.scope == lock_scope_t::group && lock.group_start < 0)
+		return;
+
+	const bool locked = m_merge.is_merge_locked(lock);
+
+	if (!menu.actions().isEmpty())
+		menu.addSeparator();
+
+	const auto label = locked ? QCoreApplication::translate("yEditor", "Unlock in Merged Patch")
+	                           : QCoreApplication::translate("yEditor", "Lock in Merged Patch");
+
+	menu.addAction(label, [this, lock]() { m_merge.toggle_merge_lock(lock); });
 }

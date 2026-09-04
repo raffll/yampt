@@ -15,7 +15,7 @@ static std::string extract_extension(const std::string & path)
 
 const file_entry_t * file_list_t::get(const std::string & path) const
 {
-	const auto it = m_entries.find(string_utils::normalize_path(path));
+	const auto it = m_entries.find(string_utils::canonicalize_path(path));
 	if (it == m_entries.end())
 		return nullptr;
 
@@ -24,7 +24,7 @@ const file_entry_t * file_list_t::get(const std::string & path) const
 
 file_entry_t * file_list_t::get(const std::string & path)
 {
-	auto it = m_entries.find(string_utils::normalize_path(path));
+	auto it = m_entries.find(string_utils::canonicalize_path(path));
 	if (it == m_entries.end())
 		return nullptr;
 
@@ -33,7 +33,7 @@ file_entry_t * file_list_t::get(const std::string & path)
 
 bool file_list_t::contains(const std::string & path) const
 {
-	return m_entries.count(string_utils::normalize_path(path)) > 0;
+	return m_entries.count(string_utils::canonicalize_path(path)) > 0;
 }
 
 std::vector<const file_entry_t *> file_list_t::all() const
@@ -60,23 +60,23 @@ std::vector<const file_entry_t *> file_list_t::workspace_files() const
 
 file_entry_t & file_list_t::add(const std::string & path)
 {
-	const auto normalized = string_utils::normalize_path(path);
-	auto it = m_entries.find(normalized);
+	const auto canonical = string_utils::canonicalize_path(path);
+	auto it = m_entries.find(canonical);
 	if (it != m_entries.end())
 		return it->second;
 
 	file_entry_t entry;
-	entry.path = normalized;
-	entry.filename = std::string(string_utils::extract_filename(normalized));
-	entry.type = classify(normalized);
+	entry.path = canonical;
+	entry.filename = std::string(string_utils::extract_filename(canonical));
+	entry.type = classify(canonical);
 
-	auto [inserted_it, success] = m_entries.emplace(normalized, std::move(entry));
+	auto [inserted_it, success] = m_entries.emplace(canonical, std::move(entry));
 	return inserted_it->second;
 }
 
 void file_list_t::remove(const std::string & path)
 {
-	m_entries.erase(string_utils::normalize_path(path));
+	m_entries.erase(string_utils::canonicalize_path(path));
 }
 
 file_type_t classify(const std::string & path)
@@ -190,7 +190,7 @@ void file_list_t::scan_single_root(const std::string & root_path)
 		return;
 
 	const auto root_fs = std::filesystem::path(root_path);
-	const auto normalized_root = string_utils::normalize_path(root_path);
+	const auto canonical_root = string_utils::canonicalize_path(root_path);
 
 	for (const auto & entry : std::filesystem::recursive_directory_iterator(root_path, ec))
 	{
@@ -212,7 +212,7 @@ void file_list_t::scan_single_root(const std::string & root_path)
 		const auto path = entry.path().string();
 		auto & fe = add(path);
 		fe.is_workspace = true;
-		fe.root_path = normalized_root;
+		fe.root_path = canonical_root;
 
 		const auto parent = entry.path().parent_path();
 		const auto relative = std::filesystem::relative(parent, root_fs, ec);

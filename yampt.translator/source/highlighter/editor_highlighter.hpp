@@ -28,7 +28,6 @@ private slots:
 private:
 	void apply_syntax_tokens(const QString & text);
 	void apply_forbidden_chars(const QString & text);
-	void apply_hyperlink_prefix(const QString & text);
 	void apply_spell_check(const QString & text);
 
 	rec_type_t m_record_type = rec_type_t::unknown;
@@ -41,6 +40,5 @@ private:
 	QTextCharFormat m_format_string;
 	QTextCharFormat m_format_html_tag;
 	QTextCharFormat m_format_forbidden;
-	QTextCharFormat m_format_hyperlink;
 	QTextCharFormat m_format_misspelled;
 };

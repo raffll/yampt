@@ -6,6 +6,8 @@
 #include "../model/lua_tree_model.hpp"
 #include "../model/nav_tree_model.hpp"
 #include "../session/plugin_session.hpp"
+#include "../model/edit_log.hpp"
+#include "history_view.hpp"
 #include "lua_tree_view.hpp"
 #include "messages_view.hpp"
 #include "nav_tree_view.hpp"
@@ -15,6 +17,7 @@
 #include <scanner/plugin_scan.hpp>
 #include <QLabel>
 #include <QMessageBox>
+#include <QProgressDialog>
 #include <QSplitter>
 #include <QTabWidget>
 #include <QWidget>
@@ -34,7 +37,6 @@ public:
 
 	void set_conflicts_only(bool value);
 	void set_show_deleted_strikeout(bool value);
-	void set_editing_enabled(bool value);
 
 	bool is_conflicts_only() const
 	{
@@ -58,6 +60,11 @@ public:
 		return m_status_label;
 	}
 
+	QLabel * validation_label() const
+	{
+		return m_validation_label;
+	}
+
 	void refresh_views();
 	void reset_all_filters();
 
@@ -65,6 +72,8 @@ public:
 
 	QWidget * sidebar_widget() const { return m_nav_tabs; }
 	QWidget * bottom_panel_widget() const { return m_bottom_tabs; }
+
+	void set_preview_scroll_sync(bool enabled);
 
 public slots:
 	void on_load_data_files();
@@ -117,6 +126,11 @@ private:
 	void apply_effective_filter();
 	QMessageBox::StandardButton prompt_unsaved(bool allow_discard);
 
+	void show_progress(const QString & label);
+	void update_progress(int done, int total);
+	void set_progress_phase(const QString & label);
+	void hide_progress();
+
 	settings_store_t & m_settings;
 	plugin_session_t * m_session = nullptr;
 	merge_controller_t * m_merge_controller = nullptr;
@@ -135,12 +149,18 @@ private:
 	record_view_t * m_record_view = nullptr;
 	messages_view_t * m_messages = nullptr;
 	preview_view_t * m_preview = nullptr;
+	history_view_t * m_history_view = nullptr;
 	QTabWidget * m_bottom_tabs = nullptr;
+
+	edit_log_t m_edit_history;
 
 	lua_scan_worker_t * m_lua_scan_worker = nullptr;
 	lua_scan_result_t m_lua_scan_result;
 
 	QLabel * m_status_label = nullptr;
+	QLabel * m_validation_label = nullptr;
+	QProgressDialog * m_progress_dialog = nullptr;
+	QString m_progress_label;
 
 	nav_tree_model_t::filter_state_t m_advanced_filter;
 	nav_tree_model_t::filter_state_t m_search_filter;

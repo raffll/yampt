@@ -9,7 +9,7 @@ dict_document_t::dict_document_t(const std::string & path, codepage_t codepage, 
     , m_codepage(codepage)
     , m_kind(kind)
 {
-	m_path = string_utils::normalize_path(m_path);
+	m_path = string_utils::canonicalize_path(m_path);
 
 	dict_reader_t reader(path);
 	if (!reader.is_loaded())
@@ -117,7 +117,7 @@ commit_result_t dict_document_t::commit(const table_row_t & row, const std::stri
 	m_dirty = true;
 	m_modified_records.insert({ row.type, row.record_index });
 
-	if (intent != status_t::model && new_text != entry.old_text)
+	if (intent != status_t::model && intent != status_t::error)
 	{
 		result.propagated_count = propagate(entry.old_text, new_text);
 		if (result.propagated_count > 0)
@@ -133,6 +133,9 @@ commit_result_t dict_document_t::commit(const table_row_t & row, const std::stri
 int dict_document_t::propagate(const std::string & old_text, const std::string & new_text)
 {
 	int count = 0;
+
+	byte_limit_validator_t validator;
+	validator.set_codepage(m_codepage);
 
 	auto trimmed_source = old_text;
 	while (!trimmed_source.empty() && (trimmed_source.front() == ' ' || trimmed_source.front() == '\t'))
@@ -158,6 +161,9 @@ int dict_document_t::propagate(const std::string & old_text, const std::string &
 				trimmed.pop_back();
 
 			if (trimmed != trimmed_source)
+				continue;
+
+			if (validator.validate(type, new_text).level == validation_level_t::error)
 				continue;
 
 			record.new_text = new_text;

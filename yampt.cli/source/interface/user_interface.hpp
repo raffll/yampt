@@ -19,6 +19,7 @@ private:
 	void convert_esm();
 	void create_esm();
 	void make_loc();
+	void apply_tags();
 
 	std::vector<std::string> args;
 	std::vector<std::string> file_paths;

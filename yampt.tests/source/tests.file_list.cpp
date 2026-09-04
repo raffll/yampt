@@ -3,6 +3,7 @@
 #include <model/sidebar_model.hpp>
 #include <rapidcheck/catch.h>
 #include <session/session.hpp>
+#include <utility/string_utils.hpp>
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
@@ -355,13 +356,13 @@ TEST_CASE("file_list_t::insert, container operations", "[u]")
 	SECTION("add and get")
 	{
 		auto & entry = list.add("C:/path/file.esp");
-		REQUIRE(entry.path == "C:/path/file.esp");
+		REQUIRE(entry.path == "c:/path/file.esp");
 		REQUIRE(entry.filename == "file.esp");
 		REQUIRE(entry.type == file_type_t::plugin);
 
 		const auto * found = list.get("C:/path/file.esp");
 		REQUIRE(found != nullptr);
-		REQUIRE(found->path == "C:/path/file.esp");
+		REQUIRE(found->path == "c:/path/file.esp");
 	}
 
 	SECTION("remove")
@@ -433,7 +434,7 @@ TEST_CASE("file_list_t::scan, section grouping", "[u]")
 			expected_entry_t exp;
 			exp.path = entry.path;
 			exp.display_text = derive_display_name(entry, false, false);
-			exp.root_path = root;
+			exp.root_path = string_utils::canonicalize_path(root);
 			exp.subfolder = entry.workspace_subfolder;
 			expected.push_back(std::move(exp));
 		}
@@ -595,4 +596,31 @@ TEST_CASE("file_list_t::scan, rescan after file deletion", "[i]")
 	REQUIRE_FALSE(list.contains((temp_dir / "remove.json").string()));
 
 	fs::remove_all(temp_dir);
+}
+
+TEST_CASE("file_list_t::get, lookup succeeds with differing drive-letter case", "[u]")
+{
+	file_list_t list;
+	const auto & added = list.add("C:/Path/File.esp");
+
+	const auto * found_lower = list.get("c:/Path/File.esp");
+	REQUIRE(found_lower != nullptr);
+	REQUIRE(list.contains("c:/Path/File.esp"));
+	REQUIRE(found_lower == &added);
+}
+
+TEST_CASE("file_list_t::get, lookup succeeds with backslash and dot-segment spelling", "[u]")
+{
+	file_list_t list;
+	list.add("C:/a/b/file.json");
+
+	REQUIRE(list.get("C:\\a\\x\\..\\b\\file.json") != nullptr);
+}
+
+TEST_CASE("file_list_t::add, stores canonical path", "[u]")
+{
+	file_list_t list;
+	const auto & entry = list.add("C:\\Mods\\Dict.json");
+
+	REQUIRE(entry.path == "c:/Mods/Dict.json");
 }

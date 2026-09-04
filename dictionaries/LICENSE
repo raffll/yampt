@@ -1,6 +1,11 @@
 Hunspell Spell-Check Dictionaries
 Source: https://github.com/wooorm/dictionaries (UTF-8 normalized versions)
 
+These dictionary files are NOT stored in this repository. They are provided by
+the wooorm/dictionaries git submodule at external/dictionaries (pinned commit
+8cfea40) and copied into the application's dictionaries/ folder at build time,
+renaming each upstream index.aff / index.dic to the locale prefix used by yampt.
+
 Each dictionary retains its original license from the upstream project.
 
 ==============================================================================
@@ -55,3 +60,115 @@ Source: magyarispell (Szabad magyar szotar)
 URL: https://github.com/laszlonemeth/magyarispell
 Copyright: 2002-2024 Laszlo Nemeth & Ferenc Godo
 License: GPL / LGPL / MPL (tri-license, pick one)
+
+==============================================================================
+es_ES — Spanish
+==============================================================================
+Source: wooorm/dictionaries, folder `es`
+URL: https://github.com/wooorm/dictionaries/tree/main/dictionaries/es
+License: (GPL-3.0 OR LGPL-3.0 OR MPL-1.1)
+
+==============================================================================
+pt_PT — Portuguese (Portugal)
+==============================================================================
+Source: wooorm/dictionaries, folder `pt-PT`
+URL: https://github.com/wooorm/dictionaries/tree/main/dictionaries/pt-PT
+License: (GPL-2.0 OR LGPL-2.1 OR MPL-1.1)
+
+==============================================================================
+cs_CZ — Czech
+==============================================================================
+Source: wooorm/dictionaries, folder `cs`
+URL: https://github.com/wooorm/dictionaries/tree/main/dictionaries/cs
+License: GPL-2.0
+
+==============================================================================
+sk_SK — Slovak
+==============================================================================
+Source: wooorm/dictionaries, folder `sk`
+URL: https://github.com/wooorm/dictionaries/tree/main/dictionaries/sk
+License: (GPL-2.0 OR LGPL-2.1 OR MPL-1.1)
+
+==============================================================================
+sl_SI — Slovenian
+==============================================================================
+Source: wooorm/dictionaries, folder `sl`
+URL: https://github.com/wooorm/dictionaries/tree/main/dictionaries/sl
+License: (GPL-3.0 OR LGPL-2.1)
+
+==============================================================================
+hr_HR — Croatian
+==============================================================================
+Source: wooorm/dictionaries, folder `hr`
+URL: https://github.com/wooorm/dictionaries/tree/main/dictionaries/hr
+License: (LGPL-2.1 OR SISSL)
+
+==============================================================================
+ro_RO — Romanian
+==============================================================================
+Source: wooorm/dictionaries, folder `ro`
+URL: https://github.com/wooorm/dictionaries/tree/main/dictionaries/ro
+License: (GPL-2.0 OR LGPL-2.1 OR MPL-1.1)
+
+==============================================================================
+uk_UA — Ukrainian
+==============================================================================
+Source: wooorm/dictionaries, folder `uk`
+URL: https://github.com/wooorm/dictionaries/tree/main/dictionaries/uk
+License: GPL-3.0
+
+==============================================================================
+bg_BG — Bulgarian
+==============================================================================
+Source: wooorm/dictionaries, folder `bg`
+URL: https://github.com/wooorm/dictionaries/tree/main/dictionaries/bg
+License: (GPL-2.0 OR LGPL-2.1 OR MPL-1.1)
+
+==============================================================================
+sr_RS — Serbian (Cyrillic)
+==============================================================================
+Source: wooorm/dictionaries, folder `sr`
+URL: https://github.com/wooorm/dictionaries/tree/main/dictionaries/sr
+License: (GPL-2.0 OR LGPL-2.1 OR MPL-1.1 OR CC-BY-SA-3.0)
+
+==============================================================================
+nl_NL — Dutch
+==============================================================================
+Source: wooorm/dictionaries, folder `nl`
+URL: https://github.com/wooorm/dictionaries/tree/main/dictionaries/nl
+License: (BSD-3-Clause OR CC-BY-3.0)
+
+==============================================================================
+sv_SE — Swedish
+==============================================================================
+Source: wooorm/dictionaries, folder `sv`
+URL: https://github.com/wooorm/dictionaries/tree/main/dictionaries/sv
+License: LGPL-3.0
+
+==============================================================================
+da_DK — Danish
+==============================================================================
+Source: wooorm/dictionaries, folder `da`
+URL: https://github.com/wooorm/dictionaries/tree/main/dictionaries/da
+License: (GPL-2.0 OR LGPL-2.1 OR MPL-1.1)
+
+==============================================================================
+nb_NO — Norwegian Bokmal
+==============================================================================
+Source: wooorm/dictionaries, folder `nb`
+URL: https://github.com/wooorm/dictionaries/tree/main/dictionaries/nb
+License: GPL-2.0
+
+==============================================================================
+ca_ES — Catalan
+==============================================================================
+Source: wooorm/dictionaries, folder `ca`
+URL: https://github.com/wooorm/dictionaries/tree/main/dictionaries/ca
+License: (GPL-2.0 OR LGPL-2.1)
+
+==============================================================================
+gl_ES — Galician
+==============================================================================
+Source: wooorm/dictionaries, folder `gl`
+URL: https://github.com/wooorm/dictionaries/tree/main/dictionaries/gl
+License: GPL-3.0

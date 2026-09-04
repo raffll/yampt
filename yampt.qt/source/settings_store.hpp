@@ -56,6 +56,9 @@ public:
 	int translation_language_index() const;
 	void set_translation_language_index(int index);
 
+	std::string translation_prompt() const;
+	void set_translation_prompt(const std::string & prompt);
+
 	std::string shortcut(const std::string & action_name) const;
 	void set_shortcut(const std::string & action_name, const std::string & key_sequence);
 
@@ -107,6 +110,12 @@ public:
 	bool bottom_visible() const;
 	void set_bottom_visible(bool value);
 
+	bool sync_scroll_enabled() const;
+	void set_sync_scroll_enabled(bool value);
+
+	int highlight_kinds_mask() const;
+	void set_highlight_kinds_mask(int mask);
+
 	int column_width(int index) const;
 	void set_column_width(int index, int value);
 
@@ -143,6 +152,9 @@ public:
 
 	int display_codepage() const;
 	void set_display_codepage(int value);
+
+	bool editing_enabled() const;
+	void set_editing_enabled(bool value);
 
 	bool clean_evil_gmst_enabled() const;
 	void set_clean_evil_gmst_enabled(bool value);

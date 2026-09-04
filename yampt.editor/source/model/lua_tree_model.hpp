@@ -29,6 +29,7 @@ public:
 	int rowCount(const QModelIndex & parent) const override;
 	int columnCount(const QModelIndex & parent) const override;
 	QVariant data(const QModelIndex & index, int role) const override;
+	QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
 
 	bool has_conflicts() const;
 	const lua_scan_result_t & scan_result() const;
@@ -50,7 +51,11 @@ private:
 
 	QVariant data_for_group(int row, int column, int role) const;
 	QVariant data_for_leaf(void * ptr, int row, int column, int role) const;
-	QVariant leaf_display_text(size_t leaf_idx) const;
+	QVariant leaf_handler_text(size_t leaf_idx) const;
+	QVariant leaf_type_text(size_t leaf_idx) const;
+
+	QVariant severity_brush(conflict_severity_t severity, int role) const;
+	bool worst_severity_for_group(const lua_group_t & group, conflict_severity_t & out_severity) const;
 
 	conflict_severity_t find_severity_for_registration(const handler_registration_t & registration) const;
 	bool is_in_conflict(const handler_registration_t & registration) const;

@@ -9,10 +9,10 @@
 #include "../view/log_view.hpp"
 #include "../view/sidebar_view.hpp"
 #include <creator/loc_generator.hpp>
-#include <io/loc_file_reader.hpp>
+#include <utility/app_logger.hpp>
+#include <utility/language_config.hpp>
 #include <utility/string_utils.hpp>
 #include <algorithm>
-#include <map>
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
@@ -28,8 +28,7 @@ void sidebar_controller_t::on_item_clicked(const std::string & path)
 	if (!entry)
 		return;
 
-	const auto norm_path = string_utils::normalize_path(path);
-	if (m_deps.active_doc && m_deps.active_doc->path() == norm_path)
+	if (m_deps.active_doc && string_utils::paths_equal(m_deps.active_doc->path(), path))
 		return;
 
 	auto * doc = m_deps.session.open(path);
@@ -42,9 +41,7 @@ void sidebar_controller_t::on_item_clicked(const std::string & path)
 
 void sidebar_controller_t::on_save_requested(const std::string & path)
 {
-	const auto norm_path = string_utils::normalize_path(path);
-
-	if (m_deps.active_doc && m_deps.active_doc->path() == norm_path)
+	if (m_deps.active_doc && string_utils::paths_equal(m_deps.active_doc->path(), path))
 	{
 		m_deps.active_doc->save();
 		update_sidebar_item(m_deps.active_doc->path());
@@ -98,8 +95,8 @@ void sidebar_controller_t::on_unload_requested(const std::string & path)
 
 	m_deps.session.close(path);
 
-	const auto norm = string_utils::normalize_path(path);
-	m_deps.filter_states.erase(norm);
+	const auto canonical_path = string_utils::canonicalize_path(path);
+	m_deps.filter_states.erase(canonical_path);
 
 	m_deps.callbacks.rebuild_annotations();
 	m_deps.last_annotation_version = m_deps.session.dict_version();
@@ -130,12 +127,12 @@ void sidebar_controller_t::on_delete_requested(const std::string & path)
 		return;
 	}
 
-	const auto norm_del_path = string_utils::normalize_path(path);
-	if (m_deps.active_doc && m_deps.active_doc->path() == norm_del_path)
+	const auto canonical_path = string_utils::canonicalize_path(path);
+	if (m_deps.active_doc && string_utils::paths_equal(m_deps.active_doc->path(), path))
 		m_deps.callbacks.switch_document(nullptr);
 
 	m_deps.session.close(path);
-	m_deps.filter_states.erase(norm_del_path);
+	m_deps.filter_states.erase(canonical_path);
 	m_deps.callbacks.rebuild_annotations();
 	m_deps.last_annotation_version = m_deps.session.dict_version();
 	m_deps.file_list.remove(path);
@@ -151,7 +148,7 @@ void sidebar_controller_t::scan_workspace()
 	roots.push_back(workspace);
 	for (const auto & root : m_deps.file_list.get_roots())
 	{
-		if (!string_utils::paths_equivalent(root, workspace))
+		if (!string_utils::paths_equal(root, workspace))
 			roots.push_back(root);
 	}
 
@@ -192,7 +189,7 @@ void sidebar_controller_t::update_watcher_roots()
 
 	for (const auto & root : m_deps.file_list.get_roots())
 	{
-		if (string_utils::paths_equivalent(root, workspace))
+		if (string_utils::paths_equal(root, workspace))
 			continue;
 
 		roots.append(QString::fromStdString(root));
@@ -286,18 +283,18 @@ void sidebar_controller_t::on_delete_folder_requested(const std::string & folder
 
 	if (m_deps.active_doc)
 	{
-		const auto folder_norm = string_utils::normalize_path(folder_path);
+		const auto folder_norm = string_utils::canonicalize_path(folder_path);
 		const auto & doc_path = m_deps.active_doc->path();
-		if (doc_path.find(folder_norm + "/") == 0 || doc_path == folder_norm)
+		if (doc_path.find(folder_norm + "/") == 0 || string_utils::paths_equal(doc_path, folder_norm))
 			m_deps.callbacks.switch_document(nullptr);
 	}
 
-	const auto folder_norm = string_utils::normalize_path(folder_path);
+	const auto folder_norm = string_utils::canonicalize_path(folder_path);
 
 	m_deps.session.close_if([this, &folder_norm](const document_t & doc)
 	{
 		const auto & doc_path = doc.path();
-		if (doc_path.find(folder_norm + "/") == 0 || doc_path == folder_norm)
+		if (doc_path.find(folder_norm + "/") == 0 || string_utils::paths_equal(doc_path, folder_norm))
 		{
 			m_deps.filter_states.erase(doc_path);
 			return true;
@@ -314,16 +311,8 @@ void sidebar_controller_t::on_delete_folder_requested(const std::string & folder
 
 std::string sidebar_controller_t::resolve_hunspell_locale(const std::string & language_code) const
 {
-	static const std::map<std::string, std::string> locale_map = {
-		{ "PL", "pl_PL" }, { "DE", "de_DE" }, { "FR", "fr_FR" },
-		{ "RU", "ru_RU" }, { "IT", "it_IT" }, { "HU", "hu_HU" },
-	};
-
-	const auto it_locale = locale_map.find(language_code);
-	if (it_locale == locale_map.end())
-		return {};
-
-	return it_locale->second;
+	const auto languages = language_config::load(resource_paths::languages_file());
+	return language_config::resolve_dictionary_prefix(languages, language_code);
 }
 
 void sidebar_controller_t::on_export_eet_requested(const std::string & path)
@@ -374,22 +363,24 @@ void sidebar_controller_t::on_generate_loc_requested(const std::string & path)
 	if (!locale.empty())
 	{
 		const auto dict_dir = resource_paths::dictionaries_dir();
-		hunspell_aff = dict_dir + locale + ".aff";
-		hunspell_dic = dict_dir + locale + ".dic";
+		hunspell_aff = string_utils::join_path(dict_dir, locale + ".aff");
+		hunspell_dic = string_utils::join_path(dict_dir, locale + ".dic");
 	}
+
+	app_logger_t::reset_log();
 
 	const loc_generator::generation_input_t input { dict, output_dir, esm_name, codepage, hunspell_aff, hunspell_dic };
 	const auto result = loc_generator::generate(input);
 
-	const auto summary = "cel=" + std::to_string(result.cel_entries) + " mrk=" + std::to_string(result.mrk_entries) +
-	                     " top=" + std::to_string(result.top_entries) +
-	                     " skipped=" + std::to_string(result.skipped_entries) +
-	                     " collisions=" + std::to_string(result.collision_warnings) + "\r\n";
-	m_deps.log_view.append_log("generate loc", summary);
+	m_deps.log_view.append_log("generate loc", app_logger_t::get_log());
 
 	scan_workspace();
+	m_deps.callbacks.rebuild_annotations();
+	m_deps.last_annotation_version = m_deps.session.dict_version();
 	reload_open_loc_documents(result);
-	load_loc_annotations(result, codepage);
+
+	if (m_deps.callbacks.update_annotations)
+		m_deps.callbacks.update_annotations();
 }
 
 void sidebar_controller_t::reload_open_loc_documents(const loc_generator::generation_result_t & result)
@@ -406,7 +397,7 @@ void sidebar_controller_t::reload_open_loc_documents(const loc_generator::genera
 		const auto & loc_path = loc_doc->path();
 		for (const auto & out_path : output_paths)
 		{
-			if (string_utils::normalize_path(loc_path) == string_utils::normalize_path(out_path))
+			if (string_utils::paths_equal(loc_path, out_path))
 			{
 				loc_doc->reload();
 				if (m_deps.active_doc == loc_doc)
@@ -419,16 +410,3 @@ void sidebar_controller_t::reload_open_loc_documents(const loc_generator::genera
 		m_deps.callbacks.switch_document(m_deps.active_doc);
 }
 
-void sidebar_controller_t::load_loc_annotations(const loc_generator::generation_result_t & result, codepage_t codepage)
-{
-	auto cel_file = loc_file_reader::read(result.cel_path, codepage);
-	auto top_file = loc_file_reader::read(result.top_path, codepage);
-	auto mrk_file = loc_file_reader::read(result.mrk_path, codepage);
-
-	loc_entries_t loc_entries;
-	loc_entries.cel = std::move(cel_file.entries);
-	loc_entries.top = std::move(top_file.entries);
-	loc_entries.mrk = std::move(mrk_file.entries);
-	m_deps.callbacks.set_loc_entries(loc_entries);
-	m_deps.callbacks.rebuild_annotations();
-}

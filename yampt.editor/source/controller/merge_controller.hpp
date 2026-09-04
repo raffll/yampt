@@ -1,7 +1,10 @@
 #pragma once
 
+#include "../model/edit_log.hpp"
 #include "../model/view_tree_model.hpp"
 #include "../patcher/patch_builder.hpp"
+#include <scanner/merge_patch_ops.hpp>
+#include <scanner/merge_patch_store.hpp>
 #include <functional>
 #include <set>
 #include <string>
@@ -17,6 +20,9 @@ class merge_controller_t
 public:
 	using log_fn_t = std::function<void(const std::string &)>;
 	using refresh_fn_t = std::function<void()>;
+	using record_removal_fn_t = std::function<void(const record_removal_record_t &)>;
+	using progress_fn_t = std::function<void(int done, int total)>;
+	using phase_fn_t = std::function<void(const std::string & label)>;
 
 	merge_controller_t(
 	    plugin_session_t & session,
@@ -26,6 +32,9 @@ public:
 	    log_fn_t log_fn);
 
 	void set_refresh_callback(refresh_fn_t refresh_fn);
+	void set_record_removal_callback(record_removal_fn_t removal_fn);
+	void set_progress_callback(progress_fn_t progress_fn);
+	void set_phase_callback(phase_fn_t phase_fn);
 
 	bool create_merged_patch();
 	void load_existing_merged_patch();
@@ -54,6 +63,16 @@ public:
 	    int binary_idx,
 	    int field_idx);
 
+	struct copy_bit_params_t
+	{
+		int plugin_idx = -1;
+		std::string rec_type;
+		std::string record_id;
+		merge_patch_ops_t::bit_patch_params_t bit;
+	};
+
+	void copy_bit(const copy_bit_params_t & params);
+
 	void remove_sub_record(
 	    const std::string & rec_type,
 	    const std::string & record_id,
@@ -66,13 +85,22 @@ public:
 
 	void remove_record_from_merge(const std::string & rec_type, const std::string & record_id);
 
+	void toggle_merge_lock(const merge_lock_t & lock);
+	bool is_merge_locked(const merge_lock_t & lock) const;
+
+	bool remove_record_from_plugin(int plugin_idx, const std::string & rec_type, const std::string & record_id);
+
 	void save_merged_patch();
 
 	bool save_plugin(int plugin_idx);
 	void save_all_dirty();
 
+	void debug_log(const std::string & message) const;
+
 private:
 	int create_merge_records();
+	void reapply_locks();
+	std::string capture_locked_content(const merge_lock_t & lock) const;
 	std::string resolve_merge_output_path() const;
 	bool save_merge_to_file(
 	    const std::string & output_path,
@@ -96,4 +124,7 @@ private:
 	settings_store_t & m_settings;
 	log_fn_t m_log;
 	refresh_fn_t m_refresh;
+	record_removal_fn_t m_record_removal;
+	progress_fn_t m_progress;
+	phase_fn_t m_phase;
 };

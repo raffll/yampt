@@ -4,6 +4,7 @@
 #include "conflict_enums.hpp"
 #include "merge_patch_store.hpp"
 #include "plugin_index.hpp"
+#include <functional>
 #include <memory>
 #include <set>
 #include <string>
@@ -37,7 +38,9 @@ public:
 	void clear_merge_records();
 	std::vector<merge_record_t> collect_pinned_records() const;
 	void restore_pinned_records(const std::vector<merge_record_t> & pinned);
-	void rebuild_conflicts();
+
+	using conflict_progress_fn_t = std::function<void(size_t done, size_t total)>;
+	void rebuild_conflicts(const conflict_progress_fn_t & progress_fn = {});
 
 	size_t plugin_count() const;
 	const std::string & plugin_path(int idx) const;
@@ -60,6 +63,13 @@ public:
 	    const std::string & content);
 	void pin_record_to_merge(const std::string & rec_type, const std::string & record_id, const std::string & content);
 	bool is_merge_pinned(const std::string & rec_type, const std::string & record_id) const;
+
+	void add_merge_lock(const merge_lock_t & lock);
+	void remove_merge_lock(const merge_lock_t & lock);
+	bool has_merge_lock(const merge_lock_t & lock) const;
+	std::vector<merge_lock_t> merge_locks_for(const std::string & rec_type, const std::string & record_id) const;
+	const std::vector<merge_lock_t> & merge_locks() const;
+	void set_merge_locks(const std::vector<merge_lock_t> & locks);
 	const std::string * find_merge_content(const std::string & rec_type, const std::string & record_id) const;
 	std::string read_record_content(int plugin_idx, size_t record_index);
 	void remove_from_merge(const std::string & type, const std::string & id);

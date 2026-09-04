@@ -9,12 +9,14 @@ lua_tree_view_t::lua_tree_view_t(QWidget * parent)
 	layout->setContentsMargins(0, 0, 0, 0);
 
 	m_tree = new QTreeView(this);
-	m_tree->setHeaderHidden(true);
 	m_tree->setRootIsDecorated(true);
 	layout->addWidget(m_tree);
 
 	m_model = new lua_tree_model_t(this);
 	m_tree->setModel(m_model);
+
+	const int handler_column_width = m_tree->fontMetrics().horizontalAdvance(QString(40, '0')) + m_tree->indentation();
+	m_tree->setColumnWidth(0, handler_column_width);
 
 	connect(
 	    m_tree->selectionModel(),
@@ -33,7 +35,7 @@ lua_tree_view_t::lua_tree_view_t(QWidget * parent)
 void lua_tree_view_t::set_scan_result(const lua_scan_result_t & result)
 {
 	m_model->set_scan_result(result);
-	m_tree->expandAll();
+	m_tree->collapseAll();
 }
 
 void lua_tree_view_t::clear()

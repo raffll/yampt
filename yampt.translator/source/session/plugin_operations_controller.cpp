@@ -227,7 +227,6 @@ void plugin_operations_controller_t::log_operation_result(
 	}
 
 	m_deps.log_view.append_log(operation_name, result.log_text);
-	m_deps.record_tabs.setCurrentWidget(&m_deps.log_view);
 }
 
 std::vector<dict_selection_dialog_t::dict_entry_t> plugin_operations_controller_t::build_dict_entries(
@@ -236,7 +235,8 @@ std::vector<dict_selection_dialog_t::dict_entry_t> plugin_operations_controller_
 	std::set<std::string> seen;
 	std::vector<dict_selection_dialog_t::dict_entry_t> entries;
 
-	auto normalize = [](std::string_view path) { return string_utils::to_lower(string_utils::normalize_path(path)); };
+	auto normalize = [](std::string_view path)
+	{ return string_utils::to_lower(string_utils::canonicalize_path(path)); };
 
 	auto matches_source_dir = [&](const std::string & norm, const std::string & target)
 	{
