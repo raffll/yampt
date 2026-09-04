@@ -4,6 +4,7 @@
 #include "../model/view_tree_model.hpp"
 #include "../patcher/patch_builder.hpp"
 #include <scanner/merge_patch_ops.hpp>
+#include <scanner/merge_patch_store.hpp>
 #include <functional>
 #include <set>
 #include <string>
@@ -84,6 +85,9 @@ public:
 
 	void remove_record_from_merge(const std::string & rec_type, const std::string & record_id);
 
+	void toggle_merge_lock(const merge_lock_t & lock);
+	bool is_merge_locked(const merge_lock_t & lock) const;
+
 	bool remove_record_from_plugin(int plugin_idx, const std::string & rec_type, const std::string & record_id);
 
 	void save_merged_patch();
@@ -95,6 +99,8 @@ public:
 
 private:
 	int create_merge_records();
+	void reapply_locks();
+	std::string capture_locked_content(const merge_lock_t & lock) const;
 	std::string resolve_merge_output_path() const;
 	bool save_merge_to_file(
 	    const std::string & output_path,

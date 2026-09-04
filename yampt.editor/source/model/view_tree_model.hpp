@@ -242,11 +242,14 @@ private:
 	std::set<std::string> m_user_ignore_conflict;
 	int m_merge_col_index = -1;
 	bool m_is_merge_pinned = false;
+	std::vector<merge_lock_t> m_record_locks;
 	std::string m_record_type;
 	std::string m_record_id;
 	std::vector<int> m_column_plugin_indices;
 	std::vector<record_version_t> m_record_versions;
 	std::vector<std::unordered_map<std::string, std::vector<size_t>>> m_col_type_indices;
+
+	bool row_is_locked(const view_node_t & row, const QModelIndex & index) const;
 
 	const std::vector<view_node_t> & visible_rows() const;
 	mutable std::vector<view_node_t> m_filtered_rows;

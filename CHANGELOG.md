@@ -40,6 +40,8 @@
 - [NEW] History tab: a tab beside the Edit and Log panels lists the field edits and record removals made during the current session, newest first. The history is not saved and resets when plugins are unloaded
 - [NEW] Diff button in the Edit panel toggles the difference highlighting between the two comparison panes. When on, lines that changed between the plugins are highlighted (removed text on the left, added text on the right); when off, both panes show plain text. Differences are compared ignoring leading indentation, so a script that differs only in spacing shows as unchanged while each pane keeps its original layout
 - [NEW] The main window now opens immediately at startup, with a progress dialog shown while the previous session is restored and while plugins are loaded or a merged patch is created, instead of a blank wait until everything is in memory
+- [NEW] Lock in Merged Patch: right-click a cell in the merged patch column to lock a whole record, a sub-record, a decoded field, or a single flag bit. A locked cell shows a lock icon, keeps its current value, and is re-applied unchanged after you regenerate the merged patch, so the auto-merge cannot overwrite it. Locks are remembered between sessions. Right-click again to unlock
+- [CHANGE] Direct editing of loaded plugins is now turned on from a new Editing page in Settings (with a warning that it can break a plugin) instead of the toolbar button, and the choice is remembered between sessions. The merged patch remains editable at all times regardless of this setting
 - [CHANGE] The Lua tab's conflict list is now a two-column tree, showing the handler as interface and method in the first column and its type argument in the second, and it starts collapsed so only the mod names are shown
 - [CHANGE] Lua handler conflicts now use the same conflict colors as plugin records, with the color carried up to the mod name so a conflicting mod is visible without expanding it
 - [CHANGE] Selecting a Lua handler conflict now shows only its Classification and Handler Body in the Edit panel, colored by the conflict severity; the interface, method, type, script path, and callback rows are no longer listed since they added no comparison value
@@ -60,6 +62,7 @@
 - [FIX] When several plugins each change the same field of a record and the last plugin reverts it to the original, the merged patch now keeps the change from the latest plugin that made one, instead of the earliest
 - [FIX] Armor and clothing body-part records now merge correctly: a female or male body-part name added by one plugin is carried into the merged patch in its own body-part slot, instead of being dropped or attached to the wrong body part
 - [FIX] Creature attack damage values (minimum and maximum for each of the three attacks) now merge as whole values, so a merged creature no longer ends up with a corrupted attack range
+- [FIX] The Edit panel Diff highlighting now colors both comparison panes as soon as a record is selected, instead of coloring only the left pane until the Diff button was toggled off and back on
 
 ## [0.1060] - 2026-08-31
 

@@ -559,6 +559,16 @@ void settings_store_t::set_display_codepage(int value)
 	m_settings.setValue("Editor/DisplayCodepage", value);
 }
 
+bool settings_store_t::editing_enabled() const
+{
+	return m_settings.value("Editing/DirectEditing", false).toBool();
+}
+
+void settings_store_t::set_editing_enabled(bool value)
+{
+	m_settings.setValue("Editing/DirectEditing", value);
+}
+
 bool settings_store_t::clean_evil_gmst_enabled() const
 {
 	return m_settings.value("Cleaning/EvilGmst", true).toBool();

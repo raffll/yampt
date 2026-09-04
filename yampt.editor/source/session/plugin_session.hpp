@@ -8,6 +8,7 @@
 #include <QObject>
 
 class patch_builder_t;
+class QSettings;
 
 class plugin_session_t : public QObject
 {
@@ -36,6 +37,8 @@ public:
 
 	void save_session_state(const QString & ini_path);
 	void restore_session_state(const QString & ini_path);
+	void save_merge_locks(QSettings & settings) const;
+	std::vector<merge_lock_t> load_merge_locks(QSettings & settings) const;
 
 	const std::set<std::string> & excluded_plugins() const;
 	void set_excluded_plugins(const std::set<std::string> & excluded);

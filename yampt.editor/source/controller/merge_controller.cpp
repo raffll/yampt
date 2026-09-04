@@ -591,6 +591,124 @@ void merge_controller_t::remove_record_from_merge(const std::string & rec_type, 
 	m_log("Removed " + rec_type + ":" + record_id + " from merged patch");
 }
 
+bool merge_controller_t::is_merge_locked(const merge_lock_t & lock) const
+{
+	return m_session.scan().has_merge_lock(lock);
+}
+
+std::string merge_controller_t::capture_locked_content(const merge_lock_t & lock) const
+{
+	const auto * merge_content = m_session.scan().find_merge_content(lock.rec_type, lock.record_id);
+	if (merge_content == nullptr)
+		return {};
+
+	return *merge_content;
+}
+
+void merge_controller_t::toggle_merge_lock(const merge_lock_t & lock)
+{
+	if (m_session.scan().has_merge_lock(lock))
+	{
+		m_session.scan().remove_merge_lock(lock);
+		m_log("Unlocked " + lock.rec_type + ":" + lock.record_id + " in merged patch");
+	}
+	else
+	{
+		auto stored = lock;
+		stored.frozen_content = capture_locked_content(lock);
+		if (stored.frozen_content.empty())
+		{
+			m_log("[warning] cannot lock " + lock.rec_type + ":" + lock.record_id + ": not in merged patch");
+			return;
+		}
+
+		if (stored.scope == lock_scope_t::group)
+			stored.group_members =
+			    sub_record_merge_t::group_members_in_range(stored.frozen_content, stored.group_start, stored.group_end);
+
+		m_session.scan().add_merge_lock(stored);
+		m_log("Locked " + lock.rec_type + ":" + lock.record_id + " in merged patch");
+	}
+
+	if (m_refresh)
+		m_refresh();
+}
+
+void merge_controller_t::reapply_locks()
+{
+	for (const auto & lock : m_session.scan().merge_locks())
+	{
+		const auto * current = m_session.scan().find_merge_content(lock.rec_type, lock.record_id);
+		const std::string merge_content = current ? *current : std::string {};
+
+		patch_result_t result;
+
+		switch (lock.scope)
+		{
+		case lock_scope_t::whole_record:
+			m_session.scan().copy_record_to_merge_raw(lock.rec_type, lock.record_id, lock.frozen_content);
+			continue;
+
+		case lock_scope_t::sub_record:
+		{
+			const auto frozen_subs = sub_record_merge_t::parse_sub_records(lock.frozen_content);
+			const int frozen_idx =
+			    sub_record_merge_t::find_by_type_and_occurrence(frozen_subs, lock.sub_type, lock.occurrence);
+			if (frozen_idx < 0 || merge_content.empty())
+				continue;
+
+			result = merge_patch_ops_t::patch_sub_record(merge_content, lock.frozen_content, lock.sub_type, frozen_idx);
+			break;
+		}
+
+		case lock_scope_t::field:
+		{
+			const auto frozen_subs = sub_record_merge_t::parse_sub_records(lock.frozen_content);
+			const int frozen_idx =
+			    sub_record_merge_t::find_by_type_and_occurrence(frozen_subs, lock.sub_type, lock.occurrence);
+			if (frozen_idx < 0 || merge_content.empty())
+				continue;
+
+			result = merge_patch_ops_t::patch_field(
+			    merge_content, lock.frozen_content, lock.rec_type, lock.sub_type, lock.sub_size, frozen_idx,
+			    lock.field_index);
+			break;
+		}
+
+		case lock_scope_t::bit:
+		{
+			const auto frozen_subs = sub_record_merge_t::parse_sub_records(lock.frozen_content);
+			const int frozen_idx =
+			    sub_record_merge_t::find_by_type_and_occurrence(frozen_subs, lock.sub_type, lock.occurrence);
+			if (frozen_idx < 0 || merge_content.empty())
+				continue;
+
+			merge_patch_ops_t::bit_patch_params_t params;
+			params.record_type = lock.rec_type;
+			params.sub_type = lock.sub_type;
+			params.sub_size = lock.sub_size;
+			params.binary_idx = frozen_idx;
+			params.field_idx = lock.field_index;
+			params.bit_index = lock.bit_index;
+			result = merge_patch_ops_t::patch_bit(merge_content, lock.frozen_content, params);
+			break;
+		}
+
+		case lock_scope_t::group:
+		{
+			if (merge_content.empty())
+				continue;
+
+			result = merge_patch_ops_t::patch_group(merge_content, lock.frozen_content, lock.group_members);
+			break;
+		}
+		}
+
+		if (result.success)
+			m_session.scan().copy_record_to_merge_raw(lock.rec_type, lock.record_id, result.content);
+	}
+}
+
 bool merge_controller_t::remove_record_from_plugin(
     int plugin_idx,
     const std::string & rec_type,
@@ -656,6 +774,7 @@ int merge_controller_t::create_merge_records()
 	const auto counters = merge.execute();
 
 	m_session.scan().restore_pinned_records(pinned_records);
+	reapply_locks();
 
 	for (const auto & entry : merge.log_entries())
 		m_log(entry.message);

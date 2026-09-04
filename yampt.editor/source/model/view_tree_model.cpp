@@ -11,7 +11,10 @@
 #include <QBrush>
 #include <QCoreApplication>
 #include <QFont>
+#include <QIcon>
 #include <QMimeData>
+#include <QPainter>
+#include <QPixmap>
 
 Q_DECLARE_METATYPE(const field_def_t *)
 
@@ -42,6 +45,7 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 	m_has_merge_column = false;
 	m_merge_col_index = -1;
 	m_is_merge_pinned = scan.is_merge_pinned(entry.rec_type, entry.record_id);
+	m_record_locks = scan.merge_locks_for(entry.rec_type, entry.record_id);
 
 	size_t col_count = setup_columns(scan, entry);
 	m_record_versions = entry.versions;
@@ -820,6 +824,89 @@ static QVariant sub_record_foreground(
 	return QBrush(theme.conflict_this_foreground(cell_conflicts[col]));
 }
 
+static QIcon lock_cell_icon()
+{
+	static const QIcon icon = []()
+	{
+		QPixmap pixmap(16, 16);
+		pixmap.fill(Qt::transparent);
+		QPainter painter(&pixmap);
+		QFont font = painter.font();
+		font.setPixelSize(13);
+		painter.setFont(font);
+		painter.drawText(pixmap.rect(), Qt::AlignCenter, QString::fromUtf8("\xF0\x9F\x94\x92"));
+		painter.end();
+		return QIcon(pixmap);
+	}();
+
+	return icon;
+}
+
+bool view_tree_model_t::row_is_locked(const view_node_t & row, const QModelIndex & index) const
+{
+	if (m_record_locks.empty())
+		return false;
+
+	const bool is_field_row = index.parent().isValid();
+
+	std::string sub_type = row.type;
+	int occurrence = row.occurrence;
+
+	if (is_field_row)
+	{
+		const auto * parent = node_from_index(index.parent());
+		if (parent != nullptr)
+		{
+			sub_type = parent->type;
+			occurrence = parent->occurrence;
+		}
+	}
+
+	for (const auto & lock : m_record_locks)
+	{
+		switch (lock.scope)
+		{
+		case lock_scope_t::whole_record:
+			return true;
+
+		case lock_scope_t::sub_record:
+			if (!is_field_row && lock.sub_type == row.type && lock.occurrence == row.occurrence)
+				return true;
+
+			break;
+
+		case lock_scope_t::field:
+			if (is_field_row && row.bit_index < 0 && lock.sub_type == sub_type && lock.occurrence == occurrence &&
+			    lock.field_index == row.schema_field_index)
+				return true;
+
+			break;
+
+		case lock_scope_t::bit:
+			if (is_field_row && row.bit_index >= 0 && lock.sub_type == sub_type && lock.occurrence == occurrence &&
+			    lock.field_index == row.schema_field_index && lock.bit_index == row.bit_index)
+				return true;
+
+			break;
+
+		case lock_scope_t::group:
+		{
+			if (m_merge_col_index < 0 || m_merge_col_index >= static_cast<int>(row.binary_ranges.size()))
+				break;
+
+			const auto & range = row.binary_ranges[m_merge_col_index];
+			if (range.start >= 0 && range.start >= lock.group_start && range.end_pos <= lock.group_end &&
+			    lock.group_start >= 0)
+				return true;
+
+			break;
+		}
+		}
+	}
+
+	return false;
+}
+
 QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 {
 	if (!index.isValid())
@@ -833,6 +920,14 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 	{
 	case Qt::DisplayRole:
 		return sub_record_display(*node, index.column());
+
+	case Qt::DecorationRole:
+	{
+		if (is_merge_column(index.column()) && row_is_locked(*node, index))
+			return lock_cell_icon();
+
+		return {};
+	}
 
 	case Qt::BackgroundRole:
 		return sub_record_background(*node, index.column());

@@ -130,9 +130,9 @@ When you click a cell in the record view that has a conflict with a previous col
 
 The Diff button below the comparison turns this highlighting on and off. With it off, both panes show plain text with no coloring, which is useful for reading the raw content of each version. Toggling it keeps your current scroll position rather than jumping back to the top.
 
-Editing is off whenever the application starts. Turn it on with the Enable Editing button on the toolbar; the choice is not remembered, so each new session begins with editing disabled to guard against accidental changes.
+Direct editing of loaded plugins is off by default. Turn it on in Settings under the Editing page, where a warning explains that editing a plugin rewrites it on save and can break it. The choice is remembered between sessions. The merged patch column is always editable regardless of this setting.
 
-When editing is enabled (via the Enable Editing button on the toolbar), clicking a decoded field in any plugin's column activates the Edit panel as an editor. The right pane becomes editable and an Apply button appears. For enum fields (race, class, type), a dropdown selector shows all valid values. For flag fields (NPC flags, cell flags), the dropdown presents checkboxes for each flag bit. Free-text fields such as names and IDs accept direct text input. The panel validates the input against the field's constraints — numeric range, string length, and codepage encoding limits. When the value is invalid the field is marked red and the reason is shown next to the Apply button. The Apply button stays disabled until the value is both valid and different from the original. Clicking Apply updates the loaded plugin held in memory and refreshes the record view to reflect the new state. It does not write the plugin file at this point; the change is kept until you choose to save it.
+When editing is enabled (via the Editing page in Settings), clicking a decoded field in any plugin's column activates the Edit panel as an editor. The right pane becomes editable and an Apply button appears. For enum fields (race, class, type), a dropdown selector shows all valid values. For flag fields (NPC flags, cell flags), the dropdown presents checkboxes for each flag bit. Free-text fields such as names and IDs accept direct text input. The panel validates the input against the field's constraints — numeric range, string length, and codepage encoding limits. When the value is invalid the field is marked red and the reason is shown next to the Apply button. The Apply button stays disabled until the value is both valid and different from the original. Clicking Apply updates the loaded plugin held in memory and refreshes the record view to reflect the new state. It does not write the plugin file at this point; the change is kept until you choose to save it.
 
 A plugin with changes that have not yet been written to disk is marked with an asterisk next to its name in the navigation panel, and the window title also shows an asterisk while any loaded plugin has unsaved changes. This gives you a clear view of which plugins have pending edits, so you can make several changes and decide when to commit them.
 
@@ -158,11 +158,19 @@ A progress dialog shows how far the merge has got while records are processed. A
 
 You can refine the auto-merge result manually. Use the record view context menu to copy individual sub-records from any plugin column into the merged patch, or remove sub-records that shouldn't be there. Changes are saved immediately.
 
+### Locking Merged Patch Values
+
+Right-click a cell in the merged patch column and choose Lock in Merged Patch to freeze that value. You can lock a whole record, a single sub-record, a decoded field, or an individual flag bit — the lock applies to whatever you right-clicked. A locked cell is marked with a lock icon and keeps the exact value it had when you locked it.
+
+When you regenerate the merged patch, the auto-merge runs as usual and then every locked value is re-applied on top, so a lock is never overwritten by the merge. This is useful when the automatic result for one field is wrong and you want to pin your chosen value while still letting everything else re-merge.
+
+Right-click a locked cell and choose Unlock in Merged Patch to remove the lock. Locks are remembered between sessions.
+
 A merged patch can be created even with a single plugin loaded. With one plugin there is nothing to merge automatically, so the patch starts empty; it still gives you a merged-patch column to copy records into by hand, which is a convenient way to build a small patch from one mod. The empty patch is written to disk like any other, and it gains its master references as you copy records into it.
 
 ## Settings
 
-Open Settings via Ctrl+, or the Tools menu. Four pages are available:
+Open Settings via Ctrl+, or the Tools menu. Five pages are available:
 
 - **Appearance** — choose between light and dark theme, and set the text codepage used to display plugin text. Choose Windows-1250 for Polish and Central European plugins, Windows-1251 for Russian, or Windows-1252 for English and other Western languages. The codepage applies to the navigation tree, the record view, and the Edit panel. Changing it updates the navigation tree and record view right away; the Edit panel refreshes the next time you select a record cell. Plugin files carry no encoding marker, so pick the codepage that matches the language of the plugins you are inspecting; choosing the wrong one makes accented or non-English characters appear as replacement symbols.
 - **Output Paths** — configure the merged patch output path for each loading mode (folder, MO2, OpenMW). Normally these are automatic and don't need changing.
@@ -170,6 +178,7 @@ Open Settings via Ctrl+, or the Tools menu. Four pages are available:
   - **Exclude Sub-Records** — a list of sub-records excluded from conflict detection and the merged patch. Each entry uses `RECORD:SUB` format (e.g. `CELL:NAM0`). Use `TYPE:*` to exclude an entire record type. Add entries via the input field or right-click a sub-record row in the record view and choose "Exclude Sub-Record."
   - **Exclude by ID** — a list of regular expression patterns matched against record IDs. Records matching any pattern are skipped entirely during auto-merge.
   - **Fixes** — toggle individual bug fixes applied during merge: fog density correction, summon persistence flag, and cell name reversion prevention.
+- **Editing** — turn direct editing of loaded plugins on or off. When on, clicking a decoded field in any plugin's column lets you edit it in place. This is off by default and carries a warning, because editing a plugin rewrites it on save and can break it if a value is malformed. The merged patch is always editable regardless of this setting. The choice is remembered between sessions.
 - **Cleaning** — toggle which cleaning operations the Clean All button performs. Evil GMSTs are Construction Set artifacts from Tribunal/Bloodmoon that can cause issues in mods that don't require those expansions. Junk cells are empty exterior cell records that only contain position data and serve no purpose. The Header Repair group provides additional fixes applied during cleaning: updating master file sizes in the plugin header to match the actual file sizes on disk, and updating the plugin version field to 1.3 (required by some engines).
 
 ## Cleaning Plugins

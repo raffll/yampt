@@ -1,5 +1,6 @@
 #include "plugin_session.hpp"
 #include "../patcher/patch_builder.hpp"
+#include <scanner/sub_record_merge.hpp>
 #include <algorithm>
 #include <QCoreApplication>
 #include <QDir>
@@ -159,6 +160,71 @@ void plugin_session_t::save_session_state(const QString & ini_path)
 		patch_list.append(QString::fromStdString(name));
 
 	settings.setValue("merge/patch_plugins", patch_list);
+
+	save_merge_locks(settings);
+}
+
+void plugin_session_t::save_merge_locks(QSettings & settings) const
+{
+	const auto & locks = m_scan.merge_locks();
+
+	settings.beginWriteArray("merge/locks");
+	for (int i = 0; i < static_cast<int>(locks.size()); ++i)
+	{
+		const auto & lock = locks[static_cast<size_t>(i)];
+		settings.setArrayIndex(i);
+		settings.setValue("rec_type", QString::fromStdString(lock.rec_type));
+		settings.setValue("record_id", QString::fromStdString(lock.record_id));
+		settings.setValue("scope", static_cast<int>(lock.scope));
+		settings.setValue("sub_type", QString::fromStdString(lock.sub_type));
+		settings.setValue("occurrence", lock.occurrence);
+		settings.setValue("field_index", lock.field_index);
+		settings.setValue("bit_index", lock.bit_index);
+		settings.setValue("sub_size", static_cast<qulonglong>(lock.sub_size));
+		settings.setValue("group_start", lock.group_start);
+		settings.setValue("group_end", lock.group_end);
+		settings.setValue(
+		    "frozen",
+		    QString::fromLatin1(
+		        QByteArray(lock.frozen_content.data(), static_cast<int>(lock.frozen_content.size())).toBase64()));
+	}
+
+	settings.endArray();
+}
+
+std::vector<merge_lock_t> plugin_session_t::load_merge_locks(QSettings & settings) const
+{
+	std::vector<merge_lock_t> locks;
+
+	const int size = settings.beginReadArray("merge/locks");
+	for (int i = 0; i < size; ++i)
+	{
+		settings.setArrayIndex(i);
+		merge_lock_t lock;
+		lock.rec_type = settings.value("rec_type").toString().toStdString();
+		lock.record_id = settings.value("record_id").toString().toStdString();
+		lock.scope = static_cast<lock_scope_t>(settings.value("scope").toInt());
+		lock.sub_type = settings.value("sub_type").toString().toStdString();
+		lock.occurrence = settings.value("occurrence").toInt();
+		lock.field_index = settings.value("field_index", -1).toInt();
+		lock.bit_index = settings.value("bit_index", -1).toInt();
+		lock.sub_size = static_cast<size_t>(settings.value("sub_size", 0).toULongLong());
+		lock.group_start = settings.value("group_start", -1).toInt();
+		lock.group_end = settings.value("group_end", -1).toInt();
+
+		const auto decoded =
+		    QByteArray::fromBase64(settings.value("frozen").toString().toLatin1());
+		lock.frozen_content.assign(decoded.constData(), static_cast<size_t>(decoded.size()));
+
+		if (lock.scope == lock_scope_t::group)
+			lock.group_members =
+			    sub_record_merge_t::group_members_in_range(lock.frozen_content, lock.group_start, lock.group_end);
+
+		locks.push_back(std::move(lock));
+	}
+
+	settings.endArray();
+	return locks;
 }
 
 void plugin_session_t::restore_session_state(const QString & ini_path)
@@ -177,6 +243,8 @@ void plugin_session_t::restore_session_state(const QString & ini_path)
 	m_patch_plugins.clear();
 	for (const auto & name : patch_list)
 		m_patch_plugins.insert(name.toStdString());
+
+	const auto saved_locks = load_merge_locks(settings);
 
 	if (m_load_base_path.empty())
 		return;
@@ -213,6 +281,9 @@ void plugin_session_t::restore_session_state(const QString & ini_path)
 	case load_source_t::none:
 		break;
 	}
+
+	if (!saved_locks.empty())
+		m_scan.set_merge_locks(saved_locks);
 }
 
 void plugin_session_t::restore_folder_session()

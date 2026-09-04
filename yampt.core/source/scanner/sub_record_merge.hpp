@@ -73,6 +73,11 @@ public:
 	    const std::string & content,
 	    const std::set<std::string> & ignored_sub_records);
 
+	static std::vector<std::pair<std::string, int>> group_members_in_range(
+	    const std::string & content,
+	    int group_start,
+	    int group_end);
+
 	static size_t find_occurrence_index(const sub_record_sequence_t & sequence, size_t index);
 	static int find_by_type_and_occurrence(
 	    const sub_record_sequence_t & sequence,

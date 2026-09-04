@@ -85,6 +85,23 @@ std::string sub_record_merge_t::filter_sub_records_by_rules(
 	return reconstruct_record(content, filtered);
 }
 
+std::vector<std::pair<std::string, int>> sub_record_merge_t::group_members_in_range(
+    const std::string & content,
+    int group_start,
+    int group_end)
+{
+	std::vector<std::pair<std::string, int>> members;
+	const auto subs = parse_sub_records(content);
+
+	if (group_start < 0 || group_end > static_cast<int>(subs.size()))
+		return members;
+
+	for (int index = group_start; index < group_end; ++index)
+		members.emplace_back(subs[static_cast<size_t>(index)].type, index);
+
+	return members;
+}
+
 size_t sub_record_merge_t::find_occurrence_index(const sub_record_sequence_t & sequence, size_t index)
 {
 	size_t count = 0;

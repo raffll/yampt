@@ -464,6 +464,7 @@ void plugin_workspace_view_t::apply_user_conflict_rules()
 void plugin_workspace_view_t::on_settings_changed()
 {
 	apply_user_conflict_rules();
+	m_editable_columns.set_editing_enabled(m_settings.editing_enabled());
 
 	const auto codepage = static_cast<codepage_t>(m_settings.display_codepage());
 	m_record_view->model()->set_display_codepage(codepage);
@@ -475,6 +476,10 @@ void plugin_workspace_view_t::on_settings_changed()
 		m_session->scan().rebuild_conflicts();
 		refresh_all_views();
 	}
+
+	const auto current = m_record_view->tree()->currentIndex();
+	if (current.isValid())
+		on_view_selection_changed(current);
 }
 
 void plugin_workspace_view_t::refresh_all_views()
@@ -594,15 +599,6 @@ void plugin_workspace_view_t::set_show_deleted_strikeout(bool value)
 {
 	m_record_view->model()->set_show_deleted_strikeout(value);
 	m_nav_view->set_show_deleted_strikeout(value);
-}
-
-void plugin_workspace_view_t::set_editing_enabled(bool value)
-{
-	m_editable_columns.set_editing_enabled(value);
-
-	const auto current = m_record_view->tree()->currentIndex();
-	if (current.isValid())
-		on_view_selection_changed(current);
 }
 
 bool plugin_workspace_view_t::is_show_deleted_strikeout() const
@@ -765,11 +761,13 @@ void plugin_workspace_view_t::on_view_selection_changed(const QModelIndex & curr
 		left_text = model->full_value_at(left_index);
 
 	if (right_text == non_existent_value && (left_text.empty() || left_text == non_existent_value))
+	{
 		m_preview->clear();
-	else
-		m_preview->show_comparison(left_text, right_text);
+		return;
+	}
 
 	m_preview->update_selection(current, model, right_text);
+	m_preview->show_comparison(left_text, right_text);
 }
 
 void plugin_workspace_view_t::display_record_in_view(const conflict_entry_t & entry)
@@ -903,6 +901,7 @@ void plugin_workspace_view_t::restore_session_state()
 
 	m_conflicts_only = settings.value("view/conflicts_only", false).toBool();
 	m_hide_duplicates = settings.value("view/hide_duplicates", false).toBool();
+	m_editable_columns.set_editing_enabled(m_settings.editing_enabled());
 
 	m_record_view->model()->set_show_deleted_strikeout(settings.value("view/show_deleted_strikeout", false).toBool());
 	m_nav_view->set_show_deleted_strikeout(m_record_view->model()->show_deleted_strikeout());

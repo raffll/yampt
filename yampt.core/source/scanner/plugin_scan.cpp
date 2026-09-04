@@ -530,6 +530,37 @@ bool plugin_scan_t::is_merge_pinned(const std::string & rec_type, const std::str
 	return m_merge_store.is_pinned(rec_type, record_id);
 }
 
+void plugin_scan_t::add_merge_lock(const merge_lock_t & lock)
+{
+	m_merge_store.add_lock(lock);
+}
+
+void plugin_scan_t::remove_merge_lock(const merge_lock_t & lock)
+{
+	m_merge_store.remove_lock(lock);
+}
+
+bool plugin_scan_t::has_merge_lock(const merge_lock_t & lock) const
+{
+	return m_merge_store.has_lock(lock);
+}
+
+std::vector<merge_lock_t> plugin_scan_t::merge_locks_for(const std::string & rec_type, const std::string & record_id)
+    const
+{
+	return m_merge_store.locks_for(rec_type, record_id);
+}
+
+const std::vector<merge_lock_t> & plugin_scan_t::merge_locks() const
+{
+	return m_merge_store.locks();
+}
+
+void plugin_scan_t::set_merge_locks(const std::vector<merge_lock_t> & locks)
+{
+	m_merge_store.set_locks(locks);
+}
+
 const std::string * plugin_scan_t::find_merge_content(const std::string & rec_type, const std::string & record_id) const
 {
 	return m_merge_store.find_content(rec_type, record_id);

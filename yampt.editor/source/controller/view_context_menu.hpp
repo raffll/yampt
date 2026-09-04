@@ -3,6 +3,7 @@
 #include "../model/field_binary_resolver.hpp"
 #include "../model/nav_tree_model.hpp"
 #include "../model/view_tree_model.hpp"
+#include <scanner/merge_patch_store.hpp>
 #include <functional>
 #include <QModelIndex>
 #include <QPoint>
@@ -61,6 +62,8 @@ private:
 	void build_copy_to_merge_menu(QMenu & menu, const view_menu_context_t & context);
 	void build_source_copy_menu(QMenu & menu, const view_menu_context_t & context);
 	void build_merge_remove_menu(QMenu & menu, const view_menu_context_t & context);
+	void build_lock_menu(QMenu & menu, const view_menu_context_t & context);
+	merge_lock_t build_lock_for(const view_menu_context_t & context) const;
 	void build_sub_record_ignore_menu(QMenu & menu, const view_menu_context_t & context);
 	void toggle_ignore_rule(const std::string & rule, bool remove_rule);
 	void add_copy_bit_action(QMenu & menu, const view_menu_context_t & context);

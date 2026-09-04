@@ -37,7 +37,6 @@ public:
 
 	void set_conflicts_only(bool value);
 	void set_show_deleted_strikeout(bool value);
-	void set_editing_enabled(bool value);
 
 	bool is_conflicts_only() const
 	{

@@ -178,20 +178,6 @@ void editor_window_t::setup_toolbar()
 
 	toolbar->addSeparator();
 
-	m_editing_btn = new QToolButton(this);
-	m_editing_btn->setText(tr("Enable Editing"));
-	m_editing_btn->setToolTip(tr("Allow editing decoded fields directly in all plugins"));
-	m_editing_btn->setCheckable(true);
-	m_editing_btn->setChecked(false);
-	toolbar->addWidget(m_editing_btn);
-	connect(
-	    m_editing_btn,
-	    &QToolButton::toggled,
-	    this,
-	    [this](bool checked) { m_plugin_workspace_view->set_editing_enabled(checked); });
-
-	toolbar->addSeparator();
-
 	m_no_filters_btn = new QToolButton(this);
 	m_no_filters_btn->setText(tr("No Filters"));
 	m_no_filters_btn->setToolTip(tr("Clear all filters and search"));
