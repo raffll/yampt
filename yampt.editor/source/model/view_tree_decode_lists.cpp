@@ -422,10 +422,17 @@ void view_tree_model_t::collect_container_entries(record_context_t & context, sl
 
 void view_tree_model_t::emit_slot_rows(record_context_t & context, slot_build_context_t & build_ctx)
 {
+	std::unordered_map<std::string, int> type_counts;
+	for (const auto & slot : build_ctx.unified_slots)
+		++type_counts[slot.type];
+
 	for (const auto & slot : build_ctx.unified_slots)
 	{
 		auto row = build_slot_row(context.col_count, context.all_sub_records, build_ctx.col_type_indices, slot);
-		row.label += " #" + std::to_string(slot.occurrence);
+
+		if (type_counts[slot.type] > 1)
+			row.label += " #" + std::to_string(slot.occurrence);
+
 		m_rows.push_back(std::move(row));
 	}
 

@@ -53,7 +53,7 @@
 - [CHANGE] The dialogue response list is now a single collapsible "Dialogue Responses" group in the record view instead of a flat separator followed by loose rows
 - [CHANGE] The status bar now reads "mode | path | plugin" (for example "MO2 | ...profiles/Default | Morrowind.esm") and no longer appends the selected record type and id
 - [CHANGE] Each faction reaction now appears as a single collapsible "Faction Reaction" group in the record view, pairing the reacting faction with its reaction value, instead of separate loose rows
-- [CHANGE] Repeating sub-records in the record view (such as a container's items and an NPC's spells) are now numbered, so each row reads "NPCO - Item #0", "NPCO - Item #1", and so on
+- [CHANGE] Sub-records that repeat within a record (such as a container's items and an NPC's spells) are now numbered in the record view, so each row reads "NPCO - Item #0", "NPCO - Item #1", and so on; sub-records that appear only once are left unnumbered
 - [FIX] The Edit panel comparison now leaves a pane blank when the corresponding plugin has no version of the selected sub-record, instead of showing stray placeholder characters
 - [FIX] Sub-records excluded from the merged patch now show their row text in the neutral color instead of the red, yellow, or orange conflict coloring, matching their greyed-out background
 - [FIX] Merging a record where two mods change different parts of the same multi-byte value (such as a weapon's stat) no longer produces a spliced value that neither mod set; each value is now taken whole from one mod
