@@ -575,6 +575,7 @@ merge_lock_t view_context_menu_t::build_lock_for(const view_menu_context_t & con
 			lock.sub_size = resolved.sub_size;
 			lock.field_index = resolved.field_index;
 			lock.bit_index = resolved.bit_index;
+			lock.occurrence = resolved.occurrence;
 			break;
 		}
 
@@ -583,6 +584,7 @@ merge_lock_t view_context_menu_t::build_lock_for(const view_menu_context_t & con
 		lock.sub_type = resolved.sub_type;
 		lock.sub_size = resolved.sub_size;
 		lock.field_index = context.row.schema_field_index;
+		lock.occurrence = resolved.occurrence;
 		break;
 	}
 

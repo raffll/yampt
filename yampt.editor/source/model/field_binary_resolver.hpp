@@ -12,6 +12,7 @@ namespace field_binary_resolver
 		std::string sub_type;
 		size_t sub_size = 0;
 		int binary_index = -1;
+		int occurrence = 0;
 	};
 
 	const view_tree_model_t::view_node_t * find_sub_record_node(
@@ -32,6 +33,7 @@ namespace field_binary_resolver
 		int binary_index = -1;
 		int field_index = -1;
 		int bit_index = -1;
+		int occurrence = 0;
 	};
 
 	resolved_bit_t resolve_bit(

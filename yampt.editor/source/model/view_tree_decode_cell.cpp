@@ -371,7 +371,7 @@ view_tree_model_t::view_node_t view_tree_model_t::build_ref_child(
 		view_node_t sub_group;
 		sub_group.type = slot.type;
 		sub_group.size = 0;
-		sub_group.label = slot.type;
+		sub_group.label = make_sub_label(slot.type, m_record_type, first_size);
 		sub_group.values.resize(col_count);
 		sub_group.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
 		sub_group.row_conflict_all = conflict_all_t::only_one;

@@ -44,7 +44,7 @@ namespace field_binary_resolver
 		if (binary_index < 0)
 			return {};
 
-		return { true, sub_record_node->type, sub_record_node->size, binary_index };
+		return { true, sub_record_node->type, sub_record_node->size, binary_index, sub_record_node->occurrence };
 	}
 
 	resolved_bit_t resolve_bit(
@@ -60,6 +60,7 @@ namespace field_binary_resolver
 		if (!field.found)
 			return {};
 
-		return { true, field.sub_type, field.sub_size, field.binary_index, schema_field_index, bit_index };
+		return { true, field.sub_type, field.sub_size, field.binary_index, schema_field_index, bit_index,
+			     field.occurrence };
 	}
 }

@@ -83,6 +83,38 @@ TEST_CASE("field_binary_resolver::find_sub_record_node, skips empty-type ancesto
 	REQUIRE(found == &sub_record);
 }
 
+TEST_CASE("field_binary_resolver::resolve, reports parent sub-record occurrence", "[u]")
+{
+	static constexpr int column = 1;
+	static constexpr int third_occurrence = 2;
+
+	auto sub_record = make_sub_record_node("NPCO", 36, column);
+	sub_record.occurrence = third_occurrence;
+
+	const std::vector<const view_node_t *> ancestors { &sub_record };
+
+	const auto resolved = field_binary_resolver::resolve(ancestors, column, 1);
+
+	REQUIRE(resolved.found);
+	REQUIRE(resolved.occurrence == third_occurrence);
+}
+
+TEST_CASE("field_binary_resolver::resolve_bit, reports parent sub-record occurrence", "[u]")
+{
+	static constexpr int column = 0;
+	static constexpr int second_occurrence = 1;
+
+	auto sub_record = make_sub_record_node("BYDT", 4, column);
+	sub_record.occurrence = second_occurrence;
+
+	const std::vector<const view_node_t *> ancestors { &sub_record };
+
+	const auto resolved = field_binary_resolver::resolve_bit(ancestors, column, 2, 1);
+
+	REQUIRE(resolved.found);
+	REQUIRE(resolved.occurrence == second_occurrence);
+}
+
 TEST_CASE("field_binary_resolver::resolve, negative field index fails", "[u]")
 {
 	auto sub_record = make_sub_record_node("CLDT", 60, 0);
