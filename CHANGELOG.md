@@ -1,6 +1,6 @@
 # Changelog
 
-## [XXX]
+## [0.1135] - 2026-09-04
 
 ### yTranslator
 - [NEW] Added Spanish and Portuguese, plus Czech, Slovak, Slovenian, Croatian, Romanian, Ukrainian, Bulgarian, Serbian, Dutch, Swedish, Danish, Norwegian Bokmal, Finnish, Catalan, and Galician as target languages; Finnish can be translated but has no spell-check dictionary
