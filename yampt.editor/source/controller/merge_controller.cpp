@@ -71,6 +71,16 @@ void merge_controller_t::set_record_removal_callback(record_removal_fn_t removal
 	m_record_removal = std::move(removal_fn);
 }
 
+void merge_controller_t::set_progress_callback(progress_fn_t progress_fn)
+{
+	m_progress = std::move(progress_fn);
+}
+
+void merge_controller_t::set_phase_callback(phase_fn_t phase_fn)
+{
+	m_phase = std::move(phase_fn);
+}
+
 bool merge_controller_t::create_merged_patch()
 {
 	if (m_session.has_any_unsaved())
@@ -111,8 +121,24 @@ bool merge_controller_t::create_merged_patch()
 	if (!m_session.scan().has_merge())
 		m_session.scan().set_merge_plugin("Merged Patch.esp");
 
+	if (m_phase)
+		m_phase(QCoreApplication::translate("yEditor", "Merging records...").toStdString());
+
 	create_merge_records();
-	m_session.scan().rebuild_conflicts();
+
+	if (m_phase)
+		m_phase(QCoreApplication::translate("yEditor", "Computing conflicts...").toStdString());
+
+	if (m_progress)
+		m_progress(0, 1);
+
+	m_session.scan().rebuild_conflicts(
+	    [this](size_t done, size_t total)
+	{
+		if (m_progress)
+			m_progress(static_cast<int>(done), static_cast<int>(total));
+	});
+
 	m_nav_view.rebuild_preserving_state();
 
 	m_log("[info] merge record count: " + std::to_string(m_session.scan().merge_record_count()));
@@ -625,6 +651,8 @@ int merge_controller_t::create_merge_records()
 
 	auto_merge_t merge(m_session.scan());
 	merge.set_config(config);
+	if (m_progress)
+		merge.set_progress_callback(m_progress);
 	const auto counters = merge.execute();
 
 	m_session.scan().restore_pinned_records(pinned_records);

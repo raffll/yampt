@@ -11,6 +11,7 @@
 #include <QSettings>
 #include <QShortcut>
 #include <QStatusBar>
+#include <QTimer>
 #include <QToolBar>
 #include <QToolButton>
 #include <QVBoxLayout>
@@ -36,6 +37,8 @@ editor_window_t::editor_window_t(QWidget * parent)
 	setup_menu_bar();
 	setup_toolbar();
 	restore_panel_state();
+
+	QTimer::singleShot(0, this, [this]() { m_plugin_workspace_view->restore_session_state(); });
 
 	connect(
 	    &theme_system_t::instance(),
@@ -287,8 +290,6 @@ void editor_window_t::load_config()
 	auto state = settings.value("window/state").toByteArray();
 	if (!state.isEmpty())
 		restoreState(state);
-
-	m_plugin_workspace_view->restore_session_state();
 }
 
 void editor_window_t::save_config()

@@ -4,6 +4,7 @@
 #include "conflict_enums.hpp"
 #include "merge_patch_store.hpp"
 #include "plugin_index.hpp"
+#include <functional>
 #include <memory>
 #include <set>
 #include <string>
@@ -37,7 +38,9 @@ public:
 	void clear_merge_records();
 	std::vector<merge_record_t> collect_pinned_records() const;
 	void restore_pinned_records(const std::vector<merge_record_t> & pinned);
-	void rebuild_conflicts();
+
+	using conflict_progress_fn_t = std::function<void(size_t done, size_t total)>;
+	void rebuild_conflicts(const conflict_progress_fn_t & progress_fn = {});
 
 	size_t plugin_count() const;
 	const std::string & plugin_path(int idx) const;

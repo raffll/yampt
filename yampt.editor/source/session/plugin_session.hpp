@@ -58,6 +58,8 @@ signals:
 	void plugins_loaded();
 	void plugins_unloaded();
 	void log_message(const std::string & message);
+	void load_progress(int done, int total);
+	void load_phase(const std::string & label);
 
 private:
 	struct mo2_resolve_context_t

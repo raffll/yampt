@@ -106,7 +106,7 @@ const std::set<std::string> & plugin_scan_t::user_ignore_conflict() const
 	return m_user_ignore_conflict;
 }
 
-void plugin_scan_t::rebuild_conflicts()
+void plugin_scan_t::rebuild_conflicts(const conflict_progress_fn_t & progress_fn)
 {
 	m_entries.clear();
 	m_entry_lookup.clear();
@@ -152,11 +152,21 @@ void plugin_scan_t::rebuild_conflicts()
 		}
 	}
 
-	for (auto & entry : m_entries)
+	const size_t total_entries = m_entries.size();
+	constexpr size_t progress_stride = 256;
+
+	for (size_t entry_index = 0; entry_index < total_entries; ++entry_index)
 	{
+		auto & entry = m_entries[entry_index];
 		if (entry.versions.size() >= 2)
 			compute_conflict(entry);
+
+		if (progress_fn && entry_index % progress_stride == 0)
+			progress_fn(entry_index, total_entries);
 	}
+
+	if (progress_fn)
+		progress_fn(total_entries, total_entries);
 }
 
 struct conflict_accumulator_t

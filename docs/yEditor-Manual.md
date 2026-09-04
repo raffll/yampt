@@ -12,6 +12,8 @@ Open File menu and choose one of three loading methods:
 
 When a merged patch is present, it is always loaded last, after every other plugin, no matter where MO2 or OpenMW places it in the sort order. This keeps its column at the far right of the record view so it always wins over the plugins it merges.
 
+The main window opens immediately, and a progress dialog shows how far the load has got while plugins are read into memory. The same dialog reappears at startup while the previous session is restored, so the window is visible right away instead of waiting for every plugin to load first.
+
 Use **Unload All** to close everything and start fresh.
 
 If any loaded plugin has unsaved field edits, you are prompted before those edits would be lost. Loading a new set of plugins, unloading everything, cleaning, and closing the application each offer to save the pending changes, discard them, or cancel the action and keep everything as it is.
@@ -152,7 +154,7 @@ The auto-merge performs several operations:
 - **Three-way record merge** — for object records modified by multiple plugins, compares each plugin's changes against the master. Non-conflicting field changes from different plugins are combined into one record.
 - **Bug fixes** — optionally corrects known engine bugs: fog density values outside valid range, summon persistence flags, and cell name reverts.
 
-After auto-merge completes, the merged patch is saved automatically. The output location depends on how you loaded plugins: same folder for Open Folder, MO2 overwrite directory for Open MO2 Profile, or the OpenMW data directory for Open OpenMW Config.
+A progress dialog shows how far the merge has got while records are processed. After auto-merge completes, the merged patch is saved automatically. The output location depends on how you loaded plugins: same folder for Open Folder, MO2 overwrite directory for Open MO2 Profile, or the OpenMW data directory for Open OpenMW Config.
 
 You can refine the auto-merge result manually. Use the record view context menu to copy individual sub-records from any plugin column into the merged patch, or remove sub-records that shouldn't be there. Changes are saved immediately.
 

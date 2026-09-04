@@ -19,6 +19,8 @@
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QMessageBox>
+#include <QProgressDialog>
+#include <QScreen>
 #include <QSettings>
 #include <QShortcut>
 #include <QTreeView>
@@ -88,6 +90,11 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 		m_history_view->update_history(m_edit_history.entries());
 	});
 
+	m_merge_controller->set_progress_callback([this](int done, int total) { update_progress(done, total); });
+
+	m_merge_controller->set_phase_callback(
+	    [this](const std::string & label) { set_progress_phase(QString::fromStdString(label)); });
+
 	m_context_menu = new view_context_menu_t(
 	    *m_session,
 	    *m_record_view,
@@ -151,6 +158,16 @@ void plugin_workspace_view_t::setup_connections()
 		update_status();
 	});
 	connect(m_session, &plugin_session_t::log_message, this, &plugin_workspace_view_t::log_message);
+	connect(
+	    m_session,
+	    &plugin_session_t::load_progress,
+	    this,
+	    [this](int done, int total) { update_progress(done, total); });
+	connect(
+	    m_session,
+	    &plugin_session_t::load_phase,
+	    this,
+	    [this](const std::string & label) { set_progress_phase(QString::fromStdString(label)); });
 
 	connect(m_lua_scan_worker, &lua_scan_worker_t::scan_complete, this, &plugin_workspace_view_t::on_lua_scan_complete);
 
@@ -206,7 +223,9 @@ void plugin_workspace_view_t::load_plugins_from_paths(
 	if (selected.empty())
 		return;
 
+	show_progress(tr("Loading plugins..."));
 	m_session->load_from_folder(selected, base_path);
+	hide_progress();
 }
 
 void plugin_workspace_view_t::on_load_data_files()
@@ -261,7 +280,9 @@ void plugin_workspace_view_t::on_load_mo2_profile()
 	if (profile_dir.isEmpty())
 		return;
 
+	show_progress(tr("Loading plugins..."));
 	m_session->load_from_mo2_profile(profile_dir);
+	hide_progress();
 	m_settings.set_last_directory(profile_dir.toStdString());
 }
 
@@ -278,7 +299,9 @@ void plugin_workspace_view_t::on_load_openmw_cfg()
 	if (cfg_path.isEmpty())
 		return;
 
+	show_progress(tr("Loading plugins..."));
 	m_session->load_from_openmw_cfg(cfg_path);
+	hide_progress();
 	const auto cfg_dir = QFileInfo(cfg_path).absolutePath();
 	m_settings.set_last_directory(cfg_dir.toStdString());
 }
@@ -349,7 +372,12 @@ void plugin_workspace_view_t::on_save_all()
 
 void plugin_workspace_view_t::on_create_merged_patch()
 {
-	if (!m_merge_controller->create_merged_patch())
+	m_progress_label = tr("Creating merged patch...");
+	const bool created = m_merge_controller->create_merged_patch();
+	hide_progress();
+	m_progress_label.clear();
+
+	if (!created)
 		return;
 
 	refresh_all_views();
@@ -892,7 +920,9 @@ void plugin_workspace_view_t::restore_session_state()
 	if (!content_state.isEmpty())
 		m_content_splitter->restoreState(content_state);
 
+	show_progress(tr("Loading plugins..."));
 	m_session->restore_session_state(ini_path);
+	hide_progress();
 
 	auto rec_type = settings.value("session/nav_rec_type").toString().toStdString();
 	auto record_id = settings.value("session/nav_record_id").toString().toStdString();
@@ -916,6 +946,76 @@ void plugin_workspace_view_t::restore_session_state()
 
 	m_nav_view->tree_widget()->setCurrentIndex(target_index);
 	m_nav_view->tree_widget()->scrollTo(target_index);
+}
+
+void plugin_workspace_view_t::show_progress(const QString & label)
+{
+	if (!m_progress_dialog)
+	{
+		m_progress_dialog = new QProgressDialog(this);
+		m_progress_dialog->setWindowModality(Qt::WindowModal);
+		m_progress_dialog->setCancelButton(nullptr);
+		m_progress_dialog->setMinimumDuration(0);
+		m_progress_dialog->setAutoClose(false);
+		m_progress_dialog->setAutoReset(false);
+
+		const auto * target_screen = screen();
+		if (target_screen)
+		{
+			const int quarter_width = target_screen->availableGeometry().width() / 4;
+			m_progress_dialog->setFixedWidth(quarter_width);
+		}
+	}
+
+	m_progress_label = label;
+	m_progress_dialog->setWindowTitle(label);
+	m_progress_dialog->setLabelText(label);
+	m_progress_dialog->setRange(0, 0);
+	m_progress_dialog->setValue(0);
+	m_progress_dialog->show();
+	QApplication::processEvents();
+}
+
+void plugin_workspace_view_t::update_progress(int done, int total)
+{
+	if (!m_progress_dialog || !m_progress_dialog->isVisible())
+		show_progress(m_progress_label.isEmpty() ? tr("Working...") : m_progress_label);
+
+	if (total > 0 && done < total)
+	{
+		m_progress_dialog->setRange(0, total);
+		m_progress_dialog->setValue(done);
+	}
+	else
+	{
+		m_progress_dialog->setRange(0, 0);
+	}
+
+	QApplication::processEvents();
+}
+
+void plugin_workspace_view_t::set_progress_phase(const QString & label)
+{
+	m_progress_label = label;
+
+	if (!m_progress_dialog || !m_progress_dialog->isVisible())
+	{
+		show_progress(label);
+
+		return;
+	}
+
+	m_progress_dialog->setLabelText(label);
+	QApplication::processEvents();
+}
+
+void plugin_workspace_view_t::hide_progress()
+{
+	if (!m_progress_dialog)
+		return;
+
+	m_progress_dialog->hide();
+	QApplication::processEvents();
 }
 
 void plugin_workspace_view_t::refresh_views()

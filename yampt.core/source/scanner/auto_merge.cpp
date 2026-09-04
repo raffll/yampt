@@ -16,6 +16,11 @@ void auto_merge_t::set_config(const merge_config_t & config)
 	m_config = config;
 }
 
+void auto_merge_t::set_progress_callback(progress_fn_t progress_fn)
+{
+	m_progress_fn = std::move(progress_fn);
+}
+
 merge_counters_t auto_merge_t::execute()
 {
 	m_log.clear();
@@ -113,8 +118,15 @@ void auto_merge_t::process_groups(merge_counters_t & counters)
 		}
 	}
 
+	const int total_groups = static_cast<int>(m_groups.size());
+	int processed_groups = 0;
+
 	for (const auto & group : m_groups)
 	{
+		++processed_groups;
+		if (m_progress_fn)
+			m_progress_fn(processed_groups, total_groups);
+
 		if (should_skip_group(group, exclusion_regex, has_exclusion))
 			continue;
 

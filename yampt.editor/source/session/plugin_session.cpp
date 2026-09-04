@@ -325,18 +325,30 @@ void plugin_session_t::load_plugins_internal(const std::vector<std::string> & pa
 	m_dirty_plugins.clear();
 	m_patch_builder->clear();
 
+	const int total_steps = static_cast<int>(paths.size());
+	int completed_steps = 0;
+	emit load_progress(completed_steps, total_steps);
+
 	for (const auto & path : paths)
 	{
-		if (!QFile::exists(QString::fromStdString(path)))
-		{
-			emit log_message("[warning] skipping missing plugin: " + path);
-			continue;
-		}
+		++completed_steps;
+		emit load_progress(completed_steps, total_steps);
 
 		auto filename = path;
 		auto pos = filename.find_last_of("/\\");
 		if (pos != std::string::npos)
 			filename = filename.substr(pos + 1);
+
+		emit load_phase(
+		    QCoreApplication::translate("yEditor", "Loading %1")
+		        .arg(QString::fromStdString(filename))
+		        .toStdString());
+
+		if (!QFile::exists(QString::fromStdString(path)))
+		{
+			emit log_message("[warning] skipping missing plugin: " + path);
+			continue;
+		}
 
 		try
 		{
@@ -365,7 +377,10 @@ void plugin_session_t::load_plugins_internal(const std::vector<std::string> & pa
 	if (m_scan.plugin_count() == 0)
 		return;
 
-	m_scan.rebuild_conflicts();
+	emit load_phase(QCoreApplication::translate("yEditor", "Computing conflicts...").toStdString());
+	emit load_progress(0, 1);
+	m_scan.rebuild_conflicts(
+	    [this](size_t done, size_t total) { emit load_progress(static_cast<int>(done), static_cast<int>(total)); });
 	emit plugins_loaded();
 }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sub_record_merge.hpp"
+#include <functional>
 #include <regex>
 #include <set>
 #include <string>
@@ -36,9 +37,12 @@ struct merge_log_entry_t
 class auto_merge_t
 {
 public:
+	using progress_fn_t = std::function<void(int done, int total)>;
+
 	explicit auto_merge_t(plugin_scan_t & scan);
 
 	void set_config(const merge_config_t & config);
+	void set_progress_callback(progress_fn_t progress_fn);
 	merge_counters_t execute();
 
 	const std::vector<merge_log_entry_t> & log_entries() const;
@@ -85,4 +89,5 @@ private:
 	merge_config_t m_config;
 	std::vector<record_group_t> m_groups;
 	std::vector<merge_log_entry_t> m_log;
+	progress_fn_t m_progress_fn;
 };

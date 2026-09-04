@@ -17,6 +17,7 @@
 #include <scanner/plugin_scan.hpp>
 #include <QLabel>
 #include <QMessageBox>
+#include <QProgressDialog>
 #include <QSplitter>
 #include <QTabWidget>
 #include <QWidget>
@@ -126,6 +127,11 @@ private:
 	void apply_effective_filter();
 	QMessageBox::StandardButton prompt_unsaved(bool allow_discard);
 
+	void show_progress(const QString & label);
+	void update_progress(int done, int total);
+	void set_progress_phase(const QString & label);
+	void hide_progress();
+
 	settings_store_t & m_settings;
 	plugin_session_t * m_session = nullptr;
 	merge_controller_t * m_merge_controller = nullptr;
@@ -154,6 +160,8 @@ private:
 
 	QLabel * m_status_label = nullptr;
 	QLabel * m_validation_label = nullptr;
+	QProgressDialog * m_progress_dialog = nullptr;
+	QString m_progress_label;
 
 	nav_tree_model_t::filter_state_t m_advanced_filter;
 	nav_tree_model_t::filter_state_t m_search_filter;
