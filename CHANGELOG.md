@@ -57,6 +57,9 @@
 - [FIX] Faction reaction values now line up by faction across plugin columns in the record view, instead of being matched by position so different factions shared a row
 - [FIX] Editing a dialogue condition now updates that condition in place instead of adding a duplicate condition
 - [FIX] The merged patch is now always loaded last, regardless of where MO2 or OpenMW places it in the load order, so its column stays at the far right and it wins over the plugins it merges
+- [FIX] When several plugins each change the same field of a record and the last plugin reverts it to the original, the merged patch now keeps the change from the latest plugin that made one, instead of the earliest
+- [FIX] Armor and clothing body-part records now merge correctly: a female or male body-part name added by one plugin is carried into the merged patch in its own body-part slot, instead of being dropped or attached to the wrong body part
+- [FIX] Creature attack damage values (minimum and maximum for each of the three attacks) now merge as whole values, so a merged creature no longer ends up with a corrupted attack range
 
 ## [0.1060] - 2026-08-31
 

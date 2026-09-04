@@ -1259,3 +1259,232 @@ TEST_CASE("sub_record_merge_t::filter_sub_records_by_rules, reference-group sub-
 
 	REQUIRE(filtered == content);
 }
+
+static std::string make_aodt(uint32_t value, uint32_t health, uint32_t enchant_points, uint32_t armor_rating)
+{
+	std::string data(24, '\0');
+	const uint32_t type = 0;
+	const float weight = 4.0f;
+	std::memcpy(data.data() + 0, &type, 4);
+	std::memcpy(data.data() + 4, &weight, 4);
+	std::memcpy(data.data() + 8, &value, 4);
+	std::memcpy(data.data() + 12, &health, 4);
+	std::memcpy(data.data() + 16, &enchant_points, 4);
+	std::memcpy(data.data() + 20, &armor_rating, 4);
+	return data;
+}
+
+static std::string make_armo(uint32_t value, uint32_t health, uint32_t enchant_points, uint32_t armor_rating)
+{
+	return make_record(
+	    "ARMO",
+	    make_sub("NAME", make_string("adamantium_helm")) + make_sub("FNAM", make_string("Adamantium Helmet")) +
+	        make_sub("AODT", make_aodt(value, health, enchant_points, armor_rating)));
+}
+
+static uint32_t read_aodt_field(const std::string & record_content, size_t field_offset)
+{
+	const auto subs = sub_record_merge_t::parse_sub_records(record_content);
+	for (const auto & entry : subs)
+	{
+		if (entry.type != "AODT")
+			continue;
+
+		uint32_t value = 0;
+		std::memcpy(&value, entry.data.data() + field_offset, 4);
+		return value;
+	}
+
+	return 0;
+}
+
+TEST_CASE("sub_record_merge_t::merge, highest-priority intermediate field change wins when winner reverted", "[u]")
+{
+	std::vector<std::string> versions = {
+		make_armo(5000, 900, 500, 70),
+		make_armo(5000, 900, 500, 40),
+		make_armo(9500, 575, 400, 50),
+		make_armo(9500, 575, 400, 50),
+		make_armo(5000, 900, 500, 70),
+		make_armo(5000, 900, 500, 70),
+	};
+
+	merge_input_t input;
+	input.rec_type = "ARMO";
+	input.record_id = "adamantium_helm";
+	input.version_contents = versions;
+
+	const auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(read_aodt_field(result.content, 8) == 9500);
+	REQUIRE(read_aodt_field(result.content, 12) == 575);
+	REQUIRE(read_aodt_field(result.content, 16) == 400);
+	REQUIRE(read_aodt_field(result.content, 20) == 50);
+}
+
+static std::string make_indx(uint32_t armor_index)
+{
+	return make_sub("INDX", make_uint32(armor_index));
+}
+
+static bool has_contiguous_part(const std::string & content, uint32_t armor_index, const std::string & member_type,
+    const std::string & member_value)
+{
+	const auto subs = sub_record_merge_t::parse_sub_records(content);
+	for (size_t i = 0; i < subs.size(); ++i)
+	{
+		if (subs[i].type != "INDX" || subs[i].data.size() < 4)
+			continue;
+
+		uint32_t index_value = 0;
+		std::memcpy(&index_value, subs[i].data.data(), 4);
+		if (index_value != armor_index)
+			continue;
+
+		for (size_t j = i + 1; j < subs.size(); ++j)
+		{
+			if (subs[j].type != "BNAM" && subs[j].type != "CNAM")
+				break;
+
+			if (subs[j].type == member_type && subs[j].data == make_string(member_value))
+				return true;
+		}
+	}
+
+	return false;
+}
+
+TEST_CASE("sub_record_merge_t::merge, ARMO intermediate-only CNAM lands in its body part", "[u]")
+{
+	const auto header = make_sub("NAME", make_string("dreugh_cuirass")) + make_sub("AODT", std::string(24, '\0'));
+
+	auto first = make_record("ARMO", header + make_indx(1) + make_sub("BNAM", make_string("a_dreugh_cuirass")));
+	auto inter = make_record(
+	    "ARMO",
+	    header + make_indx(1) + make_sub("BNAM", make_string("uni_cuirass_dreugh")) +
+	        make_sub("CNAM", make_string("uni_cuirass_dreugh_f")));
+	auto winner = make_record("ARMO", header + make_indx(1) + make_sub("BNAM", make_string("a_dreugh_cuirass")));
+
+	merge_input_t input;
+	input.rec_type = "ARMO";
+	input.record_id = "dreugh_cuirass";
+	input.version_contents = { first, inter, winner };
+
+	const auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(has_contiguous_part(result.content, 1, "BNAM", "uni_cuirass_dreugh"));
+	REQUIRE(has_contiguous_part(result.content, 1, "CNAM", "uni_cuirass_dreugh_f"));
+}
+
+TEST_CASE("sub_record_merge_t::merge, ARMO per-part CNAM has no cross-group collision", "[u]")
+{
+	const auto header = make_sub("NAME", make_string("full_suit")) + make_sub("AODT", std::string(24, '\0'));
+
+	const auto part_a_first = make_indx(1) + make_sub("BNAM", make_string("a_helm"));
+	const auto part_b_first = make_indx(2) + make_sub("BNAM", make_string("a_boots")) +
+	                          make_sub("CNAM", make_string("a_boots_f"));
+
+	auto first = make_record("ARMO", header + part_a_first + part_b_first);
+
+	const auto part_a_inter = make_indx(1) + make_sub("BNAM", make_string("a_helm")) +
+	                          make_sub("CNAM", make_string("a_helm_f"));
+	auto inter = make_record("ARMO", header + part_a_inter + part_b_first);
+
+	auto winner = make_record("ARMO", header + part_a_first + part_b_first);
+
+	merge_input_t input;
+	input.rec_type = "ARMO";
+	input.record_id = "full_suit";
+	input.version_contents = { first, inter, winner };
+
+	const auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(has_contiguous_part(result.content, 1, "CNAM", "a_helm_f"));
+	REQUIRE(has_contiguous_part(result.content, 2, "CNAM", "a_boots_f"));
+	REQUIRE_FALSE(has_contiguous_part(result.content, 2, "CNAM", "a_helm_f"));
+}
+
+TEST_CASE("sub_record_merge_t::merge, CLOT CNAM stays in its part with INDX-only parts present", "[u]")
+{
+	constexpr uint32_t cuirass = 1;
+	constexpr uint32_t left_wrist = 6;
+	constexpr uint32_t right_ankle = 9;
+
+	const auto header = make_sub("NAME", make_string("common_robe_02_h")) + make_sub("CTDT", std::string(12, '\0'));
+
+	auto first = make_record(
+	    "CLOT",
+	    header + make_indx(cuirass) + make_sub("BNAM", make_string("c_m_robe_common_02h")) +
+	        make_indx(right_ankle) + make_sub("BNAM", make_string("c_m_robe_common_02h")));
+
+	auto inter = make_record(
+	    "CLOT",
+	    header + make_indx(cuirass) + make_sub("BNAM", make_string("c_m_robe_common_02h")) +
+	        make_sub("CNAM", make_string("c_f_robe_common_02h")) + make_indx(right_ankle) +
+	        make_sub("BNAM", make_string("c_m_robe_common_02h")) + make_indx(left_wrist));
+
+	auto winner = make_record(
+	    "CLOT",
+	    header + make_indx(cuirass) + make_sub("BNAM", make_string("c_m_robe_common_02h")) +
+	        make_indx(right_ankle) + make_sub("BNAM", make_string("c_m_robe_common_02h")));
+
+	merge_input_t input;
+	input.rec_type = "CLOT";
+	input.record_id = "common_robe_02_h";
+	input.version_contents = { first, inter, winner };
+
+	const auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(has_contiguous_part(result.content, cuirass, "CNAM", "c_f_robe_common_02h"));
+	REQUIRE_FALSE(has_contiguous_part(result.content, right_ankle, "CNAM", "c_f_robe_common_02h"));
+}
+
+static std::string make_crea_npdt(uint32_t level, uint32_t attack1_min, uint32_t attack1_max)
+{
+	std::string data(96, '\0');
+	const uint32_t creature_type = 2;
+	std::memcpy(data.data() + 0, &creature_type, 4);
+	std::memcpy(data.data() + 4, &level, 4);
+	std::memcpy(data.data() + 68, &attack1_min, 4);
+	std::memcpy(data.data() + 72, &attack1_max, 4);
+	return data;
+}
+
+static uint32_t read_npdt_u32(const std::string & record_content, size_t field_offset)
+{
+	const auto subs = sub_record_merge_t::parse_sub_records(record_content);
+	for (const auto & entry : subs)
+	{
+		if (entry.type != "NPDT" || entry.data.size() < field_offset + 4)
+			continue;
+
+		uint32_t value = 0;
+		std::memcpy(&value, entry.data.data() + field_offset, 4);
+		return value;
+	}
+
+	return 0;
+}
+
+TEST_CASE("sub_record_merge_t::merge, CREA attack pair merges as 4-byte fields", "[u]")
+{
+	auto first = make_record("CREA", make_sub("NAME", make_string("beast")) + make_sub("NPDT", make_crea_npdt(10, 1, 10)));
+	auto inter = make_record("CREA", make_sub("NAME", make_string("beast")) + make_sub("NPDT", make_crea_npdt(45, 15, 45)));
+	auto winner = make_record("CREA", make_sub("NAME", make_string("beast")) + make_sub("NPDT", make_crea_npdt(10, 1, 10)));
+
+	merge_input_t input;
+	input.rec_type = "CREA";
+	input.record_id = "beast";
+	input.version_contents = { first, inter, winner };
+
+	const auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(read_npdt_u32(result.content, 4) == 45);
+	REQUIRE(read_npdt_u32(result.content, 68) == 15);
+	REQUIRE(read_npdt_u32(result.content, 72) == 45);
+}

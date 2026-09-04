@@ -17,7 +17,7 @@ Wire format (little-endian):
 import os
 import struct
 
-OUT_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
+OUT_DIR = os.path.join(os.path.dirname(__file__), "fixtures", "all_cases")
 
 FLAG_BLOCKED = 0x2000
 FLAG_PERSISTENT = 0x0400

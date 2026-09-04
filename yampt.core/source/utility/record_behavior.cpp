@@ -7,9 +7,9 @@ using enum sub_rule_flag_t;
 static constexpr sub_record_rule_t cell_wildcard = { "*", 0, skip_non_existent };
 
 static constexpr field_pair_rule_t crea_npdt_attack_pairs[] = {
-	{ 68, 70, 2 },
-	{ 72, 74, 2 },
-	{ 76, 78, 2 },
+	{ 68, 72, 4 },
+	{ 76, 80, 4 },
+	{ 84, 88, 4 },
 };
 
 static constexpr paired_merge_rule_t crea_paired_rules[] = {

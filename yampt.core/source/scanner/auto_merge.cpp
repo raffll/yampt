@@ -3,6 +3,8 @@
 #include "fog_fixer.hpp"
 #include "plugin_scan.hpp"
 #include "summon_fixer.hpp"
+#include "../utility/app_logger.hpp"
+#include <cstring>
 #include <map>
 #include <regex>
 #include <unordered_map>
@@ -303,6 +305,39 @@ void auto_merge_t::process_three_way(const record_group_t & group, merge_counter
 	}
 
 	const auto result = sub_record_merge_t::merge(input);
+
+	if (app_logger_t::is_debug() && group.rec_type == "CREA")
+	{
+		std::string note = "[debug] merge CREA \"" + group.record_id +
+		    "\": versions=" + std::to_string(input.version_contents.size()) +
+		    " changed=" + (result.changed ? "yes" : "no");
+
+		const auto read_npdt_level = [](const std::string & content) -> int
+		{
+			const auto subs = sub_record_merge_t::parse_sub_records(content);
+			for (const auto & entry : subs)
+			{
+				if (entry.type != "NPDT" || entry.data.size() < 8)
+					continue;
+
+				uint32_t level = 0;
+				std::memcpy(&level, entry.data.data() + 4, 4);
+				return static_cast<int>(level);
+			}
+
+			return -1;
+		};
+
+		for (size_t v = 0; v < input.version_contents.size(); ++v)
+			note += " | v" + std::to_string(v) + "(" + m_scan.plugin_filename(group.versions[v].plugin_idx) +
+			    ") level=" + std::to_string(read_npdt_level(input.version_contents[v]));
+
+		if (result.changed)
+			note += " | merged level=" + std::to_string(read_npdt_level(result.content));
+
+		add_log(note);
+	}
+
 	if (!result.changed)
 		return;
 
