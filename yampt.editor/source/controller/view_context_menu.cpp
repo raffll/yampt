@@ -77,6 +77,16 @@ void view_context_menu_t::show_nav_menu(const QPoint & global_pos, const nav_tre
 
 	if (!info.record_id.empty() && is_merge)
 	{
+		merge_lock_t lock;
+		lock.rec_type = info.rec_type;
+		lock.record_id = info.record_id;
+		lock.scope = lock_scope_t::whole_record;
+
+		const bool locked = m_merge.is_merge_locked(lock);
+		const auto lock_label = locked ? QCoreApplication::translate("yEditor", "Unlock in Merged Patch")
+		                               : QCoreApplication::translate("yEditor", "Lock in Merged Patch");
+		menu.addAction(lock_label, [this, lock]() { m_merge.toggle_merge_lock(lock); });
+
 		menu.addAction(
 		    QCoreApplication::translate("yEditor", "Remove Record from Merged Patch"),
 		    [this, info]() { m_merge.remove_record_from_merge(info.rec_type, info.record_id); });

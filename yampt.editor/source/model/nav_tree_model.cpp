@@ -835,6 +835,12 @@ QVariant nav_tree_model_t::data_for_record(size_t file_idx, size_t group_idx, in
 		{
 			auto display_id = QString::fromUtf8(decode_to_utf8(entry.record_id, m_display_codepage));
 			display_id.replace('|', " #");
+
+			const int plugin_idx = m_tree[file_idx].plugin_idx;
+			if (m_scan.is_merge_plugin(plugin_idx) &&
+			    !m_scan.merge_locks_for(entry.rec_type, entry.record_id).empty())
+				display_id = QString::fromUtf8("\xF0\x9F\x94\x92 ") + display_id;
+
 			return display_id;
 		}
 

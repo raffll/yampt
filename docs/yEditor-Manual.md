@@ -164,6 +164,8 @@ Right-click a cell in the merged patch column and choose Lock in Merged Patch to
 
 When you regenerate the merged patch, the auto-merge runs as usual and then every locked value is re-applied on top, so a lock is never overwritten by the merge. This is useful when the automatic result for one field is wrong and you want to pin your chosen value while still letting everything else re-merge. A group lock covers only the members that were in the group when you locked it; if a later merge adds a new member to the same group, the lock leaves it alone, and you can lock the new member separately if you want.
 
+You can also lock an entire record straight from the navigation tree: right-click a record under the merged patch and choose Lock in Merged Patch to freeze the whole record, or Unlock in Merged Patch to release it. This is the quickest way to pin a complete record such as a script or a leveled list. A locked record is marked with a lock icon in the navigation tree so you can see at a glance which records are held.
+
 Right-click a locked cell and choose Unlock in Merged Patch to remove the lock. Locks are remembered between sessions.
 
 A merged patch can be created even with a single plugin loaded. With one plugin there is nothing to merge automatically, so the patch starts empty; it still gives you a merged-patch column to copy records into by hand, which is a convenient way to build a small patch from one mod. The empty patch is written to disk like any other, and it gains its master references as you copy records into it.

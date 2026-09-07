@@ -3,6 +3,7 @@
 ## [XXX]
 
 ### yEditor
+- [NEW] Lock an entire record directly from the navigation tree: right-click a record under the merged patch and choose Lock in Merged Patch to freeze the whole record, or Unlock in Merged Patch to release it; locked records are marked with a lock icon in the navigation tree
 - [FIX] An unused skill or attribute slot in a record (such as a race's empty bonus-skill slots) now reads "None" in the record view instead of the raw number 4294967295
 - [FIX] Locking a group in the merged patch now covers exactly the group members you selected, following the same rules as copying a group; the Lock and Unlock options are greyed out when the right-clicked cell has nothing that can be locked
 
