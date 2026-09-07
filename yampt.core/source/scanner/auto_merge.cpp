@@ -342,9 +342,6 @@ void auto_merge_t::apply_fog_fixes(merge_counters_t & counters)
 		if (group.rec_type != "CELL")
 			continue;
 
-		if (m_scan.is_merge_pinned("CELL", group.record_id))
-			continue;
-
 		const auto * merge_content = m_scan.find_merge_content("CELL", group.record_id);
 		const auto & last_ver = group.versions.back();
 		const auto content =
@@ -368,9 +365,6 @@ void auto_merge_t::apply_summon_fixes(merge_counters_t & counters)
 	for (const auto & group : m_groups)
 	{
 		if (group.rec_type != "CREA")
-			continue;
-
-		if (m_scan.is_merge_pinned("CREA", group.record_id))
 			continue;
 
 		const auto * merge_content = m_scan.find_merge_content("CREA", group.record_id);
@@ -399,9 +393,6 @@ void auto_merge_t::apply_cell_name_fixes(merge_counters_t & counters)
 			continue;
 
 		if (group.versions.size() < 3)
-			continue;
-
-		if (m_scan.is_merge_pinned("CELL", group.record_id))
 			continue;
 
 		auto version_contents = read_version_contents(group);

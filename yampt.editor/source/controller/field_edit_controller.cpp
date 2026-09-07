@@ -142,10 +142,7 @@ edit_result_t field_edit_controller_t::commit_to_merge(
 	const auto & rec_type = request.record_type;
 	const auto & record_id = request.record_id;
 
-	if (m_session.scan().is_merge_pinned(rec_type, record_id))
-		m_session.scan().pin_record_to_merge(rec_type, record_id, patched_content);
-	else
-		m_session.scan().copy_record_to_merge_raw(rec_type, record_id, patched_content);
+	m_session.scan().copy_record_to_merge_raw(rec_type, record_id, patched_content);
 
 	m_session.scan().recompute_single_conflict(rec_type, record_id);
 	emit record_modified(true, {});

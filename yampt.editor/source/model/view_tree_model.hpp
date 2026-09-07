@@ -242,7 +242,6 @@ private:
 	bool m_has_merge_column = false;
 	std::set<std::string> m_user_ignore_conflict;
 	int m_merge_col_index = -1;
-	bool m_is_merge_pinned = false;
 	std::vector<merge_lock_t> m_record_locks;
 	std::string m_record_type;
 	std::string m_record_id;

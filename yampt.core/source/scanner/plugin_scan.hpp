@@ -36,8 +36,6 @@ public:
 	void set_merge_plugin(const std::string & filename);
 	void set_merge_plugin_from_loaded(int plugin_idx);
 	void clear_merge_records();
-	std::vector<merge_record_t> collect_pinned_records() const;
-	void restore_pinned_records(const std::vector<merge_record_t> & pinned);
 
 	using conflict_progress_fn_t = std::function<void(size_t done, size_t total)>;
 	void rebuild_conflicts(const conflict_progress_fn_t & progress_fn = {});
@@ -61,8 +59,6 @@ public:
 	    const std::string & rec_type,
 	    const std::string & record_id,
 	    const std::string & content);
-	void pin_record_to_merge(const std::string & rec_type, const std::string & record_id, const std::string & content);
-	bool is_merge_pinned(const std::string & rec_type, const std::string & record_id) const;
 
 	void add_merge_lock(const merge_lock_t & lock);
 	void remove_merge_lock(const merge_lock_t & lock);

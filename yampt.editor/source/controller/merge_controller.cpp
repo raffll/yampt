@@ -756,8 +756,6 @@ bool merge_controller_t::remove_record_from_plugin(
 
 int merge_controller_t::create_merge_records()
 {
-	auto pinned_records = m_session.scan().collect_pinned_records();
-
 	merge_config_t config;
 	config.excluded_plugins = m_session.excluded_plugins();
 	config.patch_plugins = m_session.patch_plugins();
@@ -773,7 +771,6 @@ int merge_controller_t::create_merge_records()
 		merge.set_progress_callback(m_progress);
 	const auto counters = merge.execute();
 
-	m_session.scan().restore_pinned_records(pinned_records);
 	reapply_locks();
 
 	for (const auto & entry : merge.log_entries())

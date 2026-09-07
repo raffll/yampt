@@ -477,16 +477,6 @@ void plugin_scan_t::clear_merge_records()
 	m_merge_store.clear();
 }
 
-std::vector<merge_record_t> plugin_scan_t::collect_pinned_records() const
-{
-	return m_merge_store.collect_pinned();
-}
-
-void plugin_scan_t::restore_pinned_records(const std::vector<merge_record_t> & pinned)
-{
-	m_merge_store.restore_pinned(pinned);
-}
-
 void plugin_scan_t::copy_record_to_merge(int source_plugin, size_t record_index)
 {
 	if (m_merge_plugin_idx < 0)
@@ -512,22 +502,6 @@ void plugin_scan_t::copy_record_to_merge_raw(
 		return;
 
 	m_merge_store.update_or_add(rec_type, record_id, content);
-}
-
-void plugin_scan_t::pin_record_to_merge(
-    const std::string & rec_type,
-    const std::string & record_id,
-    const std::string & content)
-{
-	if (m_merge_plugin_idx < 0)
-		return;
-
-	m_merge_store.update_or_add_pinned(rec_type, record_id, content);
-}
-
-bool plugin_scan_t::is_merge_pinned(const std::string & rec_type, const std::string & record_id) const
-{
-	return m_merge_store.is_pinned(rec_type, record_id);
 }
 
 void plugin_scan_t::add_merge_lock(const merge_lock_t & lock)

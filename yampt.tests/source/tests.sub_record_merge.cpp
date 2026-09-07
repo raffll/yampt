@@ -1626,3 +1626,50 @@ TEST_CASE("sub_record_merge_t::merge, CREA attack pair merges as 4-byte fields",
 	REQUIRE(read_npdt_u32(result.content, 68) == 15);
 	REQUIRE(read_npdt_u32(result.content, 72) == 45);
 }
+
+TEST_CASE("sub_record_merge_t::group_members_in_range, captures exactly the selected members", "[u]")
+{
+	const auto content = make_record(
+	    "ARMO",
+	    make_sub("NAME", make_string("armor_id")) + make_sub("INDX", make_uint32(0)) +
+	        make_sub("BNAM", make_string("male")) + make_sub("CNAM", make_string("female")) +
+	        make_sub("ITEX", make_string("icon.tga")));
+
+	const auto members = sub_record_merge_t::group_members_in_range(content, 1, 4);
+
+	REQUIRE(members.size() == 3);
+	REQUIRE(members[0] == std::make_pair(std::string("INDX"), 1));
+	REQUIRE(members[1] == std::make_pair(std::string("BNAM"), 2));
+	REQUIRE(members[2] == std::make_pair(std::string("CNAM"), 3));
+}
+
+TEST_CASE("sub_record_merge_t::group_members_in_range, later appended member does not join the frozen set", "[u]")
+{
+	const auto content_at_lock = make_record(
+	    "ARMO",
+	    make_sub("NAME", make_string("armor_id")) + make_sub("INDX", make_uint32(0)) +
+	        make_sub("BNAM", make_string("male")));
+
+	const auto frozen = sub_record_merge_t::group_members_in_range(content_at_lock, 1, 3);
+
+	REQUIRE(frozen.size() == 2);
+	REQUIRE(frozen[0] == std::make_pair(std::string("INDX"), 1));
+	REQUIRE(frozen[1] == std::make_pair(std::string("BNAM"), 2));
+
+	const auto content_after_merge = make_record(
+	    "ARMO",
+	    make_sub("NAME", make_string("armor_id")) + make_sub("INDX", make_uint32(0)) +
+	        make_sub("BNAM", make_string("male")) + make_sub("CNAM", make_string("female")));
+
+	const auto reapplied = sub_record_merge_t::group_members_in_range(content_after_merge, 1, 3);
+
+	REQUIRE(reapplied == frozen);
+}
+
+TEST_CASE("sub_record_merge_t::group_members_in_range, out of range end yields empty", "[u]")
+{
+	const auto content = make_record(
+	    "ARMO", make_sub("NAME", make_string("armor_id")) + make_sub("INDX", make_uint32(0)));
+
+	REQUIRE(sub_record_merge_t::group_members_in_range(content, 0, 5).empty());
+}

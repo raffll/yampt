@@ -67,54 +67,6 @@ TEST_CASE("merge_patch_store_t::find_content, returns nullptr for missing", "[u]
 	REQUIRE(store.find_content("NPC_", "Balmora") == nullptr);
 }
 
-TEST_CASE("merge_patch_store_t::is_pinned, false by default", "[u]")
-{
-	merge_patch_store_t store;
-	store.add("NPC_", "fargoth", "content");
-	REQUIRE(store.is_pinned("NPC_", "fargoth") == false);
-}
-
-TEST_CASE("merge_patch_store_t::add_pinned, marks as pinned", "[u]")
-{
-	merge_patch_store_t store;
-	store.add_pinned("NPC_", "fargoth", "content");
-	REQUIRE(store.is_pinned("NPC_", "fargoth") == true);
-}
-
-TEST_CASE("merge_patch_store_t::update_or_add_pinned, pins existing", "[u]")
-{
-	merge_patch_store_t store;
-	store.add("NPC_", "fargoth", "old");
-	REQUIRE(store.is_pinned("NPC_", "fargoth") == false);
-	store.update_or_add_pinned("NPC_", "fargoth", "new");
-	REQUIRE(store.is_pinned("NPC_", "fargoth") == true);
-	REQUIRE(store.record_content(0) == "new");
-}
-
-TEST_CASE("merge_patch_store_t::collect_pinned, returns only pinned", "[u]")
-{
-	merge_patch_store_t store;
-	store.add("NPC_", "fargoth", "a");
-	store.add_pinned("CELL", "Balmora", "b");
-	store.add("NPC_", "caius", "c");
-	const auto pinned = store.collect_pinned();
-	REQUIRE(pinned.size() == 1);
-	REQUIRE(pinned[0].rec_type == "CELL");
-	REQUIRE(pinned[0].record_id == "Balmora");
-}
-
-TEST_CASE("merge_patch_store_t::restore_pinned, updates existing and adds new", "[u]")
-{
-	merge_patch_store_t store;
-	store.add("NPC_", "fargoth", "old");
-	std::vector<merge_record_t> pinned = { { "NPC_", "fargoth", "restored", true }, { "CELL", "Vivec", "new", true } };
-	store.restore_pinned(pinned);
-	REQUIRE(store.count() == 2);
-	REQUIRE(store.record_content(0) == "restored");
-	REQUIRE(store.is_pinned("NPC_", "fargoth") == true);
-	REQUIRE(store.find_content("CELL", "Vivec") != nullptr);
-}
-
 TEST_CASE("merge_patch_store_t::add_lock, inserts and detects lock", "[u]")
 {
 	merge_patch_store_t store;

@@ -583,25 +583,22 @@ merge_lock_t view_context_menu_t::build_lock_for(const view_menu_context_t & con
 	case row_kind_t::group:
 	case row_kind_t::field_of_group:
 	{
+		lock.scope = lock_scope_t::group;
+
 		const auto & visible = m_record_view.model()->rows();
-		const bool valid_parent = context.kind == row_kind_t::field_of_group &&
-		    context.parent_row_idx >= 0 && context.parent_row_idx < static_cast<int>(visible.size());
-		const auto & group_row =
-		    (context.kind == row_kind_t::field_of_group && valid_parent) ? visible[context.parent_row_idx]
-		                                                                 : context.row;
+		if (context.parent_row_idx < 0 || context.parent_row_idx >= static_cast<int>(visible.size()))
+			break;
 
-		if (context.col >= 0 && context.col < static_cast<int>(group_row.binary_ranges.size()))
-		{
-			const auto & range = group_row.binary_ranges[context.col];
-			lock.scope = lock_scope_t::group;
-			lock.group_start = range.start;
-			lock.group_end = range.end_pos;
-		}
-		else
-		{
-			lock.scope = lock_scope_t::whole_record;
-		}
+		const auto & group_row = visible[context.parent_row_idx];
+		if (context.col < 0 || context.col >= static_cast<int>(group_row.binary_ranges.size()))
+			break;
 
+		const auto & range = group_row.binary_ranges[context.col];
+		if (range.start < 0)
+			break;
+
+		lock.group_start = range.start;
+		lock.group_end = range.end_pos;
 		break;
 	}
 
@@ -618,13 +615,11 @@ void view_context_menu_t::build_lock_menu(QMenu & menu, const view_menu_context_
 	const auto lock = build_lock_for(context);
 	const bool needs_sub_type =
 	    lock.scope == lock_scope_t::sub_record || lock.scope == lock_scope_t::field || lock.scope == lock_scope_t::bit;
-	if (needs_sub_type && lock.sub_type.empty())
-		return;
+	const bool invalid_sub_type = needs_sub_type && lock.sub_type.empty();
+	const bool invalid_group = lock.scope == lock_scope_t::group && lock.group_start < 0;
+	const bool can_lock = !invalid_sub_type && !invalid_group;
 
-	if (lock.scope == lock_scope_t::group && lock.group_start < 0)
-		return;
-
-	const bool locked = m_merge.is_merge_locked(lock);
+	const bool locked = can_lock && m_merge.is_merge_locked(lock);
 
 	if (!menu.actions().isEmpty())
 		menu.addSeparator();
@@ -632,5 +627,7 @@ void view_context_menu_t::build_lock_menu(QMenu & menu, const view_menu_context_
 	const auto label = locked ? QCoreApplication::translate("yEditor", "Unlock in Merged Patch")
 	                           : QCoreApplication::translate("yEditor", "Lock in Merged Patch");
 
-	menu.addAction(label, [this, lock]() { m_merge.toggle_merge_lock(lock); });
+	auto * action = can_lock ? menu.addAction(label, [this, lock]() { m_merge.toggle_merge_lock(lock); })
+	                         : menu.addAction(label);
+	action->setEnabled(can_lock);
 }

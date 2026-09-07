@@ -160,9 +160,9 @@ You can refine the auto-merge result manually. Use the record view context menu 
 
 ### Locking Merged Patch Values
 
-Right-click a cell in the merged patch column and choose Lock in Merged Patch to freeze that value. You can lock a whole record, a single sub-record, a decoded field, or an individual flag bit — the lock applies to whatever you right-clicked. A locked cell is marked with a lock icon and keeps the exact value it had when you locked it.
+Right-click a cell in the merged patch column and choose Lock in Merged Patch to freeze that value. You can lock a whole record, a single sub-record, a decoded field, an individual flag bit, or a group — the lock covers exactly what you right-clicked, following the same selection rules as copying to the merged patch. A locked cell is marked with a lock icon and keeps the exact value it had when you locked it. Lock and Unlock are only available on the merged patch column; when the cell you right-clicked has nothing that can be locked, the option appears greyed out.
 
-When you regenerate the merged patch, the auto-merge runs as usual and then every locked value is re-applied on top, so a lock is never overwritten by the merge. This is useful when the automatic result for one field is wrong and you want to pin your chosen value while still letting everything else re-merge.
+When you regenerate the merged patch, the auto-merge runs as usual and then every locked value is re-applied on top, so a lock is never overwritten by the merge. This is useful when the automatic result for one field is wrong and you want to pin your chosen value while still letting everything else re-merge. A group lock covers only the members that were in the group when you locked it; if a later merge adds a new member to the same group, the lock leaves it alone, and you can lock the new member separately if you want.
 
 Right-click a locked cell and choose Unlock in Merged Patch to remove the lock. Locks are remembered between sessions.
 

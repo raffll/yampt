@@ -21,38 +21,6 @@ void patch_builder_t::clear()
 	m_records.clear();
 }
 
-std::vector<patch_builder_t::merge_record_t> patch_builder_t::collect_pinned_records() const
-{
-	std::vector<merge_record_t> pinned;
-	for (const auto & record : m_records)
-	{
-		if (record.pinned)
-			pinned.push_back(record);
-	}
-	return pinned;
-}
-
-void patch_builder_t::restore_pinned_records(const std::vector<merge_record_t> & pinned)
-{
-	for (const auto & pinned_record : pinned)
-	{
-		bool replaced = false;
-		for (auto & existing : m_records)
-		{
-			if (existing.rec_type == pinned_record.rec_type && existing.record_id == pinned_record.record_id)
-			{
-				existing.content = pinned_record.content;
-				existing.pinned = true;
-				replaced = true;
-				break;
-			}
-		}
-
-		if (!replaced)
-			m_records.push_back(pinned_record);
-	}
-}
-
 void patch_builder_t::add_record(
     const std::string & rec_type,
     const std::string & record_id,
@@ -62,14 +30,12 @@ void patch_builder_t::add_record(
 	{
 		if (existing.rec_type == rec_type && existing.record_id == record_id)
 		{
-			if (!existing.pinned)
-				existing.content = content;
-
+			existing.content = content;
 			return;
 		}
 	}
 
-	m_records.push_back({ rec_type, record_id, content, false });
+	m_records.push_back({ rec_type, record_id, content });
 }
 
 void patch_builder_t::add_record_raw(
@@ -86,35 +52,7 @@ void patch_builder_t::add_record_raw(
 		}
 	}
 
-	m_records.push_back({ rec_type, record_id, content, false });
-}
-
-void patch_builder_t::pin_record(
-    const std::string & rec_type,
-    const std::string & record_id,
-    const std::string & content)
-{
-	for (auto & existing : m_records)
-	{
-		if (existing.rec_type == rec_type && existing.record_id == record_id)
-		{
-			existing.content = content;
-			existing.pinned = true;
-			return;
-		}
-	}
-
-	m_records.push_back({ rec_type, record_id, content, true });
-}
-
-bool patch_builder_t::is_pinned(const std::string & rec_type, const std::string & record_id) const
-{
-	for (const auto & record : m_records)
-	{
-		if (record.rec_type == rec_type && record.record_id == record_id)
-			return record.pinned;
-	}
-	return false;
+	m_records.push_back({ rec_type, record_id, content });
 }
 
 const std::string * patch_builder_t::find_content(const std::string & rec_type, const std::string & record_id) const

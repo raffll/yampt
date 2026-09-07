@@ -8,7 +8,6 @@ struct merge_record_t
 	std::string rec_type;
 	std::string record_id;
 	std::string content;
-	bool pinned = false;
 };
 
 enum class lock_scope_t
@@ -48,17 +47,11 @@ class merge_patch_store_t
 public:
 	void clear();
 	void add(const std::string & rec_type, const std::string & record_id, const std::string & content);
-	void add_pinned(const std::string & rec_type, const std::string & record_id, const std::string & content);
 	void remove(const std::string & rec_type, const std::string & record_id);
 
 	void update_or_add(const std::string & rec_type, const std::string & record_id, const std::string & content);
-	void update_or_add_pinned(const std::string & rec_type, const std::string & record_id, const std::string & content);
 
-	bool is_pinned(const std::string & rec_type, const std::string & record_id) const;
 	const std::string * find_content(const std::string & rec_type, const std::string & record_id) const;
-
-	std::vector<merge_record_t> collect_pinned() const;
-	void restore_pinned(const std::vector<merge_record_t> & pinned);
 
 	void add_lock(const merge_lock_t & lock);
 	void remove_lock(const merge_lock_t & lock);

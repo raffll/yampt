@@ -4,7 +4,6 @@
 #include <filesystem>
 #include <rapidcheck.h>
 #include <string>
-#include <tuple>
 #include <vector>
 
 namespace {
@@ -52,8 +51,7 @@ struct operation_t
 	enum class kind_t
 	{
 		add,
-		remove,
-		pin
+		remove
 	};
 
 	kind_t kind;
@@ -66,7 +64,7 @@ rc::Gen<operation_t> gen_operation()
 {
 	return rc::gen::exec([]()
 	{
-		const auto kind_val = *rc::gen::inRange(0, 3);
+		const auto kind_val = *rc::gen::inRange(0, 2);
 		auto kind = static_cast<operation_t::kind_t>(kind_val);
 		auto rec_type = *gen_type_string();
 		auto record_id = *gen_record_id();
@@ -117,67 +115,6 @@ TEST_CASE("patch_builder_t::add_record, collection invariants", "[pbt]")
 	});
 
 	rc::prop(
-	    "Validates: Requirements 5.1 - pin_record makes is_pinned return true",
-	    []()
-	{
-		patch_builder_t builder;
-
-		const auto rec_type = *gen_type_string();
-		const auto record_id = *gen_record_id();
-		const auto content = *gen_content();
-
-		builder.pin_record(rec_type, record_id, content);
-		RC_ASSERT(builder.is_pinned(rec_type, record_id));
-
-		const auto * found = builder.find_content(rec_type, record_id);
-		RC_ASSERT(found != nullptr);
-		RC_ASSERT(*found == content);
-	});
-
-	rc::prop(
-	    "Validates: Requirements 5.1 - pinned records survive collect + clear + restore",
-	    []()
-	{
-		patch_builder_t builder;
-
-		const auto pin_count = *rc::gen::inRange(1, 6);
-		std::vector<std::tuple<std::string, std::string, std::string>> pinned_entries;
-
-		for (int index = 0; index < pin_count; ++index)
-		{
-			auto rec_type = *gen_type_string();
-			auto record_id = *gen_record_id() + std::to_string(index);
-			auto content = *gen_content();
-			builder.pin_record(rec_type, record_id, content);
-			pinned_entries.emplace_back(rec_type, record_id, content);
-		}
-
-		const auto extra_count = *rc::gen::inRange(0, 5);
-		for (int index = 0; index < extra_count; ++index)
-		{
-			auto rec_type = *gen_type_string();
-			auto record_id = *gen_record_id() + "_extra" + std::to_string(index);
-			auto content = *gen_content();
-			builder.add_record(rec_type, record_id, content);
-		}
-
-		const auto pinned = builder.collect_pinned_records();
-		builder.clear();
-
-		RC_ASSERT(builder.record_count() == 0);
-
-		builder.restore_pinned_records(pinned);
-
-		for (const auto & [rec_type, record_id, content] : pinned_entries)
-		{
-			const auto * found = builder.find_content(rec_type, record_id);
-			RC_ASSERT(found != nullptr);
-			RC_ASSERT(*found == content);
-			RC_ASSERT(builder.is_pinned(rec_type, record_id));
-		}
-	});
-
-	rc::prop(
 	    "Validates: Requirements 5.1 - random operations maintain consistent record_count",
 	    []()
 	{
@@ -209,14 +146,6 @@ TEST_CASE("patch_builder_t::add_record, collection invariants", "[pbt]")
 				builder.remove_record(operation.rec_type, operation.record_id);
 				if (existing != nullptr)
 					RC_ASSERT(builder.record_count() == count_before - 1);
-				else
-					RC_ASSERT(builder.record_count() == count_before);
-				break;
-
-			case operation_t::kind_t::pin:
-				builder.pin_record(operation.rec_type, operation.record_id, operation.content);
-				if (existing == nullptr)
-					RC_ASSERT(builder.record_count() == count_before + 1);
 				else
 					RC_ASSERT(builder.record_count() == count_before);
 				break;
@@ -269,33 +198,11 @@ TEST_CASE("patch_builder_t::add_record, duplicate key updates content", "[u]")
 	REQUIRE(*found == "content_v2");
 }
 
-TEST_CASE("patch_builder_t::add_record, pinned record not overwritten by add", "[u]")
-{
-	patch_builder_t builder;
-	builder.pin_record("NPC_", "npc_id", "pinned_content");
-	builder.add_record("NPC_", "npc_id", "new_content");
-
-	const auto * found = builder.find_content("NPC_", "npc_id");
-	REQUIRE(found != nullptr);
-	REQUIRE(*found == "pinned_content");
-}
-
-TEST_CASE("patch_builder_t::add_record_raw, overwrites even pinned records", "[u]")
-{
-	patch_builder_t builder;
-	builder.pin_record("NPC_", "npc_id", "pinned_content");
-	builder.add_record_raw("NPC_", "npc_id", "raw_override");
-
-	const auto * found = builder.find_content("NPC_", "npc_id");
-	REQUIRE(found != nullptr);
-	REQUIRE(*found == "raw_override");
-}
-
 TEST_CASE("patch_builder_t::clear, empties all records", "[u]")
 {
 	patch_builder_t builder;
 	builder.add_record("NPC_", "a", "content_a");
-	builder.pin_record("CELL", "b", "content_b");
+	builder.add_record("CELL", "b", "content_b");
 
 	REQUIRE(builder.record_count() == 2);
 
