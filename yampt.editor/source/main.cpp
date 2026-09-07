@@ -2,7 +2,6 @@
 #include "editor_window.hpp"
 #include <settings_store.hpp>
 #include <theme_system.hpp>
-#include <utility/app_logger.hpp>
 #include <QApplication>
 #include <QIcon>
 #include <QLocale>
@@ -12,8 +11,6 @@
 
 int main(int argc, char * argv[])
 {
-	app_logger_t::set_debug(true); // internal: surfaces [debug] diagnostics in the Log tab; flip to false to silence
-
 	QApplication app(argc, argv);
 	app.setStyle(QStyleFactory::create("Fusion"));
 	app.setWindowIcon(QIcon(":/icons/yampt-editor.svg"));

@@ -34,6 +34,42 @@ TEST_CASE("view_tree_format::decode_field, enum_u32 shows name only", "[u]")
 	REQUIRE(result == "Pauldron");
 }
 
+TEST_CASE("view_tree_format::decode_field, enum_u32 sentinel -1 shows None", "[u]")
+{
+	static const char * const names[] = { "Block", "Armorer", "Long Blade", nullptr };
+	field_def_t field { "Bonus Skill", field_type_t::enum_u32, 0, 4, names, nullptr, 0 };
+
+	char data[4] = {};
+	uint32_t val = 0xFFFFFFFF;
+	std::memcpy(data, &val, 4);
+	auto result = decode_field(field, data, 4);
+	REQUIRE(result == "None");
+}
+
+TEST_CASE("view_tree_format::decode_field, enum_u16 sentinel -1 shows None", "[u]")
+{
+	static const char * const names[] = { "Short Blade", "Long Blade", nullptr };
+	field_def_t field { "Type", field_type_t::enum_u16, 0, 2, names, nullptr, 0 };
+
+	char data[2] = {};
+	uint16_t val = 0xFFFF;
+	std::memcpy(data, &val, 2);
+	auto result = decode_field(field, data, 2);
+	REQUIRE(result == "None");
+}
+
+TEST_CASE("view_tree_format::decode_field, enum_u32 valid index still resolves", "[u]")
+{
+	static const char * const names[] = { "Block", "Armorer", "Long Blade", nullptr };
+	field_def_t field { "Bonus Skill", field_type_t::enum_u32, 0, 4, names, nullptr, 0 };
+
+	char data[4] = {};
+	uint32_t val = 1;
+	std::memcpy(data, &val, 4);
+	auto result = decode_field(field, data, 4);
+	REQUIRE(result == "Armorer");
+}
+
 TEST_CASE("view_tree_format::decode_field, flags_u32 shows names only", "[u]")
 {
 	static const char * const flag_names[] = { "Interior", "Water", "Sleep", nullptr };

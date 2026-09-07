@@ -441,12 +441,18 @@ std::string decode_field(const field_def_t & field, const char * data, size_t da
 	{
 		uint16_t val = 0;
 		std::memcpy(&val, ptr, 2);
+		if (field.enum_names && val == 0xFFFF)
+			return "None";
+
 		return format_enum_lookup(val, field.enum_names);
 	}
 	case field_type_t::enum_u32:
 	{
 		uint32_t val = 0;
 		std::memcpy(&val, ptr, 4);
+		if (field.enum_names && val == 0xFFFFFFFF)
+			return "None";
+
 		return format_enum_lookup(val, field.enum_names);
 	}
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## [XXX]
+
+### yEditor
+- [FIX] An unused skill or attribute slot in a record (such as a race's empty bonus-skill slots) now reads "None" in the record view instead of the raw number 4294967295
+
 ## [0.1135] - 2026-09-04
 
 ### yTranslator

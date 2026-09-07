@@ -1,4 +1,4 @@
-# Yet Another Morrowind Plugin Tools
+# Yet Another Morrowind Plugin Toolkit
 
 A suite of tools for working with Morrowind plugins. Includes a plugin conflict editor similar to xEdit, a translation workbench, and a CLI for batch operations.
 
