@@ -866,7 +866,7 @@ bool view_tree_model_t::row_is_locked(const view_node_t & row, const QModelIndex
 		switch (lock.scope)
 		{
 		case lock_scope_t::whole_record:
-			return true;
+			break;
 
 		case lock_scope_t::sub_record:
 			if (!is_field_row && lock.sub_type == row.type && lock.occurrence == row.occurrence)

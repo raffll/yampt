@@ -45,6 +45,8 @@ private:
 	bool eventFilter(QObject * obj, QEvent * event) override;
 	void save_expansion_state();
 	void restore_expansion_state();
+	void restore_selection(const nav_tree_model_t::node_info_t & info);
+	std::string node_path_key(const QModelIndex & index) const;
 
 	QTreeView * m_tree = nullptr;
 	nav_tree_model_t * m_model = nullptr;

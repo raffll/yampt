@@ -67,9 +67,27 @@ void nav_tree_view_t::rebuild()
 
 void nav_tree_view_t::rebuild_preserving_state()
 {
+	const auto selected = current_selection();
+
 	save_expansion_state();
 	m_model->rebuild();
 	restore_expansion_state();
+
+	restore_selection(selected);
+}
+
+void nav_tree_view_t::restore_selection(const nav_tree_model_t::node_info_t & info)
+{
+	if (info.plugin_idx < 0)
+		return;
+
+	const auto index = m_model->index_for_node(info);
+	if (!index.isValid())
+		return;
+
+	const QSignalBlocker blocker(m_tree->selectionModel());
+	m_tree->setCurrentIndex(index);
+	m_tree->scrollTo(index);
 }
 
 void nav_tree_view_t::refresh_colors()
@@ -165,12 +183,17 @@ QTreeView * nav_tree_view_t::tree_widget() const
 	return m_tree;
 }
 
+std::string nav_tree_view_t::node_path_key(const QModelIndex & index) const
+{
+	const auto & info = m_model->node_at(index);
+	return std::to_string(info.plugin_idx) + "/" + info.rec_type + "/" + info.record_id;
+}
+
 void nav_tree_view_t::save_expansion_state()
 {
 	m_expanded_items.clear();
 
-	std::function<void(const QModelIndex &, const std::string &)> collect =
-	    [&](const QModelIndex & parent, const std::string & path)
+	std::function<void(const QModelIndex &)> collect = [&](const QModelIndex & parent)
 	{
 		const auto rows = m_model->rowCount(parent);
 		for (int i = 0; i < rows; ++i)
@@ -178,25 +201,21 @@ void nav_tree_view_t::save_expansion_state()
 			const auto & idx = m_model->index(i, 0, parent);
 			if (!idx.isValid())
 				continue;
-
-			const auto & text = m_model->data(idx, Qt::DisplayRole).toString().toStdString();
-			const auto & full_path = path + "/" + text;
 
 			if (!m_tree->isExpanded(idx))
 				continue;
 
-			m_expanded_items.insert(full_path);
-			collect(idx, full_path);
+			m_expanded_items.insert(node_path_key(idx));
+			collect(idx);
 		}
 	};
 
-	collect(QModelIndex(), "");
+	collect(QModelIndex());
 }
 
 void nav_tree_view_t::restore_expansion_state()
 {
-	std::function<void(const QModelIndex &, const std::string &)> restore =
-	    [&](const QModelIndex & parent, const std::string & path)
+	std::function<void(const QModelIndex &)> restore = [&](const QModelIndex & parent)
 	{
 		const auto rows = m_model->rowCount(parent);
 		for (int i = 0; i < rows; ++i)
@@ -205,18 +224,15 @@ void nav_tree_view_t::restore_expansion_state()
 			if (!idx.isValid())
 				continue;
 
-			const auto & text = m_model->data(idx, Qt::DisplayRole).toString().toStdString();
-			const auto & full_path = path + "/" + text;
-
-			if (!m_expanded_items.count(full_path))
+			if (!m_expanded_items.count(node_path_key(idx)))
 				continue;
 
 			m_tree->expand(idx);
-			restore(idx, full_path);
+			restore(idx);
 		}
 	};
 
-	restore(QModelIndex(), "");
+	restore(QModelIndex());
 }
 
 bool nav_tree_view_t::eventFilter(QObject * obj, QEvent * event)

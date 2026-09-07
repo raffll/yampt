@@ -501,6 +501,36 @@ QModelIndex nav_tree_model_t::find_index(const std::string & rec_type, const std
 	return {};
 }
 
+QModelIndex nav_tree_model_t::index_for_node(const node_info_t & info) const
+{
+	if (info.plugin_idx < 0)
+		return {};
+
+	if (!info.record_id.empty())
+		return find_index(info.rec_type, info.record_id);
+
+	for (size_t file_idx = 0; file_idx < m_tree.size(); ++file_idx)
+	{
+		if (m_tree[file_idx].plugin_idx != info.plugin_idx)
+			continue;
+
+		if (info.rec_type.empty())
+			return createIndex(static_cast<int>(file_idx), 0, nullptr);
+
+		for (size_t group_idx = 0; group_idx < m_tree[file_idx].groups.size(); ++group_idx)
+		{
+			if (m_tree[file_idx].groups[group_idx].type != info.rec_type)
+				continue;
+
+			return createIndex(static_cast<int>(group_idx), 0, const_cast<file_node_t *>(&m_tree[file_idx]));
+		}
+
+		return createIndex(static_cast<int>(file_idx), 0, nullptr);
+	}
+
+	return {};
+}
+
 nav_tree_model_t::node_info_t nav_tree_model_t::node_at(const QModelIndex & index) const
 {
 	if (!index.isValid())
