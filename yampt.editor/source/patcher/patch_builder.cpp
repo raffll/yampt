@@ -26,16 +26,7 @@ void patch_builder_t::add_record(
     const std::string & record_id,
     const std::string & content)
 {
-	for (auto & existing : m_records)
-	{
-		if (existing.rec_type == rec_type && existing.record_id == record_id)
-		{
-			existing.content = content;
-			return;
-		}
-	}
-
-	m_records.push_back({ rec_type, record_id, content });
+	add_record_raw(rec_type, record_id, content);
 }
 
 void patch_builder_t::add_record_raw(

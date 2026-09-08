@@ -1,4 +1,5 @@
 #include "view_tree_model.hpp"
+#include "../view/plugin_icon.hpp"
 #include "editable_column_set.hpp"
 #include <decoder/view_tree_format.hpp>
 #include <scanner/record_conflict.hpp>
@@ -46,7 +47,7 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 	m_active_col_index = -1;
 
 	const int active_idx = scan.active_plugin_index();
-	const bool active_is_merged_patch = active_idx >= 0 && scan.plugin_filename(active_idx) == "Merged Patch.esp";
+	const bool active_is_merged_patch = active_idx >= 0 && scan.plugin_filename(active_idx) == merged_patch::filename;
 	m_record_locks =
 	    active_is_merged_patch ? scan.active_locks_for(entry.rec_type, entry.record_id) : std::vector<merge_lock_t> {};
 
@@ -813,66 +814,79 @@ static QIcon lock_cell_icon()
 	return icon;
 }
 
+namespace {
+
+struct row_lock_context_t
+{
+	bool is_field_row = false;
+	std::string sub_type;
+	int occurrence = 0;
+	int active_col_index = -1;
+};
+
+bool group_lock_matches(const merge_lock_t & lock, const view_node_t & row, int active_col_index)
+{
+	if (active_col_index < 0 || active_col_index >= static_cast<int>(row.binary_ranges.size()))
+		return false;
+
+	const auto & range = row.binary_ranges[active_col_index];
+	return range.start >= 0 && lock.group_start >= 0 && range.start >= lock.group_start &&
+	    range.end_pos <= lock.group_end;
+}
+
+bool lock_matches_row(const merge_lock_t & lock, const view_node_t & row, const row_lock_context_t & context)
+{
+	switch (lock.scope)
+	{
+	case lock_scope_t::whole_record:
+		return false;
+
+	case lock_scope_t::sub_record:
+		return !context.is_field_row && lock.sub_type == row.type && lock.occurrence == row.occurrence;
+
+	case lock_scope_t::field:
+		return context.is_field_row && row.bit_index < 0 && lock.sub_type == context.sub_type &&
+		    lock.occurrence == context.occurrence && lock.field_index == row.schema_field_index;
+
+	case lock_scope_t::bit:
+		return context.is_field_row && row.bit_index >= 0 && lock.sub_type == context.sub_type &&
+		    lock.occurrence == context.occurrence && lock.field_index == row.schema_field_index &&
+		    lock.bit_index == row.bit_index;
+
+	case lock_scope_t::group:
+		return group_lock_matches(lock, row, context.active_col_index);
+	}
+
+	return false;
+}
+
+} // namespace
+
 bool view_tree_model_t::row_is_locked(const view_node_t & row, const QModelIndex & index) const
 {
 	if (m_record_locks.empty())
 		return false;
 
-	const bool is_field_row = index.parent().isValid();
+	row_lock_context_t context;
+	context.is_field_row = index.parent().isValid();
+	context.sub_type = row.type;
+	context.occurrence = row.occurrence;
+	context.active_col_index = m_active_col_index;
 
-	std::string sub_type = row.type;
-	int occurrence = row.occurrence;
-
-	if (is_field_row)
+	if (context.is_field_row)
 	{
 		const auto * parent = node_from_index(index.parent());
 		if (parent != nullptr)
 		{
-			sub_type = parent->type;
-			occurrence = parent->occurrence;
+			context.sub_type = parent->type;
+			context.occurrence = parent->occurrence;
 		}
 	}
 
 	for (const auto & lock : m_record_locks)
 	{
-		switch (lock.scope)
-		{
-		case lock_scope_t::whole_record:
-			break;
-
-		case lock_scope_t::sub_record:
-			if (!is_field_row && lock.sub_type == row.type && lock.occurrence == row.occurrence)
-				return true;
-
-			break;
-
-		case lock_scope_t::field:
-			if (is_field_row && row.bit_index < 0 && lock.sub_type == sub_type && lock.occurrence == occurrence &&
-			    lock.field_index == row.schema_field_index)
-				return true;
-
-			break;
-
-		case lock_scope_t::bit:
-			if (is_field_row && row.bit_index >= 0 && lock.sub_type == sub_type && lock.occurrence == occurrence &&
-			    lock.field_index == row.schema_field_index && lock.bit_index == row.bit_index)
-				return true;
-
-			break;
-
-		case lock_scope_t::group:
-		{
-			if (m_active_col_index < 0 || m_active_col_index >= static_cast<int>(row.binary_ranges.size()))
-				break;
-
-			const auto & range = row.binary_ranges[m_active_col_index];
-			if (range.start >= 0 && range.start >= lock.group_start && range.end_pos <= lock.group_end &&
-			    lock.group_start >= 0)
-				return true;
-
-			break;
-		}
-		}
+		if (lock_matches_row(lock, row, context))
+			return true;
 	}
 
 	return false;
@@ -1083,39 +1097,15 @@ QVariant view_tree_model_t::headerData(int section, Qt::Orientation orientation,
 		if (col < static_cast<int>(m_column_plugin_indices.size()))
 		{
 			const int pi = m_column_plugin_indices[col];
-			const bool is_merged_patch = name == "Merged Patch.esp";
-			const bool is_master =
-			    name.size() > 4 &&
-			    (name.compare(name.size() - 4, 4, ".esm") == 0 || name.compare(name.size() - 4, 4, ".ESM") == 0);
 
-			bool is_overridden = false;
-			if (m_scan_for_header)
-			{
-				const auto & full_path = m_scan_for_header->plugin_path(pi);
-				is_overridden = full_path.find("/overwrite/") != std::string::npos ||
-				                full_path.find("\\overwrite\\") != std::string::npos;
-			}
+			plugin_icon::tier_flags_t flags;
+			flags.filename = name;
+			flags.is_overridden = m_scan_for_header && plugin_icon::path_is_overwrite(m_scan_for_header->plugin_path(pi));
+			flags.is_excluded = m_excluded_plugins && m_excluded_plugins->count(name);
+			flags.is_guard = m_patch_plugins && m_patch_plugins->count(name);
+			flags.is_active = m_scan_for_header && m_scan_for_header->is_active_plugin(pi);
 
-			const bool is_excluded = m_excluded_plugins && m_excluded_plugins->count(name);
-			const bool is_guard = m_patch_plugins && m_patch_plugins->count(name);
-
-			if (is_merged_patch)
-				prefix += QString::fromUtf8("\xE2\x9A\x99 ");
-			else if (is_master)
-				prefix += QString::fromUtf8("\xF0\x9F\x93\x9C ");
-			else
-				prefix += QString::fromUtf8("\xF0\x9F\x93\x84 ");
-
-			if (is_overridden)
-				prefix += QString::fromUtf8("\xE2\x9A\xA1 ");
-
-			if (is_excluded)
-				prefix += QString::fromUtf8("\xF0\x9F\x9A\xAB ");
-			else if (is_guard)
-				prefix += QString::fromUtf8("\xF0\x9F\x9B\xA1 ");
-
-			if (m_scan_for_header && m_scan_for_header->is_active_plugin(pi))
-				prefix += QString::fromUtf8("\xE2\xAD\x90 ");
+			prefix = plugin_icon::prefix(flags);
 		}
 
 		return prefix + QString::fromStdString(name);

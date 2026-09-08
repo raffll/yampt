@@ -1,5 +1,6 @@
 #include <settings_store.hpp>
 #include "view_context_menu.hpp"
+#include "../session/merged_patch_name.hpp"
 #include "../session/plugin_session.hpp"
 #include "../view/nav_tree_view.hpp"
 #include "../view/record_view.hpp"
@@ -77,7 +78,7 @@ void view_context_menu_t::show_nav_menu(const QPoint & global_pos, const nav_tre
 
 	if (!info.record_id.empty() && is_active)
 	{
-		if (m_session.scan().plugin_filename(info.plugin_idx) == "Merged Patch.esp")
+		if (m_session.scan().plugin_filename(info.plugin_idx) == merged_patch::filename)
 		{
 			merge_lock_t lock;
 			lock.rec_type = info.rec_type;
@@ -289,7 +290,7 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 	if (has_valid_column && m_session.scan().has_active())
 	{
 		const bool is_on_active = m_session.scan().is_active_plugin(plugin_idx);
-		const bool is_on_merged_patch = m_session.scan().plugin_filename(plugin_idx) == "Merged Patch.esp";
+		const bool is_on_merged_patch = m_session.scan().plugin_filename(plugin_idx) == merged_patch::filename;
 		const bool record_in_active = m_session.scan().find_active_content(rec_type, record_id) != nullptr;
 
 		if (is_on_active && is_on_merged_patch)

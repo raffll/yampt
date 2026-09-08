@@ -1,5 +1,6 @@
 #include "plugin_session.hpp"
 #include "../patcher/patch_builder.hpp"
+#include "merged_patch_name.hpp"
 #include <algorithm>
 #include <QCoreApplication>
 #include <QDir>
@@ -419,7 +420,7 @@ void plugin_session_t::load_plugins_internal(const std::vector<std::string> & pa
 			m_scan.load_plugin(path);
 			const int loaded_idx = static_cast<int>(m_scan.plugin_count()) - 1;
 
-			if (filename == "Merged Patch.esp")
+			if (filename == merged_patch::filename)
 			{
 				m_scan.set_active_from_loaded(loaded_idx);
 				emit log_message("[info] loaded merge plugin: " + filename);
@@ -580,7 +581,7 @@ QString plugin_session_t::resolve_game_data_path(const QString & mo2_root_path)
 void plugin_session_t::append_output_plugins(std::vector<std::string> & paths, const QString & output_dir)
 {
 	std::set<std::string> output_names = m_created_plugins;
-	output_names.insert("Merged Patch.esp");
+	output_names.insert(std::string(merged_patch::filename));
 
 	const auto matches_output = [&output_names](const std::string & path)
 	{
@@ -694,7 +695,7 @@ void plugin_session_t::append_output_plugins_from_data_dirs(
     const std::vector<std::string> & data_dirs)
 {
 	std::set<std::string> output_names = m_created_plugins;
-	output_names.insert("Merged Patch.esp");
+	output_names.insert(std::string(merged_patch::filename));
 
 	for (auto it_dir = data_dirs.rbegin(); it_dir != data_dirs.rend(); ++it_dir)
 	{

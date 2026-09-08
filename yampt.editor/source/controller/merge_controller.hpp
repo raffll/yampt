@@ -101,10 +101,15 @@ public:
 	void save_all_dirty();
 
 private:
+	bool prompt_save_before_merge();
+	bool confirm_merged_patch_regeneration(int merged_idx);
+	void activate_merged_patch_target(int merged_idx);
+	void rebuild_merged_patch_conflicts();
 	int create_merge_records();
 	void reapply_locks();
 	std::string capture_locked_content(const merge_lock_t & lock) const;
 	std::string resolve_active_output_path() const;
+	std::string output_dir_relative_for_source() const;
 	bool save_active_to_file(
 	    const std::string & output_path,
 	    const std::string & author,

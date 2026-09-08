@@ -1,5 +1,6 @@
 #include "merge_controller.hpp"
 #include "../patcher/patch_builder.hpp"
+#include "../session/merged_patch_name.hpp"
 #include "../session/plugin_session.hpp"
 #include "../view/nav_tree_view.hpp"
 #include "../view/record_view.hpp"
@@ -88,62 +89,59 @@ void merge_controller_t::set_phase_callback(phase_fn_t phase_fn)
 	m_phase = std::move(phase_fn);
 }
 
-bool merge_controller_t::create_merged_patch()
+bool merge_controller_t::confirm_merged_patch_regeneration(int merged_idx)
 {
-	if (m_session.has_any_unsaved())
-	{
-		const auto answer = QMessageBox::question(
-		    nullptr,
-		    QCoreApplication::translate("yEditor", "Unsaved Changes"),
-		    QCoreApplication::translate("yEditor", "Save unsaved plugins before creating the merged patch?"),
-		    QMessageBox::Save | QMessageBox::Cancel,
-		    QMessageBox::Save);
-
-		if (answer == QMessageBox::Cancel)
-			return false;
-
-		save_all_dirty();
-	}
-
-	if (m_session.scan().plugin_count() < 1)
-	{
-		m_log("[error] no plugins loaded");
-		return false;
-	}
-
-	const int merged_idx = find_merged_patch_index();
 	const bool merged_exists = merged_idx >= 0 || (m_session.scan().has_active() &&
 	                                               m_session.scan().plugin_filename(m_session.scan().active_plugin_index()) ==
-	                                                   "Merged Patch.esp");
+	                                                   merged_patch::filename);
 
-	if (merged_exists)
-	{
-		const auto answer = QMessageBox::question(
-		    nullptr,
-		    QCoreApplication::translate("yEditor", "Regenerate Merged Patch"),
-		    QCoreApplication::translate(
-		        "yEditor", "This will regenerate the merged patch and discard manual changes. Continue?"),
-		    QMessageBox::Yes | QMessageBox::No,
-		    QMessageBox::No);
+	if (!merged_exists)
+		return true;
 
-		if (answer != QMessageBox::Yes)
-			return false;
-	}
+	const auto answer = QMessageBox::question(
+	    nullptr,
+	    QCoreApplication::translate("yEditor", "Regenerate Merged Patch"),
+	    QCoreApplication::translate(
+	        "yEditor", "This will regenerate the merged patch and discard manual changes. Continue?"),
+	    QMessageBox::Yes | QMessageBox::No,
+	    QMessageBox::No);
 
-	m_session.register_created_plugin("Merged Patch.esp");
+	return answer == QMessageBox::Yes;
+}
+
+bool merge_controller_t::prompt_save_before_merge()
+{
+	if (!m_session.has_any_unsaved())
+		return true;
+
+	const auto answer = QMessageBox::question(
+	    nullptr,
+	    QCoreApplication::translate("yEditor", "Unsaved Changes"),
+	    QCoreApplication::translate("yEditor", "Save unsaved plugins before creating the merged patch?"),
+	    QMessageBox::Save | QMessageBox::Cancel,
+	    QMessageBox::Save);
+
+	if (answer == QMessageBox::Cancel)
+		return false;
+
+	save_all_dirty();
+	return true;
+}
+
+void merge_controller_t::activate_merged_patch_target(int merged_idx)
+{
+	m_session.register_created_plugin(std::string(merged_patch::filename));
 
 	if (merged_idx >= 0)
 		m_session.scan().set_active_from_loaded(merged_idx);
 	else
-		m_session.scan().set_active_plugin("Merged Patch.esp");
+		m_session.scan().set_active_plugin(std::string(merged_patch::filename));
 
 	load_merged_patch_locks();
+}
 
-	if (m_phase)
-		m_phase(QCoreApplication::translate("yEditor", "Merging records...").toStdString());
-
-	create_merge_records();
-
+void merge_controller_t::rebuild_merged_patch_conflicts()
+{
 	if (m_phase)
 		m_phase(QCoreApplication::translate("yEditor", "Computing conflicts...").toStdString());
 
@@ -158,6 +156,30 @@ bool merge_controller_t::create_merged_patch()
 	});
 
 	m_nav_view.rebuild_preserving_state();
+}
+
+bool merge_controller_t::create_merged_patch()
+{
+	if (!prompt_save_before_merge())
+		return false;
+
+	if (m_session.scan().plugin_count() < 1)
+	{
+		m_log("[error] no plugins loaded");
+		return false;
+	}
+
+	const int merged_idx = find_merged_patch_index();
+	if (!confirm_merged_patch_regeneration(merged_idx))
+		return false;
+
+	activate_merged_patch_target(merged_idx);
+
+	if (m_phase)
+		m_phase(QCoreApplication::translate("yEditor", "Merging records...").toStdString());
+
+	create_merge_records();
+	rebuild_merged_patch_conflicts();
 
 	m_log("[info] merged patch record count: " + std::to_string(m_session.scan().active_record_count()));
 	save_active_plugin();
@@ -275,7 +297,7 @@ void merge_controller_t::set_active_plugin(int plugin_idx)
 
 	m_session.scan().set_active_from_loaded(plugin_idx);
 
-	if (m_session.scan().plugin_filename(plugin_idx) == "Merged Patch.esp")
+	if (m_session.scan().plugin_filename(plugin_idx) == merged_patch::filename)
 		load_merged_patch_locks();
 	else
 		m_session.scan().set_active_locks({});
@@ -891,9 +913,20 @@ std::string merge_controller_t::resolve_active_output_path() const
 
 	const int active_idx = m_session.scan().active_plugin_index();
 	const std::string filename =
-	    active_idx >= 0 ? m_session.scan().plugin_filename(active_idx) : std::string("Merged Patch.esp");
+	    active_idx >= 0 ? m_session.scan().plugin_filename(active_idx) : std::string(merged_patch::filename);
 
-	return QDir::cleanPath(QString::fromStdString(output_dir) + "/" + QString::fromStdString(filename)).toStdString();
+	return QDir(QString::fromStdString(output_dir)).filePath(QString::fromStdString(filename)).toStdString();
+}
+
+std::string merge_controller_t::output_dir_relative_for_source() const
+{
+	if (m_session.load_source() == plugin_session_t::load_source_t::mo2_profile)
+		return m_settings.output_dir_mo2();
+
+	if (m_session.load_source() == plugin_session_t::load_source_t::openmw_cfg)
+		return m_settings.output_dir_openmw();
+
+	return m_settings.output_dir_folder();
 }
 
 std::string merge_controller_t::resolve_output_directory() const
@@ -902,30 +935,12 @@ std::string merge_controller_t::resolve_output_directory() const
 		return {};
 
 	const auto base = QString::fromStdString(m_session.load_base_path());
+	const auto relative = QString::fromStdString(output_dir_relative_for_source());
 
-	if (m_session.load_source() == plugin_session_t::load_source_t::mo2_profile)
-	{
-		const auto relative = QString::fromStdString(m_settings.output_dir_mo2());
-		if (relative.isEmpty())
-			return QDir::cleanPath(base).toStdString();
-
-		return QDir::cleanPath(base + "/" + relative).toStdString();
-	}
-
-	if (m_session.load_source() == plugin_session_t::load_source_t::openmw_cfg)
-	{
-		const auto relative = QString::fromStdString(m_settings.output_dir_openmw());
-		if (relative.isEmpty())
-			return QDir::cleanPath(base).toStdString();
-
-		return QDir::cleanPath(base + "/" + relative).toStdString();
-	}
-
-	const auto relative = QString::fromStdString(m_settings.output_dir_folder());
 	if (relative.isEmpty())
 		return QDir::cleanPath(base).toStdString();
 
-	return QDir::cleanPath(base + "/" + relative).toStdString();
+	return QDir::cleanPath(QDir(base).filePath(relative)).toStdString();
 }
 
 void merge_controller_t::save_active_plugin()
@@ -944,7 +959,7 @@ void merge_controller_t::save_active_plugin()
 
 	const auto output_filename = std::filesystem::path(output_path).filename().string();
 	const std::string description =
-	    output_filename == "Merged Patch.esp" ? "Auto-generated merged patch" : "Created with yEditor";
+	    output_filename == merged_patch::filename ? "Auto-generated merged patch" : "Created with yEditor";
 	const bool saved = save_active_to_file(output_path, "yEditor", description);
 	if (saved)
 		m_log(
@@ -1146,7 +1161,7 @@ int merge_controller_t::find_merged_patch_index() const
 	const auto & scan = m_session.scan();
 	for (int i = 0; i < static_cast<int>(scan.plugin_count()); ++i)
 	{
-		if (scan.plugin_filename(i) == "Merged Patch.esp")
+		if (scan.plugin_filename(i) == merged_patch::filename)
 			return i;
 	}
 
@@ -1156,7 +1171,7 @@ int merge_controller_t::find_merged_patch_index() const
 void merge_controller_t::sync_active_locks()
 {
 	const int active_idx = m_session.scan().active_plugin_index();
-	if (active_idx >= 0 && m_session.scan().plugin_filename(active_idx) == "Merged Patch.esp")
+	if (active_idx >= 0 && m_session.scan().plugin_filename(active_idx) == merged_patch::filename)
 		load_merged_patch_locks();
 	else
 		m_session.scan().set_active_locks({});
@@ -1168,7 +1183,8 @@ std::string merge_controller_t::merged_patch_locks_path() const
 	if (output_dir.empty())
 		return {};
 
-	return QDir::cleanPath(QString::fromStdString(output_dir) + "/Merged Patch.esp.locks").toStdString();
+	const auto locks_name = std::string(merged_patch::filename) + std::string(merged_patch::locks_suffix);
+	return QDir(QString::fromStdString(output_dir)).filePath(QString::fromStdString(locks_name)).toStdString();
 }
 
 void merge_controller_t::save_merged_patch_locks() const
@@ -1226,9 +1242,18 @@ void merge_controller_t::load_merged_patch_locks()
 	{
 		sidecar.setArrayIndex(i);
 		merge_lock_t lock;
+
+		const int scope_value = sidecar.value("scope").toInt();
+		if (!merge_lock_scope::scope_from_value(scope_value, lock.scope))
+		{
+			app_logger_t::add_log(
+			    "[debug] skipping lock with invalid scope " + std::to_string(scope_value) + " in " + path + "\r\n",
+			    true);
+			continue;
+		}
+
 		lock.rec_type = sidecar.value("rec_type").toString().toStdString();
 		lock.record_id = sidecar.value("record_id").toString().toStdString();
-		lock.scope = static_cast<lock_scope_t>(sidecar.value("scope").toInt());
 		lock.sub_type = sidecar.value("sub_type").toString().toStdString();
 		lock.occurrence = sidecar.value("occurrence").toInt();
 		lock.field_index = sidecar.value("field_index", -1).toInt();

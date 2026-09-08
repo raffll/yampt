@@ -1,4 +1,5 @@
 #include "nav_tree_model.hpp"
+#include "../view/plugin_icon.hpp"
 #include "editable_column_set.hpp"
 #include <io/codepage.hpp>
 #include <algorithm>
@@ -748,35 +749,14 @@ QVariant nav_tree_model_t::file_node_icons(const file_node_t & file_node) const
 {
 	const auto & filename = m_scan.plugin_filename(file_node.plugin_idx);
 
-	const auto & full_path = m_scan.plugin_path(file_node.plugin_idx);
-	const bool is_overridden =
-	    full_path.find("/overwrite/") != std::string::npos || full_path.find("\\overwrite\\") != std::string::npos;
-	const bool is_master = filename.size() > 4 && (filename.compare(filename.size() - 4, 4, ".esm") == 0 ||
-	                                               filename.compare(filename.size() - 4, 4, ".ESM") == 0);
-	const bool is_excluded = m_filter.excluded_plugins() && m_filter.excluded_plugins()->count(filename);
-	const bool is_guard = m_filter.patch_plugins() && m_filter.patch_plugins()->count(filename);
+	plugin_icon::tier_flags_t flags;
+	flags.filename = filename;
+	flags.is_overridden = plugin_icon::path_is_overwrite(m_scan.plugin_path(file_node.plugin_idx));
+	flags.is_excluded = m_filter.excluded_plugins() && m_filter.excluded_plugins()->count(filename);
+	flags.is_guard = m_filter.patch_plugins() && m_filter.patch_plugins()->count(filename);
+	flags.is_active = m_scan.is_active_plugin(file_node.plugin_idx);
 
-	QString icons;
-
-	if (filename == "Merged Patch.esp")
-		icons += QString::fromUtf8("\xE2\x9A\x99 ");
-	else if (is_master)
-		icons += QString::fromUtf8("\xF0\x9F\x93\x9C ");
-	else
-		icons += QString::fromUtf8("\xF0\x9F\x93\x84 ");
-
-	if (is_overridden)
-		icons += QString::fromUtf8("\xE2\x9A\xA1 ");
-
-	if (is_excluded)
-		icons += QString::fromUtf8("\xF0\x9F\x9A\xAB ");
-	else if (is_guard)
-		icons += QString::fromUtf8("\xF0\x9F\x9B\xA1 ");
-
-	if (m_scan.is_active_plugin(file_node.plugin_idx))
-		icons += QString::fromUtf8("\xE2\xAD\x90 ");
-
-	return icons.trimmed();
+	return plugin_icon::prefix(flags).trimmed();
 }
 
 QVariant nav_tree_model_t::file_node_appearance(const file_node_t & file_node, int role) const
@@ -930,7 +910,7 @@ QVariant nav_tree_model_t::data_for_record(size_t file_idx, size_t group_idx, in
 			display_id.replace('|', " #");
 
 			const int plugin_idx = m_tree[file_idx].plugin_idx;
-			if (m_scan.is_active_plugin(plugin_idx) && m_scan.plugin_filename(plugin_idx) == "Merged Patch.esp" &&
+			if (m_scan.is_active_plugin(plugin_idx) && m_scan.plugin_filename(plugin_idx) == merged_patch::filename &&
 			    !m_scan.active_locks_for(entry.rec_type, entry.record_id).empty())
 				display_id = QString::fromUtf8("\xF0\x9F\x94\x92 ") + display_id;
 

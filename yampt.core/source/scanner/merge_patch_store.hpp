@@ -19,6 +19,27 @@ enum class lock_scope_t
 	group
 };
 
+namespace merge_lock_scope {
+
+inline constexpr int min_value = static_cast<int>(lock_scope_t::whole_record);
+inline constexpr int max_value = static_cast<int>(lock_scope_t::group);
+
+inline bool is_valid_value(int value)
+{
+	return value >= min_value && value <= max_value;
+}
+
+inline bool scope_from_value(int value, lock_scope_t & out_scope)
+{
+	if (!is_valid_value(value))
+		return false;
+
+	out_scope = static_cast<lock_scope_t>(value);
+	return true;
+}
+
+} // namespace merge_lock_scope
+
 struct merge_lock_t
 {
 	std::string rec_type;
