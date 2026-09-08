@@ -824,7 +824,10 @@ struct row_lock_context_t
 	int active_col_index = -1;
 };
 
-bool group_lock_matches(const merge_lock_t & lock, const view_node_t & row, int active_col_index)
+bool group_lock_matches(
+    const merge_lock_t & lock,
+    const view_tree_model_t::view_node_t & row,
+    int active_col_index)
 {
 	if (active_col_index < 0 || active_col_index >= static_cast<int>(row.binary_ranges.size()))
 		return false;
@@ -834,7 +837,10 @@ bool group_lock_matches(const merge_lock_t & lock, const view_node_t & row, int 
 	    range.end_pos <= lock.group_end;
 }
 
-bool lock_matches_row(const merge_lock_t & lock, const view_node_t & row, const row_lock_context_t & context)
+bool lock_matches_row(
+    const merge_lock_t & lock,
+    const view_tree_model_t::view_node_t & row,
+    const row_lock_context_t & context)
 {
 	switch (lock.scope)
 	{
