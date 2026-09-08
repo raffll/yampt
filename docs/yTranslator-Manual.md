@@ -117,7 +117,7 @@ Press Escape to clear the search and show all rows again.
 
 ## Status Filter (Statuses tab)
 
-The Statuses tab shows a list of all statuses present in the current dictionary, each with a colored bullet and a count. Click a status to solo it (show only entries with that status). Right-click to toggle individual statuses on or off. Click "All" to reset and show everything. The status filter operates independently from the type filter.
+The Statuses tab shows a list of all statuses present in the current dictionary, each with a colored bullet and a count. The counts reflect the active type filter: with a record type soloed in the Filters tab, each status count is the number of matching entries within that subset rather than the whole dictionary. The counts are not narrowed by the status selection or the search field, so soloing one status still shows the full tally for the others, and typing in the search box does not change them. Click a status to solo it (show only entries with that status). Right-click to toggle individual statuses on or off. Click "All" to reset and show everything. The status filter operates independently from the type filter.
 
 Localization files (.cel, .top, .mrk) have no status, so their entries show only the Original and Translation columns, and the Statuses tab is empty while such a file is open.
 

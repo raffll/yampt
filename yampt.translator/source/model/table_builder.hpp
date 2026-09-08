@@ -12,7 +12,6 @@ struct dict_counts_t
 {
 	std::map<rec_type_t, size_t> type_counts;
 	std::map<rec_type_t, size_t> translated_counts;
-	std::map<status_t, size_t> total_status_counts;
 	std::map<status_t, size_t> filtered_status_counts;
 	std::map<std::string, size_t> sub_type_total_counts;
 	std::map<std::string, size_t> sub_type_translated_counts;

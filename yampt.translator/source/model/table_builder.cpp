@@ -141,7 +141,6 @@ static void count_entry_statistics(dict_counts_t & counts, const entry_context_t
 	const auto & entry = context.entry;
 
 	counts.type_counts[context.count_type]++;
-	counts.total_status_counts[entry.status]++;
 
 	if (has_sub_type(context.type))
 	{
@@ -239,10 +238,7 @@ static table_row_t make_table_row(const entry_context_t & context)
 
 static void count_filtered_status(dict_counts_t & counts, const entry_context_t & context)
 {
-	const auto & search = context.params.search;
-	const auto tmp_row = make_table_row(context);
-	if (!search.has_query() || search.matches(tmp_row))
-		counts.filtered_status_counts[context.entry.status]++;
+	counts.filtered_status_counts[context.entry.status]++;
 }
 
 static std::unordered_multimap<std::string, size_t> build_bnam_prefix_map(const dict_t & data)

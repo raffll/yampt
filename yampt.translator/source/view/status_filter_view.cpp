@@ -290,12 +290,10 @@ void status_filter_view_t::update_styles()
 	}
 }
 
-void status_filter_view_t::update_counts(
-    const std::map<status_t, size_t> & /*displayed_counts*/,
-    const std::map<status_t, size_t> & total_counts)
+void status_filter_view_t::update_counts(const std::map<status_t, size_t> & displayed_counts)
 {
 	size_t grand_total = 0;
-	for (const auto & [status, count] : total_counts)
+	for (const auto & [status, count] : displayed_counts)
 		grand_total += count;
 
 	for (auto & current_row : m_rows)
@@ -310,8 +308,8 @@ void status_filter_view_t::update_counts(
 			continue;
 		}
 
-		auto found = total_counts.find(current_row.status);
-		size_t count = (found != total_counts.end()) ? found->second : 0;
+		auto found = displayed_counts.find(current_row.status);
+		size_t count = (found != displayed_counts.end()) ? found->second : 0;
 
 		current_row.item->setHidden(m_visible_statuses.count(current_row.status) == 0);
 

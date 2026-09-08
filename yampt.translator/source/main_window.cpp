@@ -413,18 +413,10 @@ void main_window_t::rebuild_table_yaml(document_t * target_doc)
 
 	const auto raw_rows = target_doc->build_rows();
 
-	std::map<status_t, size_t> total_status_counts;
 	std::map<status_t, size_t> filtered_status_counts;
 
 	for (const auto & row : raw_rows)
-	{
-		total_status_counts[row.status]++;
-
-		if (m_row_filter.has_query() && !m_row_filter.matches(row))
-			continue;
-
 		filtered_status_counts[row.status]++;
-	}
 
 	std::vector<table_row_t> rows;
 	for (const auto & row : raw_rows)
@@ -441,7 +433,7 @@ void main_window_t::rebuild_table_yaml(document_t * target_doc)
 	int total = target_doc->total_count();
 	int translated = target_doc->translated_count();
 	m_table_display->apply_yaml(
-	    std::move(rows), total, translated, target_doc->path(), filtered_status_counts, total_status_counts);
+	    std::move(rows), total, translated, target_doc->path(), filtered_status_counts);
 	m_editor_controller.set_current_row(-1);
 	clear_editor_panels();
 }
@@ -920,7 +912,7 @@ void main_window_t::update_status_counts()
 	m_filter_tree_view->update_sub_type_counts(
 	    result.counts.sub_type_total_counts, result.counts.sub_type_translated_counts);
 	m_filter_tree_view->set_total_count(total_translated, total);
-	m_status_filter_view->update_counts(result.counts.filtered_status_counts, result.counts.total_status_counts);
+	m_status_filter_view->update_counts(result.counts.filtered_status_counts);
 }
 
 void main_window_t::update_validation()

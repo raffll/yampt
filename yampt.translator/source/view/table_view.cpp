@@ -55,7 +55,7 @@ void table_view_t::apply(table_build_result_t result, const std::string & file_p
 		total_translated += c;
 
 	m_filter_tree.set_total_count(total_translated, total);
-	m_status_bar.update_counts(result.counts.filtered_status_counts, result.counts.total_status_counts);
+	m_status_bar.update_counts(result.counts.filtered_status_counts);
 
 	m_model.rebuild(std::move(result.rows));
 
@@ -81,8 +81,7 @@ void table_view_t::apply_yaml(
     int total,
     int translated,
     const std::string & file_path,
-    const std::map<status_t, size_t> & filtered_status_counts,
-    const std::map<status_t, size_t> & total_status_counts)
+    const std::map<status_t, size_t> & filtered_status_counts)
 {
 	m_file_label.setText(QString::fromStdString(string_utils::canonicalize_path(file_path)));
 	m_filter_tree.setEnabled(true);
@@ -93,7 +92,7 @@ void table_view_t::apply_yaml(
 	m_status_bar.set_document_open(true);
 	set_enabled(true);
 
-	m_status_bar.update_counts(filtered_status_counts, total_status_counts);
+	m_status_bar.update_counts(filtered_status_counts);
 
 	m_model.rebuild(std::move(rows));
 

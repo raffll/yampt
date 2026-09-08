@@ -4,6 +4,7 @@
 
 ### yTranslator
 - [CHANGE] Copy Original (F8), Set In Progress (F9), Set Translated (F10), and Set Untranslated (Del) now apply to every selected row instead of only the active one, and all four appear in the Records context menu with their shortcut keys shown; Set Untranslated clears the translation and sets the status to Untranslated, the same as pressing Del
+- [CHANGE] The Statuses tab counts now reflect the active type filter, showing the tally within that subset (for example the counts for a soloed CELL type) instead of always counting the whole dictionary; the counts are not narrowed by the status selection or the search field
 
 ### yEditor
 - [NEW] Lock an entire record directly from the navigation tree: right-click a record under the merged patch and choose Lock in Merged Patch to freeze the whole record, or Unlock in Merged Patch to release it; locked records are marked with a lock icon in the navigation tree

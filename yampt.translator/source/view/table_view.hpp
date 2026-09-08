@@ -35,8 +35,7 @@ public:
 	    int total,
 	    int translated,
 	    const std::string & file_path,
-	    const std::map<status_t, size_t> & filtered_status_counts,
-	    const std::map<status_t, size_t> & total_status_counts);
+	    const std::map<status_t, size_t> & filtered_status_counts);
 	void clear();
 	void set_enabled(bool enabled);
 

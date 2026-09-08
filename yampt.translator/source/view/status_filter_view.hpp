@@ -16,9 +16,7 @@ class status_filter_view_t : public QWidget
 public:
 	explicit status_filter_view_t(QWidget * parent = nullptr);
 
-	void update_counts(
-	    const std::map<status_t, size_t> & displayed_counts,
-	    const std::map<status_t, size_t> & total_counts);
+	void update_counts(const std::map<status_t, size_t> & displayed_counts);
 	std::set<status_t> get_active_statuses() const;
 	bool has_filter() const;
 	void set_filter_state(const std::set<status_t> & statuses);
