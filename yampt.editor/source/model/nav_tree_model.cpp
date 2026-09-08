@@ -816,13 +816,6 @@ QVariant nav_tree_model_t::file_node_appearance(const file_node_t & file_node, i
 		return QBrush(theme_system_t::instance().conflict_this_foreground(worst_this));
 	}
 
-	if (role == Qt::FontRole && m_scan.is_active_plugin(file_node.plugin_idx))
-	{
-		QFont font;
-		font.setBold(true);
-		return font;
-	}
-
 	return {};
 }
 

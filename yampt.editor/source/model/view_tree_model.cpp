@@ -1137,13 +1137,6 @@ QVariant view_tree_model_t::headerData(int section, Qt::Orientation orientation,
 		return QBrush(theme.conflict_this_foreground(m_plugin_conflict_this[col]));
 	}
 
-	if (role == Qt::FontRole && is_active_column(section))
-	{
-		QFont font;
-		font.setBold(true);
-		return font;
-	}
-
 	return {};
 }
 

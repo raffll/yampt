@@ -35,6 +35,7 @@ public:
 	void load_plugin(const std::string & path);
 	void set_active_plugin(const std::string & filename);
 	void set_active_from_loaded(int plugin_idx);
+	void reload_active_plugin(const std::string & path);
 	void clear_active_records();
 
 	using conflict_progress_fn_t = std::function<void(size_t done, size_t total)>;

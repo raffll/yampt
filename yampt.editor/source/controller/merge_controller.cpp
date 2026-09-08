@@ -245,6 +245,13 @@ void merge_controller_t::create_new_plugin(const std::string & filename)
 	m_session.register_created_plugin(filename);
 	m_session.scan().set_active_plugin(filename);
 	m_session.scan().set_active_locks({});
+
+	save_active_plugin();
+
+	const auto saved_path = resolve_active_output_path();
+	if (!saved_path.empty())
+		m_session.scan().reload_active_plugin(saved_path);
+
 	m_session.scan().rebuild_conflicts();
 
 	if (m_refresh)
@@ -252,7 +259,6 @@ void merge_controller_t::create_new_plugin(const std::string & filename)
 	else
 		m_nav_view.rebuild_preserving_state();
 
-	save_active_plugin();
 	m_log("[info] created new plugin: " + filename);
 }
 

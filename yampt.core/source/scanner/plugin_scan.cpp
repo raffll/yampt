@@ -489,6 +489,15 @@ void plugin_scan_t::clear_active_records()
 	m_active_store.clear();
 }
 
+void plugin_scan_t::reload_active_plugin(const std::string & path)
+{
+	if (m_active_plugin_idx < 0 || m_active_plugin_idx >= static_cast<int>(m_plugins.size()))
+		return;
+
+	m_plugins[m_active_plugin_idx] = std::make_unique<loaded_plugin_t>(path);
+	set_active_from_loaded(m_active_plugin_idx);
+}
+
 void plugin_scan_t::copy_record_to_active(int source_plugin, size_t record_index)
 {
 	if (m_active_plugin_idx < 0)
