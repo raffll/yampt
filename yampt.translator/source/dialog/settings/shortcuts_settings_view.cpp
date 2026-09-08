@@ -17,12 +17,12 @@ shortcuts_settings_view_t::shortcuts_settings_view_t(QWidget * parent)
 		{ "set_translated", QT_TR_NOOP("Set Translated"), "F10", true },
 		{ "save", QT_TR_NOOP("Save"), "Ctrl+S", true },
 		{ "settings", QT_TR_NOOP("Open Settings"), "Ctrl+,", true },
-		{ "escape", QT_TR_NOOP("Escape"), "Escape", true },
+		{ "escape", QT_TR_NOOP("Clear Search"), "Escape", true },
 	};
 
 	m_readonly_entries = {
-		{ "set_untranslated", QT_TR_NOOP("Set Untranslated (Table)"), "Del", false },
-		{ "navigate_next", QT_TR_NOOP("Next Entry"), "Shift+Return", false },
+		{ "set_untranslated", QT_TR_NOOP("Set Untranslated (Table Only)"), "Del", false },
+		{ "navigate_next", QT_TR_NOOP("Next Entry"), "Shift+Return / Ctrl+Down", false },
 		{ "navigate_prev", QT_TR_NOOP("Previous Entry"), "Ctrl+Up", false },
 	};
 

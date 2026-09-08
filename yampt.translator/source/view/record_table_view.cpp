@@ -2,9 +2,9 @@
 #include "../model/record_table_model.hpp"
 #include <translation_example.hpp>
 #include <optional>
+#include <QAction>
 #include <QContextMenuEvent>
 #include <QHeaderView>
-#include <QKeyEvent>
 #include <QMenu>
 
 record_table_view_t::record_table_view_t(QWidget * parent)
@@ -97,6 +97,27 @@ void record_table_view_t::set_context_menu_enabled(bool enabled)
 	m_context_menu_enabled = enabled;
 }
 
+void record_table_view_t::set_status_actions(QAction * copy_original, QAction * set_in_progress, QAction * set_translated)
+{
+	m_copy_original_action = copy_original;
+	m_set_in_progress_action = set_in_progress;
+	m_set_translated_action = set_translated;
+}
+
+void record_table_view_t::set_untranslated_action(QAction * set_untranslated)
+{
+	m_set_untranslated_action = set_untranslated;
+}
+
+QList<int> record_table_view_t::selected_rows() const
+{
+	QList<int> rows;
+	for (const auto & idx : selectionModel()->selectedRows())
+		rows.append(idx.row());
+
+	return rows;
+}
+
 void record_table_view_t::set_example_state_fn(std::function<bool(int row)> fn)
 {
 	m_example_state_fn = std::move(fn);
@@ -122,10 +143,20 @@ void record_table_view_t::contextMenuEvent(QContextMenuEvent * event)
 		return;
 
 	auto * menu = new QMenu(this);
+	menu->setToolTipsVisible(true);
 
-	auto * act_translated = menu->addAction(tr("Set Translated"));
-	auto * act_in_progress = menu->addAction(tr("Set In Progress"));
-	auto * act_untranslated = menu->addAction(tr("Set Untranslated"));
+	if (m_copy_original_action)
+		menu->addAction(m_copy_original_action);
+
+	if (m_set_in_progress_action)
+		menu->addAction(m_set_in_progress_action);
+
+	if (m_set_translated_action)
+		menu->addAction(m_set_translated_action);
+
+	if (m_set_untranslated_action)
+		menu->addAction(m_set_untranslated_action);
+
 	auto * act_error = menu->addAction(tr("Set Error"));
 
 	menu->addSeparator();
@@ -158,13 +189,7 @@ void record_table_view_t::contextMenuEvent(QContextMenuEvent * event)
 
 	auto * chosen = menu->exec(event->globalPos());
 	std::optional<status_t> new_status;
-	if (chosen == act_translated)
-		new_status = status_t::translated;
-	else if (chosen == act_in_progress)
-		new_status = status_t::in_progress;
-	else if (chosen == act_untranslated)
-		new_status = status_t::untranslated;
-	else if (chosen == act_error)
+	if (chosen == act_error)
 		new_status = status_t::error;
 
 	if (new_status.has_value())
@@ -218,19 +243,4 @@ std::vector<int> record_table_view_t::get_column_widths() const
 		widths.push_back(header->sectionSize(i));
 
 	return widths;
-}
-
-void record_table_view_t::keyPressEvent(QKeyEvent * event)
-{
-	if (event->key() == Qt::Key_Delete && !event->modifiers())
-	{
-		const auto selected = selectionModel()->selectedRows();
-		if (!selected.isEmpty())
-		{
-			emit delete_entry_requested();
-			return;
-		}
-	}
-
-	QTableView::keyPressEvent(event);
 }

@@ -137,10 +137,10 @@ The Filters tab shows record types present in the current dictionary (CELL, DIAL
 ## Keyboard Shortcuts
 
 - `Ctrl+S` — save the current dictionary to disk.
-- `F8` — copy the original text into the translation field (sets status to In Progress).
-- `F9` — commit the current edit and set status to In Progress.
-- `F10` — commit the current edit and set status to Translated.
-- `Del` — reset the selected entry to its original text and set status to Untranslated.
+- `F8` — copy the original text into the translation field (sets status to In Progress). When multiple rows are selected, it applies to every selected row.
+- `F9` — set status to In Progress. When multiple rows are selected, it applies to every selected row.
+- `F10` — set status to Translated. When multiple rows are selected, it applies to every selected row.
+- `Del` — reset the selected entry to its original text and set status to Untranslated. When multiple rows are selected, it applies to every selected row.
 - `Shift+Enter` — commit the current edit (status becomes In Progress) and select the next row.
 - `Ctrl+Down` — same as Shift+Enter.
 - `Ctrl+Up` — select the previous row.
@@ -173,7 +173,7 @@ Additional providers can be added by placing a configuration file in the `provid
 
 ## Entry Statuses
 
-Each dictionary entry has a status. Only **Translated** entries are applied during Convert Plugin/Create Patch Plugin — all others are skipped. You can manually set **Translated**, **In Progress**, **Untranslated**, or **Error** via right-click context menu on selected rows in the Records table. The same menu offers **Revert**, which restores each selected entry to its previous text and status from the edit history.
+Each dictionary entry has a status. Only **Translated** entries are applied during Convert Plugin/Create Patch Plugin — all others are skipped. You can manually apply **Copy Original**, **Set In Progress**, **Set Translated**, **Set Untranslated**, or **Set Error** via right-click context menu on selected rows in the Records table. Copy Original, Set In Progress, Set Translated, and Set Untranslated also have keyboard shortcuts (F8, F9, F10, and Del), shown next to their menu items, and every one of these actions applies to all selected rows. Set Untranslated clears the translation and sets the status to Untranslated, the same as pressing Del. The same menu offers **Revert**, which restores each selected entry to its previous text and status from the edit history.
 
 The context menu also lets you teach an AI provider your preferred style. Right-click one or more records and choose **Mark as Example** to store their original and current translation as reference pairs. When a selected record is already stored, the same entry reads **Unmark Example** and removes it. You can keep up to twenty examples at once; if you try to mark more, the extra selection is skipped and a message explains that the limit was reached. Examples apply to any record regardless of its status, and every stored example is sent to AI providers alongside your translation. They are managed in Settings → Auto Translation → Examples.
 

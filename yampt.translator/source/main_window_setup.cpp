@@ -728,32 +728,6 @@ void main_window_t::connect_editor_signals()
 
 	connect(
 	    m_table_view,
-	    &record_table_view_t::delete_entry_requested,
-	    this,
-	    [this]()
-	{
-		if (m_editor_controller.current_row() < 0)
-			return;
-
-		if (!m_active_doc)
-			return;
-
-		const auto * row_data = m_table_model->row_at(m_editor_controller.current_row());
-		if (!row_data)
-			return;
-
-		const auto result = m_active_doc->reset_to_original(*row_data);
-		if (!result.success)
-			return;
-
-		m_table_model->update_row(m_editor_controller.current_row(), result.new_text, result.status);
-		set_unsaved_changes(true);
-		update_status_counts();
-		load_record(m_editor_controller.current_row());
-	});
-
-	connect(
-	    m_table_view,
 	    &record_table_view_t::batch_status_change_requested,
 	    this,
 	    [this](const QList<int> & rows, status_t new_status)

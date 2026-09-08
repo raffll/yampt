@@ -136,7 +136,8 @@ main_window_t::main_window_t(QWidget * parent)
 	                                                                [this]() -> document_t * { return m_active_doc; },
 	                                                                [this](bool dirty) { set_unsaved_changes(dirty); },
 	                                                                [this]() { update_status_counts(); },
-	                                                                [this](int row) { load_record(row); } });
+	                                                                [this](int row) { load_record(row); },
+	                                                                [this]() { return m_table_view->selected_rows(); } });
 
 	connect_menu_signals();
 	connect_sidebar_signals();
@@ -697,6 +698,20 @@ void main_window_t::register_shortcuts()
 		    [this]() { shortcut_commit_status(status_t::translated); });
 	}
 
+	if (!m_set_untranslated_action && m_table_view)
+	{
+		m_set_untranslated_action = new QAction(m_table_view);
+		m_set_untranslated_action->setToolTip(tr("Clear translation and set status to Untranslated (Del)"));
+		m_set_untranslated_action->setShortcut(QKeySequence("Del"));
+		m_set_untranslated_action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+		m_table_view->addAction(m_set_untranslated_action);
+		connect(
+		    m_set_untranslated_action,
+		    &QAction::triggered,
+		    this,
+		    [this]() { reset_rows_to_original(m_table_view->selected_rows()); });
+	}
+
 	const auto resolve = [this](const std::string & action_name, const std::string & fallback)
 	{
 		const auto stored = m_settings.shortcut(action_name);
@@ -715,6 +730,19 @@ void main_window_t::register_shortcuts()
 
 	if (m_escape_action)
 		m_escape_action->setShortcut(resolve("escape", "Escape"));
+
+	m_copy_original_action->setText(tr("Copy Original"));
+	m_set_in_progress_action->setText(tr("Set In Progress"));
+	m_set_translated_action->setText(tr("Set Translated"));
+
+	if (m_set_untranslated_action)
+		m_set_untranslated_action->setText(tr("Set Untranslated"));
+
+	if (m_table_view)
+	{
+		m_table_view->set_status_actions(m_copy_original_action, m_set_in_progress_action, m_set_translated_action);
+		m_table_view->set_untranslated_action(m_set_untranslated_action);
+	}
 }
 
 void main_window_t::shortcut_copy_original()
@@ -731,6 +759,14 @@ void main_window_t::shortcut_commit_status(status_t new_status)
 		return;
 
 	m_shortcuts_controller->commit_status(new_status);
+}
+
+void main_window_t::reset_rows_to_original(const QList<int> & rows)
+{
+	if (!m_shortcuts_controller)
+		return;
+
+	m_shortcuts_controller->reset_to_original(rows);
 }
 
 void main_window_t::advance_to_next_row()
