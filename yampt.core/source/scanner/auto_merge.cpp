@@ -24,7 +24,7 @@ void auto_merge_t::set_progress_callback(progress_fn_t progress_fn)
 merge_counters_t auto_merge_t::execute()
 {
 	m_log.clear();
-	m_scan.clear_merge_records();
+	m_scan.clear_active_records();
 
 	merge_counters_t counters {};
 	build_record_groups();
@@ -208,7 +208,7 @@ void auto_merge_t::process_leveled_list(const record_group_t & group, merge_coun
 	if (!result.changed)
 		return;
 
-	m_scan.copy_record_to_merge_raw(group.rec_type, group.record_id, result.content);
+	m_scan.copy_record_to_active_raw(group.rec_type, group.record_id, result.content);
 	++counters.lists;
 }
 
@@ -221,14 +221,14 @@ void auto_merge_t::process_dialogue(const record_group_t & group, merge_counters
 	const auto & entry = *scan_entry;
 	const auto & winning_ver = entry.versions.back();
 	std::string winning_dial = m_scan.read_record_content(winning_ver.plugin_idx, winning_ver.record_index);
-	m_scan.copy_record_to_merge_raw("DIAL", entry.record_id, winning_dial);
+	m_scan.copy_record_to_active_raw("DIAL", entry.record_id, winning_dial);
 
 	std::vector<std::string> merged_info_ids;
 	std::map<std::string, std::string> info_contents;
 
 	for (const auto & ver : entry.versions)
 	{
-		if (m_scan.is_merge_plugin(ver.plugin_idx))
+		if (m_scan.is_active_plugin(ver.plugin_idx))
 			continue;
 
 		const auto & plugin_entries = m_scan.index(ver.plugin_idx).entries();
@@ -251,7 +251,7 @@ void auto_merge_t::process_dialogue(const record_group_t & group, merge_counters
 	}
 
 	for (const auto & info_id : merged_info_ids)
-		m_scan.copy_record_to_merge_raw("INFO", info_id, info_contents[info_id]);
+		m_scan.copy_record_to_active_raw("INFO", info_id, info_contents[info_id]);
 
 	++counters.dialogues;
 }
@@ -308,7 +308,7 @@ void auto_merge_t::process_three_way(const record_group_t & group, merge_counter
 		return;
 
 	const auto filtered = filter_ignored_sub_records(group.rec_type, result.content);
-	m_scan.copy_record_to_merge_raw(group.rec_type, group.record_id, filtered);
+	m_scan.copy_record_to_active_raw(group.rec_type, group.record_id, filtered);
 	++counters.three_way;
 
 	std::string plugins;
@@ -342,7 +342,7 @@ void auto_merge_t::apply_fog_fixes(merge_counters_t & counters)
 		if (group.rec_type != "CELL")
 			continue;
 
-		const auto * merge_content = m_scan.find_merge_content("CELL", group.record_id);
+		const auto * merge_content = m_scan.find_active_content("CELL", group.record_id);
 		const auto & last_ver = group.versions.back();
 		const auto content =
 		    merge_content ? *merge_content : m_scan.read_record_content(last_ver.plugin_idx, last_ver.record_index);
@@ -354,7 +354,7 @@ void auto_merge_t::apply_fog_fixes(merge_counters_t & counters)
 		if (fixed.empty())
 			continue;
 
-		m_scan.copy_record_to_merge_raw("CELL", group.record_id, fixed);
+		m_scan.copy_record_to_active_raw("CELL", group.record_id, fixed);
 		add_log("[info] fog fix: \"" + group.record_id + "\"");
 		++counters.fixes;
 	}
@@ -367,7 +367,7 @@ void auto_merge_t::apply_summon_fixes(merge_counters_t & counters)
 		if (group.rec_type != "CREA")
 			continue;
 
-		const auto * merge_content = m_scan.find_merge_content("CREA", group.record_id);
+		const auto * merge_content = m_scan.find_active_content("CREA", group.record_id);
 		const auto & last_ver = group.versions.back();
 		const auto content =
 		    merge_content ? *merge_content : m_scan.read_record_content(last_ver.plugin_idx, last_ver.record_index);
@@ -379,7 +379,7 @@ void auto_merge_t::apply_summon_fixes(merge_counters_t & counters)
 		if (fixed.empty())
 			continue;
 
-		m_scan.copy_record_to_merge_raw("CREA", group.record_id, fixed);
+		m_scan.copy_record_to_active_raw("CREA", group.record_id, fixed);
 		add_log("[info] summon fix: \"" + group.record_id + "\"");
 		++counters.fixes;
 	}
@@ -397,7 +397,7 @@ void auto_merge_t::apply_cell_name_fixes(merge_counters_t & counters)
 
 		auto version_contents = read_version_contents(group);
 
-		const auto * merge_content = m_scan.find_merge_content("CELL", group.record_id);
+		const auto * merge_content = m_scan.find_active_content("CELL", group.record_id);
 		if (merge_content)
 			version_contents.back() = *merge_content;
 
@@ -405,7 +405,7 @@ void auto_merge_t::apply_cell_name_fixes(merge_counters_t & counters)
 		if (fixed.empty())
 			continue;
 
-		m_scan.copy_record_to_merge_raw("CELL", group.record_id, fixed);
+		m_scan.copy_record_to_active_raw("CELL", group.record_id, fixed);
 		add_log("[info] cell name fix: \"" + group.record_id + "\"");
 		++counters.fixes;
 	}
@@ -419,11 +419,11 @@ void auto_merge_t::prune_unchanged()
 
 	std::vector<std::pair<std::string, std::string>> to_remove;
 
-	for (size_t i = 0; i < m_scan.merge_record_count(); ++i)
+	for (size_t i = 0; i < m_scan.active_record_count(); ++i)
 	{
-		const auto & rec_type = m_scan.merge_record_type(i);
-		const auto & record_id = m_scan.merge_record_id(i);
-		const auto & merge_content = m_scan.merge_record_content(i);
+		const auto & rec_type = m_scan.active_record_type(i);
+		const auto & record_id = m_scan.active_record_id(i);
+		const auto & merge_content = m_scan.active_record_content(i);
 
 		const auto key = rec_type + "\x00" + record_id;
 		auto it_found = group_lookup.find(key);
@@ -439,7 +439,7 @@ void auto_merge_t::prune_unchanged()
 	}
 
 	for (const auto & [rec_type, record_id] : to_remove)
-		m_scan.remove_from_merge(rec_type, record_id);
+		m_scan.remove_from_active(rec_type, record_id);
 }
 
 std::vector<std::string> auto_merge_t::read_version_contents(const record_group_t & group)
@@ -455,7 +455,7 @@ std::vector<std::string> auto_merge_t::read_version_contents(const record_group_
 
 bool auto_merge_t::is_plugin_included(int plugin_idx) const
 {
-	if (m_scan.is_merge_plugin(plugin_idx))
+	if (m_scan.is_active_plugin(plugin_idx))
 		return false;
 
 	const auto & filename = m_scan.plugin_filename(plugin_idx);

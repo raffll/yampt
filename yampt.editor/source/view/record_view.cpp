@@ -115,11 +115,11 @@ void record_view_t::display_record(plugin_scan_t & scan, const conflict_entry_t 
 {
 	m_model->set_record(scan, entry);
 
-	const auto merge_col = m_model->merge_column();
-	if (merge_col >= 0)
+	const auto active_col = m_model->active_column();
+	if (active_col >= 0)
 	{
-		const bool should_show = scan.has_merge();
-		m_tree->header()->setSectionHidden(merge_col, !should_show);
+		const bool should_show = scan.has_active();
+		m_tree->header()->setSectionHidden(active_col, !should_show);
 	}
 
 	expand_non_numeric_groups();

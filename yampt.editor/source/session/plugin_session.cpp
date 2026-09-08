@@ -1,6 +1,5 @@
 #include "plugin_session.hpp"
 #include "../patcher/patch_builder.hpp"
-#include <scanner/sub_record_merge.hpp>
 #include <algorithm>
 #include <QCoreApplication>
 #include <QDir>
@@ -82,6 +81,16 @@ const std::set<std::string> & plugin_session_t::excluded_plugins() const
 	return m_excluded_plugins;
 }
 
+void plugin_session_t::register_created_plugin(const std::string & filename)
+{
+	m_created_plugins.insert(filename);
+}
+
+const std::set<std::string> & plugin_session_t::created_plugins() const
+{
+	return m_created_plugins;
+}
+
 void plugin_session_t::set_excluded_plugins(const std::set<std::string> & excluded)
 {
 	m_excluded_plugins = excluded;
@@ -149,6 +158,12 @@ void plugin_session_t::save_session_state(const QString & ini_path)
 	settings.setValue("session/load_source", static_cast<int>(m_load_source));
 	settings.setValue("session/load_base_path", QString::fromStdString(m_load_base_path));
 
+	const int active_idx = m_scan.active_plugin_index();
+	if (active_idx >= 0)
+		settings.setValue("session/active_plugin_path", QString::fromStdString(m_scan.plugin_path(active_idx)));
+	else
+		settings.remove("session/active_plugin_path");
+
 	QStringList excluded_list;
 	for (const auto & name : m_excluded_plugins)
 		excluded_list.append(QString::fromStdString(name));
@@ -161,70 +176,11 @@ void plugin_session_t::save_session_state(const QString & ini_path)
 
 	settings.setValue("merge/patch_plugins", patch_list);
 
-	save_merge_locks(settings);
-}
+	QStringList created_list;
+	for (const auto & name : m_created_plugins)
+		created_list.append(QString::fromStdString(name));
 
-void plugin_session_t::save_merge_locks(QSettings & settings) const
-{
-	const auto & locks = m_scan.merge_locks();
-
-	settings.beginWriteArray("merge/locks");
-	for (int i = 0; i < static_cast<int>(locks.size()); ++i)
-	{
-		const auto & lock = locks[static_cast<size_t>(i)];
-		settings.setArrayIndex(i);
-		settings.setValue("rec_type", QString::fromStdString(lock.rec_type));
-		settings.setValue("record_id", QString::fromStdString(lock.record_id));
-		settings.setValue("scope", static_cast<int>(lock.scope));
-		settings.setValue("sub_type", QString::fromStdString(lock.sub_type));
-		settings.setValue("occurrence", lock.occurrence);
-		settings.setValue("field_index", lock.field_index);
-		settings.setValue("bit_index", lock.bit_index);
-		settings.setValue("sub_size", static_cast<qulonglong>(lock.sub_size));
-		settings.setValue("group_start", lock.group_start);
-		settings.setValue("group_end", lock.group_end);
-		settings.setValue(
-		    "frozen",
-		    QString::fromLatin1(
-		        QByteArray(lock.frozen_content.data(), static_cast<int>(lock.frozen_content.size())).toBase64()));
-	}
-
-	settings.endArray();
-}
-
-std::vector<merge_lock_t> plugin_session_t::load_merge_locks(QSettings & settings) const
-{
-	std::vector<merge_lock_t> locks;
-
-	const int size = settings.beginReadArray("merge/locks");
-	for (int i = 0; i < size; ++i)
-	{
-		settings.setArrayIndex(i);
-		merge_lock_t lock;
-		lock.rec_type = settings.value("rec_type").toString().toStdString();
-		lock.record_id = settings.value("record_id").toString().toStdString();
-		lock.scope = static_cast<lock_scope_t>(settings.value("scope").toInt());
-		lock.sub_type = settings.value("sub_type").toString().toStdString();
-		lock.occurrence = settings.value("occurrence").toInt();
-		lock.field_index = settings.value("field_index", -1).toInt();
-		lock.bit_index = settings.value("bit_index", -1).toInt();
-		lock.sub_size = static_cast<size_t>(settings.value("sub_size", 0).toULongLong());
-		lock.group_start = settings.value("group_start", -1).toInt();
-		lock.group_end = settings.value("group_end", -1).toInt();
-
-		const auto decoded =
-		    QByteArray::fromBase64(settings.value("frozen").toString().toLatin1());
-		lock.frozen_content.assign(decoded.constData(), static_cast<size_t>(decoded.size()));
-
-		if (lock.scope == lock_scope_t::group)
-			lock.group_members =
-			    sub_record_merge_t::group_members_in_range(lock.frozen_content, lock.group_start, lock.group_end);
-
-		locks.push_back(std::move(lock));
-	}
-
-	settings.endArray();
-	return locks;
+	settings.setValue("session/created_plugins", created_list);
 }
 
 void plugin_session_t::restore_session_state(const QString & ini_path)
@@ -244,7 +200,10 @@ void plugin_session_t::restore_session_state(const QString & ini_path)
 	for (const auto & name : patch_list)
 		m_patch_plugins.insert(name.toStdString());
 
-	const auto saved_locks = load_merge_locks(settings);
+	const auto created_list = settings.value("session/created_plugins").toStringList();
+	m_created_plugins.clear();
+	for (const auto & name : created_list)
+		m_created_plugins.insert(name.toStdString());
 
 	if (m_load_base_path.empty())
 		return;
@@ -282,8 +241,42 @@ void plugin_session_t::restore_session_state(const QString & ini_path)
 		break;
 	}
 
-	if (!saved_locks.empty())
-		m_scan.set_merge_locks(saved_locks);
+	const auto active_path = settings.value("session/active_plugin_path").toString().toStdString();
+	if (!active_path.empty())
+		restore_active_plugin(active_path);
+}
+
+void plugin_session_t::restore_active_plugin(const std::string & active_path)
+{
+	auto separator_pos = active_path.find_last_of("/\\");
+	const auto filename =
+	    (separator_pos != std::string::npos) ? active_path.substr(separator_pos + 1) : active_path;
+
+	for (int i = 0; i < static_cast<int>(m_scan.plugin_count()); ++i)
+	{
+		if (m_scan.plugin_filename(i) != filename)
+			continue;
+
+		m_scan.set_active_from_loaded(i);
+		m_scan.rebuild_conflicts();
+		return;
+	}
+
+	if (!QFile::exists(QString::fromStdString(active_path)))
+		return;
+
+	try
+	{
+		m_scan.load_plugin(active_path);
+		const int loaded_idx = static_cast<int>(m_scan.plugin_count()) - 1;
+		m_scan.set_active_from_loaded(loaded_idx);
+		m_scan.rebuild_conflicts();
+		emit log_message("[info] restored active plugin: " + filename);
+	}
+	catch (const std::exception & exception)
+	{
+		emit log_message("[error] restoring active plugin " + filename + ": " + exception.what());
+	}
 }
 
 void plugin_session_t::restore_folder_session()
@@ -428,14 +421,14 @@ void plugin_session_t::load_plugins_internal(const std::vector<std::string> & pa
 
 			if (filename == "Merged Patch.esp")
 			{
-				m_scan.set_merge_plugin_from_loaded(loaded_idx);
-				emit log_message("Loaded merge plugin: " + filename);
+				m_scan.set_active_from_loaded(loaded_idx);
+				emit log_message("[info] loaded merge plugin: " + filename);
 			}
 			else
 			{
 				const auto & idx = m_scan.index(loaded_idx);
 				emit log_message(
-				    "Loaded " + m_scan.plugin_filename(loaded_idx) + " (" + std::to_string(idx.entries().size()) +
+				    "[info] loaded " + m_scan.plugin_filename(loaded_idx) + " (" + std::to_string(idx.entries().size()) +
 				    " records indexed)");
 			}
 		}
@@ -514,7 +507,7 @@ std::vector<std::string> plugin_session_t::parse_mo2_profile(const QString & pro
 			    context.game_data_path.toStdString() + ")");
 	}
 
-	append_merge_patch(paths, context.overwrite_path);
+	append_output_plugins(paths, context.overwrite_path);
 	return paths;
 }
 
@@ -524,7 +517,7 @@ std::vector<std::string> plugin_session_t::read_load_order(const QString & profi
 	QFile loadorder_file(loadorder_path);
 	if (!loadorder_file.open(QIODevice::ReadOnly | QIODevice::Text))
 	{
-		emit log_message("Cannot open loadorder.txt in " + profile_dir.toStdString());
+		emit log_message("[error] cannot open loadorder.txt in " + profile_dir.toStdString());
 		return {};
 	}
 
@@ -584,24 +577,32 @@ QString plugin_session_t::resolve_game_data_path(const QString & mo2_root_path)
 	return result;
 }
 
-void plugin_session_t::append_merge_patch(std::vector<std::string> & paths, const QString & merge_dir)
+void plugin_session_t::append_output_plugins(std::vector<std::string> & paths, const QString & output_dir)
 {
-	static const QString merge_filename = "Merged Patch.esp";
+	std::set<std::string> output_names = m_created_plugins;
+	output_names.insert("Merged Patch.esp");
 
-	const auto is_merge_path = [](const std::string & path)
+	const auto matches_output = [&output_names](const std::string & path)
 	{
 		auto separator_pos = path.find_last_of("/\\");
 		auto filename = (separator_pos != std::string::npos) ? path.substr(separator_pos + 1) : path;
-		return QString::fromStdString(filename).compare(merge_filename, Qt::CaseInsensitive) == 0;
+		for (const auto & name : output_names)
+		{
+			if (QString::fromStdString(filename).compare(QString::fromStdString(name), Qt::CaseInsensitive) == 0)
+				return true;
+		}
+
+		return false;
 	};
 
-	std::erase_if(paths, is_merge_path);
+	std::erase_if(paths, matches_output);
 
-	const auto merge_full_path = merge_dir + "/" + merge_filename;
-	if (!QFile::exists(merge_full_path))
-		return;
-
-	paths.push_back(merge_full_path.toStdString());
+	for (const auto & name : output_names)
+	{
+		const auto full_path = output_dir + "/" + QString::fromStdString(name);
+		if (QFile::exists(full_path))
+			paths.push_back(full_path.toStdString());
+	}
 }
 
 std::vector<std::string> plugin_session_t::resolve_mo2_plugins(
@@ -615,11 +616,11 @@ std::vector<std::string> plugin_session_t::resolve_mo2_plugins(
 		if (!resolved.empty())
 			paths.push_back(resolved);
 		else
-			emit log_message("Cannot find: " + name);
+			emit log_message("[warning] cannot find: " + name);
 	}
 
 	if (paths.empty())
-		emit log_message("No plugins resolved from MO2 profile");
+		emit log_message("[warning] no plugins resolved from MO2 profile");
 
 	return paths;
 }
@@ -655,7 +656,7 @@ std::vector<std::string> plugin_session_t::parse_openmw_cfg(const QString & cfg_
 	QFile cfg_file(cfg_path);
 	if (!cfg_file.open(QIODevice::ReadOnly | QIODevice::Text))
 	{
-		emit log_message("Cannot open " + cfg_path.toStdString());
+		emit log_message("[error] cannot open " + cfg_path.toStdString());
 		return {};
 	}
 
@@ -684,25 +685,31 @@ std::vector<std::string> plugin_session_t::parse_openmw_cfg(const QString & cfg_
 	cfg_file.close();
 
 	auto paths = resolve_openmw_content(content_names, data_dirs);
-	append_merge_patch_from_data_dirs(paths, data_dirs);
+	append_output_plugins_from_data_dirs(paths, data_dirs);
 	return paths;
 }
 
-void plugin_session_t::append_merge_patch_from_data_dirs(
+void plugin_session_t::append_output_plugins_from_data_dirs(
     std::vector<std::string> & paths,
     const std::vector<std::string> & data_dirs)
 {
+	std::set<std::string> output_names = m_created_plugins;
+	output_names.insert("Merged Patch.esp");
+
 	for (auto it_dir = data_dirs.rbegin(); it_dir != data_dirs.rend(); ++it_dir)
 	{
-		const auto candidate = QString::fromStdString(*it_dir) + "/Merged Patch.esp";
-		if (!QFile::exists(candidate))
-			continue;
+		for (const auto & name : output_names)
+		{
+			const auto candidate = QString::fromStdString(*it_dir) + "/" + QString::fromStdString(name);
+			if (!QFile::exists(candidate))
+				continue;
 
-		append_merge_patch(paths, QString::fromStdString(*it_dir));
-		return;
+			append_output_plugins(paths, QString::fromStdString(*it_dir));
+			return;
+		}
 	}
 
-	append_merge_patch(paths, {});
+	append_output_plugins(paths, {});
 }
 
 std::vector<std::string> plugin_session_t::resolve_openmw_content(
@@ -716,11 +723,11 @@ std::vector<std::string> plugin_session_t::resolve_openmw_content(
 		if (!resolved.empty())
 			paths.push_back(resolved);
 		else
-			emit log_message("Cannot find: " + name);
+			emit log_message("[warning] cannot find: " + name);
 	}
 
 	if (paths.empty())
-		emit log_message("No plugins resolved from openmw.cfg");
+		emit log_message("[warning] no plugins resolved from openmw.cfg");
 
 	return paths;
 }

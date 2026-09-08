@@ -716,6 +716,9 @@ QVariant nav_tree_model_t::data_for_file_node(int row, int column, int role) con
 	if (role == Qt::DisplayRole && column == 0)
 		return file_node_display_text(file_node);
 
+	if (role == Qt::DisplayRole && column == 1)
+		return file_node_icons(file_node);
+
 	if (role == Qt::BackgroundRole || role == Qt::ForegroundRole || role == Qt::FontRole)
 		return file_node_appearance(file_node, role);
 
@@ -738,28 +741,42 @@ QVariant nav_tree_model_t::file_node_display_text(const file_node_t & file_node)
 	if (m_filter.dirty_plugins() && m_filter.dirty_plugins()->count(filename))
 		label = "* " + label;
 
-	if (m_filter.excluded_plugins() && m_filter.excluded_plugins()->count(filename))
-		return QString::fromUtf8("\xF0\x9F\x9A\xAB ") + QString::fromUtf8(label.c_str());
+	return QString::fromUtf8(label.c_str());
+}
 
-	if (m_filter.patch_plugins() && m_filter.patch_plugins()->count(filename))
-		return QString::fromUtf8("\xF0\x9F\x9B\xA1 ") + QString::fromUtf8(label.c_str());
-
-	if (m_scan.is_merge_plugin(file_node.plugin_idx))
-		return QString::fromUtf8("\xE2\x9A\x99 ") + QString::fromUtf8(label.c_str());
+QVariant nav_tree_model_t::file_node_icons(const file_node_t & file_node) const
+{
+	const auto & filename = m_scan.plugin_filename(file_node.plugin_idx);
 
 	const auto & full_path = m_scan.plugin_path(file_node.plugin_idx);
 	const bool is_overridden =
 	    full_path.find("/overwrite/") != std::string::npos || full_path.find("\\overwrite\\") != std::string::npos;
-
 	const bool is_master = filename.size() > 4 && (filename.compare(filename.size() - 4, 4, ".esm") == 0 ||
 	                                               filename.compare(filename.size() - 4, 4, ".ESM") == 0);
-	if (is_master)
-		return QString::fromUtf8("\xF0\x9F\x93\x9C ") + QString::fromUtf8(label.c_str());
+	const bool is_excluded = m_filter.excluded_plugins() && m_filter.excluded_plugins()->count(filename);
+	const bool is_guard = m_filter.patch_plugins() && m_filter.patch_plugins()->count(filename);
+
+	QString icons;
+
+	if (filename == "Merged Patch.esp")
+		icons += QString::fromUtf8("\xE2\x9A\x99 ");
+	else if (is_master)
+		icons += QString::fromUtf8("\xF0\x9F\x93\x9C ");
+	else
+		icons += QString::fromUtf8("\xF0\x9F\x93\x84 ");
 
 	if (is_overridden)
-		return QString::fromUtf8("\xE2\x9A\xA1 ") + QString::fromUtf8(label.c_str());
+		icons += QString::fromUtf8("\xE2\x9A\xA1 ");
 
-	return QString::fromUtf8("\xF0\x9F\x93\x84 ") + QString::fromUtf8(label.c_str());
+	if (is_excluded)
+		icons += QString::fromUtf8("\xF0\x9F\x9A\xAB ");
+	else if (is_guard)
+		icons += QString::fromUtf8("\xF0\x9F\x9B\xA1 ");
+
+	if (m_scan.is_active_plugin(file_node.plugin_idx))
+		icons += QString::fromUtf8("\xE2\xAD\x90 ");
+
+	return icons.trimmed();
 }
 
 QVariant nav_tree_model_t::file_node_appearance(const file_node_t & file_node, int role) const
@@ -797,6 +814,13 @@ QVariant nav_tree_model_t::file_node_appearance(const file_node_t & file_node, i
 			return {};
 
 		return QBrush(theme_system_t::instance().conflict_this_foreground(worst_this));
+	}
+
+	if (role == Qt::FontRole && m_scan.is_active_plugin(file_node.plugin_idx))
+	{
+		QFont font;
+		font.setBold(true);
+		return font;
 	}
 
 	return {};
@@ -913,8 +937,8 @@ QVariant nav_tree_model_t::data_for_record(size_t file_idx, size_t group_idx, in
 			display_id.replace('|', " #");
 
 			const int plugin_idx = m_tree[file_idx].plugin_idx;
-			if (m_scan.is_merge_plugin(plugin_idx) &&
-			    !m_scan.merge_locks_for(entry.rec_type, entry.record_id).empty())
+			if (m_scan.is_active_plugin(plugin_idx) && m_scan.plugin_filename(plugin_idx) == "Merged Patch.esp" &&
+			    !m_scan.active_locks_for(entry.rec_type, entry.record_id).empty())
 				display_id = QString::fromUtf8("\xF0\x9F\x94\x92 ") + display_id;
 
 			return display_id;

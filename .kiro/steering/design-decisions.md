@@ -177,18 +177,18 @@ When the Translate button is clicked with invalid state (no document, no row, no
 
 ## Plugin Icons Must Be Consistent Across Panels
 
-The navigation tree (left panel) and the record view column headers (right panel) must show the same icon for each plugin. The icon logic lives in two places — `nav_tree_model.cpp::display_text_for_file` and `view_tree_model.cpp::headerData` — and must produce identical results for the same plugin index. When adding or changing an icon, update both locations.
+The navigation tree (left panel) and the record view column headers (right panel) must show the same icons for each plugin. The icon logic lives in two places — `nav_tree_model.cpp::file_node_display_text` and `view_tree_model.cpp::headerData` — and must produce identical results for the same plugin index. When adding or changing an icon, update both locations.
 
-Icon priority (first match wins):
-1. 🚫 — excluded from merged patch
-2. 🛡 — guard patch
-3. ⚙ — merged patch
-4. ✍ — editing enabled
-5. 📜 — master file (.esm)
-6. ⚡ — loaded from MO2 overwrite folder
-7. 📄 — regular plugin (default)
+Icons are built from independent tiers, appended in this fixed order. Each tier shows at most one icon; tiers do NOT suppress each other, so a plugin can carry several icons at once (e.g. `📄⚡🚫⭐`).
 
-The per-record merge-lock indicator (🔒) is separate from the plugin-level icons above: it is prepended to a record row in the navigation tree (`nav_tree_model.cpp::data_for_record`) and drawn on a locked cell in the record view (`view_tree_model.cpp` lock_cell_icon). 🔒 always means "merge lock"; excluded-from-merge is 🚫, never 🔒.
+1. Base type (exactly one): ⚙ merged patch (filename `Merged Patch.esp`) / 📜 master file (`.esm`) / 📄 regular plugin.
+2. MO2 overwrite (its own tier): ⚡ when the plugin path is under an `overwrite` folder, meaning a second version of the file exists.
+3. Merge participation (mutually exclusive, session-enforced): 🚫 excluded from merged patch, or 🛡 guard patch.
+4. Active target: ⭐ when this is the active plugin (the one that receives copied records).
+
+The per-record merge-lock indicator (🔒) is separate from the plugin-level tiers above: it is prepended to a record row in the navigation tree (`nav_tree_model.cpp::data_for_record`) and drawn on a locked cell in the record view (`view_tree_model.cpp` lock_cell_icon). 🔒 always means "merged-patch lock" and is shown only when the active plugin is the merged patch (filename `Merged Patch.esp`); excluded-from-merge is 🚫, never 🔒. Locks live in a dedicated in-memory store (`plugin_scan_t::m_merge_locks`) separate from the active-record store, so they are never cleared or leaked when the active plugin is switched.
+
+Locks are persisted in a sidecar file `Merged Patch.esp.locks` (INI format) written next to the merged patch in its output directory, NOT in the shared `yEditor.ini`. This binds the lock set to that specific merged patch: `merge_controller_t::save_merged_patch_locks` writes it on every lock toggle, and `load_merged_patch_locks`/`sync_active_locks` load it whenever the merged patch becomes the active plugin (create, load-existing, set-active, session restore, and each profile load). Switching to a non-merged-patch active plugin clears the in-memory locks. Loading a different profile therefore picks up that profile's own merged-patch locks and never inherits another profile's.
 
 
 ## Record View Header: Use CE_HeaderSection, Draw Text Manually

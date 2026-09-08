@@ -7,12 +7,14 @@
 - [CHANGE] The Statuses tab counts now reflect the active type filter, showing the tally within that subset (for example the counts for a soloed CELL type) instead of always counting the whole dictionary; the counts are not narrowed by the status selection or the search field
 
 ### yEditor
+- [NEW] Build a plugin by hand into any target, not only the merged patch: one loaded plugin is the active plugin (marked ⭐ in the navigation tree and record view) and receives copied records. New Plugin in the toolbar creates an empty plugin and makes it active; Set as Active Plugin in a plugin's right-click menu switches the target. The merged patch is the active plugin by default, so existing workflows are unchanged. Only one plugin is active at a time, and switching first offers to save the current one.
 - [NEW] Lock an entire record directly from the navigation tree: right-click a record under the merged patch and choose Lock in Merged Patch to freeze the whole record, or Unlock in Merged Patch to release it; locked records are marked with a lock icon in the navigation tree
+- [CHANGE] Copy and remove record-view and navigation actions now read "Active Plugin" instead of "Merged Patch", since they target whichever plugin is active (the merged patch by default); locking remains available only on the merged patch, because a lock protects a value from the next auto-merge
 - [CHANGE] Excluded plugins now use a distinct 🚫 icon in the navigation tree and record view headers, so they are no longer confused with the 🔒 lock icon
 - [CHANGE] Record and navigation context menus are now ordered consistently: copy and lock actions first, toggles next, and destructive removals last under a separator
 - [FIX] The navigation tree no longer jumps or scrolls away from where you were working when you exclude, include, guard, save, lock, or unlock — the scroll position and expanded state stay put
 - [FIX] An unused skill or attribute slot in a record (such as a race's empty bonus-skill slots) now reads "None" in the record view instead of the raw number 4294967295
-- [FIX] Locking a group in the merged patch now covers exactly the group members you selected, following the same rules as copying a group; the Lock and Unlock options are greyed out when the right-clicked cell has nothing that can be locked
+- [FIX] Locking a group now covers exactly the group members you selected, following the same rules as copying a group; the Lock and Unlock options are greyed out when the right-clicked cell has nothing that can be locked
 
 ## [0.1135] - 2026-09-04
 

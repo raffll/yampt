@@ -439,7 +439,7 @@ void preview_view_t::update_selection(
 	}
 
 	const int plugin_idx =
-	    model->is_merge_column(column) ? -1 : model->column_plugin_indices()[static_cast<size_t>(column) - 1];
+	    model->is_active_column(column) ? -1 : model->column_plugin_indices()[static_cast<size_t>(column) - 1];
 
 	m_pending_request.record_type = model->record_type();
 	m_pending_request.record_id = model->record_id();

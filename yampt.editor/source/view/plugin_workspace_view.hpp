@@ -83,6 +83,7 @@ public slots:
 	void on_save();
 	void on_save_all();
 	void on_create_merged_patch();
+	void on_create_new_plugin();
 	void on_clean_all();
 	void on_advanced_filter();
 	void on_settings_changed();

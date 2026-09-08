@@ -18,6 +18,8 @@
 #include <QFileInfo>
 #include <QHBoxLayout>
 #include <QHeaderView>
+#include <QInputDialog>
+#include <QLineEdit>
 #include <QMessageBox>
 #include <QProgressDialog>
 #include <QScreen>
@@ -186,7 +188,7 @@ void plugin_workspace_view_t::setup_connections()
 	{
 		refresh_all_views();
 		if (is_merge_edit)
-			m_merge_controller->save_merged_patch();
+			m_merge_controller->save_active_plugin();
 		else
 			emit unsaved_changes_changed(true);
 	});
@@ -229,6 +231,7 @@ void plugin_workspace_view_t::load_plugins_from_paths(
 
 	show_progress(tr("Loading plugins..."));
 	m_session->load_from_folder(selected, base_path);
+	m_merge_controller->sync_active_locks();
 	hide_progress();
 }
 
@@ -264,7 +267,7 @@ void plugin_workspace_view_t::on_load_data_files()
 
 	if (paths.empty())
 	{
-		log_message("No ESM/ESP files found in " + dir.toStdString());
+		log_message("[warning] no ESM/ESP files found in " + dir.toStdString());
 		return;
 	}
 
@@ -286,6 +289,7 @@ void plugin_workspace_view_t::on_load_mo2_profile()
 
 	show_progress(tr("Loading plugins..."));
 	m_session->load_from_mo2_profile(profile_dir);
+	m_merge_controller->sync_active_locks();
 	hide_progress();
 	m_settings.set_last_directory(profile_dir.toStdString());
 }
@@ -305,6 +309,7 @@ void plugin_workspace_view_t::on_load_openmw_cfg()
 
 	show_progress(tr("Loading plugins..."));
 	m_session->load_from_openmw_cfg(cfg_path);
+	m_merge_controller->sync_active_locks();
 	hide_progress();
 	const auto cfg_dir = QFileInfo(cfg_path).absolutePath();
 	m_settings.set_last_directory(cfg_dir.toStdString());
@@ -384,6 +389,38 @@ void plugin_workspace_view_t::on_create_merged_patch()
 	if (!created)
 		return;
 
+	refresh_all_views();
+	update_status();
+}
+
+void plugin_workspace_view_t::on_create_new_plugin()
+{
+	if (m_session->scan().plugin_count() < 1)
+	{
+		log_message("[error] no plugins loaded");
+		return;
+	}
+
+	bool accepted = false;
+	const auto entered = QInputDialog::getText(
+	    this,
+	    tr("New Plugin"),
+	    tr("Plugin file name:"),
+	    QLineEdit::Normal,
+	    tr("New Plugin.esp"),
+	    &accepted);
+
+	if (!accepted)
+		return;
+
+	auto filename = entered.trimmed();
+	if (filename.isEmpty())
+		return;
+
+	if (!filename.endsWith(".esp", Qt::CaseInsensitive) && !filename.endsWith(".esm", Qt::CaseInsensitive))
+		filename += ".esp";
+
+	m_merge_controller->create_new_plugin(filename.toStdString());
 	refresh_all_views();
 	update_status();
 }
@@ -844,7 +881,7 @@ void plugin_workspace_view_t::display_record_in_view(const conflict_entry_t & en
 		m_record_view->display_record(m_session->scan(), entry);
 	}
 
-	m_editable_columns.set_merge_column(m_record_view->model()->merge_column());
+	m_editable_columns.set_merge_column(m_record_view->model()->active_column());
 }
 
 void plugin_workspace_view_t::update_status()
@@ -967,6 +1004,7 @@ void plugin_workspace_view_t::restore_session_state()
 
 	show_progress(tr("Loading plugins..."));
 	m_session->restore_session_state(ini_path);
+	m_merge_controller->sync_active_locks();
 	hide_progress();
 
 	auto rec_type = settings.value("session/nav_rec_type").toString().toStdString();

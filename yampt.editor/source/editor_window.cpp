@@ -170,6 +170,12 @@ void editor_window_t::setup_toolbar()
 	toolbar->addWidget(merge_btn);
 	connect(merge_btn, &QToolButton::clicked, m_plugin_workspace_view, &plugin_workspace_view_t::on_create_merged_patch);
 
+	auto * new_plugin_btn = new QToolButton(this);
+	new_plugin_btn->setText(tr("New Plugin"));
+	new_plugin_btn->setToolTip(tr("Create an empty plugin and make it the active copy target"));
+	toolbar->addWidget(new_plugin_btn);
+	connect(new_plugin_btn, &QToolButton::clicked, m_plugin_workspace_view, &plugin_workspace_view_t::on_create_new_plugin);
+
 	auto * clean_btn = new QToolButton(this);
 	clean_btn->setText(tr("Clean All"));
 	clean_btn->setToolTip(tr("Remove evil GMSTs and junk cells from all plugins"));

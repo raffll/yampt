@@ -44,14 +44,15 @@ Text colors indicate how each specific plugin version relates to others:
 
 Records with no conflict (only one plugin defines them) show with no background color and black text.
 
-Each plugin in the tree is prefixed with an icon indicating its role:
+Each plugin in the tree is prefixed with one or more icons showing its role. A plugin can carry several at once, always in the same order: its file type first, then the overwrite marker, then its merge role, then the active marker — for example a regular overwrite plugin that is excluded and active reads 📄⚡🚫⭐.
 
 - 📜 — a master file that other plugins depend on.
 - 📄 — a regular plugin loaded from a mod folder or game data directory.
-- ⚡ — an overridden plugin loaded from MO2's overwrite folder, meaning a cleaned or patched copy is being used instead of the original mod version.
 - ⚙ — the merged patch produced by the auto-merge operation.
+- ⚡ — the plugin is loaded from MO2's overwrite folder, meaning a second (cleaned or patched) copy of the file exists and is being used instead of the original mod version.
 - 🛡 — a guard patch that acts as a priority barrier during auto-merge.
 - 🚫 — a plugin excluded from the merged patch. Its records are ignored during merge.
+- ⭐ — the active plugin: the one that currently receives copied records.
 
 When a plugin has field edits that have not yet been written to disk, an asterisk appears next to its name, after the icon and before the filename. The asterisk disappears once the plugin is saved.
 
@@ -73,19 +74,19 @@ Each row is labeled with the INFO's display name (typically the speaker NPC ID),
 
 ## Context Menus
 
-Right-click in the record view to access merge operations:
+Right-click in the record view to copy content into the active plugin (the merged patch by default; see Choosing the Active Plugin):
 
-- **Copy Record to Merged Patch** — copies the entire record from the selected plugin column into the merged patch.
-- **Copy Sub-Record to Merged Patch** — copies a single sub-record (one row) from a plugin column.
-- **Copy Field to Merged Patch** — copies a single decoded field within a sub-record from a plugin column.
-- **Copy Bit to Merged Patch** — copies a single flag bit (a row under a Flags field, such as Female) from a plugin column, changing only that bit in the merged patch and leaving the record's other flags as they are.
-- **Copy Group to Merged Patch** — copies a group of related sub-records (e.g. all fields of a referenced object in a cell).
-- **Remove Sub-Record from Merged Patch** / **Remove Group from Merged Patch** — removes content from the merged patch column.
+- **Copy Record to Active Plugin** — copies the entire record from the selected plugin column into the active plugin.
+- **Copy Sub-Record to Active Plugin** — copies a single sub-record (one row) from a plugin column.
+- **Copy Field to Active Plugin** — copies a single decoded field within a sub-record from a plugin column.
+- **Copy Bit to Active Plugin** — copies a single flag bit (a row under a Flags field, such as Female) from a plugin column, changing only that bit in the active plugin and leaving the record's other flags as they are.
+- **Copy Group to Active Plugin** — copies a group of related sub-records (e.g. all fields of a referenced object in a cell).
+- **Remove Sub-Record from Active Plugin** / **Remove Group from Active Plugin** — removes content from the active plugin's column.
 - **Exclude Sub-Record** / **Include Sub-Record** — toggles the sub-record type in the exclusion list. When the type is already excluded, the action reads "Include Sub-Record" and removes the rule; when the whole record type is excluded by a wildcard rule, the include option is greyed out. Excluding adds the sub-record type to the exclusion list in settings. The sub-record will be hidden from conflict detection and excluded from the merged patch. The rule is stored as `RECORD:SUB` (e.g. `CELL:NAM0`) and can be reviewed in Settings. Exclusion applies only to top-level sub-records; sub-records nested inside a cell's referenced objects are never excluded, so a rule such as `CELL:DATA` affects the cell's own data and leaves the referenced objects intact. This option is offered only on top-level sub-record rows.
 
-Right-click a record node belonging to the merged patch in the navigation tree to see the **Remove Record from Merged Patch** option, which deletes that record from the merged patch entirely.
+Right-click a record node belonging to the active plugin in the navigation tree to see the **Remove Record from Active Plugin** option, which deletes that record from the active plugin entirely.
 
-Right-click a record node belonging to a loaded plugin to see the **Copy Record to Merged Patch** option, which copies the whole record from that plugin into the merged patch. It is greyed out unless a merged patch exists and the record is not already in it.
+Right-click a record node belonging to another loaded plugin to see the **Copy Record to Active Plugin** option, which copies the whole record from that plugin into the active plugin. It is greyed out unless an active plugin exists and the record is not already in it.
 
 The same menu offers **Remove Record from Plugin**. After a confirmation prompt, the record is dropped from that plugin in memory and the plugin is marked as having unsaved changes. The record disappears from the file the next time you save the plugin. This removal cannot be undone; the only way to recover the record is to close the plugin without saving. The option is greyed out unless editing is enabled.
 
@@ -156,19 +157,29 @@ The auto-merge performs several operations:
 
 A progress dialog shows how far the merge has got while records are processed. After auto-merge completes, the merged patch is saved automatically. The output location depends on how you loaded plugins: same folder for Open Folder, MO2 overwrite directory for Open MO2 Profile, or the OpenMW data directory for Open OpenMW Config.
 
-You can refine the auto-merge result manually. Use the record view context menu to copy individual sub-records from any plugin column into the merged patch, or remove sub-records that shouldn't be there. Changes are saved immediately.
+You can refine the auto-merge result manually. Use the record view context menu to copy individual sub-records from any plugin column into the active plugin, or remove sub-records that shouldn't be there. Changes are saved immediately.
+
+## Choosing the Active Plugin
+
+Copying always targets one plugin at a time, called the active plugin. It is marked with the ⭐ indicator in the navigation tree and record view, and its column is the one that accepts dropped and copied records. The merged patch is the active plugin by default, so if you only ever build merged patches nothing changes for you.
+
+Click **New Plugin** in the toolbar to create an empty plugin and make it the active target. You are asked for a file name; the plugin starts with no records and is written to the same output directory as the merged patch. From then on, copied records go into this new plugin instead of the merged patch. This is a convenient way to build a small hand-made plugin — for example a single-record fix — without running the auto-merge.
+
+To switch which plugin receives copies, right-click any plugin in the navigation tree and choose **Set as Active Plugin**. The option is greyed out for the plugin that is already active. Because only one plugin can be active at a time, switching first offers to save the current active plugin's changes so nothing is lost; you can save, discard, or cancel the switch. To go back to copying into the merged patch, set it as active again.
 
 ### Locking Merged Patch Values
 
-Right-click a cell in the merged patch column and choose Lock in Merged Patch to freeze that value. You can lock a whole record, a single sub-record, a decoded field, an individual flag bit, or a group — the lock covers exactly what you right-clicked, following the same selection rules as copying to the merged patch. A locked cell is marked with a lock icon and keeps the exact value it had when you locked it. Lock and Unlock are only available on the merged patch column; when the cell you right-clicked has nothing that can be locked, the option appears greyed out.
+Locking only applies to the merged patch, because a lock protects a value from being overwritten the next time the auto-merge runs. It is offered only when the merged patch is the active plugin; a hand-made plugin created with New Plugin has nothing to lock against, so the option does not appear there.
+
+Right-click a cell in the merged patch column and choose Lock in Merged Patch to freeze that value. You can lock a whole record, a single sub-record, a decoded field, an individual flag bit, or a group — the lock covers exactly what you right-clicked, following the same selection rules as copying. A locked cell is marked with a lock icon and keeps the exact value it had when you locked it. When the cell you right-clicked has nothing that can be locked, the option appears greyed out.
 
 When you regenerate the merged patch, the auto-merge runs as usual and then every locked value is re-applied on top, so a lock is never overwritten by the merge. This is useful when the automatic result for one field is wrong and you want to pin your chosen value while still letting everything else re-merge. A group lock covers only the members that were in the group when you locked it; if a later merge adds a new member to the same group, the lock leaves it alone, and you can lock the new member separately if you want.
 
 You can also lock an entire record straight from the navigation tree: right-click a record under the merged patch and choose Lock in Merged Patch to freeze the whole record, or Unlock in Merged Patch to release it. This is the quickest way to pin a complete record such as a script or a leveled list. A locked record is marked with a lock icon in the navigation tree so you can see at a glance which records are held.
 
-Right-click a locked cell and choose Unlock in Merged Patch to remove the lock. Locks are remembered between sessions.
+Right-click a locked cell and choose Unlock in Merged Patch to remove the lock. Locks are remembered between sessions and stored alongside the merged patch itself, so each merged patch keeps its own locks — loading a different profile's merged patch shows that patch's locks, never another's.
 
-A merged patch can be created even with a single plugin loaded. With one plugin there is nothing to merge automatically, so the patch starts empty; it still gives you a merged-patch column to copy records into by hand, which is a convenient way to build a small patch from one mod. The empty patch is written to disk like any other, and it gains its master references as you copy records into it.
+A merged patch can be created even with a single plugin loaded. With one plugin there is nothing to merge automatically, so the patch starts empty; it still gives you a column to copy records into by hand, which is a convenient way to build a small patch from one mod. The empty patch is written to disk like any other, and it gains its master references as you copy records into it.
 
 ## Settings
 

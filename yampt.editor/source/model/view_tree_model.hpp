@@ -70,8 +70,8 @@ public:
 	void set_excluded_plugins(const std::set<std::string> * excluded);
 	void set_patch_plugins(const std::set<std::string> * patch);
 	void set_editable_columns(const editable_column_set_t * editable);
-	bool is_merge_column(int section) const;
-	int merge_column() const;
+	bool is_active_column(int section) const;
+	int active_column() const;
 
 	const std::string & record_type() const
 	{
@@ -160,7 +160,6 @@ private:
 	};
 
 	size_t setup_columns(plugin_scan_t & scan, const conflict_entry_t & entry);
-	void setup_merge_column(plugin_scan_t & scan, const conflict_entry_t & entry, size_t & col_count);
 	void build_header_row(plugin_scan_t & scan, const conflict_entry_t & entry);
 	void load_sub_records(plugin_scan_t & scan, const conflict_entry_t & entry, record_context_t & context);
 
@@ -239,9 +238,9 @@ private:
 	std::vector<std::string> m_column_names;
 	std::vector<conflict_this_t> m_plugin_conflict_this;
 	bool m_hide_no_conflict = false;
-	bool m_has_merge_column = false;
+	bool m_has_active_column = false;
 	std::set<std::string> m_user_ignore_conflict;
-	int m_merge_col_index = -1;
+	int m_active_col_index = -1;
 	std::vector<merge_lock_t> m_record_locks;
 	std::string m_record_type;
 	std::string m_record_id;

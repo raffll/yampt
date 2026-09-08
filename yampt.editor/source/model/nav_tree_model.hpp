@@ -99,6 +99,7 @@ private:
 	QVariant data_for_root_level(int row, int column, int role) const;
 	QVariant data_for_file_node(int row, int column, int role) const;
 	QVariant file_node_display_text(const file_node_t & file_node) const;
+	QVariant file_node_icons(const file_node_t & file_node) const;
 	QVariant file_node_appearance(const file_node_t & file_node, int role) const;
 	QVariant data_for_esm_nodes(void * ptr, int row, int column, int role) const;
 	QVariant data_for_type_group(size_t file_idx, int row, int column, int role) const;
