@@ -51,7 +51,7 @@ Each plugin in the tree is prefixed with an icon indicating its role:
 - ⚡ — an overridden plugin loaded from MO2's overwrite folder, meaning a cleaned or patched copy is being used instead of the original mod version.
 - ⚙ — the merged patch produced by the auto-merge operation.
 - 🛡 — a guard patch that acts as a priority barrier during auto-merge.
-- 🔒 — a plugin excluded from the merged patch. Its records are ignored during merge.
+- 🚫 — a plugin excluded from the merged patch. Its records are ignored during merge.
 
 When a plugin has field edits that have not yet been written to disk, an asterisk appears next to its name, after the icon and before the filename. The asterisk disappears once the plugin is saved.
 

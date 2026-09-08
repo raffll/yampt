@@ -1113,7 +1113,7 @@ QVariant view_tree_model_t::headerData(int section, Qt::Orientation orientation,
 			const int pi = m_column_plugin_indices[col];
 
 			if (m_excluded_plugins && m_excluded_plugins->count(name))
-				prefix = QString::fromUtf8("\xF0\x9F\x94\x92 ");
+				prefix = QString::fromUtf8("\xF0\x9F\x9A\xAB ");
 			else if (m_patch_plugins && m_patch_plugins->count(name))
 				prefix = QString::fromUtf8("\xF0\x9F\x9B\xA1 ");
 			else if (m_scan_for_header && m_scan_for_header->is_merge_plugin(pi))

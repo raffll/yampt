@@ -95,6 +95,11 @@ void nav_tree_view_t::refresh_colors()
 	m_model->refresh_colors();
 }
 
+void nav_tree_view_t::notify_record_changed(const std::string & rec_type, const std::string & record_id)
+{
+	m_model->notify_record_changed(rec_type, record_id);
+}
+
 void nav_tree_view_t::set_filter(const nav_tree_model_t::filter_state_t & state)
 {
 	m_model->set_filter(state);

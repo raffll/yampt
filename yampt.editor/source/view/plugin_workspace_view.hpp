@@ -116,6 +116,7 @@ private:
 	void log_message(const std::string & msg);
 	void rebuild_nav_preserving_state();
 	void refresh_all_views();
+	void on_merge_lock_changed(const std::string & rec_type, const std::string & record_id);
 	void clear_views_if_record_filtered_out();
 	void load_plugins_from_paths(const std::vector<std::string> & paths, const std::string & base_path);
 	void display_record_in_view(const conflict_entry_t & entry);

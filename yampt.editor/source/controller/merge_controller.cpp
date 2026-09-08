@@ -66,6 +66,11 @@ void merge_controller_t::set_refresh_callback(refresh_fn_t refresh_fn)
 	m_refresh = std::move(refresh_fn);
 }
 
+void merge_controller_t::set_lock_changed_callback(lock_changed_fn_t lock_changed_fn)
+{
+	m_lock_changed = std::move(lock_changed_fn);
+}
+
 void merge_controller_t::set_record_removal_callback(record_removal_fn_t removal_fn)
 {
 	m_record_removal = std::move(removal_fn);
@@ -630,8 +635,8 @@ void merge_controller_t::toggle_merge_lock(const merge_lock_t & lock)
 		m_log("Locked " + lock.rec_type + ":" + lock.record_id + " in merged patch");
 	}
 
-	if (m_refresh)
-		m_refresh();
+	if (m_lock_changed)
+		m_lock_changed(lock.rec_type, lock.record_id);
 }
 
 void merge_controller_t::reapply_locks()

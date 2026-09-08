@@ -87,6 +87,8 @@ void view_context_menu_t::show_nav_menu(const QPoint & global_pos, const nav_tre
 		                               : QCoreApplication::translate("yEditor", "Lock in Merged Patch");
 		menu.addAction(lock_label, [this, lock]() { m_merge.toggle_merge_lock(lock); });
 
+		menu.addSeparator();
+
 		menu.addAction(
 		    QCoreApplication::translate("yEditor", "Remove Record from Merged Patch"),
 		    [this, info]() { m_merge.remove_record_from_merge(info.rec_type, info.record_id); });
@@ -277,10 +279,7 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 		const bool record_in_merge = m_session.scan().find_merge_content(rec_type, record_id) != nullptr;
 
 		if (is_on_merge)
-		{
-			build_merge_remove_menu(menu, context);
 			build_lock_menu(menu, context);
-		}
 		else if (!record_in_merge)
 			build_copy_to_merge_menu(menu, context);
 		else
@@ -289,6 +288,9 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 
 	if (kind == row_kind_t::sub_record || kind == row_kind_t::schema_record)
 		build_sub_record_ignore_menu(menu, context);
+
+	if (has_valid_column && m_session.scan().has_merge() && m_session.scan().is_merge_plugin(plugin_idx))
+		build_merge_remove_menu(menu, context);
 
 	if (menu.actions().isEmpty())
 		return;
@@ -495,6 +497,10 @@ void view_context_menu_t::build_merge_remove_menu(QMenu & menu, const view_menu_
 		{
 			const auto removed_type = context.row.type;
 			const auto bin_idx = context.bin_idx;
+
+			if (!menu.actions().isEmpty())
+				menu.addSeparator();
+
 			menu.addAction(
 			    QCoreApplication::translate("yEditor", "Remove Sub-Record from Merged Patch"),
 			    [this, &context, bin_idx, removed_type]()
@@ -521,6 +527,9 @@ void view_context_menu_t::build_merge_remove_menu(QMenu & menu, const view_menu_
 
 		if (merge_range.start >= 0)
 		{
+			if (!menu.actions().isEmpty())
+				menu.addSeparator();
+
 			menu.addAction(
 			    QCoreApplication::translate("yEditor", "Remove Group from Merged Patch"),
 			    [this, &context, merge_range]()
@@ -538,6 +547,10 @@ void view_context_menu_t::build_merge_remove_menu(QMenu & menu, const view_menu_
 
 		const int merge_bin = resolved.binary_index;
 		const auto removed_type = resolved.sub_type;
+
+		if (!menu.actions().isEmpty())
+			menu.addSeparator();
+
 		menu.addAction(
 		    QCoreApplication::translate("yEditor", "Remove Sub-Record from Merged Patch"),
 		    [this, &context, merge_bin, removed_type]()

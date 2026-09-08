@@ -501,6 +501,36 @@ QModelIndex nav_tree_model_t::find_index(const std::string & rec_type, const std
 	return {};
 }
 
+void nav_tree_model_t::notify_record_changed(const std::string & rec_type, const std::string & record_id)
+{
+	if (rec_type.empty() || record_id.empty())
+		return;
+
+	const auto & entries = m_scan.entries();
+	const int last_column = columnCount({}) - 1;
+
+	for (auto & file_node : m_tree)
+	{
+		for (auto & group : file_node.groups)
+		{
+			if (group.type != rec_type)
+				continue;
+
+			for (size_t record_idx = 0; record_idx < group.records.size(); ++record_idx)
+			{
+				const auto & entry = entries[group.records[record_idx].entry_idx];
+				if (entry.record_id != record_id)
+					continue;
+
+				const auto row = static_cast<int>(record_idx);
+				const auto top_left = createIndex(row, 0, &group);
+				const auto bottom_right = createIndex(row, last_column, &group);
+				emit dataChanged(top_left, bottom_right, { Qt::DisplayRole });
+			}
+		}
+	}
+}
+
 QModelIndex nav_tree_model_t::index_for_node(const node_info_t & info) const
 {
 	if (info.plugin_idx < 0)
@@ -693,7 +723,7 @@ QVariant nav_tree_model_t::file_node_display_text(const file_node_t & file_node)
 		label = "* " + label;
 
 	if (m_filter.excluded_plugins() && m_filter.excluded_plugins()->count(filename))
-		return QString::fromUtf8("\xF0\x9F\x94\x92 ") + QString::fromUtf8(label.c_str());
+		return QString::fromUtf8("\xF0\x9F\x9A\xAB ") + QString::fromUtf8(label.c_str());
 
 	if (m_filter.patch_plugins() && m_filter.patch_plugins()->count(filename))
 		return QString::fromUtf8("\xF0\x9F\x9B\xA1 ") + QString::fromUtf8(label.c_str());

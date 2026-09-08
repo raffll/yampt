@@ -83,6 +83,10 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 
 	m_merge_controller->set_refresh_callback([this]() { refresh_all_views(); });
 
+	m_merge_controller->set_lock_changed_callback(
+	    [this](const std::string & rec_type, const std::string & record_id)
+	{ on_merge_lock_changed(rec_type, record_id); });
+
 	m_merge_controller->set_record_removal_callback(
 	    [this](const record_removal_record_t & removal)
 	{
@@ -529,6 +533,48 @@ void plugin_workspace_view_t::refresh_all_views()
 void plugin_workspace_view_t::rebuild_nav_preserving_state()
 {
 	m_nav_view->rebuild_preserving_state();
+}
+
+void plugin_workspace_view_t::on_merge_lock_changed(const std::string & rec_type, const std::string & record_id)
+{
+	m_nav_view->notify_record_changed(rec_type, record_id);
+
+	const auto displayed_rec_type = m_record_view->model()->record_type();
+	const auto displayed_record_id = m_record_view->model()->record_id();
+	if (displayed_rec_type != rec_type || displayed_record_id != record_id)
+		return;
+
+	const auto current_cell = m_record_view->tree()->currentIndex();
+	const int cell_column = current_cell.column();
+
+	std::vector<int> ancestor_rows;
+	for (auto walk = current_cell; walk.isValid(); walk = walk.parent())
+		ancestor_rows.push_back(walk.row());
+
+	const auto * entry = m_session->scan().find(rec_type, record_id);
+	if (entry == nullptr)
+		return;
+
+	display_record_in_view(*entry);
+
+	const auto * model = m_record_view->model();
+	QModelIndex restored_cell;
+	for (size_t depth = 0; depth < ancestor_rows.size(); ++depth)
+	{
+		const int ancestor_row = ancestor_rows[ancestor_rows.size() - 1 - depth];
+		const bool is_leaf = depth + 1 == ancestor_rows.size();
+		const int column = is_leaf ? cell_column : 0;
+		restored_cell = model->index(ancestor_row, column, restored_cell);
+
+		if (!restored_cell.isValid())
+			return;
+	}
+
+	if (!restored_cell.isValid())
+		return;
+
+	m_record_view->tree()->setCurrentIndex(restored_cell);
+	on_view_selection_changed(restored_cell);
 }
 
 void plugin_workspace_view_t::on_nav_selection_changed(const nav_tree_model_t::node_info_t & info)

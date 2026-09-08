@@ -180,13 +180,15 @@ When the Translate button is clicked with invalid state (no document, no row, no
 The navigation tree (left panel) and the record view column headers (right panel) must show the same icon for each plugin. The icon logic lives in two places — `nav_tree_model.cpp::display_text_for_file` and `view_tree_model.cpp::headerData` — and must produce identical results for the same plugin index. When adding or changing an icon, update both locations.
 
 Icon priority (first match wins):
-1. 🔒 — excluded from merged patch
+1. 🚫 — excluded from merged patch
 2. 🛡 — guard patch
 3. ⚙ — merged patch
 4. ✍ — editing enabled
 5. 📜 — master file (.esm)
 6. ⚡ — loaded from MO2 overwrite folder
 7. 📄 — regular plugin (default)
+
+The per-record merge-lock indicator (🔒) is separate from the plugin-level icons above: it is prepended to a record row in the navigation tree (`nav_tree_model.cpp::data_for_record`) and drawn on a locked cell in the record view (`view_tree_model.cpp` lock_cell_icon). 🔒 always means "merge lock"; excluded-from-merge is 🚫, never 🔒.
 
 
 ## Record View Header: Use CE_HeaderSection, Draw Text Manually
