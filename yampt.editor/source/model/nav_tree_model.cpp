@@ -531,6 +531,22 @@ void nav_tree_model_t::notify_record_changed(const std::string & rec_type, const
 	}
 }
 
+void nav_tree_model_t::notify_plugin_changed(int plugin_idx)
+{
+	if (plugin_idx < 0)
+		return;
+
+	for (size_t file_idx = 0; file_idx < m_tree.size(); ++file_idx)
+	{
+		if (m_tree[file_idx].plugin_idx != plugin_idx)
+			continue;
+
+		const auto file_index = createIndex(static_cast<int>(file_idx), 0, nullptr);
+		emit dataChanged(file_index, file_index, { Qt::DisplayRole });
+		return;
+	}
+}
+
 QModelIndex nav_tree_model_t::index_for_node(const node_info_t & info) const
 {
 	if (info.plugin_idx < 0)

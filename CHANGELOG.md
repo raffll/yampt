@@ -10,6 +10,7 @@
 - [NEW] Lock an entire record directly from the navigation tree: right-click a record under the merged patch and choose Lock in Merged Patch to freeze the whole record, or Unlock in Merged Patch to release it; locked records are marked with a lock icon in the navigation tree
 - [CHANGE] Excluded plugins now use a distinct 🚫 icon in the navigation tree and record view headers, so they are no longer confused with the 🔒 lock icon
 - [CHANGE] Record and navigation context menus are now ordered consistently: copy and lock actions first, toggles next, and destructive removals last under a separator
+- [FIX] The navigation tree no longer jumps or scrolls away from where you were working when you exclude, include, guard, save, lock, or unlock — the scroll position and expanded state stay put
 - [FIX] An unused skill or attribute slot in a record (such as a race's empty bonus-skill slots) now reads "None" in the record view instead of the raw number 4294967295
 - [FIX] Locking a group in the merged patch now covers exactly the group members you selected, following the same rules as copying a group; the Lock and Unlock options are greyed out when the right-clicked cell has nothing that can be locked
 

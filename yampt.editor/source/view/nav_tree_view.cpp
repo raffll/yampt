@@ -87,7 +87,6 @@ void nav_tree_view_t::restore_selection(const nav_tree_model_t::node_info_t & in
 
 	const QSignalBlocker blocker(m_tree->selectionModel());
 	m_tree->setCurrentIndex(index);
-	m_tree->scrollTo(index);
 }
 
 void nav_tree_view_t::refresh_colors()
@@ -98,6 +97,11 @@ void nav_tree_view_t::refresh_colors()
 void nav_tree_view_t::notify_record_changed(const std::string & rec_type, const std::string & record_id)
 {
 	m_model->notify_record_changed(rec_type, record_id);
+}
+
+void nav_tree_view_t::notify_plugin_changed(int plugin_idx)
+{
+	m_model->notify_plugin_changed(plugin_idx);
 }
 
 void nav_tree_view_t::set_filter(const nav_tree_model_t::filter_state_t & state)
@@ -170,7 +174,6 @@ void nav_tree_view_t::select_record(const std::string & rec_type, const std::str
 
 	const QSignalBlocker blocker(m_tree->selectionModel());
 	m_tree->setCurrentIndex(index);
-	m_tree->scrollTo(index);
 }
 
 QModelIndex nav_tree_view_t::find_index(const std::string & rec_type, const std::string & record_id) const

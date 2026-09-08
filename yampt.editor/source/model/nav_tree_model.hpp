@@ -58,6 +58,7 @@ public:
 	QModelIndex find_index(const std::string & rec_type, const std::string & record_id) const;
 	QModelIndex index_for_node(const node_info_t & info) const;
 	void notify_record_changed(const std::string & rec_type, const std::string & record_id);
+	void notify_plugin_changed(int plugin_idx);
 
 private:
 	plugin_scan_t & m_scan;

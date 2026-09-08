@@ -130,7 +130,7 @@ void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_mo
 	    [this, info]()
 	{
 		if (m_merge.save_plugin(info.plugin_idx))
-			m_nav_view.rebuild_preserving_state();
+			m_nav_view.notify_plugin_changed(info.plugin_idx);
 
 		if (m_on_unsaved_changed)
 			m_on_unsaved_changed(m_session.has_any_unsaved());
@@ -143,7 +143,7 @@ void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_mo
 	menu.addAction(
 	    excluded ? QCoreApplication::translate("yEditor", "Include in Merged Patch")
 	             : QCoreApplication::translate("yEditor", "Exclude from Merged Patch"),
-	    [this, filename, excluded]()
+	    [this, info, filename, excluded]()
 	{
 		auto excluded_copy = m_session.excluded_plugins();
 		if (excluded)
@@ -161,13 +161,13 @@ void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_mo
 
 		m_session.set_excluded_plugins(excluded_copy);
 		m_session.save_session_state(QDir(settings_store_t::settings_dir()).filePath("yEditor.ini"));
-		m_nav_view.rebuild_preserving_state();
+		m_nav_view.notify_plugin_changed(info.plugin_idx);
 	});
 
 	menu.addAction(
 	    is_patch ? QCoreApplication::translate("yEditor", "Unmark as Guard Patch")
 	             : QCoreApplication::translate("yEditor", "Mark as Guard Patch"),
-	    [this, filename, is_patch]()
+	    [this, info, filename, is_patch]()
 	{
 		auto patch_copy = m_session.patch_plugins();
 		if (is_patch)
@@ -185,7 +185,7 @@ void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_mo
 
 		m_session.set_patch_plugins(patch_copy);
 		m_session.save_session_state(QDir(settings_store_t::settings_dir()).filePath("yEditor.ini"));
-		m_nav_view.rebuild_preserving_state();
+		m_nav_view.notify_plugin_changed(info.plugin_idx);
 	});
 }
 
