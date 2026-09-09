@@ -17,6 +17,7 @@
     <ClCompile Include="source\tests.language_config.cpp" />
     <ClCompile Include="source\tests.script_parser.cpp" />
     <ClCompile Include="source\tests.record_conflict.cpp" />
+    <ClCompile Include="source\tests.exclusion_resolver.cpp" />
     <ClCompile Include="source\tests.conflict_slots.cpp" />
     <ClCompile Include="source\tests.document.cpp" />
     <ClCompile Include="source\tests.esm_reader.cpp" />

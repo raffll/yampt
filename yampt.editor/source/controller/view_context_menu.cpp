@@ -5,8 +5,11 @@
 #include "../view/nav_tree_view.hpp"
 #include "../view/record_view.hpp"
 #include "merge_controller.hpp"
+#include <scanner/exclusion_resolver.hpp>
 #include <scanner/record_conflict.hpp>
+#include <utility/app_logger.hpp>
 #include <utility/record_behavior.hpp>
+#include <regex>
 #include <set>
 #include <string>
 #include <QAction>
@@ -49,6 +52,63 @@ static std::string serialize_ignore_rules(const std::set<std::string> & rules)
 	}
 
 	return result;
+}
+
+static std::string anchored_exclusion_token(const std::string & record_id)
+{
+	return "^" + exclusion_resolver::regex_escape_literal(record_id) + "$";
+}
+
+static std::string append_exclusion_token(const std::string & pattern, const std::string & token)
+{
+	if (pattern.empty())
+		return token;
+
+	return pattern + "|" + token;
+}
+
+static std::string remove_exclusion_token(const std::string & pattern, const std::string & token)
+{
+	std::string result;
+	size_t start = 0;
+
+	while (start <= pattern.size())
+	{
+		const auto bar = pattern.find('|', start);
+		const auto end = (bar == std::string::npos) ? pattern.size() : bar;
+		const auto piece = pattern.substr(start, end - start);
+
+		if (piece != token)
+		{
+			if (!result.empty())
+				result += "|";
+
+			result += piece;
+		}
+
+		if (bar == std::string::npos)
+			break;
+
+		start = bar + 1;
+	}
+
+	return result;
+}
+
+static bool pattern_compiles(const std::string & pattern)
+{
+	if (pattern.empty())
+		return true;
+
+	try
+	{
+		std::regex compiled(pattern, std::regex::icase);
+		return true;
+	}
+	catch (...)
+	{
+		return false;
+	}
 }
 
 view_context_menu_t::view_context_menu_t(
@@ -96,6 +156,8 @@ void view_context_menu_t::show_nav_menu(const QPoint & global_pos, const nav_tre
 		menu.addAction(
 		    QCoreApplication::translate("yEditor", "Remove Record from Active Plugin"),
 		    [this, info]() { m_merge.remove_record_from_active(info.rec_type, info.record_id); });
+
+		add_exclude_record_action(menu, info);
 	}
 	else if (!info.record_id.empty() && !is_active)
 	{
@@ -111,6 +173,8 @@ void view_context_menu_t::show_nav_menu(const QPoint & global_pos, const nav_tre
 		    QCoreApplication::translate("yEditor", "Remove Record from Plugin"),
 		    [this, info]() { confirm_remove_record_from_plugin(info); });
 		remove_action->setEnabled(m_record_view.model()->is_editing_enabled());
+
+		add_exclude_record_action(menu, info);
 	}
 	else if (info.rec_type.empty() && info.record_id.empty())
 	{
@@ -201,6 +265,62 @@ void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_mo
 		m_session.save_session_state(QDir(settings_store_t::settings_dir()).filePath("yEditor.ini"));
 		m_nav_view.notify_plugin_changed(info.plugin_idx);
 	});
+}
+
+void view_context_menu_t::add_exclude_record_action(QMenu & menu, const nav_tree_model_t::node_info_t & info)
+{
+	const auto current_pattern = m_settings.merge_exclusion_pattern();
+
+	exclusion_resolver_t resolver;
+	resolver.set_pattern(current_pattern);
+	const bool excluded = resolver.is_record_excluded(info.rec_type, info.record_id);
+
+	const auto token = anchored_exclusion_token(info.record_id);
+	const auto has_token = remove_exclusion_token(current_pattern, token) != current_pattern;
+
+	menu.addSeparator();
+
+	if (!excluded)
+	{
+		const auto next_pattern = append_exclusion_token(current_pattern, token);
+		menu.addAction(
+		    QCoreApplication::translate("yEditor", "Exclude Record from Merged Patch"),
+		    [this, info, next_pattern]() { apply_record_exclusion_pattern(info, next_pattern); });
+
+		return;
+	}
+
+	if (!has_token)
+	{
+		auto * covered_action =
+		    menu.addAction(QCoreApplication::translate("yEditor", "Include Record in Merged Patch"));
+		covered_action->setEnabled(false);
+		covered_action->setToolTip(
+		    QCoreApplication::translate("yEditor", "This record is covered by a custom exclusion pattern"));
+
+		return;
+	}
+
+	const auto next_pattern = remove_exclusion_token(current_pattern, token);
+	menu.addAction(
+	    QCoreApplication::translate("yEditor", "Include Record in Merged Patch"),
+	    [this, info, next_pattern]() { apply_record_exclusion_pattern(info, next_pattern); });
+}
+
+void view_context_menu_t::apply_record_exclusion_pattern(
+    const nav_tree_model_t::node_info_t & info,
+    const std::string & pattern)
+{
+	if (!pattern_compiles(pattern))
+	{
+		app_logger_t::add_log("[warning] invalid exclusion pattern, keeping previous: " + pattern + "\r\n");
+
+		return;
+	}
+
+	m_settings.set_merge_exclusion_pattern(pattern);
+	m_session.save_session_state(QDir(settings_store_t::settings_dir()).filePath("yEditor.ini"));
+	m_nav_view.notify_record_changed(info.rec_type, info.record_id);
 }
 
 void view_context_menu_t::confirm_remove_record_from_plugin(const nav_tree_model_t::node_info_t & info)

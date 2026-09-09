@@ -58,6 +58,8 @@ private:
 	};
 
 	void build_source_file_menu(QMenu & menu, const nav_tree_model_t::node_info_t & info);
+	void add_exclude_record_action(QMenu & menu, const nav_tree_model_t::node_info_t & info);
+	void apply_record_exclusion_pattern(const nav_tree_model_t::node_info_t & info, const std::string & pattern);
 	void confirm_remove_record_from_plugin(const nav_tree_model_t::node_info_t & info);
 	void build_copy_to_merge_menu(QMenu & menu, const view_menu_context_t & context);
 	void build_source_copy_menu(QMenu & menu, const view_menu_context_t & context);

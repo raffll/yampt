@@ -200,6 +200,7 @@
     <ClCompile Include="source\tests.header_repair.cpp" />
     <ClCompile Include="source\tests.file_list.cpp" />
     <ClCompile Include="source\tests.record_conflict.cpp" />
+    <ClCompile Include="source\tests.exclusion_resolver.cpp" />
     <ClCompile Include="source\tests.conflict_slots.cpp" />
     <ClCompile Include="source\tests.document.cpp" />
     <ClCompile Include="source\tests.esm_reader.cpp" />

@@ -212,6 +212,7 @@
     <ClCompile Include="source\scanner\dial_info_align.cpp" />
     <ClCompile Include="source\scanner\fog_fixer.cpp" />
     <ClCompile Include="source\scanner\auto_merge.cpp" />
+    <ClCompile Include="source\scanner\exclusion_resolver.cpp" />
     <ClCompile Include="source\scanner\batch_cleaner.cpp" />
     <ClCompile Include="source\scanner\header_repair.cpp" />
     <ClCompile Include="source\scanner\merge_patch_ops.cpp" />
@@ -283,6 +284,7 @@
     <ClInclude Include="source\scanner\conflict_enums.hpp" />
     <ClInclude Include="source\scanner\fog_fixer.hpp" />
     <ClInclude Include="source\scanner\auto_merge.hpp" />
+    <ClInclude Include="source\scanner\exclusion_resolver.hpp" />
     <ClInclude Include="source\scanner\batch_cleaner.hpp" />
     <ClInclude Include="source\scanner\header_repair.hpp" />
     <ClInclude Include="source\scanner\merge_patch_ops.hpp" />
