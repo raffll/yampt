@@ -15,6 +15,7 @@ enum class color_name_t
 	selection_background,
 	selection_text,
 	disabled_text,
+	excluded_background,
 
 	status_translated,
 	status_untranslated,

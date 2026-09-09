@@ -44,6 +44,8 @@ Text colors indicate how each specific plugin version relates to others:
 
 Records with no conflict (only one plugin defines them) show with no background color and black text.
 
+Anything excluded from the merged patch shows a grey background instead of a conflict color. This covers an excluded plugin and all of its records, as well as any individual record matched by the exclusion pattern, so excluded content is easy to spot even when it would otherwise be flagged as a conflict.
+
 Each plugin in the tree is prefixed with one or more icons showing its role. A plugin can carry several at once, always in the same order: its file type first, then the overwrite marker, then its merge role, then the active marker — for example a regular overwrite plugin that is excluded and active reads 📄⚡🚫⭐.
 
 - 📜 — a master file that other plugins depend on.

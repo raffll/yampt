@@ -144,6 +144,11 @@ void nav_tree_view_t::set_editable_columns(const editable_column_set_t * editabl
 	m_model->set_editable_columns(editable);
 }
 
+void nav_tree_view_t::set_exclusion_pattern(const std::string & pattern)
+{
+	m_model->set_exclusion_pattern(pattern);
+}
+
 void nav_tree_view_t::set_display_codepage(codepage_t codepage)
 {
 	m_model->set_display_codepage(codepage);

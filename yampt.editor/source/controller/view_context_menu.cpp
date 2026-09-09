@@ -320,6 +320,7 @@ void view_context_menu_t::apply_record_exclusion_pattern(
 
 	m_settings.set_merge_exclusion_pattern(pattern);
 	m_session.save_session_state(QDir(settings_store_t::settings_dir()).filePath("yEditor.ini"));
+	m_nav_view.set_exclusion_pattern(pattern);
 	m_nav_view.notify_record_changed(info.rec_type, info.record_id);
 }
 

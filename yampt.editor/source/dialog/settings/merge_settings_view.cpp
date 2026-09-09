@@ -202,7 +202,7 @@ void merge_settings_view_t::load(const settings_store_t & settings)
 
 	m_exclude_list->clear();
 	const auto exclude_str = QString::fromStdString(settings.merge_exclusion_pattern());
-	const auto exclude_parts = exclude_str.split(',', Qt::SkipEmptyParts);
+	const auto exclude_parts = exclude_str.split('|', Qt::SkipEmptyParts);
 	for (const auto & part : exclude_parts)
 	{
 		const auto trimmed = part.trimmed();

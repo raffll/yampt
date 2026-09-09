@@ -237,6 +237,21 @@ void nav_tree_model_t::set_editable_columns(const editable_column_set_t * editab
 	m_editable_columns = editable;
 }
 
+void nav_tree_model_t::set_exclusion_pattern(const std::string & pattern)
+{
+	m_exclusion_resolver.set_pattern(pattern);
+	refresh_colors();
+}
+
+bool nav_tree_model_t::is_plugin_excluded(int plugin_idx) const
+{
+	const auto * excluded = m_filter.excluded_plugins();
+	if (excluded == nullptr)
+		return false;
+
+	return excluded->count(m_scan.plugin_filename(plugin_idx)) != 0;
+}
+
 void nav_tree_model_t::build_tree()
 {
 	m_tree.clear();
@@ -782,6 +797,9 @@ QVariant nav_tree_model_t::file_node_appearance(const file_node_t & file_node, i
 
 	if (role == Qt::BackgroundRole)
 	{
+		if (is_plugin_excluded(file_node.plugin_idx))
+			return QBrush(theme_system_t::instance().get_color(color_name_t::excluded_background));
+
 		if (worst_all < conflict_all_t::no_conflict)
 			return {};
 
@@ -860,6 +878,9 @@ QVariant nav_tree_model_t::data_for_type_group(size_t file_idx, int row, int col
 
 	if (role == Qt::BackgroundRole)
 	{
+		if (is_plugin_excluded(m_tree[file_idx].plugin_idx))
+			return QBrush(theme_system_t::instance().get_color(color_name_t::excluded_background));
+
 		if (worst_all < conflict_all_t::no_conflict)
 			return {};
 
@@ -931,6 +952,10 @@ QVariant nav_tree_model_t::data_for_record(size_t file_idx, size_t group_idx, in
 
 	if (role == Qt::BackgroundRole)
 	{
+		if (is_plugin_excluded(m_tree[file_idx].plugin_idx) ||
+		    m_exclusion_resolver.is_record_excluded(entry.rec_type, entry.record_id))
+			return QBrush(theme_system_t::instance().get_color(color_name_t::excluded_background));
+
 		if (entry.conflict_all < conflict_all_t::no_conflict)
 			return {};
 

@@ -2,6 +2,7 @@
 
 #include "nav_tree_filter.hpp"
 #include <io/codepage.hpp>
+#include <scanner/exclusion_resolver.hpp>
 #include <scanner/plugin_scan.hpp>
 #include <conflict_types.hpp>
 #include <set>
@@ -25,6 +26,7 @@ public:
 	void set_patch_plugins(const std::set<std::string> * patch);
 	void set_dirty_plugins(const std::set<std::string> * dirty);
 	void set_editable_columns(const editable_column_set_t * editable);
+	void set_exclusion_pattern(const std::string & pattern);
 
 	using filter_state_t = nav_tree_filter_t::filter_state_t;
 
@@ -87,8 +89,10 @@ private:
 	bool m_show_deleted_strikeout = false;
 	codepage_t m_display_codepage = codepage_t::windows_1252;
 	const editable_column_set_t * m_editable_columns = nullptr;
+	exclusion_resolver_t m_exclusion_resolver;
 
 	conflict_this_t record_foreground_for_plugin(const conflict_entry_t & entry, int plugin_idx) const;
+	bool is_plugin_excluded(int plugin_idx) const;
 
 	void build_tree();
 	void sort_records();
