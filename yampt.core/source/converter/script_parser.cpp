@@ -6,6 +6,17 @@
 
 namespace {
 
+compiled_patch_kind_t compiled_patch_kind_for(const std::string & keyword)
+{
+	if (keyword == "getpccell")
+		return compiled_patch_kind_t::getpccell;
+
+	if (keyword == "addtopic")
+		return compiled_patch_kind_t::addtopic;
+
+	return compiled_patch_kind_t::plain;
+}
+
 size_t find_whole_word(const std::string & text_line, const std::string & keyword)
 {
 	auto is_word_char = [](char value) { return std::isalnum(static_cast<unsigned char>(value)) || value == '_'; };
@@ -281,8 +292,7 @@ void script_parser_t::convert_line(const std::string & keyword, const int pos_in
 	find_new_text(text_type);
 	insert_new_text();
 
-	const auto is_getpccell = keyword == "getpccell" ? true : false;
-	convert_text_in_compiled(is_getpccell);
+	convert_text_in_compiled(compiled_patch_kind_for(keyword));
 
 	m_is_done = true;
 }
@@ -331,7 +341,7 @@ void script_parser_t::convert_line_unquoted(const std::string & keyword, const r
 
 	find_new_text(text_type);
 	insert_new_text();
-	convert_text_in_compiled(false);
+	convert_text_in_compiled(compiled_patch_kind_t::plain);
 
 	m_is_done = true;
 }
@@ -440,7 +450,7 @@ void script_parser_t::insert_new_text()
 	app_logger_t::add_log(">>> " + m_new_line + "\r\n", true);
 }
 
-void script_parser_t::convert_text_in_compiled(const bool is_getpccell)
+void script_parser_t::convert_text_in_compiled(const compiled_patch_kind_t kind)
 {
 	if (m_new_text == m_old_text)
 		return;
@@ -455,7 +465,12 @@ void script_parser_t::convert_text_in_compiled(const bool is_getpccell)
 		return;
 	}
 
-	const auto result = m_patcher->apply_text_patch(m_old_text, m_new_text, is_getpccell);
+	text_patch_params_t params;
+	params.new_text = m_new_text;
+	params.is_getpccell = kind == compiled_patch_kind_t::getpccell;
+	params.pad_short_to_minimum = kind == compiled_patch_kind_t::addtopic;
+
+	const auto result = m_patcher->apply_text_patch(m_old_text, params);
 
 	if (result.had_false_positive)
 	{

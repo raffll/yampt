@@ -26,3 +26,5 @@ cmake_install.cmake
 # and copied at build time; never track loose dictionary files here.
 dictionaries/*.aff
 dictionaries/*.dic
+/tmp_analysis
+/.kiro/specs

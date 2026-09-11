@@ -24,7 +24,7 @@ TEST_CASE("scdt_patcher_t::apply_text_patch, single replacement", "[u]")
 	scdt += std::string(5, '\x00');
 
 	scdt_patcher_t patcher(scdt);
-	const auto & result = patcher.apply_text_patch(old_text, new_text, false);
+	const auto & result = patcher.apply_text_patch(old_text, { new_text, false, false });
 
 	REQUIRE(result.success);
 	REQUIRE_FALSE(result.had_false_positive);
@@ -56,8 +56,8 @@ TEST_CASE("scdt_patcher_t::apply_text_patch, two sequential replacements", "[u]"
 	scdt += std::string(3, '\x00');
 
 	scdt_patcher_t patcher(scdt);
-	const auto & result_first = patcher.apply_text_patch(old_first, new_first, false);
-	const auto & result_second = patcher.apply_text_patch(old_second, new_second, false);
+	const auto & result_first = patcher.apply_text_patch(old_first, { new_first, false, false });
+	const auto & result_second = patcher.apply_text_patch(old_second, { new_second, false, false });
 
 	REQUIRE(result_first.success);
 	REQUIRE(result_second.success);
@@ -75,11 +75,11 @@ TEST_CASE("scdt_patcher_t::apply_text_patch, getpccell standalone", "[u]")
 	std::string old_text = "Balmora";
 	std::string new_text = "Bal Molagmer Hall";
 
-	size_t expr_size = 2 + 1 + 1 + old_text.size();
+	size_t old_expr_size = 4 + old_text.size();
 
 	std::string scdt;
 	scdt += std::string(3, '\x00');
-	scdt += size_byte(expr_size);
+	scdt += size_byte(old_expr_size);
 	scdt += "X";
 	scdt += std::string(1, '\x00');
 	scdt += size_byte(old_text.size());
@@ -88,7 +88,7 @@ TEST_CASE("scdt_patcher_t::apply_text_patch, getpccell standalone", "[u]")
 	scdt += std::string(3, '\x00');
 
 	scdt_patcher_t patcher(scdt);
-	const auto & result = patcher.apply_text_patch(old_text, new_text, true);
+	const auto & result = patcher.apply_text_patch(old_text, { new_text, true, false });
 
 	REQUIRE(result.success);
 
@@ -103,7 +103,7 @@ TEST_CASE("scdt_patcher_t::apply_text_patch, getpccell standalone", "[u]")
 	REQUIRE(x_pos != std::string::npos);
 
 	size_t expr_size_pos = x_pos - 2;
-	size_t expected_expr_size = (cell_pos + new_text.size()) - expr_size_pos;
+	size_t expected_expr_size = old_expr_size + new_text.size() - old_text.size();
 	auto actual_expr_size = static_cast<unsigned char>(patched[expr_size_pos]);
 	REQUIRE(actual_expr_size == expected_expr_size);
 }
@@ -114,11 +114,11 @@ TEST_CASE("scdt_patcher_t::apply_text_patch, getpccell with comparison", "[u]")
 	std::string new_text = "Bal Molagmer Hall";
 	std::string comparison = " == 1";
 
-	size_t expr_size = 2 + 1 + 1 + old_text.size() + comparison.size();
+	size_t old_expr_size = 4 + old_text.size() + comparison.size();
 
 	std::string scdt;
 	scdt += std::string(3, '\x00');
-	scdt += size_byte(expr_size);
+	scdt += size_byte(old_expr_size);
 	scdt += "X";
 	scdt += std::string(1, '\x00');
 	scdt += size_byte(old_text.size());
@@ -128,7 +128,7 @@ TEST_CASE("scdt_patcher_t::apply_text_patch, getpccell with comparison", "[u]")
 	scdt += std::string(3, '\x00');
 
 	scdt_patcher_t patcher(scdt);
-	const auto & result = patcher.apply_text_patch(old_text, new_text, true);
+	const auto & result = patcher.apply_text_patch(old_text, { new_text, true, false });
 
 	REQUIRE(result.success);
 
@@ -143,10 +143,77 @@ TEST_CASE("scdt_patcher_t::apply_text_patch, getpccell with comparison", "[u]")
 	REQUIRE(x_pos != std::string::npos);
 
 	size_t expr_size_pos = x_pos - 2;
-	size_t end_of_expression = cell_pos + new_text.size() + comparison.size();
-	size_t expected_expr_size = end_of_expression - expr_size_pos - 1;
+	size_t expected_expr_size = old_expr_size + new_text.size() - old_text.size();
 	auto actual_expr_size = static_cast<unsigned char>(patched[expr_size_pos]);
 	REQUIRE(actual_expr_size == expected_expr_size);
+}
+
+TEST_CASE("scdt_patcher_t::apply_text_patch, getpccell short cell name not padded", "[u]")
+{
+	std::string old_text = "Balmora";
+	std::string new_text = "Vos";
+
+	size_t old_expr_size = 4 + old_text.size();
+
+	std::string scdt;
+	scdt += std::string(3, '\x00');
+	scdt += size_byte(old_expr_size);
+	scdt += "X";
+	scdt += std::string(1, '\x00');
+	scdt += size_byte(old_text.size());
+	scdt += old_text;
+	scdt += std::string(1, '\xAB');
+	scdt += std::string(3, '\x00');
+
+	scdt_patcher_t patcher(scdt);
+	const auto & result = patcher.apply_text_patch(old_text, { new_text, true, false });
+
+	REQUIRE(result.success);
+
+	const auto & patched = patcher.get_scdt();
+	auto cell_pos = patched.find(new_text);
+	REQUIRE(cell_pos != std::string::npos);
+
+	auto inner_size = static_cast<unsigned char>(patched[cell_pos - 1]);
+	REQUIRE(inner_size == new_text.size());
+}
+
+TEST_CASE("scdt_patcher_t::apply_text_patch, getpccell comparison shrink keeps expr size consistent", "[u]")
+{
+	std::string old_text = "Odai Plateau";
+	std::string new_text = "Vos";
+	std::string comparison = " == 0";
+
+	size_t old_expr_size = 4 + old_text.size() + comparison.size();
+
+	std::string scdt;
+	scdt += std::string(3, '\x00');
+	scdt += size_byte(old_expr_size);
+	scdt += "X";
+	scdt += std::string(1, '\x00');
+	scdt += size_byte(old_text.size());
+	scdt += old_text;
+	scdt += comparison;
+	scdt += std::string(1, '\x06');
+	scdt += std::string(3, '\x01');
+
+	scdt_patcher_t patcher(scdt);
+	const auto & result = patcher.apply_text_patch(old_text, { new_text, true, false });
+
+	REQUIRE(result.success);
+
+	const auto & patched = patcher.get_scdt();
+	auto cell_pos = patched.find(new_text);
+	REQUIRE(cell_pos != std::string::npos);
+
+	size_t x_pos = patched.rfind('X', cell_pos);
+	size_t expr_size_pos = x_pos - 2;
+	auto actual_expr_size = static_cast<unsigned char>(patched[expr_size_pos]);
+	size_t expected_expr_size = old_expr_size + new_text.size() - old_text.size();
+	REQUIRE(actual_expr_size == expected_expr_size);
+
+	size_t suffix_end = cell_pos + new_text.size() + comparison.size();
+	REQUIRE(actual_expr_size == suffix_end - expr_size_pos - 1);
 }
 
 TEST_CASE("scdt_patcher_t::apply_text_patch, false-positive retry", "[u]")
@@ -164,7 +231,7 @@ TEST_CASE("scdt_patcher_t::apply_text_patch, false-positive retry", "[u]")
 	scdt += std::string(3, '\x00');
 
 	scdt_patcher_t patcher(scdt);
-	const auto & result = patcher.apply_text_patch(old_text, new_text, false);
+	const auto & result = patcher.apply_text_patch(old_text, { new_text, false, false });
 
 	REQUIRE(result.success);
 	REQUIRE(result.had_false_positive);
@@ -177,6 +244,36 @@ TEST_CASE("scdt_patcher_t::apply_text_patch, false-positive retry", "[u]")
 	REQUIRE(stored_size == new_text.size());
 
 	REQUIRE(patched.find("Cave") != std::string::npos);
+}
+
+TEST_CASE("scdt_patcher_t::apply_text_patch, does not match inside identifier", "[u]")
+{
+	std::string identifier = "T_Glob_NineholesBet";
+	std::string old_text = "Bet";
+	std::string new_text = "Zaklad";
+
+	std::string scdt;
+	scdt += std::string(2, '\x00');
+	scdt += size_byte(identifier.size());
+	scdt += identifier;
+	scdt += std::string(2, '\x00');
+	scdt += size_byte(old_text.size());
+	scdt += old_text;
+	scdt += std::string(3, '\x00');
+
+	scdt_patcher_t patcher(scdt);
+	const auto & result = patcher.apply_text_patch(old_text, { new_text, false, false });
+
+	REQUIRE(result.success);
+
+	const auto & patched = patcher.get_scdt();
+
+	REQUIRE(patched.find(identifier) != std::string::npos);
+
+	auto new_pos = patched.find(new_text);
+	REQUIRE(new_pos != std::string::npos);
+	auto stored_size = static_cast<unsigned char>(patched[new_pos - 1]);
+	REQUIRE(stored_size == new_text.size());
 }
 
 TEST_CASE("scdt_patcher_t::apply_message_patch, multi-segment", "[u]")
@@ -194,8 +291,10 @@ TEST_CASE("scdt_patcher_t::apply_message_patch, multi-segment", "[u]")
 	scdt += seg_old_0;
 	scdt += size_byte(seg_old_1.size() + 1);
 	scdt += seg_old_1;
+	scdt += std::string(1, '\x00');
 	scdt += size_byte(seg_old_2.size() + 1);
 	scdt += seg_old_2;
+	scdt += std::string(1, '\x00');
 	scdt += std::string(3, '\x00');
 
 	std::vector<std::string> segments_old = { seg_old_0, seg_old_1, seg_old_2 };
@@ -219,11 +318,56 @@ TEST_CASE("scdt_patcher_t::apply_message_patch, multi-segment", "[u]")
 	REQUIRE(pos_1 != std::string::npos);
 	auto stored_second_size = static_cast<unsigned char>(patched[pos_1 - 1]);
 	REQUIRE(stored_second_size == seg_new_1.size() + 1);
+	REQUIRE(patched[pos_1 + seg_new_1.size()] == '\x00');
 
 	auto pos_2 = patched.find(seg_new_2, pos_1);
 	REQUIRE(pos_2 != std::string::npos);
 	auto stored_third_size = static_cast<unsigned char>(patched[pos_2 - 1]);
 	REQUIRE(stored_third_size == seg_new_2.size() + 1);
+	REQUIRE(patched[pos_2 + seg_new_2.size()] == '\x00');
+}
+
+TEST_CASE("scdt_patcher_t::apply_message_patch, later button inserts trailing null", "[u]")
+{
+	std::string seg_old_0 = "First";
+	std::string seg_old_1 = "Iron";
+	std::string seg_new_0 = "First";
+	std::string seg_new_1 = "Fe";
+
+	std::string scdt;
+	scdt += std::string(2, '\x00');
+	scdt += size_word(seg_old_0.size());
+	scdt += seg_old_0;
+	scdt += size_byte(seg_old_1.size() + 1);
+	scdt += seg_old_1;
+	scdt += std::string(1, '\x00');
+	scdt += size_byte(3);
+	scdt += "Tel";
+	scdt += std::string(1, '\x00');
+	scdt += std::string(3, '\x00');
+
+	std::vector<std::string> segments_old = { seg_old_0, seg_old_1 };
+	std::vector<std::string> segments_new = { seg_new_0, seg_new_1 };
+
+	scdt_patcher_t patcher(scdt);
+	const auto & result = patcher.apply_message_patch(segments_old, segments_new);
+
+	REQUIRE(result.success);
+
+	const auto & patched = patcher.get_scdt();
+
+	auto pos_1 = patched.find(seg_new_1);
+	REQUIRE(pos_1 != std::string::npos);
+
+	auto stored_size = static_cast<unsigned char>(patched[pos_1 - 1]);
+	REQUIRE(stored_size == seg_new_1.size() + 1);
+
+	REQUIRE(patched[pos_1 + seg_new_1.size()] == '\x00');
+
+	auto tel_pos = patched.find("Tel", pos_1);
+	REQUIRE(tel_pos != std::string::npos);
+	auto tel_size = static_cast<unsigned char>(patched[tel_pos - 1]);
+	REQUIRE(tel_size == 3);
 }
 
 TEST_CASE("scdt_patcher_t::apply_message_patch, unchanged segments", "[u]")
@@ -238,18 +382,78 @@ TEST_CASE("scdt_patcher_t::apply_message_patch, unchanged segments", "[u]")
 	scdt += seg_0;
 	scdt += size_byte(seg_1.size() + 1);
 	scdt += seg_1;
+	scdt += std::string(1, '\x00');
 	scdt += size_byte(seg_2.size() + 1);
 	scdt += seg_2;
+	scdt += std::string(1, '\x00');
 	scdt += std::string(3, '\x00');
 
 	std::vector<std::string> segments_old = { seg_0, seg_1, seg_2 };
 	std::vector<std::string> segments_new = { seg_0, seg_1, seg_2 };
 
-	const auto & original_scdt = scdt;
+	const auto original_scdt = scdt;
 
 	scdt_patcher_t patcher(scdt);
 	const auto & result = patcher.apply_message_patch(segments_old, segments_new);
 
 	REQUIRE(result.success);
 	REQUIRE(patcher.get_scdt() == original_scdt);
+}
+
+TEST_CASE("scdt_patcher_t::apply_text_patch, addtopic pads short text to four bytes", "[u]")
+{
+	std::string old_text = "Tear";
+	std::string new_text = "\xa3za";
+
+	std::string scdt;
+	scdt += std::string(3, '\x00');
+	scdt += size_byte(old_text.size());
+	scdt += old_text;
+	scdt += std::string(1, '\x00');
+	scdt += size_byte(3);
+	scdt += "Tel";
+	scdt += std::string(3, '\x00');
+
+	scdt_patcher_t patcher(scdt);
+	const auto & result = patcher.apply_text_patch(old_text, { new_text, false, true });
+
+	REQUIRE(result.success);
+
+	const auto & patched = patcher.get_scdt();
+	auto pos = patched.find(new_text);
+	REQUIRE(pos != std::string::npos);
+
+	auto stored_size = static_cast<unsigned char>(patched[pos - 1]);
+	REQUIRE(stored_size == 4);
+	REQUIRE(patched[pos + new_text.size()] == '\x00');
+
+	auto tel_pos = patched.find("Tel", pos);
+	REQUIRE(tel_pos != std::string::npos);
+	auto tel_size = static_cast<unsigned char>(patched[tel_pos - 1]);
+	REQUIRE(tel_size == 3);
+}
+
+TEST_CASE("scdt_patcher_t::apply_text_patch, addtopic exact size for four or more", "[u]")
+{
+	std::string old_text = "Balmora";
+	std::string new_text = "Suran";
+
+	std::string scdt;
+	scdt += std::string(3, '\x00');
+	scdt += size_byte(old_text.size());
+	scdt += old_text;
+	scdt += std::string(3, '\x00');
+
+	scdt_patcher_t patcher(scdt);
+	const auto & result = patcher.apply_text_patch(old_text, { new_text, false, true });
+
+	REQUIRE(result.success);
+
+	const auto & patched = patcher.get_scdt();
+	auto pos = patched.find(new_text);
+	REQUIRE(pos != std::string::npos);
+
+	auto stored_size = static_cast<unsigned char>(patched[pos - 1]);
+	REQUIRE(stored_size == new_text.size());
+	REQUIRE(patched[pos + new_text.size()] != '\x00');
 }

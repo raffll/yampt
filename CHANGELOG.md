@@ -4,6 +4,7 @@
 
 ### yTranslator
 - [CHANGE] Copy Original (F8), Set In Progress (F9), Set Translated (F10), and Set Untranslated (Del) now apply to every selected row instead of only the active one, and all four appear in the Records context menu with their shortcut keys shown; Set Untranslated clears the translation and sets the status to Untranslated, the same as pressing Del
+- [FIX] Converting a plugin no longer produces scripts that crash the original Morrowind engine on a new game. Compiled message and choice buttons and topic entries whose translated text changed length are now written with the exact byte layout the engine expects, so converted plugins run without needing to be recompiled in the Construction Set
 - [CHANGE] The Statuses tab counts now reflect the active type filter, showing the tally within that subset (for example the counts for a soloed CELL type) instead of always counting the whole dictionary; the counts are not narrowed by the status selection or the search field
 
 ### yEditor

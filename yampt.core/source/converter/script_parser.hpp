@@ -20,6 +20,13 @@ token_result_t extract_token_at(const std::string & text_input, int position);
 
 } // namespace script_token
 
+enum class compiled_patch_kind_t
+{
+	plain,
+	getpccell,
+	addtopic
+};
+
 class script_parser_t
 {
 public:
@@ -55,7 +62,7 @@ private:
 	void remove_quotes();
 	void find_new_text(const rec_type_t text_type);
 	void insert_new_text();
-	void convert_text_in_compiled(const bool is_getpccell);
+	void convert_text_in_compiled(const compiled_patch_kind_t kind);
 	void convert_line();
 	void find_keyword();
 	void find_new_message();
