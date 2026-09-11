@@ -696,7 +696,7 @@ static QVariant sub_record_display(const view_tree_model_t::view_node_t & row, i
 	if (column == 0)
 	{
 		if (row.is_excluded_sub_record)
-			return QString::fromStdString(row.label) + QString::fromUtf8(" \xF0\x9F\x9A\xAB");
+			return QString::fromStdString(row.label) + QString::fromUtf8(" \xE2\x9B\x94");
 
 		return QString::fromStdString(row.label);
 	}
@@ -883,8 +883,8 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 		if (is_active_column(index.column()) && row_is_locked(*node, index))
 		{
 			const auto text = display.toString();
-			return text.isEmpty() ? QString::fromUtf8("\xF0\x9F\x94\x92")
-			                      : text + QString::fromUtf8(" \xF0\x9F\x94\x92");
+			return text.isEmpty() ? QString::fromUtf8(plugin_icon::glyph::lock)
+			                      : text + " " + QString::fromUtf8(plugin_icon::glyph::lock);
 		}
 
 		return display;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../session/merged_patch_name.hpp"
+#include "plugin_icon_glyphs.hpp"
 #include <string>
 #include <string_view>
 #include <QString>
@@ -36,22 +37,22 @@ inline QString prefix(const tier_flags_t & flags)
 	QString icons;
 
 	if (flags.filename == merged_patch::filename)
-		icons += QString::fromUtf8("\xE2\x9A\x99 ");
+		icons += QString::fromUtf8(glyph::gear) + " ";
 	else if (has_esm_extension(flags.filename))
-		icons += QString::fromUtf8("\xF0\x9F\x93\x9C ");
+		icons += QString::fromUtf8(glyph::scroll) + " ";
 	else
-		icons += QString::fromUtf8("\xF0\x9F\x93\x84 ");
+		icons += QString::fromUtf8(glyph::page) + " ";
 
 	if (flags.is_overridden)
-		icons += QString::fromUtf8("\xE2\x9A\xA1 ");
+		icons += QString::fromUtf8(glyph::bolt) + " ";
 
 	if (flags.is_excluded)
-		icons += QString::fromUtf8("\xF0\x9F\x9A\xAB ");
+		icons += QString::fromUtf8(glyph::no_entry) + " ";
 	else if (flags.is_guard)
-		icons += QString::fromUtf8("\xF0\x9F\x9B\xA1 ");
+		icons += QString::fromUtf8(glyph::shield) + " ";
 
 	if (flags.is_active)
-		icons += QString::fromUtf8("\xE2\xAD\x90 ");
+		icons += QString::fromUtf8(glyph::star) + " ";
 
 	return icons;
 }

@@ -48,6 +48,7 @@
     <ClInclude Include="source\session\merged_patch_name.hpp" />
     <ClInclude Include="source\view\count_label_format.hpp" />
     <ClInclude Include="source\view\plugin_icon.hpp" />
+    <ClInclude Include="source\view\plugin_icon_glyphs.hpp" />
     <ClInclude Include="source\view\editor_delegates.hpp" />
   </ItemGroup>
 </Project>

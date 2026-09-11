@@ -243,15 +243,6 @@ void nav_tree_model_t::set_exclusion_pattern(const std::string & pattern)
 	refresh_colors();
 }
 
-bool nav_tree_model_t::is_plugin_excluded(int plugin_idx) const
-{
-	const auto * excluded = m_filter.excluded_plugins();
-	if (excluded == nullptr)
-		return false;
-
-	return excluded->count(m_scan.plugin_filename(plugin_idx)) != 0;
-}
-
 bool nav_tree_model_t::has_whole_record_lock(const std::string & rec_type, const std::string & record_id) const
 {
 	const auto locks = m_scan.active_locks_for(rec_type, record_id);
@@ -272,10 +263,10 @@ QString nav_tree_model_t::record_status_glyphs(size_t file_idx, const conflict_e
 	const bool is_merged_patch_active =
 	    m_scan.is_active_plugin(plugin_idx) && m_scan.plugin_filename(plugin_idx) == merged_patch::filename;
 	if (is_merged_patch_active && has_whole_record_lock(entry.rec_type, entry.record_id))
-		glyphs += QString::fromUtf8("\xF0\x9F\x94\x92");
+		glyphs += QString::fromUtf8(plugin_icon::glyph::lock);
 
-	if (is_plugin_excluded(plugin_idx) || m_exclusion_resolver.is_record_excluded(entry.rec_type, entry.record_id))
-		glyphs += QString::fromUtf8("\xF0\x9F\x9A\xAB");
+	if (m_exclusion_resolver.is_record_excluded(entry.rec_type, entry.record_id))
+		glyphs += QString::fromUtf8(plugin_icon::glyph::no_entry);
 
 	return glyphs;
 }
