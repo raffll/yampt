@@ -3,6 +3,7 @@
 #include <QDragEnterEvent>
 #include <QDragMoveEvent>
 #include <QDropEvent>
+#include <QHeaderView>
 #include <QMimeData>
 #include <QSignalBlocker>
 #include <QTreeView>
@@ -26,6 +27,12 @@ nav_tree_view_t::nav_tree_view_t(plugin_scan_t & scan, QWidget * parent)
 
 	const int id_column_width = m_tree->fontMetrics().horizontalAdvance(QString(30, '0')) + m_tree->indentation();
 	m_tree->setColumnWidth(0, id_column_width);
+
+	const int status_column_width = m_tree->fontMetrics().horizontalAdvance(QStringLiteral("WWWW"));
+	m_tree->header()->setStretchLastSection(false);
+	m_tree->header()->setSectionResizeMode(2, QHeaderView::Fixed);
+	m_tree->setColumnWidth(2, status_column_width);
+	m_tree->header()->setSectionResizeMode(1, QHeaderView::Stretch);
 
 	connect(
 	    m_tree->selectionModel(),

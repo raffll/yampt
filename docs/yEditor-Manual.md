@@ -44,9 +44,7 @@ Text colors indicate how each specific plugin version relates to others:
 
 Records with no conflict (only one plugin defines them) show with no background color and black text.
 
-Anything excluded from the merged patch shows a grey background instead of a conflict color. This covers an excluded plugin and all of its records, as well as any individual record matched by the exclusion pattern, so excluded content is easy to spot even when it would otherwise be flagged as a conflict.
-
-Each plugin in the tree is prefixed with one or more icons showing its role. A plugin can carry several at once, always in the same order: its file type first, then the overwrite marker, then its merge role, then the active marker — for example a regular overwrite plugin that is excluded and active reads 📄⚡🚫⭐.
+The tree has three columns: ID, Name, and Status. The ID and Name columns show the record identifier and its display name; the Status column, on the right, carries the status glyphs. For a plugin row the Status column holds one or more icons showing its role. A plugin can carry several at once, always in the same order: its file type first, then the overwrite marker, then its merge role, then the active marker — for example a regular overwrite plugin that is excluded and active reads 📄⚡🚫⭐.
 
 - 📜 — a master file that other plugins depend on.
 - 📄 — a regular plugin loaded from a mod folder or game data directory.
@@ -56,7 +54,9 @@ Each plugin in the tree is prefixed with one or more icons showing its role. A p
 - 🚫 — a plugin excluded from the merged patch. Its records are ignored during merge.
 - ⭐ — the active plugin: the one that currently receives copied records.
 
-When a plugin has field edits that have not yet been written to disk, an asterisk appears next to its name, after the icon and before the filename. The asterisk disappears once the plugin is saved.
+When a plugin has field edits that have not yet been written to disk, an asterisk appears before the filename in the ID column. The asterisk disappears once the plugin is saved.
+
+For a record row the Status column shows 🔒 when the record is locked in the merged patch and 🚫 when the record is excluded from the merged patch, either because its plugin is excluded or because it matches the exclusion pattern.
 
 ## Record View
 
@@ -65,6 +65,8 @@ Clicking a record in the nav tree displays its full content in the record view. 
 Each column represents one plugin's version. Column headers show the plugin filename, colored by that plugin's conflict status for this record. Cells with differing values across plugins are highlighted to make conflicts visible.
 
 Empty cells mean that plugin does not include the sub-record. This happens when a plugin only modifies some fields of a record.
+
+A sub-record excluded from conflict detection and the merged patch is marked with 🚫 after its name in the first column, so you can see at a glance which sub-records are being skipped.
 
 ## Dialogue Responses
 
@@ -94,9 +96,9 @@ The same menu offers **Remove Record from Plugin**. After a confirmation prompt,
 
 Right-click a plugin node in the navigation tree for plugin-level options:
 
-- **Save** — writes the plugin's pending field edits to disk and removes its asterisk. This option is enabled only while the plugin has unsaved changes; when the plugin is already saved it appears greyed out.
 - **Exclude from Merged Patch** / **Include in Merged Patch** — excluded plugins are completely ignored during auto-merge. Their records will not appear in the merged patch regardless of conflicts.
 - **Mark as Guard Patch** — the guard patch acts as a priority barrier during auto-merge. Plugins loaded before the guard that modify the same records are ignored. Only the guard's version and later plugins are considered. If the final plugin's version matches master (reverting a change), the guard's version is used instead of letting the revert through.
+- **Save** — writes the plugin's pending field edits to disk and removes its asterisk. This option is enabled only while the plugin has unsaved changes; when the plugin is already saved it appears greyed out.
 
 ## View Menu
 

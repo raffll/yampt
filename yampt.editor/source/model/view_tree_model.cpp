@@ -12,10 +12,7 @@
 #include <QBrush>
 #include <QCoreApplication>
 #include <QFont>
-#include <QIcon>
 #include <QMimeData>
-#include <QPainter>
-#include <QPixmap>
 
 Q_DECLARE_METATYPE(const field_def_t *)
 
@@ -697,7 +694,12 @@ static QString truncate_for_display(const std::string & value)
 static QVariant sub_record_display(const view_tree_model_t::view_node_t & row, int column)
 {
 	if (column == 0)
+	{
+		if (row.is_excluded_sub_record)
+			return QString::fromStdString(row.label) + QString::fromUtf8(" \xF0\x9F\x9A\xAB");
+
 		return QString::fromStdString(row.label);
+	}
 
 	if (hoists_single_leaf_child(row))
 	{
@@ -720,12 +722,6 @@ static QVariant sub_record_display(const view_tree_model_t::view_node_t & row, i
 
 static QVariant sub_record_background(const view_tree_model_t::view_node_t & row, int column)
 {
-	if (row.is_ignored)
-	{
-		const auto & theme = theme_system_t::instance();
-		return (theme.active_theme() == theme_t::dark) ? QBrush(QColor(45, 45, 48)) : QBrush(QColor(235, 235, 238));
-	}
-
 	if (row.row_conflict_all < conflict_all_t::no_conflict)
 		return {};
 
@@ -761,27 +757,17 @@ static QVariant sub_record_foreground(
 
 	const auto & theme = theme_system_t::instance();
 
-	if (row.is_ignored)
-		return QBrush(theme.conflict_this_foreground(conflict_this_t::ignored));
-
 	if (column == 0)
 	{
 		conflict_this_t worst = conflict_this_t::unknown;
-		bool any_ignored = false;
 		for (const auto & status : cell_conflicts)
 		{
-			if (status == conflict_this_t::ignored)
-				any_ignored = true;
-
 			if (status == conflict_this_t::identical_to_master)
 				continue;
 
 			if (status > worst)
 				worst = status;
 		}
-
-		if (any_ignored)
-			return QBrush(theme.conflict_this_foreground(conflict_this_t::ignored));
 
 		if (worst == conflict_this_t::unknown || worst == conflict_this_t::master)
 			return {};
@@ -794,24 +780,6 @@ static QVariant sub_record_foreground(
 		return {};
 
 	return QBrush(theme.conflict_this_foreground(cell_conflicts[col]));
-}
-
-static QIcon lock_cell_icon()
-{
-	static const QIcon icon = []()
-	{
-		QPixmap pixmap(16, 16);
-		pixmap.fill(Qt::transparent);
-		QPainter painter(&pixmap);
-		QFont font = painter.font();
-		font.setPixelSize(13);
-		painter.setFont(font);
-		painter.drawText(pixmap.rect(), Qt::AlignCenter, QString::fromUtf8("\xF0\x9F\x94\x92"));
-		painter.end();
-		return QIcon(pixmap);
-	}();
-
-	return icon;
 }
 
 namespace {
@@ -910,14 +878,16 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 	switch (role)
 	{
 	case Qt::DisplayRole:
-		return sub_record_display(*node, index.column());
-
-	case Qt::DecorationRole:
 	{
+		auto display = sub_record_display(*node, index.column());
 		if (is_active_column(index.column()) && row_is_locked(*node, index))
-			return lock_cell_icon();
+		{
+			const auto text = display.toString();
+			return text.isEmpty() ? QString::fromUtf8("\xF0\x9F\x94\x92")
+			                      : text + QString::fromUtf8(" \xF0\x9F\x94\x92");
+		}
 
-		return {};
+		return display;
 	}
 
 	case Qt::BackgroundRole:

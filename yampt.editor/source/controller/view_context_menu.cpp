@@ -149,15 +149,15 @@ void view_context_menu_t::show_nav_menu(const QPoint & global_pos, const nav_tre
 			const auto lock_label = locked ? QCoreApplication::translate("yEditor", "Unlock in Merged Patch")
 			                               : QCoreApplication::translate("yEditor", "Lock in Merged Patch");
 			menu.addAction(lock_label, [this, lock]() { m_merge.toggle_active_lock(lock); });
-
-			menu.addSeparator();
 		}
+
+		add_exclude_record_action(menu, info);
+
+		menu.addSeparator();
 
 		menu.addAction(
 		    QCoreApplication::translate("yEditor", "Remove Record from Active Plugin"),
 		    [this, info]() { m_merge.remove_record_from_active(info.rec_type, info.record_id); });
-
-		add_exclude_record_action(menu, info);
 	}
 	else if (!info.record_id.empty() && !is_active)
 	{
@@ -169,12 +169,14 @@ void view_context_menu_t::show_nav_menu(const QPoint & global_pos, const nav_tre
 
 		menu.addSeparator();
 
+		add_exclude_record_action(menu, info);
+
+		menu.addSeparator();
+
 		auto * remove_action = menu.addAction(
 		    QCoreApplication::translate("yEditor", "Remove Record from Plugin"),
 		    [this, info]() { confirm_remove_record_from_plugin(info); });
 		remove_action->setEnabled(m_record_view.model()->is_editing_enabled());
-
-		add_exclude_record_action(menu, info);
 	}
 	else if (info.rec_type.empty() && info.record_id.empty())
 	{
@@ -200,21 +202,6 @@ void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_mo
 	set_active_action->setToolTip(
 	    QCoreApplication::translate("yEditor", "Make this the plugin that receives copied records"));
 	set_active_action->setEnabled(!is_active);
-
-	menu.addSeparator();
-
-	auto * save_action = menu.addAction(
-	    QCoreApplication::translate("yEditor", "Save"),
-	    [this, info]()
-	{
-		if (m_merge.save_plugin(info.plugin_idx))
-			m_nav_view.notify_plugin_changed(info.plugin_idx);
-
-		if (m_on_unsaved_changed)
-			m_on_unsaved_changed(m_session.has_any_unsaved());
-	});
-	save_action->setToolTip(QCoreApplication::translate("yEditor", "Write in-memory changes to the plugin file"));
-	save_action->setEnabled(m_session.is_plugin_dirty(info.plugin_idx));
 
 	menu.addSeparator();
 
@@ -265,6 +252,21 @@ void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_mo
 		m_session.save_session_state(QDir(settings_store_t::settings_dir()).filePath("yEditor.ini"));
 		m_nav_view.notify_plugin_changed(info.plugin_idx);
 	});
+
+	menu.addSeparator();
+
+	auto * save_action = menu.addAction(
+	    QCoreApplication::translate("yEditor", "Save"),
+	    [this, info]()
+	{
+		if (m_merge.save_plugin(info.plugin_idx))
+			m_nav_view.notify_plugin_changed(info.plugin_idx);
+
+		if (m_on_unsaved_changed)
+			m_on_unsaved_changed(m_session.has_any_unsaved());
+	});
+	save_action->setToolTip(QCoreApplication::translate("yEditor", "Write in-memory changes to the plugin file"));
+	save_action->setEnabled(m_session.is_plugin_dirty(info.plugin_idx));
 }
 
 void view_context_menu_t::add_exclude_record_action(QMenu & menu, const nav_tree_model_t::node_info_t & info)
@@ -277,8 +279,6 @@ void view_context_menu_t::add_exclude_record_action(QMenu & menu, const nav_tree
 
 	const auto token = anchored_exclusion_token(info.record_id);
 	const auto has_token = remove_exclusion_token(current_pattern, token) != current_pattern;
-
-	menu.addSeparator();
 
 	if (!excluded)
 	{

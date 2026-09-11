@@ -116,6 +116,7 @@ public:
 		conflict_all_t row_conflict_all = conflict_all_t::only_one;
 		bool all_identical = true;
 		bool is_ignored = false;
+		bool is_excluded_sub_record = false;
 		bool is_deleted = false;
 		bool is_info_chain = false;
 		int occurrence = 0;

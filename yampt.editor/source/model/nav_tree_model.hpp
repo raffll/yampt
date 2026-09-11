@@ -93,6 +93,8 @@ private:
 
 	conflict_this_t record_foreground_for_plugin(const conflict_entry_t & entry, int plugin_idx) const;
 	bool is_plugin_excluded(int plugin_idx) const;
+	bool has_whole_record_lock(const std::string & rec_type, const std::string & record_id) const;
+	QString record_status_glyphs(size_t file_idx, const conflict_entry_t & entry) const;
 
 	void build_tree();
 	void sort_records();

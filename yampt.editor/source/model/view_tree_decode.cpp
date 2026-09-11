@@ -135,6 +135,7 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 	if (user_ignore)
 	{
 		row.is_ignored = true;
+		row.is_excluded_sub_record = true;
 		row.row_conflict_all = conflict_all_t::no_conflict;
 		row.cell_conflict_this.assign(col_count, conflict_this_t::ignored);
 	}

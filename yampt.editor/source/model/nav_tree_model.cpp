@@ -252,6 +252,34 @@ bool nav_tree_model_t::is_plugin_excluded(int plugin_idx) const
 	return excluded->count(m_scan.plugin_filename(plugin_idx)) != 0;
 }
 
+bool nav_tree_model_t::has_whole_record_lock(const std::string & rec_type, const std::string & record_id) const
+{
+	const auto locks = m_scan.active_locks_for(rec_type, record_id);
+	for (const auto & lock : locks)
+	{
+		if (lock.scope == lock_scope_t::whole_record)
+			return true;
+	}
+
+	return false;
+}
+
+QString nav_tree_model_t::record_status_glyphs(size_t file_idx, const conflict_entry_t & entry) const
+{
+	QString glyphs;
+
+	const int plugin_idx = m_tree[file_idx].plugin_idx;
+	const bool is_merged_patch_active =
+	    m_scan.is_active_plugin(plugin_idx) && m_scan.plugin_filename(plugin_idx) == merged_patch::filename;
+	if (is_merged_patch_active && has_whole_record_lock(entry.rec_type, entry.record_id))
+		glyphs += QString::fromUtf8("\xF0\x9F\x94\x92");
+
+	if (is_plugin_excluded(plugin_idx) || m_exclusion_resolver.is_record_excluded(entry.rec_type, entry.record_id))
+		glyphs += QString::fromUtf8("\xF0\x9F\x9A\xAB");
+
+	return glyphs;
+}
+
 void nav_tree_model_t::build_tree()
 {
 	m_tree.clear();
@@ -409,7 +437,7 @@ int nav_tree_model_t::rowCount(const QModelIndex & parent) const
 
 int nav_tree_model_t::columnCount(const QModelIndex &) const
 {
-	return 2;
+	return 3;
 }
 
 QVariant nav_tree_model_t::headerData(int section, Qt::Orientation orientation, int role) const
@@ -423,6 +451,8 @@ QVariant nav_tree_model_t::headerData(int section, Qt::Orientation orientation, 
 		return QStringLiteral("ID");
 	case 1:
 		return QStringLiteral("Name");
+	case 2:
+		return QStringLiteral("Status");
 	}
 
 	return {};
@@ -732,7 +762,7 @@ QVariant nav_tree_model_t::data_for_file_node(int row, int column, int role) con
 	if (role == Qt::DisplayRole && column == 0)
 		return file_node_display_text(file_node);
 
-	if (role == Qt::DisplayRole && column == 1)
+	if (role == Qt::DisplayRole && column == 2)
 		return file_node_icons(file_node);
 
 	if (role == Qt::BackgroundRole || role == Qt::ForegroundRole || role == Qt::FontRole)
@@ -797,9 +827,6 @@ QVariant nav_tree_model_t::file_node_appearance(const file_node_t & file_node, i
 
 	if (role == Qt::BackgroundRole)
 	{
-		if (is_plugin_excluded(file_node.plugin_idx))
-			return QBrush(theme_system_t::instance().get_color(color_name_t::excluded_background));
-
 		if (worst_all < conflict_all_t::no_conflict)
 			return {};
 
@@ -878,9 +905,6 @@ QVariant nav_tree_model_t::data_for_type_group(size_t file_idx, int row, int col
 
 	if (role == Qt::BackgroundRole)
 	{
-		if (is_plugin_excluded(m_tree[file_idx].plugin_idx))
-			return QBrush(theme_system_t::instance().get_color(color_name_t::excluded_background));
-
 		if (worst_all < conflict_all_t::no_conflict)
 			return {};
 
@@ -930,11 +954,6 @@ QVariant nav_tree_model_t::data_for_record(size_t file_idx, size_t group_idx, in
 			auto display_id = QString::fromUtf8(decode_to_utf8(entry.record_id, m_display_codepage));
 			display_id.replace('|', " #");
 
-			const int plugin_idx = m_tree[file_idx].plugin_idx;
-			if (m_scan.is_active_plugin(plugin_idx) && m_scan.plugin_filename(plugin_idx) == merged_patch::filename &&
-			    !m_scan.active_locks_for(entry.rec_type, entry.record_id).empty())
-				display_id = QString::fromUtf8("\xF0\x9F\x94\x92 ") + display_id;
-
 			return display_id;
 		}
 
@@ -948,14 +967,13 @@ QVariant nav_tree_model_t::data_for_record(size_t file_idx, size_t group_idx, in
 
 			return QString::fromUtf8(decode_to_utf8(entry.dial_name, m_display_codepage));
 		}
+
+		if (column == 2)
+			return record_status_glyphs(file_idx, entry);
 	}
 
 	if (role == Qt::BackgroundRole)
 	{
-		if (is_plugin_excluded(m_tree[file_idx].plugin_idx) ||
-		    m_exclusion_resolver.is_record_excluded(entry.rec_type, entry.record_id))
-			return QBrush(theme_system_t::instance().get_color(color_name_t::excluded_background));
-
 		if (entry.conflict_all < conflict_all_t::no_conflict)
 			return {};
 
