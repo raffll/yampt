@@ -1,6 +1,6 @@
 #include <catch2/catch_all.hpp>
-#include <filesystem>
 #include <utility/string_utils.hpp>
+#include <filesystem>
 
 TEST_CASE("string_utils::to_lower, ascii mixed case", "[u]")
 {
@@ -180,6 +180,7 @@ TEST_CASE("string_utils::utf8_to_path, round-trips through path_to_utf8", "[u]")
 	const auto path = string_utils::utf8_to_path(utf8_text);
 	REQUIRE(string_utils::path_to_utf8(path) == utf8_text);
 }
+
 TEST_CASE("string_utils::canonicalize_path, empty input", "[u]")
 {
 	REQUIRE(string_utils::canonicalize_path("") == "");

@@ -1,4 +1,3 @@
-#include <resource_paths.hpp>
 #include "main_window.hpp"
 #include "dialog/dict_selection_dialog.hpp"
 #include "dialog/first_run_dialog.hpp"
@@ -21,14 +20,15 @@
 #include "view/status_filter_view.hpp"
 #include "view/translation_suggestion_view.hpp"
 #include "view/validation_view.hpp"
-#include <translation_example.hpp>
 #include <translator/translation_example_ops.hpp>
 #include <utility/language_config.hpp>
 #include <utility/string_utils.hpp>
 #include <algorithm>
 #include <filesystem>
 #include <map>
+#include <resource_paths.hpp>
 #include <theme_system.hpp>
+#include <translation_example.hpp>
 #include <QAction>
 #include <QCloseEvent>
 #include <QCoreApplication>
@@ -130,14 +130,14 @@ main_window_t::main_window_t(QWidget * parent)
 	                                                                          m_extra_sel_translation,
 	                                                                          *m_grammar_check });
 
-	m_shortcuts_controller =
-	    std::make_unique<shortcuts_controller_t>(shortcuts_deps_t { m_editor_controller,
-	                                                                *m_table_model,
-	                                                                [this]() -> document_t * { return m_active_doc; },
-	                                                                [this](bool dirty) { set_unsaved_changes(dirty); },
-	                                                                [this]() { update_status_counts(); },
-	                                                                [this](int row) { load_record(row); },
-	                                                                [this]() { return m_table_view->selected_rows(); } });
+	m_shortcuts_controller = std::make_unique<shortcuts_controller_t>(
+	    shortcuts_deps_t { m_editor_controller,
+	                       *m_table_model,
+	                       [this]() -> document_t * { return m_active_doc; },
+	                       [this](bool dirty) { set_unsaved_changes(dirty); },
+	                       [this]() { update_status_counts(); },
+	                       [this](int row) { load_record(row); },
+	                       [this]() { return m_table_view->selected_rows(); } });
 
 	connect_menu_signals();
 	connect_sidebar_signals();
@@ -173,8 +173,7 @@ main_window_t::main_window_t(QWidget * parent)
 			m_settings.set_native_tag(native);
 			m_settings.set_foreign_tag(foreign);
 
-			const auto languages =
-			    language_config::load(resource_paths::languages_file());
+			const auto languages = language_config::load(resource_paths::languages_file());
 
 			const auto * native_lang = language_config::find_by_code(languages, native);
 			const int encoding_index = native_lang ? codepage_to_index(native_lang->codepage) : 2;
@@ -188,8 +187,10 @@ main_window_t::main_window_t(QWidget * parent)
 				if (prefix.empty())
 					return;
 
-				const auto aff_path = string_utils::canonicalize_path(string_utils::join_path(dict_dir, prefix + ".aff"));
-				const auto dic_path = string_utils::canonicalize_path(string_utils::join_path(dict_dir, prefix + ".dic"));
+				const auto aff_path =
+				    string_utils::canonicalize_path(string_utils::join_path(dict_dir, prefix + ".aff"));
+				const auto dic_path =
+				    string_utils::canonicalize_path(string_utils::join_path(dict_dir, prefix + ".dic"));
 
 				if (!std::filesystem::exists(aff_path) || !std::filesystem::exists(dic_path))
 					return;
@@ -432,8 +433,7 @@ void main_window_t::rebuild_table_yaml(document_t * target_doc)
 
 	int total = target_doc->total_count();
 	int translated = target_doc->translated_count();
-	m_table_display->apply_yaml(
-	    std::move(rows), total, translated, target_doc->path(), filtered_status_counts);
+	m_table_display->apply_yaml(std::move(rows), total, translated, target_doc->path(), filtered_status_counts);
 	m_editor_controller.set_current_row(-1);
 	clear_editor_panels();
 }

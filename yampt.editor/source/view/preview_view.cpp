@@ -152,9 +152,7 @@ void build_line_diff_html(
 	}
 
 	const auto wrap = [](const QStringList & lines)
-	{
-		return QString("<div style='white-space:pre-wrap;'>") + lines.join(QString("\n")) + "</div>";
-	};
+	{ return QString("<div style='white-space:pre-wrap;'>") + lines.join(QString("\n")) + "</div>"; };
 
 	left_html = wrap(left_ordered);
 	right_html = wrap(right_ordered);
@@ -234,10 +232,7 @@ preview_view_t::preview_view_t(QWidget * parent)
 void preview_view_t::setup_scroll_sync()
 {
 	connect(
-	    m_left_edit->verticalScrollBar(),
-	    &QScrollBar::valueChanged,
-	    this,
-	    [this]() { sync_scroll_from(m_left_edit); });
+	    m_left_edit->verticalScrollBar(), &QScrollBar::valueChanged, this, [this]() { sync_scroll_from(m_left_edit); });
 	connect(
 	    m_left_edit->horizontalScrollBar(),
 	    &QScrollBar::valueChanged,

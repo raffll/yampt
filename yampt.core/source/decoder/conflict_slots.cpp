@@ -73,7 +73,7 @@ static void align_slots_to_result(
 
 	for (const auto & slot : slots)
 	{
-		aligned_slot_t aligned{};
+		aligned_slot_t aligned {};
 		aligned.key.type = slot.type;
 		aligned.key.occurrence = slot.occurrence;
 		aligned.indices.resize(ver_count);
@@ -385,7 +385,7 @@ static void align_single_entries(
 
 	for (const auto & target_id : all_ids)
 	{
-		aligned_slot_t aligned{};
+		aligned_slot_t aligned {};
 		aligned.key.type = slot_type;
 		aligned.key.occurrence = occurrence++;
 		aligned.indices.resize(ver_count);
@@ -737,7 +737,7 @@ static void align_cell_header(
 
 	for (const auto & slot : header_slots)
 	{
-		aligned_slot_t aligned{};
+		aligned_slot_t aligned {};
 		aligned.key.type = slot.type;
 		aligned.key.occurrence = slot.occurrence;
 		aligned.indices.resize(ver_count);
@@ -812,7 +812,7 @@ static void align_ref_group_slots(
 
 	for (const auto & slot : ref_slots)
 	{
-		aligned_slot_t aligned{};
+		aligned_slot_t aligned {};
 		aligned.key.type = slot.type;
 		aligned.key.occurrence = slot.occurrence;
 		aligned.indices.resize(ver_count);

@@ -5,6 +5,7 @@ TEST_CASE("topic_tagger_t::strip_tags, empty line unchanged", "[u]")
 {
 	REQUIRE(topic_tagger_t::strip_tags("") == "");
 }
+
 TEST_CASE("topic_tagger_t::strip_tags, single link", "[u]")
 {
 	REQUIRE(topic_tagger_t::strip_tags("Talk to @Caius Cosades# now") == "Talk to Caius Cosades now");
@@ -12,8 +13,7 @@ TEST_CASE("topic_tagger_t::strip_tags, single link", "[u]")
 
 TEST_CASE("topic_tagger_t::strip_tags, multiple links", "[u]")
 {
-	REQUIRE(topic_tagger_t::strip_tags("Ask @Caius# about the @Blades# order")
-		== "Ask Caius about the Blades order");
+	REQUIRE(topic_tagger_t::strip_tags("Ask @Caius# about the @Blades# order") == "Ask Caius about the Blades order");
 }
 
 TEST_CASE("topic_tagger_t::strip_tags, malformed lone at sign unchanged", "[u]")
@@ -31,8 +31,7 @@ TEST_CASE("topic_tagger_t::strip_tags, pseudo asterisk inner text preserved", "[
 	REQUIRE(topic_tagger_t::strip_tags("@topic*#") == "topic*");
 }
 
-namespace
-{
+namespace {
 topic_tagger_t make_tagger(const std::vector<std::pair<std::string, std::string>> & dial_topics)
 {
 	dict_t dict;
@@ -44,7 +43,7 @@ topic_tagger_t make_tagger(const std::vector<std::pair<std::string, std::string>
 	tagger.seed_topics(dict);
 	return tagger;
 }
-}
+} // namespace
 
 TEST_CASE("topic_tagger_t::tag_line, single topic wrapped", "[u]")
 {
@@ -153,10 +152,10 @@ TEST_CASE("topic_tagger_t::tag_line, only DIAL topics seeded", "[u]")
 	REQUIRE(result.tags_inserted == 0);
 }
 
-namespace
-{
-dict_t make_apply_dict(const std::vector<std::pair<std::string, std::string>> & dial_topics,
-	const std::vector<record_entry_t> & translatable)
+namespace {
+dict_t make_apply_dict(
+    const std::vector<std::pair<std::string, std::string>> & dial_topics,
+    const std::vector<record_entry_t> & translatable)
 {
 	dict_t dict;
 	auto & dial_chapter = dict[rec_type_t::dial];
@@ -169,14 +168,14 @@ dict_t make_apply_dict(const std::vector<std::pair<std::string, std::string>> & 
 
 	return dict;
 }
-}
+} // namespace
 
 TEST_CASE("topic_tagger_t::apply_topic_tags, counts changed entries and inserted tags", "[u]")
 {
 	auto dict = make_apply_dict(
-		{ { "Caius Cosades", "Caius Cosades" }, { "Blades", "Blades" } },
-		{ { "info_one", "Talk to Caius Cosades now", "Talk to Caius Cosades now", status_t::translated },
-			{ "info_two", "Join the Blades order", "Join the Blades order", status_t::translated } });
+	    { { "Caius Cosades", "Caius Cosades" }, { "Blades", "Blades" } },
+	    { { "info_one", "Talk to Caius Cosades now", "Talk to Caius Cosades now", status_t::translated },
+	      { "info_two", "Join the Blades order", "Join the Blades order", status_t::translated } });
 
 	const auto result = apply_topic_tags(dict);
 
@@ -189,8 +188,8 @@ TEST_CASE("topic_tagger_t::apply_topic_tags, counts changed entries and inserted
 TEST_CASE("topic_tagger_t::apply_topic_tags, non-matching entries untouched", "[u]")
 {
 	auto dict = make_apply_dict(
-		{ { "Blades", "Blades" } },
-		{ { "info_one", "Nothing to tag here", "Nothing to tag here", status_t::translated } });
+	    { { "Blades", "Blades" } },
+	    { { "info_one", "Nothing to tag here", "Nothing to tag here", status_t::translated } });
 
 	const auto result = apply_topic_tags(dict);
 
@@ -202,8 +201,7 @@ TEST_CASE("topic_tagger_t::apply_topic_tags, non-matching entries untouched", "[
 TEST_CASE("topic_tagger_t::apply_topic_tags, non-translated entries skipped", "[u]")
 {
 	auto dict = make_apply_dict(
-		{ { "Caius", "Caius" } },
-		{ { "info_one", "Find Caius today", "Find Caius today", status_t::untranslated } });
+	    { { "Caius", "Caius" } }, { { "info_one", "Find Caius today", "Find Caius today", status_t::untranslated } });
 
 	const auto result = apply_topic_tags(dict);
 
@@ -214,9 +212,7 @@ TEST_CASE("topic_tagger_t::apply_topic_tags, non-translated entries skipped", "[
 
 TEST_CASE("topic_tagger_t::apply_topic_tags, entries below minimum length skipped", "[u]")
 {
-	auto dict = make_apply_dict(
-		{ { "a", "a" } },
-		{ { "info_one", "a", "a", status_t::translated } });
+	auto dict = make_apply_dict({ { "a", "a" } }, { { "info_one", "a", "a", status_t::translated } });
 
 	const auto result = apply_topic_tags(dict);
 
@@ -227,9 +223,7 @@ TEST_CASE("topic_tagger_t::apply_topic_tags, entries below minimum length skippe
 
 TEST_CASE("topic_tagger_t::apply_topic_tags, whitespace-only entries skipped", "[u]")
 {
-	auto dict = make_apply_dict(
-		{ { "Caius", "Caius" } },
-		{ { "info_one", "   ", "   ", status_t::translated } });
+	auto dict = make_apply_dict({ { "Caius", "Caius" } }, { { "info_one", "   ", "   ", status_t::translated } });
 
 	const auto result = apply_topic_tags(dict);
 
@@ -240,8 +234,8 @@ TEST_CASE("topic_tagger_t::apply_topic_tags, whitespace-only entries skipped", "
 TEST_CASE("topic_tagger_t::apply_topic_tags, refresh strips and reinserts existing tags", "[u]")
 {
 	auto dict = make_apply_dict(
-		{ { "Blades", "Blades" } },
-		{ { "info_one", "Meet @Caius# and the Blades", "Meet @Caius# and the Blades", status_t::translated } });
+	    { { "Blades", "Blades" } },
+	    { { "info_one", "Meet @Caius# and the Blades", "Meet @Caius# and the Blades", status_t::translated } });
 
 	const auto result = apply_topic_tags(dict);
 
@@ -253,9 +247,9 @@ TEST_CASE("topic_tagger_t::apply_topic_tags, refresh strips and reinserts existi
 TEST_CASE("topic_tagger_t::apply_topic_tags, voice info records skipped", "[u]")
 {
 	auto dict = make_apply_dict(
-		{ { "Blades", "Blades" } },
-		{ { "V^Attack^voice_one", "Join the Blades order", "Join the Blades order", status_t::translated },
-			{ "T^Blades^topic_one", "Join the Blades order", "Join the Blades order", status_t::translated } });
+	    { { "Blades", "Blades" } },
+	    { { "V^Attack^voice_one", "Join the Blades order", "Join the Blades order", status_t::translated },
+	      { "T^Blades^topic_one", "Join the Blades order", "Join the Blades order", status_t::translated } });
 
 	const auto result = apply_topic_tags(dict);
 

@@ -4,10 +4,9 @@
 #include <set>
 #include <string>
 
-namespace exclusion_resolver
-{
-	std::string regex_escape_literal(const std::string & id);
-}
+namespace exclusion_resolver {
+std::string regex_escape_literal(const std::string & id);
+} // namespace exclusion_resolver
 
 class exclusion_resolver_t
 {

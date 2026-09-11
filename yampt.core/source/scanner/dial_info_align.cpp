@@ -14,7 +14,11 @@ struct info_insert_record_t
 	int source_plugin_idx = -1;
 };
 
-static std::string extract_sub_text(plugin_scan_t & scan, int plugin_idx, size_t record_index, const std::string & sub_type)
+static std::string extract_sub_text(
+    plugin_scan_t & scan,
+    int plugin_idx,
+    size_t record_index,
+    const std::string & sub_type)
 {
 	const auto content = scan.read_record_content(plugin_idx, record_index);
 	sub_record_iter_t iter(content);

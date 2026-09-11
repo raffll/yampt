@@ -1,6 +1,6 @@
-#include <resource_paths.hpp>
 #include "main_window.hpp"
 #include <utility/app_logger.hpp>
+#include <resource_paths.hpp>
 #include <settings_store.hpp>
 #include <theme_system.hpp>
 #include <QApplication>

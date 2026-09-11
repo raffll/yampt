@@ -55,9 +55,8 @@ static std::string make_wpdt(uint16_t health)
 
 static std::string make_weap(uint16_t health)
 {
-	const auto subs =
-	    make_sub("NAME", make_cstr("repro_sword")) + make_sub("FNAM", make_cstr("Repro Sword")) +
-	    make_sub("WPDT", make_wpdt(health));
+	const auto subs = make_sub("NAME", make_cstr("repro_sword")) + make_sub("FNAM", make_cstr("Repro Sword")) +
+	                  make_sub("WPDT", make_wpdt(health));
 	return make_record("WEAP", subs);
 }
 
@@ -76,12 +75,12 @@ TEST_CASE("sub_record_merge_t::merge_fields_three_way, multi-byte field is not s
 {
 	const auto base = make_wpdt(0x0100);
 	auto inter = make_wpdt(0x0100);
-	inter[10] = static_cast<char>(0xFF);   // low byte of Health only
+	inter[10] = static_cast<char>(0xFF); // low byte of Health only
 	auto winner = make_wpdt(0x0100);
-	winner[11] = static_cast<char>(0x64);  // high byte of Health only
+	winner[11] = static_cast<char>(0x64); // high byte of Health only
 
-	const auto merged =
-	    sub_record_merge_t::merge_fields_three_way("WEAP", "WPDT", base.data(), inter.data(), winner.data(), base.size());
+	const auto merged = sub_record_merge_t::merge_fields_three_way(
+	    "WEAP", "WPDT", base.data(), inter.data(), winner.data(), base.size());
 
 	uint16_t merged_health = 0;
 	std::memcpy(&merged_health, merged.data() + 10, 2);
@@ -118,9 +117,8 @@ static std::string make_fadt(uint32_t rank1_attr1, uint32_t rank2_attr1)
 
 static std::string make_fact(uint32_t rank1_attr1, uint32_t rank2_attr1)
 {
-	const auto subs =
-	    make_sub("NAME", make_cstr("test_faction")) + make_sub("FNAM", make_cstr("Test Faction")) +
-	    make_sub("FADT", make_fadt(rank1_attr1, rank2_attr1));
+	const auto subs = make_sub("NAME", make_cstr("test_faction")) + make_sub("FNAM", make_cstr("Test Faction")) +
+	                  make_sub("FADT", make_fadt(rank1_attr1, rank2_attr1));
 	return make_record("FACT", subs);
 }
 

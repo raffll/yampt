@@ -1,7 +1,6 @@
 #include "creator/topic_link_splitter.hpp"
 
-namespace
-{
+namespace {
 constexpr char link_open = '@';
 constexpr char link_close = '#';
 
@@ -32,7 +31,7 @@ link_segment_t make_link_segment(const std::string & inner)
 
 	return segment;
 }
-}
+} // namespace
 
 namespace topic_link_splitter {
 

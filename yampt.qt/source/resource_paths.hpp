@@ -2,8 +2,7 @@
 
 #include <string>
 
-namespace resource_paths
-{
+namespace resource_paths {
 
 // Shared read-only data
 // Linux: ~/.yampt/ -> /usr/share/yampt/ -> exe dir

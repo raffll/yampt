@@ -1,8 +1,8 @@
 #include "lua_tree_model.hpp"
 #include <conflict_types.hpp>
-#include <theme_system.hpp>
 #include <map>
 #include <set>
+#include <theme_system.hpp>
 #include <QBrush>
 #include <QString>
 
@@ -232,9 +232,7 @@ QVariant lua_tree_model_t::data_for_group(int row, int column, int role) const
 		if (column != 0)
 			return {};
 
-		return QString("%1 [%2]")
-		    .arg(QString::fromStdString(group.group_name))
-		    .arg(group.leaf_indices.size());
+		return QString("%1 [%2]").arg(QString::fromStdString(group.group_name)).arg(group.leaf_indices.size());
 	}
 
 	if ((role == Qt::ForegroundRole || role == Qt::BackgroundRole) && m_conflicts_mode)
@@ -343,9 +341,7 @@ QVariant lua_tree_model_t::severity_brush(conflict_severity_t severity, int role
 	return QBrush(theme_system_t::instance().conflict_this_foreground(conflict_this));
 }
 
-bool lua_tree_model_t::worst_severity_for_group(
-    const lua_group_t & group,
-    conflict_severity_t & out_severity) const
+bool lua_tree_model_t::worst_severity_for_group(const lua_group_t & group, conflict_severity_t & out_severity) const
 {
 	bool found = false;
 	int best_priority = 0;
@@ -373,8 +369,7 @@ bool lua_tree_model_t::worst_severity_for_group(
 	return found;
 }
 
-conflict_severity_t lua_tree_model_t::find_severity_for_registration(
-    const handler_registration_t & registration) const
+conflict_severity_t lua_tree_model_t::find_severity_for_registration(const handler_registration_t & registration) const
 {
 	for (const auto & conflict : m_scan_result.conflicts)
 	{

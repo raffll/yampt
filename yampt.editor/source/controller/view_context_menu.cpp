@@ -1,4 +1,3 @@
-#include <settings_store.hpp>
 #include "view_context_menu.hpp"
 #include "../session/merged_patch_name.hpp"
 #include "../session/plugin_session.hpp"
@@ -11,6 +10,7 @@
 #include <utility/record_behavior.hpp>
 #include <regex>
 #include <set>
+#include <settings_store.hpp>
 #include <string>
 #include <QAction>
 #include <QCoreApplication>
@@ -329,13 +329,14 @@ void view_context_menu_t::confirm_remove_record_from_plugin(const nav_tree_model
 	const auto & filename = m_session.scan().plugin_filename(info.plugin_idx);
 
 	const auto title = QCoreApplication::translate("yEditor", "Remove Record");
-	const auto message = QCoreApplication::translate(
-	                         "yEditor",
-	                         "Remove record %1:%2 from \"%3\"?\n\nThis cannot be undone. The record is dropped from the "
-	                         "plugin in memory and disappears from the file when you save it.")
-	                         .arg(QString::fromStdString(info.rec_type))
-	                         .arg(QString::fromStdString(info.record_id))
-	                         .arg(QString::fromStdString(filename));
+	const auto message =
+	    QCoreApplication::translate(
+	        "yEditor",
+	        "Remove record %1:%2 from \"%3\"?\n\nThis cannot be undone. The record is dropped from the "
+	        "plugin in memory and disappears from the file when you save it.")
+	        .arg(QString::fromStdString(info.rec_type))
+	        .arg(QString::fromStdString(info.record_id))
+	        .arg(QString::fromStdString(filename));
 
 	const auto choice =
 	    QMessageBox::question(nullptr, title, message, QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
@@ -375,9 +376,8 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 
 	const int plugin_idx = has_valid_column ? m_record_view.model()->column_plugin_indices()[col] : -1;
 
-	const int bin_idx = (has_valid_column && col < static_cast<int>(row.binary_ranges.size()))
-	                        ? row.binary_ranges[col].start
-	                        : -1;
+	const int bin_idx =
+	    (has_valid_column && col < static_cast<int>(row.binary_ranges.size())) ? row.binary_ranges[col].start : -1;
 
 	const auto kind = [&]() -> row_kind_t
 	{
@@ -448,7 +448,7 @@ void view_context_menu_t::build_sub_record_ignore_menu(QMenu & menu, const view_
 		menu.addSeparator();
 
 	const auto label = already_excluded ? QCoreApplication::translate("yEditor", "Include Sub-Record \"%1\"")
-	                                     : QCoreApplication::translate("yEditor", "Exclude Sub-Record \"%1\"");
+	                                    : QCoreApplication::translate("yEditor", "Exclude Sub-Record \"%1\"");
 
 	auto * action = menu.addAction(
 	    label.arg(QString::fromStdString(rule)),
@@ -510,8 +510,7 @@ field_binary_resolver::resolved_field_t view_context_menu_t::resolve_schema_fiel
 	return field_binary_resolver::resolve(ancestors, context.col, context.row.schema_field_index);
 }
 
-field_binary_resolver::resolved_bit_t view_context_menu_t::resolve_schema_bit(
-    const view_menu_context_t & context) const
+field_binary_resolver::resolved_bit_t view_context_menu_t::resolve_schema_bit(const view_menu_context_t & context) const
 {
 	std::vector<const view_tree_model_t::view_node_t *> ancestors;
 	QModelIndex ancestor_index = context.index.parent();
@@ -784,9 +783,9 @@ void view_context_menu_t::build_lock_menu(QMenu & menu, const view_menu_context_
 		menu.addSeparator();
 
 	const auto label = locked ? QCoreApplication::translate("yEditor", "Unlock in Merged Patch")
-	                           : QCoreApplication::translate("yEditor", "Lock in Merged Patch");
+	                          : QCoreApplication::translate("yEditor", "Lock in Merged Patch");
 
-	auto * action = can_lock ? menu.addAction(label, [this, lock]() { m_merge.toggle_active_lock(lock); })
-	                         : menu.addAction(label);
+	auto * action =
+	    can_lock ? menu.addAction(label, [this, lock]() { m_merge.toggle_active_lock(lock); }) : menu.addAction(label);
 	action->setEnabled(can_lock);
 }

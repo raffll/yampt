@@ -32,8 +32,8 @@ int decode_utf8(const unsigned char * bytes, int remaining, std::uint32_t & code
 	if ((lead & 0xF8) == 0xF0 && remaining >= 4 && (bytes[1] & 0xC0) == 0x80 && (bytes[2] & 0xC0) == 0x80 &&
 	    (bytes[3] & 0xC0) == 0x80)
 	{
-		code_point = ((lead & 0x07u) << 18) | ((bytes[1] & 0x3Fu) << 12) | ((bytes[2] & 0x3Fu) << 6) |
-		    (bytes[3] & 0x3Fu);
+		code_point =
+		    ((lead & 0x07u) << 18) | ((bytes[1] & 0x3Fu) << 12) | ((bytes[2] & 0x3Fu) << 6) | (bytes[3] & 0x3Fu);
 		return 4;
 	}
 

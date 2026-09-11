@@ -64,7 +64,8 @@ TEST_CASE("string_utils::to_lower_utf8, sharp s passes through", "[u]")
 
 TEST_CASE("string_utils::to_lower_utf8, idempotent", "[u]")
 {
-	const std::string mixed = "B\xC4\x84LMORA \xD0\xAF \xC3\x96" "dsee";
+	const std::string mixed = "B\xC4\x84LMORA \xD0\xAF \xC3\x96"
+	                          "dsee";
 	const auto once = string_utils::to_lower_utf8(mixed);
 	REQUIRE(string_utils::to_lower_utf8(once) == once);
 }
@@ -92,6 +93,11 @@ TEST_CASE("string_utils::case_insensitive_equal_utf8, accented", "[u]")
 {
 	REQUIRE(string_utils::case_insensitive_equal_utf8("B\xC4\x84lmora", "b\xC4\x85lmora") == true);
 	REQUIRE(string_utils::case_insensitive_equal_utf8("\xD0\x9C\xD0\xBE", "\xD0\xBC\xD0\xBE") == true);
-	REQUIRE(string_utils::case_insensitive_equal_utf8("\xC3\x96" "dsee", "\xC3\xB6" "dsee") == true);
+	REQUIRE(
+	    string_utils::case_insensitive_equal_utf8(
+	        "\xC3\x96"
+	        "dsee",
+	        "\xC3\xB6"
+	        "dsee") == true);
 	REQUIRE(string_utils::case_insensitive_equal_utf8("Balmora", "Vivec") == false);
 }

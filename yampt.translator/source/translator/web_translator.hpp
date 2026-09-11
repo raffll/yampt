@@ -4,10 +4,10 @@
 #include "web_translator_config.hpp"
 #include <functional>
 #include <string>
+#include <translation_example.hpp>
 #include <unordered_map>
 #include <vector>
 #include <QObject>
-#include <translation_example.hpp>
 
 class QNetworkAccessManager;
 class QNetworkReply;

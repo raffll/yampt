@@ -411,4 +411,3 @@ void view_tree_model_t::decode_hex_children(
 		parent_row.children.push_back(std::move(frow));
 	}
 }
-

@@ -279,9 +279,7 @@ void content_alignment_t::fill_key_indices(
 	}
 }
 
-void content_alignment_t::align(
-    alignment_context_t & context,
-    const std::vector<alignment_rule_t> & rules)
+void content_alignment_t::align(alignment_context_t & context, const std::vector<alignment_rule_t> & rules)
 {
 	collect_non_excluded(context.all_subs, context.col_count, rules, context.unified_slots, context.col_type_indices);
 
@@ -293,7 +291,8 @@ void content_alignment_t::align(
 		scan_groups(context.all_subs, context.col_count, rule, col_groups, all_keys, -1);
 
 		for (const auto & key : all_keys)
-			emit_key_slots(key, col_groups, context.col_count, rule, context.unified_slots, context.col_type_indices, -1);
+			emit_key_slots(
+			    key, col_groups, context.col_count, rule, context.unified_slots, context.col_type_indices, -1);
 	}
 }
 
@@ -374,9 +373,7 @@ void content_alignment_t::fit_merge_column(
 	}
 }
 
-void content_alignment_t::build_from_slot_result(
-    const slot_result_t & slot_result,
-    alignment_context_t & context)
+void content_alignment_t::build_from_slot_result(const slot_result_t & slot_result, alignment_context_t & context)
 {
 	for (const auto & aligned_slot : slot_result.aligned)
 		context.unified_slots.push_back({ aligned_slot.key.type, aligned_slot.key.occurrence });

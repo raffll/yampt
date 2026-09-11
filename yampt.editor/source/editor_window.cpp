@@ -168,13 +168,15 @@ void editor_window_t::setup_toolbar()
 	merge_btn->setText(tr("Create Merged Patch"));
 	merge_btn->setToolTip(tr("Create a merged patch from loaded plugins"));
 	toolbar->addWidget(merge_btn);
-	connect(merge_btn, &QToolButton::clicked, m_plugin_workspace_view, &plugin_workspace_view_t::on_create_merged_patch);
+	connect(
+	    merge_btn, &QToolButton::clicked, m_plugin_workspace_view, &plugin_workspace_view_t::on_create_merged_patch);
 
 	auto * new_plugin_btn = new QToolButton(this);
 	new_plugin_btn->setText(tr("New Plugin"));
 	new_plugin_btn->setToolTip(tr("Create an empty plugin and make it the active copy target"));
 	toolbar->addWidget(new_plugin_btn);
-	connect(new_plugin_btn, &QToolButton::clicked, m_plugin_workspace_view, &plugin_workspace_view_t::on_create_new_plugin);
+	connect(
+	    new_plugin_btn, &QToolButton::clicked, m_plugin_workspace_view, &plugin_workspace_view_t::on_create_new_plugin);
 
 	auto * clean_btn = new QToolButton(this);
 	clean_btn->setText(tr("Clean All"));
@@ -196,10 +198,7 @@ void editor_window_t::setup_toolbar()
 	m_conflicts_action->setChecked(m_plugin_workspace_view->is_conflicts_only());
 	m_conflicts_action->setToolTip(tr("Show only conflicting records"));
 	connect(
-	    m_conflicts_action,
-	    &QAction::toggled,
-	    m_plugin_workspace_view,
-	    &plugin_workspace_view_t::set_conflicts_only);
+	    m_conflicts_action, &QAction::toggled, m_plugin_workspace_view, &plugin_workspace_view_t::set_conflicts_only);
 
 	auto * conflicts_btn = new QToolButton(this);
 	conflicts_btn->setDefaultAction(m_conflicts_action);
@@ -247,7 +246,12 @@ void editor_window_t::setup_toolbar()
 
 	connect(m_search_field, &QLineEdit::returnPressed, this, &editor_window_t::on_search_apply);
 	connect(filter_btn, &QToolButton::clicked, m_plugin_workspace_view, &plugin_workspace_view_t::on_advanced_filter);
-	connect(m_no_filters_btn, &QToolButton::clicked, this, [this](bool checked) {
+	connect(
+	    m_no_filters_btn,
+	    &QToolButton::clicked,
+	    this,
+	    [this](bool checked)
+	{
 		if (checked)
 			on_reset_filters();
 		else

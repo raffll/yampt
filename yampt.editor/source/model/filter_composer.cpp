@@ -1,14 +1,12 @@
 #include "filter_composer.hpp"
-
 #include <scanner/conflict_enums.hpp>
 
-namespace filter_composer
-{
+namespace filter_composer {
 
 nav_tree_filter_t::filter_state_t compose_filter(
-	bool conflicts_only,
-	const nav_tree_filter_t::filter_state_t & advanced,
-	const nav_tree_filter_t::filter_state_t & search)
+    bool conflicts_only,
+    const nav_tree_filter_t::filter_state_t & advanced,
+    const nav_tree_filter_t::filter_state_t & search)
 {
 	auto result = advanced;
 
@@ -23,9 +21,9 @@ nav_tree_filter_t::filter_state_t compose_filter(
 		return result;
 
 	result.filter_conflict_all = true;
-	result.conflict_all_set = {conflict_all_t::conflict, conflict_all_t::override_benign};
+	result.conflict_all_set = { conflict_all_t::conflict, conflict_all_t::override_benign };
 
 	return result;
 }
 
-}
+} // namespace filter_composer

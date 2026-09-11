@@ -7,29 +7,28 @@
 #include <scanner/record_conflict.hpp>
 #include <algorithm>
 
-namespace
+namespace {
+const sub_record_view_t * find_slot_view(
+    const std::vector<std::vector<sub_record_view_t>> & all_subs,
+    const std::unordered_map<std::string, std::vector<size_t>> & type_index,
+    const sub_slot_t & slot,
+    size_t column)
 {
-	const sub_record_view_t * find_slot_view(
-	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
-	    const std::unordered_map<std::string, std::vector<size_t>> & type_index,
-	    const sub_slot_t & slot,
-	    size_t column)
-	{
-		if (column >= all_subs.size())
-			return nullptr;
+	if (column >= all_subs.size())
+		return nullptr;
 
-		auto it_type = type_index.find(slot.type);
-		if (it_type == type_index.end() || slot.occurrence < 0 ||
-		    slot.occurrence >= static_cast<int>(it_type->second.size()))
-			return nullptr;
+	auto it_type = type_index.find(slot.type);
+	if (it_type == type_index.end() || slot.occurrence < 0 ||
+	    slot.occurrence >= static_cast<int>(it_type->second.size()))
+		return nullptr;
 
-		const size_t idx = it_type->second[slot.occurrence];
-		if (idx == SIZE_MAX || idx >= all_subs[column].size())
-			return nullptr;
+	const size_t idx = it_type->second[slot.occurrence];
+	if (idx == SIZE_MAX || idx >= all_subs[column].size())
+		return nullptr;
 
-		return &all_subs[column][idx];
-	}
+	return &all_subs[column][idx];
 }
+} // namespace
 
 void view_tree_model_t::set_record_leveled(record_context_t & context, const conflict_entry_t & entry)
 {
@@ -201,8 +200,8 @@ void view_tree_model_t::set_record_dial(
 			const int plugin_idx = (col < m_column_plugin_indices.size()) ? m_column_plugin_indices[col] : -1;
 
 			const bool present = plugin_idx >= 0 &&
-			    plugin_idx < static_cast<int>(info_entry.present_in_plugin.size()) &&
-			    info_entry.present_in_plugin[plugin_idx];
+			                     plugin_idx < static_cast<int>(info_entry.present_in_plugin.size()) &&
+			                     info_entry.present_in_plugin[plugin_idx];
 
 			if (!present)
 			{
@@ -386,7 +385,9 @@ void view_tree_model_t::collect_leveled_entries(record_context_t & context, slot
 	rule.trailing_types = { "INTV" };
 	rule.key_source = alignment_rule_t::key_from_t::anchor;
 
-	alignment_context_t align_ctx { context.all_sub_records, context.col_count, build_ctx.unified_slots, build_ctx.col_type_indices };
+	alignment_context_t align_ctx {
+		context.all_sub_records, context.col_count, build_ctx.unified_slots, build_ctx.col_type_indices
+	};
 	content_alignment_t::align(align_ctx, { rule });
 }
 
@@ -398,7 +399,9 @@ void view_tree_model_t::collect_faction_entries(record_context_t & context, slot
 	rule.trailing_types = { "INTV" };
 	rule.key_source = alignment_rule_t::key_from_t::anchor;
 
-	alignment_context_t align_ctx { context.all_sub_records, context.col_count, build_ctx.unified_slots, build_ctx.col_type_indices };
+	alignment_context_t align_ctx {
+		context.all_sub_records, context.col_count, build_ctx.unified_slots, build_ctx.col_type_indices
+	};
 	content_alignment_t::align(align_ctx, { rule });
 }
 
@@ -416,7 +419,9 @@ void view_tree_model_t::collect_container_entries(record_context_t & context, sl
 	npcs_rule.anchor_size = 32;
 	npcs_rule.key_source = alignment_rule_t::key_from_t::anchor;
 
-	alignment_context_t align_ctx { context.all_sub_records, context.col_count, build_ctx.unified_slots, build_ctx.col_type_indices };
+	alignment_context_t align_ctx {
+		context.all_sub_records, context.col_count, build_ctx.unified_slots, build_ctx.col_type_indices
+	};
 	content_alignment_t::align(align_ctx, { npco_rule, npcs_rule });
 }
 
@@ -520,8 +525,7 @@ void view_tree_model_t::emit_faction_rows(record_context_t & context, slot_build
 
 	for (size_t i = 0; i < unified.size(); ++i)
 	{
-		const bool is_pair =
-		    (unified[i].type == "ANAM") && (i + 1 < unified.size()) && (unified[i + 1].type == "INTV");
+		const bool is_pair = (unified[i].type == "ANAM") && (i + 1 < unified.size()) && (unified[i + 1].type == "INTV");
 
 		if (!is_pair)
 		{
@@ -531,8 +535,7 @@ void view_tree_model_t::emit_faction_rows(record_context_t & context, slot_build
 		}
 
 		auto faction_row = build_slot_row(col_count, context.all_sub_records, build_ctx.col_type_indices, unified[i]);
-		auto value_row =
-		    build_slot_row(col_count, context.all_sub_records, build_ctx.col_type_indices, unified[i + 1]);
+		auto value_row = build_slot_row(col_count, context.all_sub_records, build_ctx.col_type_indices, unified[i + 1]);
 
 		view_node_t group_row;
 		group_row.type = "ANAM";
@@ -569,11 +572,11 @@ void view_tree_model_t::emit_faction_rows(record_context_t & context, slot_build
 		for (size_t col = 0; col < col_count; ++col)
 		{
 			const conflict_this_t faction_ct = (col < faction_row.cell_conflict_this.size())
-			    ? faction_row.cell_conflict_this[col]
-			    : conflict_this_t::unknown;
+			                                       ? faction_row.cell_conflict_this[col]
+			                                       : conflict_this_t::unknown;
 			const conflict_this_t value_ct = (col < value_row.cell_conflict_this.size())
-			    ? value_row.cell_conflict_this[col]
-			    : conflict_this_t::unknown;
+			                                     ? value_row.cell_conflict_this[col]
+			                                     : conflict_this_t::unknown;
 			group_row.cell_conflict_this[col] = std::max(faction_ct, value_ct);
 		}
 

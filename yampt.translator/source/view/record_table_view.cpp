@@ -1,7 +1,7 @@
 #include "record_table_view.hpp"
 #include "../model/record_table_model.hpp"
-#include <translation_example.hpp>
 #include <optional>
+#include <translation_example.hpp>
 #include <QAction>
 #include <QContextMenuEvent>
 #include <QHeaderView>
@@ -97,7 +97,10 @@ void record_table_view_t::set_context_menu_enabled(bool enabled)
 	m_context_menu_enabled = enabled;
 }
 
-void record_table_view_t::set_status_actions(QAction * copy_original, QAction * set_in_progress, QAction * set_translated)
+void record_table_view_t::set_status_actions(
+    QAction * copy_original,
+    QAction * set_in_progress,
+    QAction * set_translated)
 {
 	m_copy_original_action = copy_original;
 	m_set_in_progress_action = set_in_progress;

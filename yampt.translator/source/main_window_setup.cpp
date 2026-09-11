@@ -1,4 +1,3 @@
-#include <resource_paths.hpp>
 #include "dialog/dict_selection_dialog.hpp"
 #include "dialog/first_run_dialog.hpp"
 #include "dialog/spell_context_menu.hpp"
@@ -21,6 +20,7 @@
 #include "view/validation_view.hpp"
 #include <utility/string_utils.hpp>
 #include <algorithm>
+#include <resource_paths.hpp>
 #include <QAction>
 #include <QCoreApplication>
 #include <QDir>
@@ -462,8 +462,7 @@ void main_window_t::connect_menu_signals()
 #endif
 
 		const auto archive_name = QFileInfo(archive_path).completeBaseName();
-		const auto target_dir =
-		    QDir(QString::fromStdString(resource_paths::workspace_dir())).filePath(archive_name);
+		const auto target_dir = QDir(QString::fromStdString(resource_paths::workspace_dir())).filePath(archive_name);
 		QDir().mkpath(target_dir);
 
 		QProcess proc;
@@ -552,7 +551,6 @@ void main_window_t::connect_menu_signals()
 		rebuild_table();
 		advance_to_next_row();
 	});
-
 }
 
 void main_window_t::connect_sidebar_signals()

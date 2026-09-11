@@ -90,8 +90,8 @@ static void add_annotation_section(
 	{
 		const auto annotation = QString::fromStdString(entry.old_text + " \xe2\x86\x92 " + entry.new_text);
 		const auto source = entry.source.empty()
-		    ? QString()
-		    : QString::fromStdString(std::string(string_utils::extract_filename(entry.source)));
+		                        ? QString()
+		                        : QString::fromStdString(std::string(string_utils::extract_filename(entry.source)));
 
 		auto * item = new QTreeWidgetItem(tree, { annotation, source });
 		item->setData(column_annotation, Qt::UserRole, QString::fromStdString(entry.new_text));

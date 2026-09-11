@@ -6,8 +6,8 @@
 #include <functional>
 #include <memory>
 #include <string>
-#include <vector>
 #include <translation_example.hpp>
+#include <vector>
 #include <QWidget>
 
 class QComboBox;

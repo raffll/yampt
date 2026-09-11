@@ -2,8 +2,8 @@
 #include <editor/glossary.hpp>
 #include <highlighter/highlight_coordinator.hpp>
 #include <rapidcheck/catch.h>
-#include <rapidcheck.h>
 #include <algorithm>
+#include <rapidcheck.h>
 
 TEST_CASE("highlight_coordinator_t::find_annotation_highlights, position bounds", "[pbt]")
 {
@@ -81,12 +81,14 @@ TEST_CASE("highlight_coordinator_t::find_annotation_highlights, non-ASCII annota
 	entry.start = 0;
 	entry.end = 0;
 	entry.kind = annotation_t::glossary_term;
-	entry.old_text = "\xc3\x96" "dsee";
+	entry.old_text = "\xc3\x96"
+	                 "dsee";
 	entry.new_text = "lake";
 	entry.source = "test.json";
 	annotations.push_back(entry);
 
-	const std::string text_lower = "die \xc3\xb6" "dsee ist kalt";
+	const std::string text_lower = "die \xc3\xb6"
+	                               "dsee ist kalt";
 
 	highlight_request_t request;
 	request.annotations = &annotations;

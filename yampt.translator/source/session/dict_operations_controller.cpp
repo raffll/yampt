@@ -1,4 +1,3 @@
-#include <resource_paths.hpp>
 #include "dict_operations_controller.hpp"
 #include "../dialog/dict_selection_dialog.hpp"
 #include "../editor/edit_history.hpp"
@@ -12,12 +11,12 @@
 #include <utility/app_logger.hpp>
 #include <utility/string_utils.hpp>
 #include <filesystem>
+#include <resource_paths.hpp>
 #include <QCoreApplication>
 #include <QDateTime>
 #include <QDir>
 
-namespace
-{
+namespace {
 constexpr std::size_t minimum_tag_length = 3;
 
 bool is_whitespace_only(const std::string & text)
@@ -64,8 +63,8 @@ std::string build_apply_summary(const apply_tags_result_t & result, const std::s
 	app_logger_t::reset_log();
 	app_logger_t::add_log("[info] apply tags: reading inflections from \"" + top_path + "\"\r\n");
 	app_logger_t::add_log(
-	    "[info] apply tags: " + std::to_string(result.entries_changed) + " entries changed, "
-	    + std::to_string(result.tags_inserted) + " tags inserted\r\n");
+	    "[info] apply tags: " + std::to_string(result.entries_changed) + " entries changed, " +
+	    std::to_string(result.tags_inserted) + " tags inserted\r\n");
 
 	return app_logger_t::get_log();
 }
@@ -73,8 +72,7 @@ std::string build_apply_summary(const apply_tags_result_t & result, const std::s
 std::string build_remove_summary(const apply_tags_result_t & result)
 {
 	app_logger_t::reset_log();
-	app_logger_t::add_log(
-	    "[info] remove tags: " + std::to_string(result.entries_changed) + " entries changed\r\n");
+	app_logger_t::add_log("[info] remove tags: " + std::to_string(result.entries_changed) + " entries changed\r\n");
 
 	return app_logger_t::get_log();
 }
@@ -111,7 +109,9 @@ apply_tags_result_t process_info_record(tag_context_t context, std::size_t index
 	return { 1, tagged.tags_inserted };
 }
 
-std::vector<std::pair<std::string, std::string>> load_inflected_forms(const std::string & dict_path, codepage_t codepage)
+std::vector<std::pair<std::string, std::string>> load_inflected_forms(
+    const std::string & dict_path,
+    codepage_t codepage)
 {
 	const auto esm_name = loc_generator::derive_esm_name(dict_path);
 	const auto sep = dict_path.find_last_of("/\\");

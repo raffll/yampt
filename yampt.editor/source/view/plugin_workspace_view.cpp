@@ -86,12 +86,10 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 
 	m_merge_controller->set_refresh_callback([this]() { refresh_all_views(); });
 
-	m_merge_controller->set_lock_changed_callback(
-	    [this](const std::string & rec_type, const std::string & record_id)
+	m_merge_controller->set_lock_changed_callback([this](const std::string & rec_type, const std::string & record_id)
 	{ on_merge_lock_changed(rec_type, record_id); });
 
-	m_merge_controller->set_record_removal_callback(
-	    [this](const record_removal_record_t & removal)
+	m_merge_controller->set_record_removal_callback([this](const record_removal_record_t & removal)
 	{
 		m_edit_history.record_record_removal(removal);
 		m_history_view->update_history(m_edit_history.entries());
@@ -99,8 +97,8 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 
 	m_merge_controller->set_progress_callback([this](int done, int total) { update_progress(done, total); });
 
-	m_merge_controller->set_phase_callback(
-	    [this](const std::string & label) { set_progress_phase(QString::fromStdString(label)); });
+	m_merge_controller->set_phase_callback([this](const std::string & label)
+	{ set_progress_phase(QString::fromStdString(label)); });
 
 	m_context_menu = new view_context_menu_t(
 	    *m_session,
@@ -204,11 +202,7 @@ void plugin_workspace_view_t::setup_connections()
 		m_history_view->update_history(m_edit_history.entries());
 	});
 
-	connect(
-	    m_preview,
-	    &preview_view_t::edit_committed,
-	    this,
-	    [this]() { refresh_all_views(); });
+	connect(m_preview, &preview_view_t::edit_committed, this, [this]() { refresh_all_views(); });
 
 	connect(
 	    m_preview,
@@ -319,8 +313,8 @@ void plugin_workspace_view_t::on_load_openmw_cfg()
 QMessageBox::StandardButton plugin_workspace_view_t::prompt_unsaved(bool allow_discard)
 {
 	const auto title = QCoreApplication::translate("yEditor", "Unsaved Changes");
-	const auto text = QCoreApplication::translate(
-	    "yEditor", "Some plugins have unsaved changes. Save them before continuing?");
+	const auto text =
+	    QCoreApplication::translate("yEditor", "Some plugins have unsaved changes. Save them before continuing?");
 
 	auto buttons = QMessageBox::Save | QMessageBox::Cancel;
 	if (allow_discard)
@@ -404,12 +398,7 @@ void plugin_workspace_view_t::on_create_new_plugin()
 
 	bool accepted = false;
 	const auto entered = QInputDialog::getText(
-	    this,
-	    tr("New Plugin"),
-	    tr("Plugin file name:"),
-	    QLineEdit::Normal,
-	    tr("New Plugin.esp"),
-	    &accepted);
+	    this, tr("New Plugin"), tr("Plugin file name:"), QLineEdit::Normal, tr("New Plugin.esp"), &accepted);
 
 	if (!accepted)
 		return;

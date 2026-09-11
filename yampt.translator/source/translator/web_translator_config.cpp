@@ -84,7 +84,9 @@ const std::string & web_translator_config::default_system_prompt()
 	return prompt;
 }
 
-web_translator_config_t web_translator_config::parse_string(const std::string & json_content, const std::string & identifier)
+web_translator_config_t web_translator_config::parse_string(
+    const std::string & json_content,
+    const std::string & identifier)
 {
 	auto document = QJsonDocument::fromJson(QByteArray::fromStdString(json_content));
 	if (!document.isObject())

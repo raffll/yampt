@@ -1,6 +1,6 @@
 #include <catch2/catch_all.hpp>
-#include <model/loc_document.hpp>
 #include <io/codepage.hpp>
+#include <model/loc_document.hpp>
 #include <filesystem>
 #include <fstream>
 #include <string>

@@ -9,7 +9,9 @@ TEST_CASE("filter_composer::compose_filter, shortcut only sets conflict all", "[
 	const auto result = filter_composer::compose_filter(true, advanced, search);
 
 	REQUIRE(result.filter_conflict_all == true);
-	REQUIRE(result.conflict_all_set == std::set<conflict_all_t>{ conflict_all_t::conflict, conflict_all_t::override_benign });
+	REQUIRE(
+	    result.conflict_all_set ==
+	    std::set<conflict_all_t> { conflict_all_t::conflict, conflict_all_t::override_benign });
 	REQUIRE(result.filter_conflict_this == false);
 	REQUIRE(result.filter_by_type == false);
 	REQUIRE(result.filter_by_id == false);
@@ -30,7 +32,7 @@ TEST_CASE("filter_composer::compose_filter, advanced conflict all preserved when
 	const auto result = filter_composer::compose_filter(false, advanced, search);
 
 	REQUIRE(result.filter_conflict_all == true);
-	REQUIRE(result.conflict_all_set == std::set<conflict_all_t>{ conflict_all_t::conflict });
+	REQUIRE(result.conflict_all_set == std::set<conflict_all_t> { conflict_all_t::conflict });
 }
 
 TEST_CASE("filter_composer::compose_filter, shortcut overrides advanced conflict all while other dims survive", "[u]")
@@ -48,11 +50,15 @@ TEST_CASE("filter_composer::compose_filter, shortcut overrides advanced conflict
 	const auto result = filter_composer::compose_filter(true, advanced, search);
 
 	REQUIRE(result.filter_conflict_all == true);
-	REQUIRE(result.conflict_all_set == std::set<conflict_all_t>{ conflict_all_t::conflict, conflict_all_t::override_benign });
+	REQUIRE(
+	    result.conflict_all_set ==
+	    std::set<conflict_all_t> { conflict_all_t::conflict, conflict_all_t::override_benign });
 	REQUIRE(result.filter_conflict_this == true);
-	REQUIRE(result.conflict_this_set == std::set<conflict_this_t>{ conflict_this_t::master, conflict_this_t::override_wins });
+	REQUIRE(
+	    result.conflict_this_set ==
+	    std::set<conflict_this_t> { conflict_this_t::master, conflict_this_t::override_wins });
 	REQUIRE(result.filter_by_type == true);
-	REQUIRE(result.type_set == std::set<std::string>{ "CELL", "NPC_" });
+	REQUIRE(result.type_set == std::set<std::string> { "CELL", "NPC_" });
 }
 
 TEST_CASE("filter_composer::compose_filter, advanced and search fields both present", "[u]")
@@ -69,7 +75,7 @@ TEST_CASE("filter_composer::compose_filter, advanced and search fields both pres
 	const auto result = filter_composer::compose_filter(false, advanced, search);
 
 	REQUIRE(result.filter_by_type == true);
-	REQUIRE(result.type_set == std::set<std::string>{ "ARMO" });
+	REQUIRE(result.type_set == std::set<std::string> { "ARMO" });
 	REQUIRE(result.filter_by_id == true);
 	REQUIRE(result.id_text == "iron");
 	REQUIRE(result.search_case_sensitive == true);
@@ -82,5 +88,5 @@ TEST_CASE("filter_composer::compose_filter, all empty equals default constructed
 
 	const auto result = filter_composer::compose_filter(false, advanced, search);
 
-	REQUIRE(result == nav_tree_filter_t::filter_state_t{});
+	REQUIRE(result == nav_tree_filter_t::filter_state_t {});
 }

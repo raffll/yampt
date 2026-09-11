@@ -2,11 +2,11 @@
 
 #include "../controller/merge_controller.hpp"
 #include "../controller/view_context_menu.hpp"
+#include "../model/edit_log.hpp"
 #include "../model/editable_column_set.hpp"
 #include "../model/lua_tree_model.hpp"
 #include "../model/nav_tree_model.hpp"
 #include "../session/plugin_session.hpp"
-#include "../model/edit_log.hpp"
 #include "history_view.hpp"
 #include "lua_tree_view.hpp"
 #include "messages_view.hpp"
@@ -70,8 +70,15 @@ public:
 
 	bool confirm_discard_or_save_unsaved();
 
-	QWidget * sidebar_widget() const { return m_nav_tabs; }
-	QWidget * bottom_panel_widget() const { return m_bottom_tabs; }
+	QWidget * sidebar_widget() const
+	{
+		return m_nav_tabs;
+	}
+
+	QWidget * bottom_panel_widget() const
+	{
+		return m_bottom_tabs;
+	}
 
 	void set_preview_scroll_sync(bool enabled);
 

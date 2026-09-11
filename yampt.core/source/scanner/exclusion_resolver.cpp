@@ -1,25 +1,24 @@
 #include "exclusion_resolver.hpp"
 
-namespace exclusion_resolver
+namespace exclusion_resolver {
+std::string regex_escape_literal(const std::string & id)
 {
-	std::string regex_escape_literal(const std::string & id)
+	static const std::string metacharacters = "\\^$.|?*+()[]{}";
+
+	std::string result;
+	result.reserve(id.size() * 2);
+
+	for (const auto character : id)
 	{
-		static const std::string metacharacters = "\\^$.|?*+()[]{}";
+		if (metacharacters.find(character) != std::string::npos)
+			result += '\\';
 
-		std::string result;
-		result.reserve(id.size() * 2);
-
-		for (const auto character : id)
-		{
-			if (metacharacters.find(character) != std::string::npos)
-				result += '\\';
-
-			result += character;
-		}
-
-		return result;
+		result += character;
 	}
+
+	return result;
 }
+} // namespace exclusion_resolver
 
 void exclusion_resolver_t::set_pattern(const std::string & pattern)
 {

@@ -1,4 +1,3 @@
-#include <resource_paths.hpp>
 #include "operation_executor.hpp"
 #include <converter/esm_converter.hpp>
 #include <creator/dict_creator.hpp>
@@ -9,6 +8,7 @@
 #include <algorithm>
 #include <chrono>
 #include <filesystem>
+#include <resource_paths.hpp>
 #include <QCoreApplication>
 #include <QDateTime>
 #include <QDir>
@@ -21,7 +21,8 @@ std::string operation_executor_t::make_output_path(const std::string & source_pa
 	return make_output_path_from_name(base_name, ext);
 }
 
-std::string operation_executor_t::make_output_path_from_name(const std::string & base_name, const std::string & ext) const
+std::string operation_executor_t::make_output_path_from_name(const std::string & base_name, const std::string & ext)
+    const
 {
 	const auto dir = get_output_dir();
 

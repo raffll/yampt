@@ -341,8 +341,8 @@ void cell_matcher_t::match_interior_cells()
 		else
 			app_logger_t::add_log(
 			    "[warning] missing CELL \"" + cell_name +
-			    "\": no interior cell with matching contents; unmatched native candidates: " +
-			    m_native_candidates_str + "\r\n");
+			    "\": no interior cell with matching contents; unmatched native candidates: " + m_native_candidates_str +
+			    "\r\n");
 	}
 
 	add_missing_cells(missing_cells, m_native_candidates_str);

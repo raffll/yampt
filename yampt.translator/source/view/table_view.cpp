@@ -2,9 +2,9 @@
 #include "../model/record_table_model.hpp"
 #include "filter_tree_view.hpp"
 #include "status_filter_view.hpp"
+#include <utility/string_utils.hpp>
 #include <QAbstractButton>
 #include <QCoreApplication>
-#include <utility/string_utils.hpp>
 #include <QLabel>
 #include <QLineEdit>
 #include <QString>

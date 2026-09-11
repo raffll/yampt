@@ -1,5 +1,4 @@
 #include <catch2/catch_all.hpp>
-
 #include <model/field_binary_resolver.hpp>
 
 using view_node_t = view_tree_model_t::view_node_t;

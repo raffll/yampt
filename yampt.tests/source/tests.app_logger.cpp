@@ -43,4 +43,3 @@ TEST_CASE("app_logger_t::add_log, silent messages visible when debug on", "[u]")
 	REQUIRE(app_logger_t::get_log() == "[debug] visible\r\n");
 	app_logger_t::set_debug(false);
 }
-

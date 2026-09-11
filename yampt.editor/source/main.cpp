@@ -1,5 +1,5 @@
-#include <resource_paths.hpp>
 #include "editor_window.hpp"
+#include <resource_paths.hpp>
 #include <settings_store.hpp>
 #include <theme_system.hpp>
 #include <QApplication>

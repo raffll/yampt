@@ -168,12 +168,7 @@ std::string sub_record_merge_t::merge_bytes_three_way(
 	return result;
 }
 
-static bool field_range_differs(
-    const char * lhs,
-    const char * rhs,
-    size_t offset,
-    size_t length,
-    size_t data_size)
+static bool field_range_differs(const char * lhs, const char * rhs, size_t offset, size_t length, size_t data_size)
 {
 	if (offset + length > data_size)
 		return false;
@@ -764,8 +759,12 @@ void sub_record_merge_t::merge_winner_armor_groups(
 			if (it_inter == inter_map.end())
 				continue;
 
-			apply_intermediate(merged_subs, it_first->second.sub_records, it_inter->second.sub_records,
-			    winner_group.sub_records, "ARMO");
+			apply_intermediate(
+			    merged_subs,
+			    it_first->second.sub_records,
+			    it_inter->second.sub_records,
+			    winner_group.sub_records,
+			    "ARMO");
 		}
 
 		merged_groups.push_back({ armor_index, std::move(merged_subs) });

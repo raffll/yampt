@@ -222,6 +222,7 @@ std::string format_value_full(const char * data, size_t size, codepage_t codepag
 
 	return hex_output;
 }
+
 static std::string format_flags(uint32_t value, const field_def_t & field, int max_bits)
 {
 	if (field.flag_names && field.flag_count > 0)

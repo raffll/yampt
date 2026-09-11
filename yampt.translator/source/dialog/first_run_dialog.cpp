@@ -1,7 +1,7 @@
-#include <resource_paths.hpp>
 #include "first_run_dialog.hpp"
 #include <utility/language_config.hpp>
 #include <algorithm>
+#include <resource_paths.hpp>
 #include <QComboBox>
 #include <QCoreApplication>
 #include <QDialogButtonBox>
@@ -19,8 +19,7 @@ first_run_dialog_t::first_run_dialog_t(QWidget * parent)
 
 	auto * combo_layout = new QHBoxLayout;
 
-	auto languages =
-	    language_config::load(resource_paths::languages_file());
+	auto languages = language_config::load(resource_paths::languages_file());
 	std::sort(
 	    languages.begin(),
 	    languages.end(),

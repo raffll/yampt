@@ -1,9 +1,9 @@
-#include <resource_paths.hpp>
 #include "translator_settings_dialog.hpp"
 #include "appearance_settings_view.hpp"
 #include "language_settings_view.hpp"
 #include "shortcuts_settings_view.hpp"
 #include "translation_settings_view.hpp"
+#include <resource_paths.hpp>
 #include <settings_store.hpp>
 #include <QCoreApplication>
 #include <QDialogButtonBox>

@@ -1,5 +1,4 @@
 #include "phrase_form_builder.hpp"
-
 #include <unordered_set>
 
 namespace phrase_form_builder {
@@ -91,7 +90,8 @@ std::vector<std::string> build_phrase_forms(
 		results.push_back(std::move(joined));
 		if (static_cast<int>(results.size()) >= max_phrase_forms)
 			return results;
-	} while (advance_indices(indices, per_word_candidate_forms));
+	}
+	while (advance_indices(indices, per_word_candidate_forms));
 
 	return results;
 }

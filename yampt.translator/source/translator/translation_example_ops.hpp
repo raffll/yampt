@@ -1,9 +1,8 @@
 #pragma once
 
 #include <string>
-#include <vector>
-
 #include <translation_example.hpp>
+#include <vector>
 
 namespace translation_example_ops {
 

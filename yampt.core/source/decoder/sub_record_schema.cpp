@@ -552,8 +552,8 @@ static const field_def_t land_binary_fields[] = {
 
 static const char * const info_gender[] = { "Male", "Female", nullptr };
 
-static const char * const info_rank_names[] = { "Rank 0", "Rank 1", "Rank 2", "Rank 3", "Rank 4",
-	                                            "Rank 5", "Rank 6", "Rank 7", "Rank 8", "Rank 9", nullptr };
+static const char * const info_rank_names[] = { "Rank 0", "Rank 1", "Rank 2", "Rank 3", "Rank 4", "Rank 5",
+	                                            "Rank 6", "Rank 7", "Rank 8", "Rank 9", nullptr };
 
 static const char * const info_types[] = { "Topic", "Voice", "Greeting", "Persuasion", "Journal", nullptr };
 
@@ -570,18 +570,27 @@ static const field_def_t info_scvr_fields[] = {
 };
 
 static const field_def_t regn_weat_fields[] = {
-	{ "Clear", field_type_t::u8, 0, 1, nullptr, nullptr, 0, nullptr }, { "Cloudy", field_type_t::u8, 1, 1, nullptr, nullptr, 0, nullptr },
-	{ "Foggy", field_type_t::u8, 2, 1, nullptr, nullptr, 0, nullptr }, { "Overcast", field_type_t::u8, 3, 1, nullptr, nullptr, 0, nullptr },
-	{ "Rain", field_type_t::u8, 4, 1, nullptr, nullptr, 0, nullptr },  { "Thunder", field_type_t::u8, 5, 1, nullptr, nullptr, 0, nullptr },
-	{ "Ash", field_type_t::u8, 6, 1, nullptr, nullptr, 0, nullptr },   { "Blight", field_type_t::u8, 7, 1, nullptr, nullptr, 0, nullptr },
+	{ "Clear", field_type_t::u8, 0, 1, nullptr, nullptr, 0, nullptr },
+	{ "Cloudy", field_type_t::u8, 1, 1, nullptr, nullptr, 0, nullptr },
+	{ "Foggy", field_type_t::u8, 2, 1, nullptr, nullptr, 0, nullptr },
+	{ "Overcast", field_type_t::u8, 3, 1, nullptr, nullptr, 0, nullptr },
+	{ "Rain", field_type_t::u8, 4, 1, nullptr, nullptr, 0, nullptr },
+	{ "Thunder", field_type_t::u8, 5, 1, nullptr, nullptr, 0, nullptr },
+	{ "Ash", field_type_t::u8, 6, 1, nullptr, nullptr, 0, nullptr },
+	{ "Blight", field_type_t::u8, 7, 1, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t regn_weat_10_fields[] = {
-	{ "Clear", field_type_t::u8, 0, 1, nullptr, nullptr, 0, nullptr }, { "Cloudy", field_type_t::u8, 1, 1, nullptr, nullptr, 0, nullptr },
-	{ "Foggy", field_type_t::u8, 2, 1, nullptr, nullptr, 0, nullptr }, { "Overcast", field_type_t::u8, 3, 1, nullptr, nullptr, 0, nullptr },
-	{ "Rain", field_type_t::u8, 4, 1, nullptr, nullptr, 0, nullptr },  { "Thunder", field_type_t::u8, 5, 1, nullptr, nullptr, 0, nullptr },
-	{ "Ash", field_type_t::u8, 6, 1, nullptr, nullptr, 0, nullptr },   { "Blight", field_type_t::u8, 7, 1, nullptr, nullptr, 0, nullptr },
-	{ "Snow", field_type_t::u8, 8, 1, nullptr, nullptr, 0, nullptr },  { "Blizzard", field_type_t::u8, 9, 1, nullptr, nullptr, 0, nullptr },
+	{ "Clear", field_type_t::u8, 0, 1, nullptr, nullptr, 0, nullptr },
+	{ "Cloudy", field_type_t::u8, 1, 1, nullptr, nullptr, 0, nullptr },
+	{ "Foggy", field_type_t::u8, 2, 1, nullptr, nullptr, 0, nullptr },
+	{ "Overcast", field_type_t::u8, 3, 1, nullptr, nullptr, 0, nullptr },
+	{ "Rain", field_type_t::u8, 4, 1, nullptr, nullptr, 0, nullptr },
+	{ "Thunder", field_type_t::u8, 5, 1, nullptr, nullptr, 0, nullptr },
+	{ "Ash", field_type_t::u8, 6, 1, nullptr, nullptr, 0, nullptr },
+	{ "Blight", field_type_t::u8, 7, 1, nullptr, nullptr, 0, nullptr },
+	{ "Snow", field_type_t::u8, 8, 1, nullptr, nullptr, 0, nullptr },
+	{ "Blizzard", field_type_t::u8, 9, 1, nullptr, nullptr, 0, nullptr },
 };
 
 static const char * const spell_types[] = { "Spell", "Ability", "Blight", "Disease", "Curse", "Power", nullptr };

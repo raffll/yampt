@@ -763,8 +763,7 @@ TEST_CASE("sub_record_merge_t::merge, 4 versions mixed layout skips 12-byte inte
 	npdt_winner[npdt_52_gold_offset] = 100;
 
 	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_first);
-	auto subs_inter_autocalc =
-	    make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_inter_autocalc);
+	auto subs_inter_autocalc = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_inter_autocalc);
 	auto subs_inter_explicit = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_inter_explicit);
 	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_winner);
 
@@ -799,8 +798,7 @@ TEST_CASE("sub_record_merge_t::merge, 4 versions 12-byte base with mixed layouts
 	npdt_winner[npdt_12_gold_offset] = 30;
 
 	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_first);
-	auto subs_inter_autocalc =
-	    make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_inter_autocalc);
+	auto subs_inter_autocalc = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_inter_autocalc);
 	auto subs_inter_explicit = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_inter_explicit);
 	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_winner);
 
@@ -1351,8 +1349,8 @@ TEST_CASE("sub_record_merge_t::filter_sub_records_by_rules, drops specific ignor
 
 TEST_CASE("sub_record_merge_t::filter_sub_records_by_rules, wildcard drops all matching types", "[u]")
 {
-	const auto content = make_record(
-	    "LTEX", make_sub("NAME", make_string("AI_Grass_Dirt")) + make_sub("INTV", make_uint32(36)));
+	const auto content =
+	    make_record("LTEX", make_sub("NAME", make_string("AI_Grass_Dirt")) + make_sub("INTV", make_uint32(36)));
 
 	const auto filtered = sub_record_merge_t::filter_sub_records_by_rules("LTEX", content, { "LTEX:*" });
 
@@ -1362,8 +1360,8 @@ TEST_CASE("sub_record_merge_t::filter_sub_records_by_rules, wildcard drops all m
 
 TEST_CASE("sub_record_merge_t::filter_sub_records_by_rules, rule for other record type is ignored", "[u]")
 {
-	const auto content = make_record(
-	    "LTEX", make_sub("NAME", make_string("AI_Grass_Dirt")) + make_sub("INTV", make_uint32(36)));
+	const auto content =
+	    make_record("LTEX", make_sub("NAME", make_string("AI_Grass_Dirt")) + make_sub("INTV", make_uint32(36)));
 
 	const auto filtered = sub_record_merge_t::filter_sub_records_by_rules("LTEX", content, { "CELL:INTV" });
 
@@ -1378,8 +1376,7 @@ TEST_CASE("sub_record_merge_t::filter_sub_records_by_rules, excluded winner filt
 	        make_sub("DATA", make_string("Tx_AI_grass_dirt_01.tga")));
 
 	const auto merge_after_filter = sub_record_merge_t::reconstruct_record(
-	    winner,
-	    { { "NAME", make_string("AI_Grass_Dirt") }, { "DATA", make_string("Tx_AI_grass_dirt_01.tga") } });
+	    winner, { { "NAME", make_string("AI_Grass_Dirt") }, { "DATA", make_string("Tx_AI_grass_dirt_01.tga") } });
 
 	const auto filtered_winner = sub_record_merge_t::filter_sub_records_by_rules("LTEX", winner, { "LTEX:INTV" });
 
@@ -1390,8 +1387,7 @@ TEST_CASE("sub_record_merge_t::filter_sub_records_by_rules, reference-group sub-
 {
 	const auto content = make_record(
 	    "CELL",
-	    make_sub("NAME", make_string("Balmora")) + make_sub("FRMR", make_uint32(1)) +
-	        make_sub("INTV", make_uint32(5)));
+	    make_sub("NAME", make_string("Balmora")) + make_sub("FRMR", make_uint32(1)) + make_sub("INTV", make_uint32(5)));
 
 	const auto filtered = sub_record_merge_t::filter_sub_records_by_rules("CELL", content, { "CELL:INTV" });
 
@@ -1439,12 +1435,8 @@ static uint32_t read_aodt_field(const std::string & record_content, size_t field
 TEST_CASE("sub_record_merge_t::merge, highest-priority intermediate field change wins when winner reverted", "[u]")
 {
 	std::vector<std::string> versions = {
-		make_armo(5000, 900, 500, 70),
-		make_armo(5000, 900, 500, 40),
-		make_armo(9500, 575, 400, 50),
-		make_armo(9500, 575, 400, 50),
-		make_armo(5000, 900, 500, 70),
-		make_armo(5000, 900, 500, 70),
+		make_armo(5000, 900, 500, 70), make_armo(5000, 900, 500, 40), make_armo(9500, 575, 400, 50),
+		make_armo(9500, 575, 400, 50), make_armo(5000, 900, 500, 70), make_armo(5000, 900, 500, 70),
 	};
 
 	merge_input_t input;
@@ -1466,7 +1458,10 @@ static std::string make_indx(uint32_t armor_index)
 	return make_sub("INDX", make_uint32(armor_index));
 }
 
-static bool has_contiguous_part(const std::string & content, uint32_t armor_index, const std::string & member_type,
+static bool has_contiguous_part(
+    const std::string & content,
+    uint32_t armor_index,
+    const std::string & member_type,
     const std::string & member_value)
 {
 	const auto subs = sub_record_merge_t::parse_sub_records(content);
@@ -1521,13 +1516,13 @@ TEST_CASE("sub_record_merge_t::merge, ARMO per-part CNAM has no cross-group coll
 	const auto header = make_sub("NAME", make_string("full_suit")) + make_sub("AODT", std::string(24, '\0'));
 
 	const auto part_a_first = make_indx(1) + make_sub("BNAM", make_string("a_helm"));
-	const auto part_b_first = make_indx(2) + make_sub("BNAM", make_string("a_boots")) +
-	                          make_sub("CNAM", make_string("a_boots_f"));
+	const auto part_b_first =
+	    make_indx(2) + make_sub("BNAM", make_string("a_boots")) + make_sub("CNAM", make_string("a_boots_f"));
 
 	auto first = make_record("ARMO", header + part_a_first + part_b_first);
 
-	const auto part_a_inter = make_indx(1) + make_sub("BNAM", make_string("a_helm")) +
-	                          make_sub("CNAM", make_string("a_helm_f"));
+	const auto part_a_inter =
+	    make_indx(1) + make_sub("BNAM", make_string("a_helm")) + make_sub("CNAM", make_string("a_helm_f"));
 	auto inter = make_record("ARMO", header + part_a_inter + part_b_first);
 
 	auto winner = make_record("ARMO", header + part_a_first + part_b_first);
@@ -1555,8 +1550,8 @@ TEST_CASE("sub_record_merge_t::merge, CLOT CNAM stays in its part with INDX-only
 
 	auto first = make_record(
 	    "CLOT",
-	    header + make_indx(cuirass) + make_sub("BNAM", make_string("c_m_robe_common_02h")) +
-	        make_indx(right_ankle) + make_sub("BNAM", make_string("c_m_robe_common_02h")));
+	    header + make_indx(cuirass) + make_sub("BNAM", make_string("c_m_robe_common_02h")) + make_indx(right_ankle) +
+	        make_sub("BNAM", make_string("c_m_robe_common_02h")));
 
 	auto inter = make_record(
 	    "CLOT",
@@ -1566,8 +1561,8 @@ TEST_CASE("sub_record_merge_t::merge, CLOT CNAM stays in its part with INDX-only
 
 	auto winner = make_record(
 	    "CLOT",
-	    header + make_indx(cuirass) + make_sub("BNAM", make_string("c_m_robe_common_02h")) +
-	        make_indx(right_ankle) + make_sub("BNAM", make_string("c_m_robe_common_02h")));
+	    header + make_indx(cuirass) + make_sub("BNAM", make_string("c_m_robe_common_02h")) + make_indx(right_ankle) +
+	        make_sub("BNAM", make_string("c_m_robe_common_02h")));
 
 	merge_input_t input;
 	input.rec_type = "CLOT";
@@ -1610,9 +1605,12 @@ static uint32_t read_npdt_u32(const std::string & record_content, size_t field_o
 
 TEST_CASE("sub_record_merge_t::merge, CREA attack pair merges as 4-byte fields", "[u]")
 {
-	auto first = make_record("CREA", make_sub("NAME", make_string("beast")) + make_sub("NPDT", make_crea_npdt(10, 1, 10)));
-	auto inter = make_record("CREA", make_sub("NAME", make_string("beast")) + make_sub("NPDT", make_crea_npdt(45, 15, 45)));
-	auto winner = make_record("CREA", make_sub("NAME", make_string("beast")) + make_sub("NPDT", make_crea_npdt(10, 1, 10)));
+	auto first =
+	    make_record("CREA", make_sub("NAME", make_string("beast")) + make_sub("NPDT", make_crea_npdt(10, 1, 10)));
+	auto inter =
+	    make_record("CREA", make_sub("NAME", make_string("beast")) + make_sub("NPDT", make_crea_npdt(45, 15, 45)));
+	auto winner =
+	    make_record("CREA", make_sub("NAME", make_string("beast")) + make_sub("NPDT", make_crea_npdt(10, 1, 10)));
 
 	merge_input_t input;
 	input.rec_type = "CREA";
@@ -1668,8 +1666,8 @@ TEST_CASE("sub_record_merge_t::group_members_in_range, later appended member doe
 
 TEST_CASE("sub_record_merge_t::group_members_in_range, out of range end yields empty", "[u]")
 {
-	const auto content = make_record(
-	    "ARMO", make_sub("NAME", make_string("armor_id")) + make_sub("INDX", make_uint32(0)));
+	const auto content =
+	    make_record("ARMO", make_sub("NAME", make_string("armor_id")) + make_sub("INDX", make_uint32(0)));
 
 	REQUIRE(sub_record_merge_t::group_members_in_range(content, 0, 5).empty());
 }

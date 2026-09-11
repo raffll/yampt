@@ -162,8 +162,7 @@ void plugin_scan_t::rebuild_conflicts(const conflict_progress_fn_t & progress_fn
 		std::sort(
 		    entry.versions.begin(),
 		    entry.versions.end(),
-		    [](const record_version_t & lhs, const record_version_t & rhs)
-		{ return lhs.plugin_idx < rhs.plugin_idx; });
+		    [](const record_version_t & lhs, const record_version_t & rhs) { return lhs.plugin_idx < rhs.plugin_idx; });
 
 		if (entry.versions.size() >= 2)
 			compute_conflict(entry);

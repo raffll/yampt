@@ -1,6 +1,5 @@
 #include <catch2/catch_all.hpp>
 #include <utility/case_fold.hpp>
-
 #include <cstdint>
 
 static int utf8_length(std::uint32_t code_point)

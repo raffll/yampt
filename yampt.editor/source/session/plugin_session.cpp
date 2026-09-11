@@ -250,8 +250,7 @@ void plugin_session_t::restore_session_state(const QString & ini_path)
 void plugin_session_t::restore_active_plugin(const std::string & active_path)
 {
 	auto separator_pos = active_path.find_last_of("/\\");
-	const auto filename =
-	    (separator_pos != std::string::npos) ? active_path.substr(separator_pos + 1) : active_path;
+	const auto filename = (separator_pos != std::string::npos) ? active_path.substr(separator_pos + 1) : active_path;
 
 	for (int i = 0; i < static_cast<int>(m_scan.plugin_count()); ++i)
 	{
@@ -405,9 +404,7 @@ void plugin_session_t::load_plugins_internal(const std::vector<std::string> & pa
 			filename = filename.substr(pos + 1);
 
 		emit load_phase(
-		    QCoreApplication::translate("yEditor", "Loading %1")
-		        .arg(QString::fromStdString(filename))
-		        .toStdString());
+		    QCoreApplication::translate("yEditor", "Loading %1").arg(QString::fromStdString(filename)).toStdString());
 
 		if (!QFile::exists(QString::fromStdString(path)))
 		{
@@ -429,8 +426,8 @@ void plugin_session_t::load_plugins_internal(const std::vector<std::string> & pa
 			{
 				const auto & idx = m_scan.index(loaded_idx);
 				emit log_message(
-				    "[info] loaded " + m_scan.plugin_filename(loaded_idx) + " (" + std::to_string(idx.entries().size()) +
-				    " records indexed)");
+				    "[info] loaded " + m_scan.plugin_filename(loaded_idx) + " (" +
+				    std::to_string(idx.entries().size()) + " records indexed)");
 			}
 		}
 		catch (const std::exception & exception)
@@ -444,8 +441,8 @@ void plugin_session_t::load_plugins_internal(const std::vector<std::string> & pa
 
 	emit load_phase(QCoreApplication::translate("yEditor", "Computing conflicts...").toStdString());
 	emit load_progress(0, 1);
-	m_scan.rebuild_conflicts(
-	    [this](size_t done, size_t total) { emit load_progress(static_cast<int>(done), static_cast<int>(total)); });
+	m_scan.rebuild_conflicts([this](size_t done, size_t total)
+	{ emit load_progress(static_cast<int>(done), static_cast<int>(total)); });
 	emit plugins_loaded();
 }
 

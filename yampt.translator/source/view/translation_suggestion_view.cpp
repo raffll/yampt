@@ -1,4 +1,3 @@
-#include <resource_paths.hpp>
 #include "translation_suggestion_view.hpp"
 #include "../translator/ctranslate2_translator.hpp"
 #include "../translator/model_list_utils.hpp"
@@ -7,6 +6,7 @@
 #include <utility/language_config.hpp>
 #include <filesystem>
 #include <fstream>
+#include <resource_paths.hpp>
 #include <settings_store.hpp>
 #include <QComboBox>
 #include <QCoreApplication>
@@ -198,8 +198,7 @@ void translation_suggestion_view_t::rebuild_web_providers()
 			const auto * model_setting = find_model_setting(provider->config());
 			const auto default_model = model_setting != nullptr ? model_setting->default_value : std::string();
 			const auto current_text = m_model_combo->currentText().toStdString();
-			const auto selected =
-			    model_list_utils::choose_selected_model(current_text, models, default_model);
+			const auto selected = model_list_utils::choose_selected_model(current_text, models, default_model);
 			populate_model_combo(models, selected);
 			append_log("[info] fetched " + std::to_string(models.size()) + " models\n");
 		});
@@ -337,8 +336,7 @@ void translation_suggestion_view_t::rebuild_language_list()
 
 		if (!nllb_models.empty())
 		{
-			const auto languages =
-			    language_config::load(resource_paths::languages_file());
+			const auto languages = language_config::load(resource_paths::languages_file());
 
 			const auto & model_path = nllb_models[0];
 			for (const auto & lang : languages)
@@ -552,8 +550,7 @@ std::vector<std::string> translation_suggestion_view_t::build_segment_sources() 
 			continue;
 		}
 
-		const auto prepared =
-		    m_glossary_fn ? m_glossary_fn(segment.plain_text) : segment.plain_text;
+		const auto prepared = m_glossary_fn ? m_glossary_fn(segment.plain_text) : segment.plain_text;
 		sources.push_back(prepared);
 	}
 

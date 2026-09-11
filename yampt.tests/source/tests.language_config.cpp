@@ -6,13 +6,13 @@ namespace {
 std::vector<language_entry_t> make_languages()
 {
 	return {
-	    { "EN", "English", "eng_Latn", "en_US", codepage_t::windows_1252 },
-	    { "ES", "Spanish", "spa_Latn", "es_ES", codepage_t::windows_1252 },
-	    { "PT", "Portuguese", "por_Latn", "pt_PT", codepage_t::windows_1252 },
-	    { "CS", "Czech", "ces_Latn", "cs_CZ", codepage_t::windows_1250 },
-	    { "UK", "Ukrainian", "ukr_Cyrl", "uk_UA", codepage_t::windows_1251 },
-	    { "NL", "Dutch", "nld_Latn", "nl_NL", codepage_t::windows_1252 },
-	    { "FI", "Finnish", "fin_Latn", "fi_FI", codepage_t::windows_1252 },
+		{ "EN", "English", "eng_Latn", "en_US", codepage_t::windows_1252 },
+		{ "ES", "Spanish", "spa_Latn", "es_ES", codepage_t::windows_1252 },
+		{ "PT", "Portuguese", "por_Latn", "pt_PT", codepage_t::windows_1252 },
+		{ "CS", "Czech", "ces_Latn", "cs_CZ", codepage_t::windows_1250 },
+		{ "UK", "Ukrainian", "ukr_Cyrl", "uk_UA", codepage_t::windows_1251 },
+		{ "NL", "Dutch", "nld_Latn", "nl_NL", codepage_t::windows_1252 },
+		{ "FI", "Finnish", "fin_Latn", "fi_FI", codepage_t::windows_1252 },
 	};
 }
 

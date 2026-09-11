@@ -416,8 +416,8 @@ void view_tree_model_t::set_lua_conflict(const handler_conflict_t & conflict)
 
 	view_node_t classification_row;
 	classification_row.label = "Classification";
-	classification_row.values =
-	    build_values([](const handler_registration_t & r) { return lua_classification_text(r.classification).toStdString(); });
+	classification_row.values = build_values([](const handler_registration_t & r)
+	{ return lua_classification_text(r.classification).toStdString(); });
 	classification_row.all_identical = check_all_identical(classification_row.values);
 	classification_row.row_conflict_all = severity_background;
 	classification_row.cell_conflict_this.assign(col_count, severity_foreground);
@@ -556,8 +556,7 @@ static bool hoists_single_leaf_child(const view_tree_model_t::view_node_t & node
 	const bool is_group = !node.type.empty() && node.size == 0 && !node.children.empty();
 	const bool single_leaf_child = node.children.size() == 1 && node.children[0].children.empty();
 	const bool child_is_flag_bit = single_leaf_child && node.children[0].bit_index >= 0;
-	return single_leaf_child && !is_group && !is_data_sub_record(node) && !child_is_flag_bit &&
-	       !node.is_info_chain;
+	return single_leaf_child && !is_group && !is_data_sub_record(node) && !child_is_flag_bit && !node.is_info_chain;
 }
 
 std::string view_tree_model_t::full_value_at(const QModelIndex & index) const
@@ -792,17 +791,14 @@ struct row_lock_context_t
 	int active_col_index = -1;
 };
 
-bool group_lock_matches(
-    const merge_lock_t & lock,
-    const view_tree_model_t::view_node_t & row,
-    int active_col_index)
+bool group_lock_matches(const merge_lock_t & lock, const view_tree_model_t::view_node_t & row, int active_col_index)
 {
 	if (active_col_index < 0 || active_col_index >= static_cast<int>(row.binary_ranges.size()))
 		return false;
 
 	const auto & range = row.binary_ranges[active_col_index];
 	return range.start >= 0 && lock.group_start >= 0 && range.start >= lock.group_start &&
-	    range.end_pos <= lock.group_end;
+	       range.end_pos <= lock.group_end;
 }
 
 bool lock_matches_row(
@@ -820,12 +816,12 @@ bool lock_matches_row(
 
 	case lock_scope_t::field:
 		return context.is_field_row && row.bit_index < 0 && lock.sub_type == context.sub_type &&
-		    lock.occurrence == context.occurrence && lock.field_index == row.schema_field_index;
+		       lock.occurrence == context.occurrence && lock.field_index == row.schema_field_index;
 
 	case lock_scope_t::bit:
 		return context.is_field_row && row.bit_index >= 0 && lock.sub_type == context.sub_type &&
-		    lock.occurrence == context.occurrence && lock.field_index == row.schema_field_index &&
-		    lock.bit_index == row.bit_index;
+		       lock.occurrence == context.occurrence && lock.field_index == row.schema_field_index &&
+		       lock.bit_index == row.bit_index;
 
 	case lock_scope_t::group:
 		return group_lock_matches(lock, row, context.active_col_index);
@@ -1076,7 +1072,8 @@ QVariant view_tree_model_t::headerData(int section, Qt::Orientation orientation,
 
 			plugin_icon::tier_flags_t flags;
 			flags.filename = name;
-			flags.is_overridden = m_scan_for_header && plugin_icon::path_is_overwrite(m_scan_for_header->plugin_path(pi));
+			flags.is_overridden =
+			    m_scan_for_header && plugin_icon::path_is_overwrite(m_scan_for_header->plugin_path(pi));
 			flags.is_excluded = m_excluded_plugins && m_excluded_plugins->count(name);
 			flags.is_guard = m_patch_plugins && m_patch_plugins->count(name);
 			flags.is_active = m_scan_for_header && m_scan_for_header->is_active_plugin(pi);

@@ -72,8 +72,7 @@ text_patch_result_t scdt_patcher_t::apply_message_patch(
 			const auto new_size_with_null = segments_new[index].size() + message_other_null_terminator;
 			if (new_size_with_null > 255)
 			{
-				app_logger_t::add_log(
-				    "[error] message segment exceeds 255 byte limit, skipping SCDT patch\r\n");
+				app_logger_t::add_log("[error] message segment exceeds 255 byte limit, skipping SCDT patch\r\n");
 				return result;
 			}
 

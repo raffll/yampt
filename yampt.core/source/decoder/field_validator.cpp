@@ -333,12 +333,10 @@ validate_result_t validate_field(
 		return validate_hex_bytes(input, existing_sub_size);
 
 	case field_type_t::scvr_type:
-		return scvr_type_char(std::string(input)) != '\0' ? make_valid()
-		                                                   : make_invalid("unknown condition type");
+		return scvr_type_char(std::string(input)) != '\0' ? make_valid() : make_invalid("unknown condition type");
 
 	case field_type_t::scvr_operator:
-		return scvr_operator_char(std::string(input)) != '\0' ? make_valid()
-		                                                       : make_invalid("unknown operator");
+		return scvr_operator_char(std::string(input)) != '\0' ? make_valid() : make_invalid("unknown operator");
 
 	case field_type_t::scvr_subject:
 		return validate_string_fixed(input, codepage, field.size);

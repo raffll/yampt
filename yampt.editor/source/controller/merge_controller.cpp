@@ -91,9 +91,10 @@ void merge_controller_t::set_phase_callback(phase_fn_t phase_fn)
 
 bool merge_controller_t::confirm_merged_patch_regeneration(int merged_idx)
 {
-	const bool merged_exists = merged_idx >= 0 || (m_session.scan().has_active() &&
-	                                               m_session.scan().plugin_filename(m_session.scan().active_plugin_index()) ==
-	                                                   merged_patch::filename);
+	const bool merged_exists =
+	    merged_idx >= 0 ||
+	    (m_session.scan().has_active() &&
+	     m_session.scan().plugin_filename(m_session.scan().active_plugin_index()) == merged_patch::filename);
 
 	if (!merged_exists)
 		return true;
@@ -148,8 +149,7 @@ void merge_controller_t::rebuild_merged_patch_conflicts()
 	if (m_progress)
 		m_progress(0, 1);
 
-	m_session.scan().rebuild_conflicts(
-	    [this](size_t done, size_t total)
+	m_session.scan().rebuild_conflicts([this](size_t done, size_t total)
 	{
 		if (m_progress)
 			m_progress(static_cast<int>(done), static_cast<int>(total));
@@ -242,8 +242,7 @@ bool merge_controller_t::prompt_save_active_before_switch()
 	const auto answer = QMessageBox::question(
 	    nullptr,
 	    QCoreApplication::translate("yEditor", "Save Active Plugin"),
-	    QCoreApplication::translate(
-	        "yEditor", "Save changes to the current active plugin before switching?"),
+	    QCoreApplication::translate("yEditor", "Save changes to the current active plugin before switching?"),
 	    QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel,
 	    QMessageBox::Save);
 
@@ -441,8 +440,8 @@ void merge_controller_t::copy_sub_record(
 	if (!result.success)
 	{
 		m_log(
-		    "[warning] copy_sub_record: patch failed for " + sub_type + " (binary_idx=" +
-		    std::to_string(binary_idx) + ") in " + rec_type + ":" + record_id);
+		    "[warning] copy_sub_record: patch failed for " + sub_type + " (binary_idx=" + std::to_string(binary_idx) +
+		    ") in " + rec_type + ":" + record_id);
 		return;
 	}
 
@@ -482,8 +481,8 @@ void merge_controller_t::copy_group(
 	if (group_row_idx < 0 || group_row_idx >= static_cast<int>(visible.size()))
 	{
 		m_log(
-		    "[warning] copy_group: group_row_idx " + std::to_string(group_row_idx) + " out of range (visible=" +
-		    std::to_string(visible.size()) + ")");
+		    "[warning] copy_group: group_row_idx " + std::to_string(group_row_idx) +
+		    " out of range (visible=" + std::to_string(visible.size()) + ")");
 		return;
 	}
 
@@ -591,8 +590,8 @@ void merge_controller_t::copy_bit(const copy_bit_params_t & params)
 	if (!result.success)
 	{
 		m_log(
-		    "[warning] copy_bit: patch failed for " + params.bit.sub_type + " bit=" +
-		    std::to_string(params.bit.bit_index) + " in " + params.rec_type + ":" + params.record_id);
+		    "[warning] copy_bit: patch failed for " + params.bit.sub_type +
+		    " bit=" + std::to_string(params.bit.bit_index) + " in " + params.rec_type + ":" + params.record_id);
 		return;
 	}
 
@@ -796,7 +795,12 @@ void merge_controller_t::reapply_locks()
 				continue;
 
 			result = merge_patch_ops_t::patch_field(
-			    merge_content, lock.frozen_content, lock.rec_type, lock.sub_type, lock.sub_size, frozen_idx,
+			    merge_content,
+			    lock.frozen_content,
+			    lock.rec_type,
+			    lock.sub_type,
+			    lock.sub_size,
+			    frozen_idx,
 			    lock.field_index);
 			break;
 		}
@@ -963,7 +967,8 @@ void merge_controller_t::save_active_plugin()
 	const bool saved = save_active_to_file(output_path, "yEditor", description);
 	if (saved)
 		m_log(
-		    "[info] saved " + output_path + " (" + std::to_string(m_session.scan().active_record_count()) + " records)");
+		    "[info] saved " + output_path + " (" + std::to_string(m_session.scan().active_record_count()) +
+		    " records)");
 	else
 		m_log("[error] failed to save " + output_path);
 }
