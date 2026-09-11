@@ -14,6 +14,8 @@
 - [CHANGE] Copy and remove record-view and navigation actions now read "Active Plugin" instead of "Merged Patch", since they target whichever plugin is active (the merged patch by default); locking remains available only on the merged patch, because a lock protects a value from the next auto-merge
 - [CHANGE] Excluded plugins now use a distinct 🚫 icon in the navigation tree and record view headers, so they are no longer confused with the 🔒 lock icon
 - [CHANGE] Record and navigation context menus are now ordered consistently in three bands: setters and copy actions first, then the reversible toggles (lock/unlock and exclude/include), then destructive actions last — Save and record removal — each band separated by a divider
+- [CHANGE] The window title now shows the active plugin's file name (for example "yEditor - New Plugin.esp"), updating whenever you switch, create, load, or unload the active plugin; the unsaved-changes asterisk still appears after the name
+- [CHANGE] The toolbar button that creates an empty active plugin is now labelled "Create New Plugin" (previously "New Plugin")
 - [FIX] The merge exclusion list in settings now shows each excluded record as its own row again; previously the whole pattern was loaded into a single row
 - [FIX] The navigation tree no longer jumps or scrolls away from where you were working when you exclude, include, guard, save, lock, or unlock — the scroll position and expanded state stay put
 - [FIX] An unused skill or attribute slot in a record (such as a race's empty bonus-skill slots) now reads "None" in the record view instead of the raw number 4294967295

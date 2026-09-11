@@ -161,6 +161,7 @@ void plugin_workspace_view_t::setup_connections()
 		m_edit_history.clear();
 		m_history_view->clear();
 		update_status();
+		emit active_plugin_changed(active_plugin_filename());
 	});
 	connect(m_session, &plugin_session_t::log_message, this, &plugin_workspace_view_t::log_message);
 	connect(
@@ -462,6 +463,7 @@ void plugin_workspace_view_t::rebuild_after_load()
 	on_filter_changed();
 	update_status();
 	start_lua_scan();
+	emit active_plugin_changed(active_plugin_filename());
 }
 
 void plugin_workspace_view_t::apply_user_conflict_rules()
@@ -514,8 +516,19 @@ void plugin_workspace_view_t::on_settings_changed()
 		on_view_selection_changed(current);
 }
 
+QString plugin_workspace_view_t::active_plugin_filename() const
+{
+	const int active_idx = m_session->scan().active_plugin_index();
+	if (active_idx < 0)
+		return {};
+
+	return QString::fromStdString(m_session->scan().plugin_filename(active_idx));
+}
+
 void plugin_workspace_view_t::refresh_all_views()
 {
+	emit active_plugin_changed(active_plugin_filename());
+
 	const auto displayed_rec_type = m_record_view->model()->record_type();
 	const auto displayed_record_id = m_record_view->model()->record_id();
 
@@ -997,6 +1010,8 @@ void plugin_workspace_view_t::restore_session_state()
 	m_session->restore_session_state(ini_path);
 	m_merge_controller->sync_active_locks();
 	hide_progress();
+
+	emit active_plugin_changed(active_plugin_filename());
 
 	auto rec_type = settings.value("session/nav_rec_type").toString().toStdString();
 	auto record_id = settings.value("session/nav_record_id").toString().toStdString();

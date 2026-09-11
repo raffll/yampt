@@ -172,7 +172,7 @@ void editor_window_t::setup_toolbar()
 	    merge_btn, &QToolButton::clicked, m_plugin_workspace_view, &plugin_workspace_view_t::on_create_merged_patch);
 
 	auto * new_plugin_btn = new QToolButton(this);
-	new_plugin_btn->setText(tr("New Plugin"));
+	new_plugin_btn->setText(tr("Create New Plugin"));
 	new_plugin_btn->setToolTip(tr("Create an empty plugin and make it the active copy target"));
 	toolbar->addWidget(new_plugin_btn);
 	connect(
@@ -267,6 +267,11 @@ void editor_window_t::setup_toolbar()
 	    &plugin_workspace_view_t::unsaved_changes_changed,
 	    this,
 	    &editor_window_t::set_unsaved_changes);
+	connect(
+	    m_plugin_workspace_view,
+	    &plugin_workspace_view_t::active_plugin_changed,
+	    this,
+	    &editor_window_t::set_active_plugin_name);
 
 	auto * escape_shortcut = new QShortcut(QKeySequence("Escape"), this);
 	connect(escape_shortcut, &QShortcut::activated, this, &editor_window_t::on_search_clear);
@@ -342,7 +347,28 @@ void editor_window_t::set_unsaved_changes(bool dirty)
 		return;
 
 	m_has_unsaved_changes = dirty;
-	setWindowTitle(m_has_unsaved_changes ? tr("yEditor *") : tr("yEditor"));
+	update_window_title();
+}
+
+void editor_window_t::set_active_plugin_name(const QString & filename)
+{
+	if (m_active_plugin_name == filename)
+		return;
+
+	m_active_plugin_name = filename;
+	update_window_title();
+}
+
+void editor_window_t::update_window_title()
+{
+	QString title = tr("yEditor");
+	if (!m_active_plugin_name.isEmpty())
+		title += tr(" - %1").arg(m_active_plugin_name);
+
+	if (m_has_unsaved_changes)
+		title += tr(" *");
+
+	setWindowTitle(title);
 }
 
 void editor_window_t::closeEvent(QCloseEvent * event)

@@ -82,6 +82,8 @@ public:
 
 	void set_preview_scroll_sync(bool enabled);
 
+	QString active_plugin_filename() const;
+
 public slots:
 	void on_load_data_files();
 	void on_load_mo2_profile();
@@ -114,6 +116,7 @@ private slots:
 signals:
 	void filters_active_changed(bool active);
 	void unsaved_changes_changed(bool dirty);
+	void active_plugin_changed(const QString & filename);
 
 private:
 	void setup_views();

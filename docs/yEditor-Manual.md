@@ -165,15 +165,17 @@ You can refine the auto-merge result manually. Use the record view context menu 
 
 ## Choosing the Active Plugin
 
-Copying always targets one plugin at a time, called the active plugin. It is marked with the ⭐ indicator in the navigation tree and record view, and its column is the one that accepts dropped and copied records. The merged patch is the active plugin by default, so if you only ever build merged patches nothing changes for you.
+Copying always targets one plugin at a time, called the active plugin. It is marked with the ⭐ indicator in the navigation tree and record view, and its column is the one that accepts dropped and copied records. The merged patch is the active plugin by default, so if you only ever build merged patches nothing changes for you. The window title shows the active plugin's file name, so you can always see which plugin will receive copied records.
 
-Click **New Plugin** in the toolbar to create an empty plugin and make it the active target. You are asked for a file name; the plugin starts with no records and is written to the same output directory as the merged patch. From then on, copied records go into this new plugin instead of the merged patch. This is a convenient way to build a small hand-made plugin — for example a single-record fix — without running the auto-merge.
+Click **Create New Plugin** in the toolbar to create an empty plugin and make it the active target. You are asked for a file name; the plugin starts with no records and is written to the same output directory as the merged patch. From then on, copied records go into this new plugin instead of the merged patch. This is a convenient way to build a small hand-made plugin — for example a single-record fix — without running the auto-merge.
+
+Whenever a plugin is written — a new plugin created with an existing name, or the merged patch rebuilt — its modification date is set to the current moment. Because the Open Folder method orders plugins by modification date, this places the freshly written file last in load order, so it wins over everything it was built from, matching how the game and Mod Organizer 2 treat the newest file.
 
 To switch which plugin receives copies, right-click any plugin in the navigation tree and choose **Set as Active Plugin**. The option is greyed out for the plugin that is already active. Because only one plugin can be active at a time, switching first offers to save the current active plugin's changes so nothing is lost; you can save, discard, or cancel the switch. To go back to copying into the merged patch, set it as active again.
 
 ### Locking Merged Patch Values
 
-Locking only applies to the merged patch, because a lock protects a value from being overwritten the next time the auto-merge runs. It is offered only when the merged patch is the active plugin; a hand-made plugin created with New Plugin has nothing to lock against, so the option does not appear there.
+Locking only applies to the merged patch, because a lock protects a value from being overwritten the next time the auto-merge runs. It is offered only when the merged patch is the active plugin; a hand-made plugin created with Create New Plugin has nothing to lock against, so the option does not appear there.
 
 Right-click a cell in the merged patch column and choose Lock in Merged Patch to freeze that value. You can lock a whole record, a single sub-record, a decoded field, an individual flag bit, or a group — the lock covers exactly what you right-clicked, following the same selection rules as copying. A locked cell is marked with a lock icon and keeps the exact value it had when you locked it. When the cell you right-clicked has nothing that can be locked, the option appears greyed out.
 
