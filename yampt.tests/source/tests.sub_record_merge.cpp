@@ -720,6 +720,7 @@ TEST_CASE("sub_record_merge_t::merge, 4 versions all 52-byte NPDT merges gold fi
 	npdt_inter1[npdt_52_gold_offset] = 250;
 
 	std::string npdt_inter2(52, '\0');
+	npdt_inter2[npdt_52_gold_offset] = 100;
 	npdt_inter2[0] = 5;
 
 	std::string npdt_winner(52, '\0');
@@ -757,6 +758,7 @@ TEST_CASE("sub_record_merge_t::merge, 4 versions mixed layout skips 12-byte inte
 	npdt_inter_autocalc[npdt_12_gold_offset] = 200;
 
 	std::string npdt_inter_explicit(52, '\0');
+	npdt_inter_explicit[npdt_52_gold_offset] = 100;
 	npdt_inter_explicit[2] = 60;
 
 	std::string npdt_winner(52, '\0');

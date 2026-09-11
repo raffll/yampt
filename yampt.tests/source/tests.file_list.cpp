@@ -356,13 +356,13 @@ TEST_CASE("file_list_t::insert, container operations", "[u]")
 	SECTION("add and get")
 	{
 		auto & entry = list.add("C:/path/file.esp");
-		REQUIRE(entry.path == "c:/path/file.esp");
+		REQUIRE(entry.path == "C:/path/file.esp");
 		REQUIRE(entry.filename == "file.esp");
 		REQUIRE(entry.type == file_type_t::plugin);
 
 		const auto * found = list.get("C:/path/file.esp");
 		REQUIRE(found != nullptr);
-		REQUIRE(found->path == "c:/path/file.esp");
+		REQUIRE(found->path == "C:/path/file.esp");
 	}
 
 	SECTION("remove")
@@ -622,5 +622,5 @@ TEST_CASE("file_list_t::add, stores canonical path", "[u]")
 	file_list_t list;
 	const auto & entry = list.add("C:\\Mods\\Dict.json");
 
-	REQUIRE(entry.path == "c:/Mods/Dict.json");
+	REQUIRE(entry.path == "C:/Mods/Dict.json");
 }

@@ -80,7 +80,7 @@ TEST_CASE("scdt_patcher_t::apply_text_patch, getpccell standalone", "[u]")
 	std::string scdt;
 	scdt += std::string(3, '\x00');
 	scdt += size_byte(old_expr_size);
-	scdt += "X";
+	scdt += " X";
 	scdt += std::string(1, '\x00');
 	scdt += size_byte(old_text.size());
 	scdt += old_text;
@@ -119,7 +119,7 @@ TEST_CASE("scdt_patcher_t::apply_text_patch, getpccell with comparison", "[u]")
 	std::string scdt;
 	scdt += std::string(3, '\x00');
 	scdt += size_byte(old_expr_size);
-	scdt += "X";
+	scdt += " X";
 	scdt += std::string(1, '\x00');
 	scdt += size_byte(old_text.size());
 	scdt += old_text;
@@ -158,7 +158,7 @@ TEST_CASE("scdt_patcher_t::apply_text_patch, getpccell short cell name not padde
 	std::string scdt;
 	scdt += std::string(3, '\x00');
 	scdt += size_byte(old_expr_size);
-	scdt += "X";
+	scdt += " X";
 	scdt += std::string(1, '\x00');
 	scdt += size_byte(old_text.size());
 	scdt += old_text;
@@ -189,7 +189,7 @@ TEST_CASE("scdt_patcher_t::apply_text_patch, getpccell comparison shrink keeps e
 	std::string scdt;
 	scdt += std::string(3, '\x00');
 	scdt += size_byte(old_expr_size);
-	scdt += "X";
+	scdt += " X";
 	scdt += std::string(1, '\x00');
 	scdt += size_byte(old_text.size());
 	scdt += old_text;
@@ -443,6 +443,7 @@ TEST_CASE("scdt_patcher_t::apply_text_patch, addtopic exact size for four or mor
 	scdt += size_byte(old_text.size());
 	scdt += old_text;
 	scdt += std::string(3, '\x00');
+	const auto original_size = scdt.size();
 
 	scdt_patcher_t patcher(scdt);
 	const auto & result = patcher.apply_text_patch(old_text, { new_text, false, true });
@@ -455,5 +456,5 @@ TEST_CASE("scdt_patcher_t::apply_text_patch, addtopic exact size for four or mor
 
 	auto stored_size = static_cast<unsigned char>(patched[pos - 1]);
 	REQUIRE(stored_size == new_text.size());
-	REQUIRE(patched[pos + new_text.size()] != '\x00');
+	REQUIRE(patched.size() == original_size - (old_text.size() - new_text.size()));
 }

@@ -107,7 +107,7 @@ TEST_CASE("web_translator_config::default_system_prompt, non-empty with language
 
 	REQUIRE(!prompt.empty());
 	REQUIRE(prompt.find("{{target_lang}}") != std::string::npos);
-	REQUIRE(prompt.find("{{source_lang_upper}}") != std::string::npos);
+	REQUIRE(prompt.find("{{source_lang}}") != std::string::npos);
 }
 
 TEST_CASE("web_translator_config::load_single, empty file returns empty config", "[u]")

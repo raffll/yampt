@@ -94,6 +94,7 @@ TEST_CASE("highlight_coordinator_t::find_annotation_highlights, non-ASCII annota
 	request.annotations = &annotations;
 	request.use_old_text = true;
 	request.sort_policy = highlight_sort_policy_t::length_first;
+	request.enabled_kinds = { highlight_kind_t::glossary };
 
 	const auto results = highlight_coordinator_t::find_annotation_highlights(text_lower, request);
 
@@ -120,6 +121,7 @@ TEST_CASE("highlight_coordinator_t::find_annotation_highlights, uppercase annota
 	request.annotations = &annotations;
 	request.use_old_text = true;
 	request.sort_policy = highlight_sort_policy_t::length_first;
+	request.enabled_kinds = { highlight_kind_t::hyperlink };
 
 	const auto results = highlight_coordinator_t::find_annotation_highlights(text_lower, request);
 
@@ -160,6 +162,7 @@ TEST_CASE("highlight_coordinator_t::combine_translation_annotations, inflected f
 	request.annotations = &combined;
 	request.use_old_text = false;
 	request.sort_policy = highlight_sort_policy_t::hyperlink_first;
+	request.enabled_kinds = { highlight_kind_t::glossary, highlight_kind_t::inflection };
 
 	const auto results = highlight_coordinator_t::find_annotation_highlights(text_lower, request);
 

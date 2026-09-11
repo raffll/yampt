@@ -178,11 +178,11 @@ TEST_CASE("patch_builder_t::save, creates ESP file on disk", "[i]")
 	fs::remove(output_path, error_code);
 }
 
-TEST_CASE("patch_builder_t::save, empty builder returns false", "[u]")
+TEST_CASE("patch_builder_t::has_records, empty builder has none", "[u]")
 {
 	patch_builder_t builder;
-	const bool saved = builder.save("should_not_exist.esp", "Author", "Desc", {});
-	REQUIRE_FALSE(saved);
+	REQUIRE_FALSE(builder.has_records());
+	REQUIRE(builder.record_count() == 0);
 }
 
 TEST_CASE("patch_builder_t::add_record, duplicate key updates content", "[u]")

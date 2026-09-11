@@ -4,6 +4,7 @@
 #include <rapidcheck.h>
 #include <settings_store.hpp>
 #include <string>
+#include <utility/string_utils.hpp>
 #include <vector>
 #include <QCoreApplication>
 #include <QFile>
@@ -82,6 +83,11 @@ TEST_CASE("settings_store_t::save, round-trip", "[pbt]")
 			const auto workspace_roots = *gen_string_vector();
 			store.set_workspace_roots(workspace_roots);
 
+			std::vector<std::string> canonical_workspace_roots;
+			canonical_workspace_roots.reserve(workspace_roots.size());
+			for (const auto & root : workspace_roots)
+				canonical_workspace_roots.push_back(string_utils::canonicalize_path(root));
+
 			const auto merge_order = *gen_string_vector();
 			store.set_last_merge_order(merge_order);
 
@@ -99,7 +105,7 @@ TEST_CASE("settings_store_t::save, round-trip", "[pbt]")
 			RC_ASSERT(reader.foreign_tag() == foreign_tag);
 			RC_ASSERT(reader.sidebar_visible() == sidebar_visible);
 			RC_ASSERT(reader.merge_fog_fix_enabled() == merge_fog_fix);
-			RC_ASSERT(reader.workspace_roots() == workspace_roots);
+			RC_ASSERT(reader.workspace_roots() == canonical_workspace_roots);
 			RC_ASSERT(reader.last_merge_order() == merge_order);
 			RC_ASSERT(reader.theme() == theme);
 

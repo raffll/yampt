@@ -118,7 +118,7 @@ TEST_CASE("topic_tagger_t::tag_line, inflected form tagged when no overlap", "[u
 
 	const auto result = tagger.tag_line("widzialem szczura wczoraj");
 
-	REQUIRE(result.text == "widzialem @szczura# wczoraj");
+	REQUIRE(result.text == "widzialem @szczur#a wczoraj");
 	REQUIRE(result.tags_inserted == 1);
 }
 

@@ -599,5 +599,5 @@ std::string make_sub_label(const std::string & sub_type, const std::string & rec
 	if (it != descs.end())
 		return sub_type + " - " + it->second;
 
-	return sub_type;
+	return sub_type + " - Data";
 }

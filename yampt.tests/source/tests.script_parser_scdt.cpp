@@ -75,12 +75,12 @@ TEST_CASE("script_parser_t::convert_script, scdt getpccell size update", "[u]")
 
 	size_t text_size = old_text.size();
 	std::string comparison = " == 1";
-	size_t expr_size = 2 + 1 + 1 + text_size + comparison.size();
+	size_t old_expr_size = 4 + text_size + comparison.size();
 
 	std::string scdt;
 	scdt += std::string(5, '\x00');
-	scdt += size_byte(expr_size);
-	scdt += "X";
+	scdt += size_byte(old_expr_size);
+	scdt += " X";
 	scdt += std::string(1, '\x00');
 	scdt += size_byte(text_size);
 	scdt += old_text;
@@ -103,7 +103,7 @@ TEST_CASE("script_parser_t::convert_script, scdt getpccell size update", "[u]")
 	REQUIRE(x_pos != std::string::npos);
 
 	size_t expr_size_pos = x_pos - 2;
-	size_t expected_expr_size = (cell_pos + new_text.size() + comparison.size()) - expr_size_pos - 1;
+	size_t expected_expr_size = old_expr_size + new_text.size() - old_text.size();
 	auto actual_expr_size = static_cast<unsigned char>(new_scdt[expr_size_pos]);
 	REQUIRE(actual_expr_size == expected_expr_size);
 }

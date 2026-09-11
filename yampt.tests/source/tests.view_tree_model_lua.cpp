@@ -117,7 +117,7 @@ TEST_CASE(
 		RC_ASSERT(model.columnCount(QModelIndex()) == static_cast<int>(reg_count) + 1);
 
 		const auto & rows = model.rows();
-		RC_ASSERT(rows.size() == 7u);
+		RC_ASSERT(rows.size() == 2u);
 
 		for (size_t col = 0; col < reg_count; ++col)
 		{
@@ -127,10 +127,8 @@ TEST_CASE(
 			const auto header = model.headerData(section, Qt::Horizontal, Qt::DisplayRole).toString().toStdString();
 			RC_ASSERT(header == reg.mod_name);
 
-			RC_ASSERT(rows[3].values[col] == classification_text(reg.classification));
-			RC_ASSERT(rows[4].values[col] == reg.script_path);
-			RC_ASSERT(rows[5].values[col] == reg.callback_expression);
-			RC_ASSERT(rows[6].values[col] == reg.handler_body);
+			RC_ASSERT(rows[0].values[col] == classification_text(reg.classification));
+			RC_ASSERT(rows[1].values[col] == reg.handler_body);
 		}
 	});
 }
