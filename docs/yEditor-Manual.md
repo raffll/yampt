@@ -44,19 +44,19 @@ Text colors indicate how each specific plugin version relates to others:
 
 Records with no conflict (only one plugin defines them) show with no background color and black text.
 
-The tree has three columns: ID, Name, and Status. The ID and Name columns show the record identifier and its display name; the Status column, on the right, carries the status glyphs. For a plugin row the Status column holds one or more icons showing its role. A plugin can carry several at once, always in the same order: its file type first, then the overwrite marker, then its merge role, then the active marker — for example a regular overwrite plugin that is excluded and active reads 📄⚡⛔⭐.
+The tree has three columns: ID, Name, and Status. The ID and Name columns show the record identifier and its display name; the Status column, on the right, carries the status glyphs. For a plugin row the Status column holds one or more icons showing its role. A plugin can carry several at once, always in the same order: its file type first, then the overwrite marker, then its merge role, then the active marker — for example a regular overwrite plugin that is excluded and active reads 📄⚡🚫⭐.
 
 - 📜 — a master file that other plugins depend on.
 - 📄 — a regular plugin loaded from a mod folder or game data directory.
 - ⚙ — the merged patch produced by the auto-merge operation.
 - ⚡ — the plugin is loaded from MO2's overwrite folder, meaning a second (cleaned or patched) copy of the file exists and is being used instead of the original mod version.
 - 🛡 — a guard patch that acts as a priority barrier during auto-merge.
-- ⛔ — a plugin excluded from the merged patch. Its records are ignored during merge.
+- 🚫 — a plugin excluded from the merged patch. Its records are ignored during merge.
 - ⭐ — the active plugin: the one that currently receives copied records.
 
 When a plugin has field edits that have not yet been written to disk, an asterisk appears before the filename in the ID column. The asterisk disappears once the plugin is saved.
 
-For a record row the Status column shows 🔒 when the record is locked in the merged patch and ⛔ when the record itself matches the exclusion pattern. A plugin excluded from the merged patch is marked only on its own plugin row, not on each of its records.
+For a record row the Status column shows 🔒 when the record is locked in the merged patch and 🚫 when the record itself matches the exclusion pattern. A plugin excluded from the merged patch is marked only on its own plugin row, not on each of its records.
 
 ## Record View
 
@@ -66,7 +66,7 @@ Each column represents one plugin's version. Column headers show the plugin file
 
 Empty cells mean that plugin does not include the sub-record. This happens when a plugin only modifies some fields of a record.
 
-A sub-record excluded from conflict detection and the merged patch is marked with ⛔ after its name in the first column, so you can see at a glance which sub-records are being skipped.
+A sub-record excluded from conflict detection and the merged patch is marked with 🚫 after its name in the first column, so you can see at a glance which sub-records are being skipped.
 
 ## Dialogue Responses
 

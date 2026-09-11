@@ -696,7 +696,7 @@ static QVariant sub_record_display(const view_tree_model_t::view_node_t & row, i
 	if (column == 0)
 	{
 		if (row.is_excluded_sub_record)
-			return QString::fromStdString(row.label) + QString::fromUtf8(" \xE2\x9B\x94");
+			return QString::fromStdString(row.label) + " " + QString::fromUtf8(plugin_icon::glyph::no_entry);
 
 		return QString::fromStdString(row.label);
 	}
