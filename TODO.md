@@ -57,7 +57,7 @@ AI_F more meaningluf fiedl names and why is so big numbers there?
 diff is broken, it should be per character
 book and script need also syntax coloring
 how to merge armor body part? ignore non existent? ninf cnam and bnasm?
-
+should_not_exist.esp in C:\OMEN\Morrowind\yampt\x64\Release\$(SolutionDir)
 remove status column
 move esp esm guard merged to left of plugin name
 all excluded plugins, records, subrecords in light grey backgroud, grey text
