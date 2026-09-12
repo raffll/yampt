@@ -28,3 +28,4 @@ dictionaries/*.aff
 dictionaries/*.dic
 /tmp_analysis
 /.kiro/specs
+/bugs
