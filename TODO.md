@@ -1,8 +1,5 @@
 # TODO
 
-autocalc vs non autocalc prevenmt merging other values also
-we know npc faction so we can resolve rank: 1 (Blabla)
-reapetable subrecords whould have #0 even if only one, non repeatable no
 exclude subrecord should not recalculate conflicts, they are valid, we need only different colors
 diff dont work on editable fields
 figure out how to show valid ranges for fields
@@ -29,7 +26,7 @@ diff is broken, it should be per character
 book and script need also syntax coloring
 how to merge armor body part? ignore non existent? ninf cnam and bnasm?
 should_not_exist.esp in C:\OMEN\Morrowind\yampt\x64\Release\$(SolutionDir)
-
+show optional, enabled on load, but checkbox not checjked
 
 
 editor: make field editing active-plugin-only; remove obsolete per-plugin in-place editing. Editing a non-active plugin column writes back to that plugin's own file (mutable_plugin + replace_record + mark_plugin_dirty + save_all_dirty), which is a separate path from active/merge editing. Since all record changes should target the active plugin (same store as Copy-to-Active), drop the source-plugin branch: the plugin_idx != -1 path in field_edit_controller (commit_to_source, field_edited signal, read_record_content/mutable_plugin/replace_record for edits), the "Direct Editing" settings page, and the m_editing_enabled half of editable_column_set_t::is_editable (leaving the active/merge column always editable). Also re-gate "Remove Record from Plugin" which currently keys off is_editing_enabled().
@@ -50,11 +47,15 @@ Root cause: FACT inter-faction reactions are stored as paired INTV (reaction val
 ## Faction rank names
 
 - rnam rank name can be #0 #1: FACT RNAM rank names repeat, so they must carry occurrence indices (#0, #1, ...) in both panels, matching the repeatable-subrecord numbering rule.
-- resolve NPC rank to rank name: an NPC's rank is a number; using the NPC's faction (ANAM) we can look up the faction's RNAM list and display "1 (Rank Name)" instead of a bare number.
+- resolve NPC rank to rank name: an NPC's rank is a number; using the NPC's faction (ANAM) we can look up the faction's RNAM list and display "1 (Rank Name)" instead of a bare number. INVESTIGATED: the NPC Rank lives in NPDT (u8 at offset 4 for 12-byte, offset 46 for 52-byte, sub_record_schema.cpp); faction id is the NPC's own ANAM; rank names are the FACT record's repeating RNAM entries (order = rank 0,1,2...). The field decoder (view_tree_decode.cpp) is pure per-record byte decode with NO scan/index access, so resolving a name requires threading a faction->ordered-RNAM-list resolver (or prebuilt map) into the view tree model decode path. DECIDE: which FACT version supplies the names when several plugins define the faction (active/merged view suggested); display form "1 (Rank Name)" replacing the number vs appending; fallback to bare number when NPC has no ANAM or the rank index isn't found; whether to do this together with the RNAM #0/#1 numbering and NPC ANAM misdecode items in this block.
 - NPC "door destination" misdecode: NPC ANAM (faction) appears to be decoded/labelled as a door destination field. Verify the NPC_ ANAM schema mapping is not colliding with the door ANAM/DNAM mapping.
 
 
 ## Deferred (need decision)
+
+repeatable subrecords should have #0 even if only one, non-repeatable no: today the #N index is added only when a type appears more than once (view_tree_decode_lists.cpp emit_slot_rows: `if (type_counts[slot.type] > 1) row.label += " #" + occurrence`), and the generic build_slot_row path (view_tree_decode.cpp, make_sub_label) adds no index at all. So a repeatable type with a single occurrence gets no #0, and numbering is inconsistent across decode paths. There is NO existing "repeatable" metadata; optional_sub_records (record_behavior.cpp) lists a record's possible sub-record types once each and does NOT distinguish repeatable from single, so it does not help directly — a separate repeatable_sub_records registry is needed (place beside optional_sub_records). AGREED APPROACH: authoritative per-record repeatable registry (not the "appeared >1" heuristic); a repeatable type always shows #0/#1..., non-repeatable never. Proposed repeatable set (NEEDS FINAL CONFIRMATION): NPC_/CREA = NPCO, NPCS, AI_W, AI_T, AI_F, AI_E, AI_A, DODT, DNAM; CONT = NPCO; RACE/BSGN = NPCS; FACT = RNAM, ANAM, INTV; REGN = SNAM; SPEL/ENCH/ALCH/INGR = ENAM; LEVI = INAM, INTV; LEVC = CNAM, INTV; INFO/LAND = none. DECIDE: final set; and scope — recommendation is to apply the registry to the flat paths (generic build_slot_row + emit_slot_rows, faction, container/NPC/CREA) and leave the CELL-ref and leveled-list GROUPED paths as-is since they already disambiguate by occurrence/grouping. Implement test-first (single repeatable -> #0; non-repeatable single -> no index; repeatable multiple -> #0 #1).
+
+autocalc vs non autocalc prevent merging other values also: for NPC_/CREA the FLAG autocalc bit (0x0010) determines whether stored stats are authoritative. merge_generic already skips an intermediate when its NPDT size differs from the master (has_mismatched_npdt) — the 12-byte (autocalc-on) vs 52-byte (autocalc-off) proxy. Two gaps: (1) autocalc bit differing while NPDT size is the same is not caught; (2) even when the gate fires, the NPCS (spells) and NPCO (inventory) keyed-list phases still run afterward, so "other values" merge across the autocalc boundary. Proposed fix: add autocalc_differs(first_subs, other_subs) reading the FLAG 0x0010 bit, broaden the merge_generic gate, and skip NPCS/NPCO merge for versions whose autocalc state disagrees with the master; winner still wins as-is. DECIDE: CREA scope (NPC_ only vs NPC_+CREA); winner-vs-master autocalc disagreement handling; hardcoded (like has_mismatched_npdt) vs table-driven flag in record_behavior.
 
 locked bit/field on a repeated sub-record (occurrence > 1) behind a flags group or cell-ref: coloring/menu shows it as not locked because occurrence is left at 0 on flags-group and cell-ref child rows (view_tree_decode.cpp / view_tree_decode_cell.cpp) and row_is_locked reads occurrence from the flags-group parent. reapply still writes it; only the match/display is wrong
 excluded plugins should be on list: add an "Excluded Plugins" tab to the Merged Patch settings page (merge_settings_view) listing the session's excluded plugins. Excluded plugins are session state (plugin_session_t, merge/excluded_plugins), not settings_store_t, so the settings dialog must be given the session. DECIDE: read-only list vs a Remove button that re-includes a plugin (needs session write-back + nav refresh + session save)
