@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <set>
 #include <string>
@@ -108,6 +109,16 @@ public:
 	    const char * winner,
 	    size_t size);
 
+	struct keyed_item_t
+	{
+		std::string key;
+		std::string data;
+
+		bool operator==(const keyed_item_t & other) const = default;
+	};
+
+	static std::vector<keyed_item_t> keyed_list_merge(const std::vector<std::vector<keyed_item_t>> & versions);
+
 	static std::vector<std::string> collect_enam_data(const sub_record_sequence_t & sequence);
 	static std::string merge_enam_slots(
 	    const std::vector<std::string> & first_enams,
@@ -133,11 +144,13 @@ private:
 	    const sub_record_sequence_t & winner_subs,
 	    const sub_record_sequence_t & output);
 
-	static sub_record_sequence_t merge_npco_phase(
+	static sub_record_sequence_t merge_keyed_list_phase(
 	    const merge_input_t & input,
 	    const sub_record_sequence_t & first_subs,
 	    const sub_record_sequence_t & winner_subs,
-	    const sub_record_sequence_t & output);
+	    const sub_record_sequence_t & output,
+	    const std::string & sub_type,
+	    const std::function<std::string(const sub_record_entry_t &)> & key_of);
 
 	static void apply_intermediate_to_group(
 	    sub_record_sequence_t & output,

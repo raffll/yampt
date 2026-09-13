@@ -41,6 +41,10 @@ static constexpr sub_record_rule_t fact_sub_rules[] = {
 	{ "FADT", 240, element_wise_merge },
 };
 
+static constexpr sub_record_rule_t race_sub_rules[] = {
+	{ "RADT", 140, element_wise_merge },
+};
+
 static constexpr sub_record_rule_t generic_sub_rules[] = {
 	{ "AIDT", 12, element_wise_merge },
 };
@@ -52,7 +56,7 @@ static constexpr record_behavior_t behavior_table[] = {
 	{ "FACT", decode_mode_t::faction, copy_strategy_t::whole_record, fact_sub_rules, 1, nullptr, nullptr, 0 },
 	{ "CONT", decode_mode_t::container, copy_strategy_t::whole_record, nullptr, 0, nullptr, nullptr, 0 },
 	{ "BSGN", decode_mode_t::container, copy_strategy_t::whole_record, nullptr, 0, nullptr, nullptr, 0 },
-	{ "RACE", decode_mode_t::container, copy_strategy_t::whole_record, nullptr, 0, nullptr, nullptr, 0 },
+	{ "RACE", decode_mode_t::container, copy_strategy_t::whole_record, race_sub_rules, 1, nullptr, nullptr, 0 },
 	{ "NPC_", decode_mode_t::container, copy_strategy_t::whole_record, npc_sub_rules, 3, nullptr, nullptr, 0 },
 	{ "CREA",
 	  decode_mode_t::container,
