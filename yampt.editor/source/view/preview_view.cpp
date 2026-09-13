@@ -428,6 +428,27 @@ void preview_view_t::update_selection(
 		return;
 	}
 
+	const bool is_info = (m_pending_request.record_type == "INFO");
+	const bool is_record_id =
+	    (is_info && m_pending_request.sub_type == "INAM") || (!is_info && m_pending_request.sub_type == "NAME");
+	if (is_record_id)
+	{
+		set_editing_enabled(false);
+		m_right_cached = (cell_value == non_existent_value) ? std::string {} : cell_value;
+		render_comparison();
+		show_readonly_message(tr("Record ID, not editable"));
+		return;
+	}
+
+	if (m_pending_request.record_type == "LAND")
+	{
+		set_editing_enabled(false);
+		m_right_cached = (cell_value == non_existent_value) ? std::string {} : cell_value;
+		render_comparison();
+		show_readonly_message(tr("Landscape data, not editable"));
+		return;
+	}
+
 	m_original_value = cell_value;
 	populate_value_selector();
 	set_editing_enabled(true);

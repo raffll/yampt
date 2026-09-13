@@ -464,6 +464,9 @@ bool auto_merge_t::is_plugin_included(int plugin_idx) const
 
 bool auto_merge_t::is_type_enabled(const std::string & rec_type) const
 {
+	if (rec_type == "LAND")
+		return false;
+
 	return m_config.disabled_types.count(rec_type) == 0;
 }
 

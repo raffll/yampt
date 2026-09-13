@@ -27,6 +27,8 @@
 - [CHANGE] The toolbar button that creates an empty active plugin is now labelled "Create New Plugin" (previously "New Plugin")
 - [CHANGE] A field's validation error now appears in the Edit panel next to the Apply button, prefixed "Error:", instead of in the status bar at the bottom of the window
 - [CHANGE] A leveled list's entry Count is no longer editable, since the game recomputes it automatically; selecting it shows "Auto-calculated, not editable" next to the Apply button
+- [CHANGE] A record's ID field is no longer editable, since it identifies the record and renaming it in place would break references; selecting it shows "Record ID, not editable" next to the Apply button
+- [CHANGE] Landscape (LAND) records are never written to the merged patch and their fields cannot be edited, since landscape is bulk terrain data that the merge cannot combine meaningfully; selecting a landscape field shows "Landscape data, not editable". Landscape records still appear in the navigation tree so conflicts remain visible
 - [FIX] The merge exclusion list in settings now shows each excluded record as its own row again; previously the whole pattern was loaded into a single row
 - [FIX] The navigation tree no longer jumps or scrolls away from where you were working when you exclude, include, guard, save, lock, or unlock — the scroll position and expanded state stay put
 - [FIX] An unused skill or attribute slot in a record (such as a race's empty bonus-skill slots) now reads "None" in the record view instead of the raw number 4294967295

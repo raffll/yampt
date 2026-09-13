@@ -719,3 +719,46 @@ TEST_CASE("auto_merge_t::execute, NPC FLAG merges per bit from plugin files", "[
 	fs::remove(plugin1_path);
 	fs::remove(plugin2_path);
 }
+
+// ============================================================================
+// Landscape (LAND) is never written to the merged patch
+// ============================================================================
+
+static std::string make_land(int32_t grid_x, int32_t grid_y, const std::string & height_data)
+{
+	std::string intv;
+	intv.append(reinterpret_cast<const char *>(&grid_x), 4);
+	intv.append(reinterpret_cast<const char *>(&grid_y), 4);
+
+	auto body = make_sub("INTV", intv);
+	body += make_sub("DATA", make_uint32(1));
+	body += make_sub("VHGT", height_data);
+	return make_record("LAND", body);
+}
+
+TEST_CASE("auto_merge_t::execute, LAND record excluded from merged patch", "[i]")
+{
+	namespace fs = std::filesystem;
+
+	const auto master_body = make_tes3_header_record() + make_land(0, 0, std::string(64, '\x01'));
+	const auto plugin_body = make_tes3_header_record() + make_land(0, 0, std::string(64, '\x02'));
+
+	const auto master_path = temp_plugin_path("yampt_land_master.esm");
+	const auto plugin_path = temp_plugin_path("yampt_land_plugin.esp");
+	write_plugin_file(master_path, master_body);
+	write_plugin_file(plugin_path, plugin_body);
+
+	plugin_scan_t scan;
+	scan.load_plugin(master_path);
+	scan.load_plugin(plugin_path);
+	scan.set_active_plugin("Merged Patch.esp");
+	scan.rebuild_conflicts();
+
+	auto_merge_t merge(scan);
+	merge.execute();
+
+	REQUIRE(scan.find_active_content("LAND", "GRID[0,0]") == nullptr);
+
+	fs::remove(master_path);
+	fs::remove(plugin_path);
+}
