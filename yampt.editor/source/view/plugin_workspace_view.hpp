@@ -131,6 +131,7 @@ private:
 	void clear_views_if_record_filtered_out();
 	void load_plugins_from_paths(const std::vector<std::string> & paths, const std::string & base_path);
 	void display_record_in_view(const conflict_entry_t & entry);
+	std::string first_existing_previous_value(const QModelIndex & current) const;
 	QString build_mode_prefix() const;
 	void start_lua_scan();
 	void on_lua_scan_complete(const lua_scan_result_t & result);

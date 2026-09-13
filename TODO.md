@@ -1,7 +1,6 @@
 # TODO
 
-in left panel show first non-empty/existing records, not exactly previous
-filed name default color should be also grey?
+view treen column 0, field name default color should be also grey <- should be identical to master
 mayve indicator that min/max are bounded
 dont wrap log lines
 remove locking entire records, it is always single field/group copied or modified, maybe lock them automatically for mnerged patch and keep source indicator, and remove when source is not in load order

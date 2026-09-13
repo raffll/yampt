@@ -819,11 +819,7 @@ void plugin_workspace_view_t::on_view_selection_changed(const QModelIndex & curr
 	m_preview->set_editing_enabled(false);
 
 	const auto right_text = model->full_value_at(current);
-
-	const auto left_index = model->index(current.row(), clicked_col - 1, current.parent());
-	std::string left_text;
-	if (left_index.isValid() && left_index.column() >= 1)
-		left_text = model->full_value_at(left_index);
+	const auto left_text = first_existing_previous_value(current);
 
 	if (right_text == non_existent_value && (left_text.empty() || left_text == non_existent_value))
 	{
@@ -833,6 +829,28 @@ void plugin_workspace_view_t::on_view_selection_changed(const QModelIndex & curr
 
 	m_preview->update_selection(current, model, right_text);
 	m_preview->show_comparison(left_text, right_text);
+}
+
+std::string plugin_workspace_view_t::first_existing_previous_value(const QModelIndex & current) const
+{
+	const auto * model = m_record_view->model();
+	if (!model)
+		return {};
+
+	for (int col = current.column() - 1; col >= 1; --col)
+	{
+		const auto index = model->index(current.row(), col, current.parent());
+		if (!index.isValid())
+			continue;
+
+		const auto value = model->full_value_at(index);
+		if (value.empty() || value == non_existent_value)
+			continue;
+
+		return value;
+	}
+
+	return {};
 }
 
 void plugin_workspace_view_t::display_record_in_view(const conflict_entry_t & entry)

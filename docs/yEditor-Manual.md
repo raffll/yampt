@@ -130,7 +130,7 @@ Press Escape to clear the search field and remove the text filter.
 
 The Edit panel at the bottom of the window serves two purposes: text comparison and field editing.
 
-When you click a cell in the record view that has a conflict with a previous column, the Edit panel shows both values side by side. The lines that changed between the two versions are highlighted: removed lines have a red background on the left, added lines a green background on the right. The comparison ignores leading indentation, so a script that differs only in how its lines are indented reads as unchanged, while each pane still shows its own original layout with tabs rendered four characters wide.
+When you click a cell in the record view, the Edit panel shows its value on the right and, on the left, the value from the nearest earlier plugin column that actually defines this field. Columns that leave the field empty are skipped, so the left pane always shows a real previous value to compare against rather than a blank. The lines that changed between the two versions are highlighted: removed lines have a red background on the left, added lines a green background on the right. The comparison ignores leading indentation, so a script that differs only in how its lines are indented reads as unchanged, while each pane still shows its own original layout with tabs rendered four characters wide.
 
 The Diff button below the comparison turns this highlighting on and off. With it off, both panes show plain text with no coloring, which is useful for reading the raw content of each version. Toggling it keeps your current scroll position rather than jumping back to the top.
 

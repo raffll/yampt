@@ -23,6 +23,7 @@
 - [FIX] An unused skill or attribute slot in a record (such as a race's empty bonus-skill slots) now reads "None" in the record view instead of the raw number 4294967295
 - [FIX] Locking a group now covers exactly the group members you selected, following the same rules as copying a group; the Lock and Unlock options are greyed out when the right-clicked cell has nothing that can be locked
 - [FIX] Locking a text field — such as a name, model path, script, book text, or dialogue value — now actually holds its value through a re-merge; previously locking these variable-length fields appeared to work but the value was not preserved when the merged patch was regenerated
+- [FIX] The Edit panel's left comparison pane now shows the value from the nearest earlier plugin that actually defines the clicked field, skipping columns that leave it empty, instead of only the immediately preceding column which could be blank
 
 ## [0.1135] - 2026-09-04
 
