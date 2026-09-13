@@ -58,6 +58,16 @@ static std::string make_bytes(const std::vector<uint8_t> & bytes)
 	return std::string(bytes.begin(), bytes.end());
 }
 
+static size_t npdt_size(const std::string & record)
+{
+	const auto pos = record.find("NPDT");
+	REQUIRE(pos != std::string::npos);
+
+	uint32_t size_val = 0;
+	std::memcpy(&size_val, record.data() + pos + 4, 4);
+	return size_val;
+}
+
 // ============================================================================
 // Requirement 1: Three-Way Sub-Record Merge â€” Generic
 // ============================================================================
@@ -690,10 +700,10 @@ TEST_CASE("sub_record_merge_t::merge, autocalc intermediate skipped", "[u]")
 }
 
 // ============================================================================
-// Element-wise merge requires same size
+// NPDT resolves by last-changer wins even when sizes differ
 // ============================================================================
 
-TEST_CASE("sub_record_merge_t::merge, element-wise skipped on size mismatch", "[u]")
+TEST_CASE("sub_record_merge_t::merge, only intermediate changed NPDT wins on size mismatch", "[u]")
 {
 	std::string npdt_52(52, '\0');
 	npdt_52[4] = 100;
@@ -716,7 +726,8 @@ TEST_CASE("sub_record_merge_t::merge, element-wise skipped on size mismatch", "[
 
 	auto result = sub_record_merge_t::merge(input);
 
-	REQUIRE_FALSE(result.changed);
+	REQUIRE(result.changed);
+	REQUIRE(npdt_size(result.content) == 12);
 }
 
 // ============================================================================
@@ -736,16 +747,6 @@ static uint32_t read_npdt_gold(const std::string & record, size_t gold_offset)
 	uint32_t gold = 0;
 	std::memcpy(&gold, record.data() + data_start + gold_offset, 4);
 	return gold;
-}
-
-static size_t npdt_size(const std::string & record)
-{
-	const auto pos = record.find("NPDT");
-	REQUIRE(pos != std::string::npos);
-
-	uint32_t size_val = 0;
-	std::memcpy(&size_val, record.data() + pos + 4, 4);
-	return size_val;
 }
 
 TEST_CASE("sub_record_merge_t::merge, 4 versions all 52-byte NPDT merges gold field", "[u]")
@@ -822,39 +823,101 @@ TEST_CASE("sub_record_merge_t::merge, 4 versions mixed layout skips 12-byte inte
 	REQUIRE(read_npdt_gold(result.content, npdt_52_gold_offset) == 100);
 }
 
-TEST_CASE("sub_record_merge_t::merge, 4 versions 12-byte base with mixed layouts", "[u]")
+TEST_CASE("sub_record_merge_t::merge, NPDT last changer wins regardless of size", "[u]")
 {
-	std::string npdt_first(12, '\0');
-	npdt_first[npdt_12_gold_offset] = 30;
+	std::string npdt_master(52, '\0');
+	npdt_master[npdt_52_gold_offset] = 100;
 
-	std::string npdt_inter_autocalc(12, '\0');
-	npdt_inter_autocalc[npdt_12_gold_offset] = 90;
+	std::string npdt_p1(12, '\0');
+	npdt_p1[npdt_12_gold_offset] = 30;
 
-	std::string npdt_inter_explicit(52, '\0');
-	npdt_inter_explicit[npdt_52_gold_offset] = 500;
+	std::string npdt_p2(52, '\0');
+	npdt_p2[npdt_52_gold_offset] = 200;
 
-	std::string npdt_winner(12, '\0');
-	npdt_winner[npdt_12_gold_offset] = 30;
+	std::string npdt_p3(12, '\0');
+	npdt_p3[npdt_12_gold_offset] = 90;
 
-	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_first);
-	auto subs_inter_autocalc = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_inter_autocalc);
-	auto subs_inter_explicit = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_inter_explicit);
-	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_winner);
+	auto subs_master = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_master);
+	auto subs_p1 = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_p1);
+	auto subs_p2 = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_p2);
+	auto subs_p3 = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_p3);
 
 	merge_input_t input;
 	input.rec_type = "NPC_";
 	input.record_id = "id";
 	input.version_contents = {
-		make_record("NPC_", subs_first, npc_flag_autocalc),
-		make_record("NPC_", subs_inter_autocalc, npc_flag_autocalc),
-		make_record("NPC_", subs_inter_explicit),
-		make_record("NPC_", subs_winner, npc_flag_autocalc),
+		make_record("NPC_", subs_master),
+		make_record("NPC_", subs_p1),
+		make_record("NPC_", subs_p2),
+		make_record("NPC_", subs_p3),
 	};
 
 	auto result = sub_record_merge_t::merge(input);
 
 	REQUIRE(npdt_size(result.content) == 12);
 	REQUIRE(read_npdt_gold(result.content, npdt_12_gold_offset) == 90);
+}
+
+TEST_CASE("sub_record_merge_t::merge, NPDT 12-byte intermediate wins over unchanged winner", "[u]")
+{
+	std::string npdt_master(52, '\0');
+	npdt_master[npdt_52_gold_offset] = 100;
+
+	std::string npdt_inter(12, '\0');
+	npdt_inter[npdt_12_gold_offset] = 90;
+
+	std::string npdt_winner(52, '\0');
+	npdt_winner[npdt_52_gold_offset] = 100;
+
+	auto subs_master = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_master);
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_inter);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_winner);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_master),
+		make_record("NPC_", subs_inter),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(npdt_size(result.content) == 12);
+	REQUIRE(read_npdt_gold(result.content, npdt_12_gold_offset) == 90);
+}
+
+TEST_CASE("sub_record_merge_t::merge, NPDT 52-byte intermediate wins over unchanged autocalc winner", "[u]")
+{
+	std::string npdt_master(12, '\0');
+	npdt_master[npdt_12_gold_offset] = 30;
+
+	std::string npdt_inter(52, '\0');
+	npdt_inter[npdt_52_gold_offset] = 500;
+
+	std::string npdt_winner(12, '\0');
+	npdt_winner[npdt_12_gold_offset] = 30;
+
+	auto subs_master = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_master);
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_inter);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_winner);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_master),
+		make_record("NPC_", subs_inter),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(npdt_size(result.content) == 52);
+	REQUIRE(read_npdt_gold(result.content, npdt_52_gold_offset) == 500);
 }
 
 // ============================================================================

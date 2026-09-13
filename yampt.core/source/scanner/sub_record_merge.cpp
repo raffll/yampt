@@ -1073,28 +1073,6 @@ static sub_record_sequence_t replace_entries_of_type(
 	return result;
 }
 
-static size_t find_npdt_size(const sub_record_sequence_t & subs)
-{
-	for (const auto & entry : subs)
-	{
-		if (entry.type == "NPDT")
-			return entry.data.size();
-	}
-
-	return 0;
-}
-
-static bool has_mismatched_npdt(const sub_record_sequence_t & first, const sub_record_sequence_t & inter)
-{
-	const auto first_size = find_npdt_size(first);
-	const auto inter_size = find_npdt_size(inter);
-
-	if (first_size == 0 || inter_size == 0)
-		return false;
-
-	return first_size != inter_size;
-}
-
 merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
 {
 	const auto & versions = input.version_contents;
@@ -1112,10 +1090,6 @@ merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
 	for (size_t version_idx = versions.size() - 2; version_idx >= 1; --version_idx)
 	{
 		const auto inter_subs = parse_sub_records(versions[version_idx]);
-
-		if (input.rec_type == "NPC_" && has_mismatched_npdt(first_subs, inter_subs))
-			continue;
-
 		apply_intermediate(output, first_subs, inter_subs, winner_subs, input.rec_type);
 	}
 

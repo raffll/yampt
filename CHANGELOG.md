@@ -35,6 +35,7 @@
 - [FIX] A deleted-record marker in the record view now reads "DELETED" instead of showing 0 or a raw value
 - [FIX] Race records now merge field by field, so a race's skill bonuses, attributes, height, weight, and flags from different plugins are combined instead of the last plugin's entire race data replacing the rest
 - [FIX] Faction reactions now merge by faction rather than by position, so reactions listed in a different order across plugins no longer drop or get mismatched; a changed reaction value follows load order and a reaction removed by a plugin stays removed
+- [FIX] An NPC whose stats a plugin changed now carries that change into the merged patch, including when the change switches the NPC between auto-calculated and full hand-set stats. The stat block is resolved like any other field, so the last plugin in load order to change it wins instead of the change being dropped
 
 ### Both Apps
 - [CHANGE] The log panel no longer wraps long lines; instead it scrolls horizontally, so each log entry stays on one line
