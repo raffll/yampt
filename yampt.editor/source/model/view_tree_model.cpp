@@ -7,7 +7,9 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
+#include <iterator>
 #include <map>
+#include <set>
 #include <theme_system.hpp>
 #include <QBrush>
 #include <QCoreApplication>
@@ -109,7 +111,42 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 		}
 	}
 
+	sort_rows_by_canonical_order();
+
+	if (m_show_optional_placeholders)
+		append_optional_placeholders(col_count);
+
 	endResetModel();
+}
+
+static int canonical_row_rank(const view_tree_model_t::view_node_t & row, const std::vector<std::string> & order)
+{
+	static constexpr int rank_header = -1;
+	static constexpr int rank_unlisted = 1000000;
+
+	if (row.type == "Record Header")
+		return rank_header;
+
+	for (size_t position = 0; position < order.size(); ++position)
+	{
+		if (order[position] == row.type)
+			return static_cast<int>(position);
+	}
+
+	return rank_unlisted;
+}
+
+void view_tree_model_t::sort_rows_by_canonical_order()
+{
+	const auto & order = optional_sub_records(m_record_type);
+	if (order.empty())
+		return;
+
+	std::stable_sort(
+	    m_rows.begin(),
+	    m_rows.end(),
+	    [&order](const view_node_t & lhs, const view_node_t & rhs)
+	    { return canonical_row_rank(lhs, order) < canonical_row_rank(rhs, order); });
 }
 
 size_t view_tree_model_t::setup_columns(plugin_scan_t & scan, const conflict_entry_t & entry)
@@ -504,6 +541,57 @@ void view_tree_model_t::set_show_deleted_strikeout(bool value)
 	emit dataChanged(QModelIndex(), QModelIndex(), { Qt::FontRole });
 }
 
+void view_tree_model_t::set_show_optional_placeholders(bool value)
+{
+	if (m_show_optional_placeholders == value)
+		return;
+
+	m_show_optional_placeholders = value;
+
+	if (!m_scan_for_header || m_record_type.empty())
+		return;
+
+	const auto * entry = m_scan_for_header->find(m_record_type, m_record_id);
+	if (!entry)
+		return;
+
+	set_record(*m_scan_for_header, *entry);
+}
+
+void view_tree_model_t::append_optional_placeholders(size_t col_count)
+{
+	const auto & roster = optional_sub_records(m_record_type);
+	if (roster.empty())
+		return;
+
+	std::set<std::string> present_types;
+	for (const auto & row : m_rows)
+	{
+		if (!row.type.empty())
+			present_types.insert(row.type);
+	}
+
+	bool added_any = false;
+	for (const auto & sub_type : roster)
+	{
+		if (present_types.count(sub_type) > 0)
+			continue;
+
+		view_node_t row;
+		row.type = sub_type;
+		row.label = make_sub_label(sub_type, m_record_type, 0);
+		row.is_optional_placeholder = true;
+		row.row_conflict_all = conflict_all_t::only_one;
+		row.values.assign(col_count, non_existent_value);
+		row.cell_conflict_this.assign(col_count, conflict_this_t::unknown);
+		m_rows.push_back(std::move(row));
+		added_any = true;
+	}
+
+	if (added_any)
+		sort_rows_by_canonical_order();
+}
+
 const std::vector<view_tree_model_t::view_node_t> & view_tree_model_t::visible_rows() const
 {
 	if (!m_hide_no_conflict)
@@ -764,7 +852,7 @@ static QVariant sub_record_foreground(
 		}
 
 		if (worst == conflict_this_t::unknown || worst == conflict_this_t::master)
-			return {};
+			return QBrush(theme.conflict_this_foreground(conflict_this_t::identical_to_master));
 
 		return QBrush(theme.conflict_this_foreground(worst));
 	}
@@ -879,6 +967,9 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 		if (node->is_excluded_sub_record)
 			return QBrush(theme_system_t::instance().get_color(color_name_t::excluded_background));
 
+		if (node->is_optional_placeholder)
+			return QBrush(theme_system_t::instance().get_color(color_name_t::optional_placeholder_background));
+
 		return sub_record_background(*node, index.column());
 	}
 
@@ -889,6 +980,9 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 
 		if (node->is_excluded_sub_record)
 			return QBrush(theme_system_t::instance().get_color(color_name_t::excluded_text));
+
+		if (node->is_optional_placeholder)
+			return QBrush(theme_system_t::instance().get_color(color_name_t::optional_placeholder_text));
 
 		return sub_record_foreground(*node, m_column_names.size(), index.column(), m_has_active_column);
 	}

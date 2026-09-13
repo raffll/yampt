@@ -2,6 +2,7 @@
 #include <cstddef>
 #include <set>
 #include <string>
+#include <vector>
 
 enum class sub_rule_flag_t : unsigned
 {
@@ -73,8 +74,21 @@ struct record_behavior_t
 	size_t paired_rule_count;
 };
 
+enum class field_pair_role_t
+{
+	none,
+	min_bound,
+	max_bound
+};
+
 const record_behavior_t * find_record_behavior(const std::string & record_type);
 const sub_record_rule_t * find_sub_record_rule(
     const record_behavior_t * behavior,
     const std::string & sub_type,
     size_t data_size);
+field_pair_role_t find_field_pair_role(
+    const std::string & record_type,
+    const std::string & sub_type,
+    size_t field_offset);
+
+const std::vector<std::string> & optional_sub_records(const std::string & record_type);

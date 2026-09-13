@@ -67,6 +67,13 @@ public:
 		return m_show_deleted_strikeout;
 	}
 
+	void set_show_optional_placeholders(bool value);
+
+	bool show_optional_placeholders() const
+	{
+		return m_show_optional_placeholders;
+	}
+
 	void set_excluded_plugins(const std::set<std::string> * excluded);
 	void set_patch_plugins(const std::set<std::string> * patch);
 	void set_editable_columns(const editable_column_set_t * editable);
@@ -117,6 +124,7 @@ public:
 		bool all_identical = true;
 		bool is_ignored = false;
 		bool is_excluded_sub_record = false;
+		bool is_optional_placeholder = false;
 		bool is_deleted = false;
 		bool is_info_chain = false;
 		int occurrence = 0;
@@ -172,6 +180,8 @@ private:
 	void set_record_info(record_context_t & context, const conflict_entry_t & entry);
 	void set_record_dial(plugin_scan_t & scan, record_context_t & context, const conflict_entry_t & entry);
 	void set_record_generic(record_context_t & context, const conflict_entry_t & entry);
+	void sort_rows_by_canonical_order();
+	void append_optional_placeholders(size_t col_count);
 
 	void collect_leveled_entries(record_context_t & context, slot_build_context_t & build_ctx);
 	void collect_faction_entries(record_context_t & context, slot_build_context_t & build_ctx);
@@ -259,6 +269,7 @@ private:
 	plugin_scan_t * m_scan_for_header = nullptr;
 	codepage_t m_display_codepage = codepage_t::windows_1252;
 	bool m_show_deleted_strikeout = false;
+	bool m_show_optional_placeholders = false;
 	mutable std::map<std::string, field_def_t> m_synthetic_fields;
 	mutable field_def_t m_bool_bit_field {};
 };

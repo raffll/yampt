@@ -62,6 +62,8 @@ enum class color_name_t
 
 	excluded_background,
 	excluded_text,
+	optional_placeholder_background,
+	optional_placeholder_text,
 	locked_background,
 	locked_text,
 

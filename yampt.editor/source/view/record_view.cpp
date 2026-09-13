@@ -136,6 +136,12 @@ void record_view_t::resize_columns()
 	apply_column_sizing();
 }
 
+void record_view_t::refresh_expansion()
+{
+	expand_non_numeric_groups();
+	apply_column_sizing();
+}
+
 view_tree_model_t * record_view_t::model() const
 {
 	return m_model;

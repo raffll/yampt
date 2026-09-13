@@ -65,7 +65,11 @@ Each column represents one plugin's version. Column headers show the plugin file
 
 Empty cells mean that plugin does not include the sub-record. This happens when a plugin only modifies some fields of a record.
 
+Sub-records are shown in a fixed, consistent order for each record type: the record header first, then the simple single-value fields (including any optional placeholder rows in their usual position), then the data blocks that expand into sub-values, and finally repeating content such as inventory items, spells, or body-part slots. The order is the same every time you open a record of that type, so fields are always where you expect them.
+
 A sub-record excluded from conflict detection and the merged patch is shown with a light grey background and grey text, so you can see at a glance which sub-records are being skipped.
+
+Some fields are linked as a pair whose two values are always merged together from the same plugin, never taken from different plugins. A creature's attack damage minimum and maximum are such a pair. The two rows are marked in front of their names with a bracket, ┌ on the minimum and └ on the maximum, so you can see they move as one during a merge.
 
 ## Dialogue Responses
 
@@ -108,6 +112,7 @@ The View menu provides display options:
 - **Sync Scrolling** — locks the scroll position between the two comparison panes in the Edit panel so they stay aligned as you scroll either one. The setting is remembered between sessions.
 - **Show Only One Column Per Plugin** — when a plugin defines the same record more than once, collapses those versions into a single column showing only that plugin's last (winning) version, instead of one column per occurrence.
 - **Strike Out Deleted Records** — renders deleted records and cell references with strikethrough text, making them visually distinct from active content.
+- **Show Optional Fields** — adds a row for each sub-record a record can contain but currently does not, so you can see the fields that are available to add. These placeholder rows have a white background with light grey text and are empty in every plugin column. Only single-occurrence sub-records are shown this way; repeating content such as inventory items or spell effects is not. The setting is remembered between sessions.
 
 ## Toolbar Search
 
@@ -121,7 +126,7 @@ The toolbar search field filters the navigation tree by record ID or display nam
 - **.\*** — interpret the query as a regular expression.
 - **ID** — search in the record's internal ID (e.g. "iron_dagger", "balmora_guild").
 - **Name** — search in the record's display name (e.g. "Iron Dagger", "Balmora Mages Guild").
-- **Advanced Filters...** — opens the advanced filter dialog for filtering by conflict severity, per-plugin conflict status, record type, deleted status, and Lua handler criteria. The dialog opens pre-populated with the advanced criteria currently in effect, so adjustments build on the existing selection rather than starting from scratch.
+- **Advanced Filters...** — opens the advanced filter dialog for filtering by conflict severity, per-plugin conflict status, record type, deleted status, and Lua handler criteria. The record type list uses the same readable names as the navigation tree (for example Cell, Creature, Dialogue Response), not the raw four-letter codes. The dialog opens pre-populated with the advanced criteria currently in effect, so adjustments build on the existing selection rather than starting from scratch.
 - **No Filters** — a checkable toggle that shows whether any filters are active. When unchecked (filters are active), clicking it clears Conflicts Only, the search field, and the advanced filter in one action, returning the navigation tree to showing every record. When already checked, clicking it does nothing.
 
 Press Escape to clear the search field and remove the text filter.

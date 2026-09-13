@@ -10,6 +10,8 @@
 ### yEditor
 - [NEW] Build a plugin by hand into any target, not only the merged patch: one loaded plugin is the active plugin (marked ⭐ in the navigation tree and record view) and receives copied records. New Plugin in the toolbar creates an empty plugin and makes it active; Set as Active Plugin in a plugin's right-click menu switches the target. The merged patch is the active plugin by default, so existing workflows are unchanged. Only one plugin is active at a time, and switching first offers to save the current one.
 - [NEW] Lock an entire record directly from the navigation tree: right-click a record under the merged patch and choose Lock in Merged Patch to freeze the whole record, or Unlock in Merged Patch to release it
+- [NEW] Fields that must merge together as a pair — such as a creature's attack damage minimum and maximum — are now marked in the record view with a bracket before their names (┌ on the minimum, └ on the maximum), showing that both values come from the same plugin during a merge
+- [NEW] Show Optional Fields (View menu): adds a placeholder row for each single-occurrence sub-record a record can have but currently does not, drawn on a white background with light grey text, so you can see which fields are available to add. The choice is remembered between sessions
 - [CHANGE] The navigation tree now has two columns — ID and Name. Plugin role icons appear before the plugin filename in the ID column
 - [CHANGE] A plugin now shows a single role icon instead of a stack: the highest-priority role wins, in the order guard, merged patch, overwrite copy, then file type (so the merged patch no longer shows the ⚡ overwrite marker). The active-plugin star is still shown after the role icon
 - [CHANGE] Land texture index (LTEX:INTV) is now excluded from conflict detection and the merged patch by default, since it is assigned per plugin and its differences are not real conflicts; it can be re-included from the Merged Patch settings
@@ -17,6 +19,8 @@
 - [CHANGE] Excluded and locked content is now shown by color instead of icons: excluded plugins, records, and sub-records use a light grey background with grey text (excluded plugin column headers in the record view use grey text), and locked cells and locked records use a light blue background with blue text. The 🚫 excluded and 🔒 lock glyphs have been removed from both panels; where a cell is both locked and excluded, the locked color takes precedence
 - [CHANGE] Record and navigation context menus are now ordered consistently in three bands: setters and copy actions first, then the reversible toggles (lock/unlock and exclude/include), then destructive actions last — Save and record removal — each band separated by a divider
 - [CHANGE] The window title now shows the active plugin's file name (for example "yEditor - New Plugin.esp"), updating whenever you switch, create, load, or unload the active plugin; the unsaved-changes asterisk still appears after the name
+- [CHANGE] The record view now shows sub-records in a fixed, consistent order for each record type: the record header, then simple single-value fields (with any optional placeholder rows in their usual position), then data blocks that expand into sub-values, then repeating content such as inventory items, spells, and body-part slots
+- [CHANGE] The Advanced Filters dialog now lists record types by their readable names (Cell, Creature, Dialogue Response) matching the navigation tree, instead of the raw four-letter codes
 - [CHANGE] The toolbar button that creates an empty active plugin is now labelled "Create New Plugin" (previously "New Plugin")
 - [FIX] The merge exclusion list in settings now shows each excluded record as its own row again; previously the whole pattern was loaded into a single row
 - [FIX] The navigation tree no longer jumps or scrolls away from where you were working when you exclude, include, guard, save, lock, or unlock — the scroll position and expanded state stay put
@@ -24,6 +28,9 @@
 - [FIX] Locking a group now covers exactly the group members you selected, following the same rules as copying a group; the Lock and Unlock options are greyed out when the right-clicked cell has nothing that can be locked
 - [FIX] Locking a text field — such as a name, model path, script, book text, or dialogue value — now actually holds its value through a re-merge; previously locking these variable-length fields appeared to work but the value was not preserved when the merged patch was regenerated
 - [FIX] The Edit panel's left comparison pane now shows the value from the nearest earlier plugin that actually defines the clicked field, skipping columns that leave it empty, instead of only the immediately preceding column which could be blank
+
+### Both Apps
+- [CHANGE] The log panel no longer wraps long lines; instead it scrolls horizontally, so each log entry stays on one line
 
 ## [0.1135] - 2026-09-04
 

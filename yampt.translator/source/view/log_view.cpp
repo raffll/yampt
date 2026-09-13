@@ -13,6 +13,7 @@ log_view_t::log_view_t(QWidget * parent)
 
 	m_text_edit = new QPlainTextEdit(this);
 	m_text_edit->setReadOnly(true);
+	m_text_edit->setLineWrapMode(QPlainTextEdit::NoWrap);
 	layout->addWidget(m_text_edit);
 }
 

@@ -1,5 +1,6 @@
 #include "record_behavior.hpp"
 #include <cstring>
+#include <map>
 #include <set>
 
 using enum sub_rule_flag_t;
@@ -104,4 +105,76 @@ const sub_record_rule_t * find_sub_record_rule(
 	}
 
 	return behavior->wildcard_rule;
+}
+
+field_pair_role_t find_field_pair_role(
+    const std::string & record_type,
+    const std::string & sub_type,
+    size_t field_offset)
+{
+	const auto * behavior = find_record_behavior(record_type);
+	if (!behavior)
+		return field_pair_role_t::none;
+
+	for (size_t rule_idx = 0; rule_idx < behavior->paired_rule_count; ++rule_idx)
+	{
+		const auto & rule = behavior->paired_rules[rule_idx];
+		if (sub_type != rule.sub_type)
+			continue;
+
+		for (size_t pair_idx = 0; pair_idx < rule.pair_count; ++pair_idx)
+		{
+			const auto & pair = rule.pairs[pair_idx];
+			if (field_offset == pair.min_offset)
+				return field_pair_role_t::min_bound;
+
+			if (field_offset == pair.max_offset)
+				return field_pair_role_t::max_bound;
+		}
+	}
+
+	return field_pair_role_t::none;
+}
+
+const std::vector<std::string> & optional_sub_records(const std::string & record_type)
+{
+	static const std::map<std::string, std::vector<std::string>> roster = {
+		{ "ACTI", { "NAME", "MODL", "FNAM", "SCRI" } },
+		{ "ALCH", { "NAME", "MODL", "FNAM", "ITEX", "TEXT", "SCRI", "ALDT" } },
+		{ "APPA", { "NAME", "MODL", "FNAM", "ITEX", "SCRI", "AADT" } },
+		{ "ARMO", { "NAME", "MODL", "FNAM", "ITEX", "SCRI", "ENAM", "AODT" } },
+		{ "BOOK", { "NAME", "MODL", "FNAM", "ITEX", "SCRI", "TEXT", "BKDT" } },
+		{ "BSGN", { "NAME", "FNAM", "TNAM", "DESC" } },
+		{ "CLAS", { "NAME", "FNAM", "DESC", "CLDT" } },
+		{ "CLOT", { "NAME", "MODL", "FNAM", "ITEX", "ENAM", "SCRI", "CTDT" } },
+		{ "CONT", { "NAME", "MODL", "FNAM", "CNDT", "FLAG" } },
+		{ "CREA", { "NAME", "MODL", "FNAM", "SCRI", "XSCL", "NPDT", "FLAG", "AIDT" } },
+		{ "DOOR", { "NAME", "FNAM", "MODL", "SCIP", "SNAM", "ANAM" } },
+		{ "ENCH", { "NAME", "ENDT" } },
+		{ "GLOB", { "NAME", "FNAM", "FLTV" } },
+		{ "GMST", { "NAME", "STRV", "INTV", "FLTV" } },
+		{ "INGR", { "NAME", "MODL", "FNAM", "ITEX", "SCRI", "IRDT" } },
+		{ "LIGH", { "NAME", "FNAM", "MODL", "SCPT", "ITEX", "SNAM", "LHDT" } },
+		{ "LOCK", { "NAME", "MODL", "FNAM", "ITEX", "SCRI", "LKDT" } },
+		{ "MGEF",
+		  { "ITEX", "PTEX", "CVFX", "BVFX", "HVFX", "AVFX", "DESC", "CSND", "BSND", "HSND", "ASND", "INDX", "MEDT" } },
+		{ "MISC", { "NAME", "MODL", "FNAM", "ITEX", "ENAM", "SCRI", "MCDT" } },
+		{ "NPC_", { "NAME", "FNAM", "MODL", "RNAM", "ANAM", "BNAM", "CNAM", "KNAM", "SCRI", "NPDT", "FLAG", "AIDT" } },
+		{ "PROB", { "NAME", "MODL", "FNAM", "ITEX", "SCRI", "PBDT" } },
+		{ "REPA", { "NAME", "MODL", "FNAM", "ITEX", "SCRI", "RIDT" } },
+		{ "SKIL", { "DESC", "INDX", "SKDT" } },
+		{ "SNDG", { "NAME", "SNAM", "CNAM", "DATA" } },
+		{ "SOUN", { "NAME", "FNAM", "DATA" } },
+		{ "SPEL", { "NAME", "FNAM", "SPDT" } },
+		{ "STAT", { "NAME", "MODL" } },
+		{ "WEAP", { "NAME", "MODL", "FNAM", "ITEX", "ENAM", "SCRI", "WPDT" } },
+	};
+
+	static const std::vector<std::string> empty;
+
+	const auto it_roster = roster.find(record_type);
+	if (it_roster == roster.end())
+		return empty;
+
+	return it_roster->second;
 }

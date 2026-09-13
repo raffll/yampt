@@ -2,8 +2,20 @@
 #include <decoder/scvr_condition.hpp>
 #include <decoder/view_tree_format.hpp>
 #include <scanner/record_conflict.hpp>
+#include <utility/record_behavior.hpp>
 #include <cstdio>
 #include <cstring>
+
+static std::string apply_pair_prefix(const std::string & label, field_pair_role_t role)
+{
+	if (role == field_pair_role_t::min_bound)
+		return "\u250c " + label;
+
+	if (role == field_pair_role_t::max_bound)
+		return "\u2514 " + label;
+
+	return label;
+}
 
 static void mark_children_ignored(view_tree_model_t::view_node_t & parent)
 {
@@ -283,7 +295,8 @@ void view_tree_model_t::decode_schema_children(
 		}
 
 		view_node_t frow;
-		frow.label = fdef.name;
+		const auto pair_role = find_field_pair_role(m_record_type, slot.type, fdef.offset);
+		frow.label = apply_pair_prefix(fdef.name, pair_role);
 		frow.schema_field_index = static_cast<int>(field_idx);
 		frow.values.resize(col_count);
 

@@ -1,5 +1,6 @@
 #include "nav_tree_model.hpp"
 #include "../view/plugin_icon.hpp"
+#include "../view/record_type_name.hpp"
 #include "editable_column_set.hpp"
 #include <io/codepage.hpp>
 #include <algorithm>
@@ -117,57 +118,7 @@ static int natural_compare(const std::string & a, const std::string & b)
 
 static const char * type_to_display_name(const std::string & type)
 {
-	static const std::map<std::string, const char *> names = {
-		{ "ACTI", "Activator" },
-		{ "ALCH", "Potion" },
-		{ "APPA", "Apparatus" },
-		{ "ARMO", "Armor" },
-		{ "BODY", "Body Part" },
-		{ "BOOK", "Book" },
-		{ "BSGN", "Birthsign" },
-		{ "CELL", "Cell" },
-		{ "CLAS", "Class" },
-		{ "CLOT", "Clothing" },
-		{ "CONT", "Container" },
-		{ "CREA", "Creature" },
-		{ "DIAL", "Dialogue" },
-		{ "DOOR", "Door" },
-		{ "ENCH", "Enchantment" },
-		{ "FACT", "Faction" },
-		{ "GLOB", "Global" },
-		{ "GMST", "Game Setting" },
-		{ "INFO", "Dialogue Response" },
-		{ "INGR", "Ingredient" },
-		{ "LAND", "Landscape" },
-		{ "LEVC", "Leveled Creature" },
-		{ "LEVI", "Leveled Item" },
-		{ "LIGH", "Light" },
-		{ "LOCK", "Lockpick" },
-		{ "LTEX", "Land Texture" },
-		{ "MGEF", "Magic Effect" },
-		{ "MISC", "Misc. Item" },
-		{ "NPC_", "NPC" },
-		{ "PGRD", "Path Grid" },
-		{ "PROB", "Probe" },
-		{ "RACE", "Race" },
-		{ "REGN", "Region" },
-		{ "REPA", "Repair Item" },
-		{ "SCPT", "Script" },
-		{ "SKIL", "Skill" },
-		{ "SNDG", "Sound Generator" },
-		{ "SOUN", "Sound" },
-		{ "SPEL", "Spell" },
-		{ "SSCR", "Start Script" },
-		{ "STAT", "Static" },
-		{ "TES3", "File Header" },
-		{ "WEAP", "Weapon" },
-	};
-
-	auto it = names.find(type);
-	if (it != names.end())
-		return it->second;
-
-	return nullptr;
+	return record_type_name::display(type);
 }
 
 nav_tree_model_t::nav_tree_model_t(plugin_scan_t & scan, QObject * parent)

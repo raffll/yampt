@@ -671,6 +671,17 @@ bool plugin_workspace_view_t::is_show_deleted_strikeout() const
 	return m_record_view->model()->show_deleted_strikeout();
 }
 
+void plugin_workspace_view_t::set_show_optional_placeholders(bool value)
+{
+	m_record_view->model()->set_show_optional_placeholders(value);
+	m_record_view->refresh_expansion();
+}
+
+bool plugin_workspace_view_t::is_show_optional_placeholders() const
+{
+	return m_record_view->model()->show_optional_placeholders();
+}
+
 void plugin_workspace_view_t::on_filter_changed()
 {
 	apply_effective_filter();
@@ -962,6 +973,7 @@ void plugin_workspace_view_t::save_session_state()
 	settings.setValue("view/conflicts_only", m_conflicts_only);
 	settings.setValue("view/hide_duplicates", m_hide_duplicates);
 	settings.setValue("view/show_deleted_strikeout", m_record_view->model()->show_deleted_strikeout());
+	settings.setValue("view/show_optional_placeholders", m_record_view->model()->show_optional_placeholders());
 	settings.setValue("view/nav_header", m_nav_view->tree_widget()->header()->saveState());
 
 	const auto info = m_nav_view->current_selection();
@@ -988,6 +1000,8 @@ void plugin_workspace_view_t::restore_session_state()
 
 	m_record_view->model()->set_show_deleted_strikeout(settings.value("view/show_deleted_strikeout", false).toBool());
 	m_nav_view->set_show_deleted_strikeout(m_record_view->model()->show_deleted_strikeout());
+	m_record_view->model()->set_show_optional_placeholders(
+	    settings.value("view/show_optional_placeholders", false).toBool());
 	m_nav_view->set_hide_duplicates(m_hide_duplicates);
 
 	auto nav_header_state = settings.value("view/nav_header").toByteArray();

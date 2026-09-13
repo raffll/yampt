@@ -16,6 +16,7 @@ public:
 	void display_record(plugin_scan_t & scan, const conflict_entry_t & entry);
 	void clear();
 	void resize_columns();
+	void refresh_expansion();
 
 	view_tree_model_t * model() const;
 	QTreeView * tree() const;

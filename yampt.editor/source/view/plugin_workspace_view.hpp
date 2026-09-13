@@ -37,6 +37,7 @@ public:
 
 	void set_conflicts_only(bool value);
 	void set_show_deleted_strikeout(bool value);
+	void set_show_optional_placeholders(bool value);
 
 	bool is_conflicts_only() const
 	{
@@ -49,6 +50,7 @@ public:
 	}
 
 	bool is_show_deleted_strikeout() const;
+	bool is_show_optional_placeholders() const;
 
 	QLabel * count_label() const
 	{

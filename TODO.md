@@ -1,16 +1,7 @@
 # TODO
 
-view treen column 0, field name default color should be also grey <- should be identical to master
-mayve indicator that min/max are bounded
-dont wrap log lines
-remove locking entire records, it is always single field/group copied or modified, maybe lock them automatically for mnerged patch and keep source indicator, and remove when source is not in load order
-adavanmced filters records list, show sanme manes as nav tree
-special, show excluded, show locked only
-show optional fields, in white backgroud, light grey text, can be edited and added
-record flags follow, last plugin wins
-maybe better subrecords sorting, single values one before multi
 DELE - showing 0 or garbade inseatd of DELETED
-check priority excluded vs lock, exclude shoulk take precedense
+check priority excluded vs lock, should be mutualiy exclusive
 sound generator record without ID?
 bonus skills not merged?
 race merged patch is broken
@@ -81,3 +72,31 @@ excluded plugins should be on list: add an "Excluded Plugins" tab to the Merged 
 there should be list of locked records and subrecords: a central list of all active merge locks (from plugin_scan_t::active_locks(), each merge_lock_t has rec_type/record_id/scope/sub_type). Mirror the excluded-plugins list placement (Merged Patch settings page tab). DECIDE with the excluded-plugins item: read-only vs a Remove button (remove_active_lock + reapply/refresh)
 always allow to lock merged patch, even if not active: currently the lock menu gates on is_on_active && is_on_merged_patch (view_context_menu.cpp), and locks live in the ACTIVE plugin's store (plugin_scan_t::active_locks / m_active_store), reapplied to the active merge output. To lock the merged patch while another plugin is active, locks must address the merged patch independently of the active store (dedicated merged-patch lock store, always loaded from the sidecar), and the menu gate must allow is_on_merged_patch regardless of active. Contradicts the current design-decisions rule "locking only when merged patch is active" — that rule needs updating too. DECIDE: on lock while not active, re-apply to on-disk merged patch immediately vs only record in sidecar for next merge regeneration
 in 3rd column show spell effects: predates nav-tree Status column removal (no 3rd column now). Likely means the record view — show a readable spell-effect summary on the collapsed ENAM group row (like the faction-reaction summary), e.g. "Restore Health, Self, 10pts, 30s". Raw ENAM fields already decode (Effect/Skill/Attribute/Range/Area/Duration/Mag). DECIDE exact presentation and where
+
+replace whole-record locking with automatic field/group locks: today the merged patch can be locked at the whole-record level (Lock in Merged Patch on a nav-tree record, plus scope=record locks in plugin_scan_t::m_merge_locks and the .locks sidecar). In practice the user only ever copies or modifies a single field or a single group into the merged patch, so a record-wide lock is too coarse. Proposal:
+  - remove the whole-record lock UI and the record-scope lock path (nav-tree "Lock/Unlock in Merged Patch", scope=record handling in the lock store, sidecar, and reapply). Keep only field-scope and group-scope locks.
+  - when a field or group is copied/modified into the merged patch, lock exactly that field/group automatically (no manual Lock action needed), so a later auto-merge cannot overwrite the value the user hand-picked.
+  - keep a source indicator on each auto-locked field/group showing which plugin the value came from (the plugin filename already available at copy time in merge_controller_t::copy_field / copy_group).
+  - when the source plugin is no longer in the load order, drop the auto-lock (and its source indicator) for that field/group, since the pinned value no longer has a provenance.
+  DECIDE:
+  - manual override: should the user still be able to manually lock/unlock an individual field/group, or is locking now purely automatic on copy? if manual unlock stays, where does it live (context menu on the merged-patch column)?
+  - source-not-in-load-order timing: drop the lock at load time (when the load order is established) vs at next merge regeneration. affects whether the merged patch on disk changes without an explicit re-merge.
+  - migration: existing .locks sidecars contain scope=record entries. per the no-migration rule, decide whether old sidecars are simply ignored/discarded (record-scope entries dropped on load) rather than converted.
+  - interaction with the "always allow to lock merged patch, even if not active" deferred item and the design-decisions "locking only when merged patch is active" rule, both of which assume manual locking exists.
+
+advanced filters: add "Excluded Only" and "Locked Only" to the Special group: the Advanced Filters dialog's Special group currently has only "Deleted Only" (filter_dialog.cpp, m_chk_deleted). Add two more checkboxes that, combined as AND with every other active filter (same as Deleted Only), narrow the nav tree to records that are excluded from the merged patch, or records that carry an active merge lock.
+  implementation notes:
+  - the deleted filter works via conflict_entry_t::has_dele evaluated inside nav_tree_filter_t::passes. Excluded/locked cannot be evaluated there: the predicates live in the model, not the filter. "Excluded" = nav_tree_model_t::m_exclusion_resolver.is_record_excluded(rec_type, record_id) (plus plugin-level exclusion via m_filter.excluded_plugins()); "locked" = has_whole_record_lock(rec_type, record_id) which reads plugin_scan_t::active_locks_for. nav_tree_filter_t has neither the resolver nor the scan.
+  - clean approach: add bool filter_excluded / bool filter_locked to both filter_state_t structs (nav_tree_filter_t and filter_dialog_t) so they round-trip through the dialog and filter_composer, but APPLY these two flags in nav_tree_model_t::rebuild() right after the m_filter.passes(...) call, reusing the same is_record_excluded / has_whole_record_lock the coloring already uses. The filter struct only carries the flags; the model enforces them.
+  - wire the two flags through: filter_dialog_t state()/set_state(), the dialog<->m_advanced_filter mapping in plugin_workspace_view.cpp (~709-737), and filter_composer::compose_filter.
+  DECIDE:
+  - Locked Only scope: whole-record locks are only meaningful when the merged patch is the active plugin (coloring gates on is_merged_patch_active). Match that (Locked Only matches nothing when the merged patch is not active) vs show any locked record regardless of active plugin.
+  - whether "excluded" should include records excluded only because their plugin is excluded, or only records excluded by an ID/type exclusion rule (is_record_excluded), or both.
+
+allow editing and adding optional fields: make the optional-field placeholder rows (see "show optional fields (display only)") editable, so entering a value adds that sub-record/field to the record in the active plugin. depends on the display-only item landing first. DECIDE: which optional fields are addable (only schema-known sub-records with a fixed layout, vs any), and how add differs from the existing Copy Field/Copy Sub-Record path.
+
+record flags follow last-plugin-wins (intent unclear, needs investigation first): the record header holds a 4-byte Flags field at offset 12 (Persistent 0x0400, Blocked 0x2000). In the merge, sub_record_merge_t::reconstruct_record copies the 16-byte header (flags included) verbatim from winner_content, and auto_merge already selects winner_content as versions.back() (last/highest-priority plugin) in the paths checked. So record flags may ALREADY follow last-plugin-wins for most merge paths.
+  before implementing, FIRST INVESTIGATE (no code) which of these the note means:
+  - merge behavior: audit every merge path (generic reconstruct_record, cell/armor reconstruct_*, leveled build_merged_list_record, DIAL/INFO) to confirm the merged record's header/flags come from the last plugin; fix any path that keeps an earlier header.
+  - record-view display: header flags (Persistent/Blocked) are currently read into a header string (read_record_flags in view_tree_model.cpp) but may not be shown as a per-plugin, conflict-colored, comparable row like other fields. The note may want flags decoded as a normal comparable field so last-wins is visible.
+  DECIDE after investigation: is there an actual bug, or is this already correct? Only then scope a fix.

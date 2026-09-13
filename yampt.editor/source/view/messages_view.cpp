@@ -12,6 +12,7 @@ messages_view_t::messages_view_t(QWidget * parent)
 
 	m_text = new QPlainTextEdit(this);
 	m_text->setReadOnly(true);
+	m_text->setLineWrapMode(QPlainTextEdit::NoWrap);
 
 	QFont font("Consolas", 9);
 	font.setStyleHint(QFont::Monospace);

@@ -71,6 +71,8 @@ inline constexpr auto light_palette = []()
 
 	palette[static_cast<size_t>(color_name_t::excluded_background)] = { 235, 235, 235 };
 	palette[static_cast<size_t>(color_name_t::excluded_text)] = { 140, 140, 140 };
+	palette[static_cast<size_t>(color_name_t::optional_placeholder_background)] = { 255, 255, 255 };
+	palette[static_cast<size_t>(color_name_t::optional_placeholder_text)] = { 190, 190, 190 };
 	palette[static_cast<size_t>(color_name_t::locked_background)] = { 210, 228, 245 };
 	palette[static_cast<size_t>(color_name_t::locked_text)] = { 40, 90, 170 };
 
@@ -135,6 +137,8 @@ inline constexpr auto dark_palette = []()
 
 	palette[static_cast<size_t>(color_name_t::excluded_background)] = { 45, 45, 45 };
 	palette[static_cast<size_t>(color_name_t::excluded_text)] = { 130, 130, 130 };
+	palette[static_cast<size_t>(color_name_t::optional_placeholder_background)] = { 35, 35, 40 };
+	palette[static_cast<size_t>(color_name_t::optional_placeholder_text)] = { 90, 90, 95 };
 	palette[static_cast<size_t>(color_name_t::locked_background)] = { 40, 60, 90 };
 	palette[static_cast<size_t>(color_name_t::locked_text)] = { 130, 175, 235 };
 

@@ -136,6 +136,17 @@ void editor_window_t::setup_menu_bar()
 	    m_plugin_workspace_view,
 	    &plugin_workspace_view_t::set_show_deleted_strikeout);
 
+	auto * show_optional_action = new QAction(tr("Show &Optional Fields"), this);
+	show_optional_action->setCheckable(true);
+	show_optional_action->setChecked(m_plugin_workspace_view->is_show_optional_placeholders());
+	show_optional_action->setToolTip(tr("Show sub-records a record can have but does not"));
+	view_menu->addAction(show_optional_action);
+	connect(
+	    show_optional_action,
+	    &QAction::toggled,
+	    m_plugin_workspace_view,
+	    &plugin_workspace_view_t::set_show_optional_placeholders);
+
 	view_menu->addSeparator();
 
 	m_sync_scroll_toggle = new QAction(tr("S&ync Scrolling"), this);
