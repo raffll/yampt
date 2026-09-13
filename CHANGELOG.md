@@ -40,6 +40,8 @@
 - [FIX] Faction reactions now merge by faction rather than by position, so reactions listed in a different order across plugins no longer drop or get mismatched; a changed reaction value follows load order and a reaction removed by a plugin stays removed
 - [FIX] An NPC whose stats a plugin changed now carries that change into the merged patch, including when the change switches the NPC between auto-calculated and full hand-set stats. The stat block is resolved like any other field, so the last plugin in load order to change it wins instead of the change being dropped
 - [FIX] The Edit panel's difference highlighting now shows on editable fields as well as read-only ones, and updates as you type. Differences are marked character by character — the removed characters on the left pane and the added characters on the right — instead of highlighting whole lines
+- [FIX] Leveled list entries now merge per item instead of treating each item-and-level pair as separate: when a plugin changes an entry's PC level, or changes how many times an item appears, that change is applied with the last plugin in load order winning, instead of the old value being kept or the entry appearing twice. Items intentionally repeated for spawn weighting are preserved
+- [FIX] Flag fields now merge one bit at a time, so changes to different flags of the same field made by different plugins are combined instead of the last plugin's whole set of flags overwriting the rest. This includes a leveled list's calculation flags (Calc for Each Item, Calc from All Levels) and the flag fields of NPCs, creatures, and containers
 
 ### Both Apps
 - [CHANGE] The log panel no longer wraps long lines; instead it scrolls horizontally, so each log entry stays on one line

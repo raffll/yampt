@@ -1,7 +1,5 @@
 # TODO
 
-leveled items pc level is not merged
-calc for each item not merged
 id should also be not editable? allow to create new record?
 landscape should not be editable/merge patch at all
 we can show entire hex in edit panel, with line numbers, fixed  colum,n and rows

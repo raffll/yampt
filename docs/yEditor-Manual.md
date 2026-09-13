@@ -159,8 +159,8 @@ Click **Create Merged Patch** in the toolbar to run the automatic merge. If any 
 
 The auto-merge performs several operations:
 
-- **Leveled list merge** — combines entries from all plugins that modify leveled item or creature lists. No entries are lost; duplicates are removed.
-- **Three-way record merge** — for object records modified by multiple plugins, compares each plugin's changes against the master. Non-conflicting field changes from different plugins are combined into one record.
+- **Leveled list merge** — combines entries from all plugins that modify leveled item or creature lists. Entries added by any plugin are kept and an entry removed by a plugin stays removed. When a plugin changes an existing entry's PC level, or changes how many times an item appears in the list, that change is applied with the last plugin in load order winning; an entry deliberately listed more than once to weight its chance is preserved.
+- **Three-way record merge** — for object records modified by multiple plugins, compares each plugin's changes against the master. Non-conflicting field changes from different plugins are combined into one record. Flag fields merge one bit at a time, so two plugins that each toggle a different flag on the same field both take effect.
 - **Bug fixes** — optionally corrects known engine bugs: fog density values outside valid range, summon persistence flags, and cell name reverts.
 
 A progress dialog shows how far the merge has got while records are processed. After auto-merge completes, the merged patch is saved automatically. The output location depends on how you loaded plugins: same folder for Open Folder, MO2 overwrite directory for Open MO2 Profile, or the OpenMW data directory for Open OpenMW Config.

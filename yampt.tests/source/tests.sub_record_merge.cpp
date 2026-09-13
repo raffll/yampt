@@ -823,6 +823,63 @@ TEST_CASE("sub_record_merge_t::merge, 4 versions mixed layout skips 12-byte inte
 	REQUIRE(read_npdt_gold(result.content, npdt_52_gold_offset) == 100);
 }
 
+static std::string make_npc_flag_sub(uint32_t flag_value)
+{
+	return make_sub("FLAG", make_uint32(flag_value));
+}
+
+static uint32_t read_npc_flag_sub(const std::string & record)
+{
+	const auto pos = record.find("FLAG");
+	REQUIRE(pos != std::string::npos);
+
+	uint32_t value = 0;
+	std::memcpy(&value, record.data() + pos + 4 + 4, 4);
+	return value;
+}
+
+TEST_CASE("sub_record_merge_t::merge, NPC FLAG merges per bit", "[u]")
+{
+	auto subs_first = make_sub("NAME", make_string("id")) + make_npc_flag_sub(0);
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_npc_flag_sub(0x0001);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_npc_flag_sub(0x0002);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_first),
+		make_record("NPC_", subs_inter),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(read_npc_flag_sub(result.content) == 0x0003);
+}
+
+TEST_CASE("sub_record_merge_t::merge, NPC FLAG bit cleared by plugin wins", "[u]")
+{
+	auto subs_first = make_sub("NAME", make_string("id")) + make_npc_flag_sub(0x0003);
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_npc_flag_sub(0x0001);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_npc_flag_sub(0x0003);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_first),
+		make_record("NPC_", subs_inter),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(read_npc_flag_sub(result.content) == 0x0001);
+}
+
 TEST_CASE("sub_record_merge_t::merge, NPDT last changer wins regardless of size", "[u]")
 {
 	std::string npdt_master(52, '\0');

@@ -218,3 +218,21 @@ This is intentional, NOT a bug. When a translation propagates, the user wants th
 Do NOT "fix" this by preserving the source entry's `intent` status when propagation occurs. Do NOT report it as "propagation overwrites user intent on the source entry." The overwrite is the desired behavior.
 
 Note: when `propagated_count == 0` (no siblings shared the `old_text`), the source keeps `intent` — the overwrite only happens when propagation actually occurred.
+
+## Leveled List Merge: Per-Occurrence Level Merge (Diverges From TES3Merge)
+
+`leveled_list_merge_t::merge` keys each leveled-list entry by **(item ID, occurrence index within the list)**, and resolves each occurrence's PC level (INTV) by normal three-way precedence (last-listed plugin that changed it wins). This means:
+
+- A plugin that **changes** an existing entry's PC level (e.g. master lists `T_Dwe_Regular_Long @ 13`, a plugin sets it to `@ 14`) merges as a change: the merged patch shows one entry at level 14, not two entries at 13 and 14.
+- **Duplicate entries are preserved, not collapsed.** OpenMW stores a leveled list as a flat `std::vector<LevelItem>` (`components/esm3/loadlevlist.cpp`); listing the same item ID multiple times is legitimate and increases its spawn weight. So an item that appears N times stays N times in the merged patch. The **occurrence count of an item ID is itself resolved as a three-way conflict** (last-listed plugin that changed the count from the master wins), NOT summed and NOT max — two plugins that both list an item 3× yield 3, not 6; a plugin that reduces the count wins if it is the last to change it. Each occurrence's level merges independently by position, also by last-changer-wins precedence.
+- Item union and deletion are keyed on item ID: an item present in the master but absent from a plugin is removed; items added by any plugin are kept.
+
+**This diverges from TES3Merge on purpose.** TES3Merge (`sources/TES3Merge/TES3Merge/Merger/LEVI.cs`) keys entries on `(ItemEditorId, PCLevelOfPrevious)` — item ID **and** level together — so a level change is treated as two distinct entries and both are kept (the merged list would show the item at both 13 and 14). yampt intentionally treats the PC level as a mergeable property of an occurrence instead, so a level edit resolves like any other field conflict. Do NOT "align" this back to TES3Merge's item+level key.
+
+## Flag Fields Merge Per Bit
+
+In the three-way sub-record merge, a schema field of type `flags_u8`/`flags_u16`/`flags_u32` merges **bit by bit**, not as a whole value. `merge_fields_three_way` (sub_record_merge.cpp) detects a flags field via `is_flags_field` and calls `merge_field_bits`: for each bit, if a plugin flipped it relative to the master and the winner did not, the plugin's bit is taken; the winner wins per bit on conflict; the last-listed plugin wins per bit among changers. Non-flag fields still merge whole-field.
+
+Consequence: two plugins that each toggle a *different* flag on the same field both take effect, instead of the last plugin's entire flags value overwriting the other's.
+
+This only fires for sub-records that go through the element-wise merge path (`needs_element_wise` true — i.e. they have an `element_wise_merge` rule in `record_behavior.cpp`). Sub-records that are a single flags field and previously merged whole-value were given explicit `element_wise_merge` rules so they get per-bit treatment: NPC_ `FLAG`, CREA `FLAG`, CONT `FLAG`, and LEVI/LEVC `DATA` (the leveled-list calculation flags, merged via the leveled header path `merge_header_part`). Do NOT remove these rules or revert flags to whole-value merge. CELL `DATA` flags are a separate concern (cell merge path) and are not covered here.

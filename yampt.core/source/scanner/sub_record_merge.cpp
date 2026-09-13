@@ -138,6 +138,12 @@ int sub_record_merge_t::find_by_type_and_occurrence(
 	return -1;
 }
 
+static bool is_flags_field(const field_def_t & field)
+{
+	return field.type == field_type_t::flags_u8 || field.type == field_type_t::flags_u16 ||
+	       field.type == field_type_t::flags_u32;
+}
+
 bool sub_record_merge_t::needs_element_wise(
     const std::string & rec_type,
     const std::string & sub_type,
@@ -177,6 +183,35 @@ static bool field_range_differs(const char * lhs, const char * rhs, size_t offse
 	return std::memcmp(lhs + offset, rhs + offset, length) != 0;
 }
 
+static void merge_field_bits(
+    std::string & result,
+    const char * first,
+    const char * inter,
+    const char * winner,
+    const field_def_t & field)
+{
+	for (size_t byte_index = 0; byte_index < field.size; ++byte_index)
+	{
+		const size_t offset = field.offset + byte_index;
+		const unsigned char first_byte = static_cast<unsigned char>(first[offset]);
+		const unsigned char inter_byte = static_cast<unsigned char>(inter[offset]);
+		const unsigned char winner_byte = static_cast<unsigned char>(winner[offset]);
+
+		unsigned char merged = winner_byte;
+		for (int bit = 0; bit < 8; ++bit)
+		{
+			const unsigned char mask = static_cast<unsigned char>(1u << bit);
+			const bool inter_changed = (inter_byte & mask) != (first_byte & mask);
+			const bool winner_changed = (winner_byte & mask) != (first_byte & mask);
+
+			if (inter_changed && !winner_changed)
+				merged = static_cast<unsigned char>((merged & ~mask) | (inter_byte & mask));
+		}
+
+		result[offset] = static_cast<char>(merged);
+	}
+}
+
 std::string sub_record_merge_t::merge_fields_three_way(
     const std::string & rec_type,
     const std::string & sub_type,
@@ -196,6 +231,12 @@ std::string sub_record_merge_t::merge_fields_three_way(
 		const auto & field = schema->fields[field_index];
 		if (field.offset + field.size > size)
 			continue;
+
+		if (is_flags_field(field))
+		{
+			merge_field_bits(result, first, inter, winner, field);
+			continue;
+		}
 
 		const bool inter_changed = field_range_differs(inter, first, field.offset, field.size, size);
 		const bool winner_changed = field_range_differs(winner, first, field.offset, field.size, size);
@@ -1235,9 +1276,9 @@ static std::vector<list_item_t> extract_list_items(const std::string & content)
 	return items;
 }
 
-static std::string extract_list_header(const std::string & content)
+static sub_record_sequence_t extract_header_subs(const std::string & content)
 {
-	std::string header_part;
+	sub_record_sequence_t header;
 	sub_record_iter_t iter(content);
 	sub_record_view_t sub;
 
@@ -1249,10 +1290,27 @@ static std::string extract_list_header(const std::string & content)
 		if (sub.type == "INDX")
 			continue;
 
-		header_part += sub.type;
-		header_part += domain_types::convert_uint_to_string_byte_array(sub.size);
-		header_part += std::string(sub.data, sub.size);
+		header.push_back({ sub.type, std::string(sub.data, sub.size) });
 	}
+
+	return header;
+}
+
+static std::string merge_header_part(const std::vector<std::string> & versions, const std::string & rec_type)
+{
+	const auto first_header = extract_header_subs(versions.front());
+	const auto winner_header = extract_header_subs(versions.back());
+	auto output = winner_header;
+
+	for (size_t version_idx = versions.size() - 2; version_idx >= 1; --version_idx)
+	{
+		const auto inter_header = extract_header_subs(versions[version_idx]);
+		sub_record_merge_t::apply_intermediate(output, first_header, inter_header, winner_header, rec_type);
+	}
+
+	std::string header_part;
+	for (const auto & entry : output)
+		header_part += sub_record_merge_t::serialize_sub_record(entry);
 
 	return header_part;
 }
@@ -1294,74 +1352,130 @@ static std::string build_merged_list_record(
 	return record;
 }
 
-using item_count_map_t = std::map<std::pair<std::string, uint16_t>, size_t>;
+using item_levels_map_t = std::map<std::string, std::vector<uint16_t>>;
 
-static item_count_map_t build_item_count_map(const std::vector<list_item_t> & items)
+static item_levels_map_t build_item_levels_map(const std::vector<list_item_t> & items)
 {
-	item_count_map_t counts;
+	item_levels_map_t levels;
 	for (const auto & item : items)
-		++counts[{ item.ident, item.level }];
+		levels[item.ident].push_back(item.level);
 
-	return counts;
+	return levels;
 }
 
 static bool is_item_deleted(
-    const std::pair<std::string, uint16_t> & item_key,
-    const item_count_map_t & first_map,
-    const std::vector<item_count_map_t> & non_first_maps)
+    const std::string & ident,
+    const item_levels_map_t & first_map,
+    const std::vector<item_levels_map_t> & plugin_maps)
 {
-	const auto it_first = first_map.find(item_key);
-	if (it_first == first_map.end() || it_first->second == 0)
+	const auto it_first = first_map.find(ident);
+	if (it_first == first_map.end() || it_first->second.empty())
 		return false;
 
-	for (const auto & version_map : non_first_maps)
+	for (const auto & version_map : plugin_maps)
 	{
-		const auto it_ver = version_map.find(item_key);
-		if (it_ver == version_map.end())
+		if (version_map.find(ident) == version_map.end())
 			return true;
 	}
 
 	return false;
 }
 
-static size_t compute_merged_count(
-    const std::pair<std::string, uint16_t> & item_key,
-    const std::vector<item_count_map_t> & non_first_maps)
+static size_t version_count(const item_levels_map_t & map, const std::string & ident)
 {
-	size_t max_count = 0;
-	for (const auto & version_map : non_first_maps)
+	const auto it_map = map.find(ident);
+	return it_map == map.end() ? 0 : it_map->second.size();
+}
+
+struct count_context_t
+{
+	const std::string & ident;
+	const item_levels_map_t & first_map;
+	const std::vector<item_levels_map_t> & plugin_maps;
+};
+
+static size_t merged_occurrence_count(const count_context_t & context)
+{
+	const size_t master_count = version_count(context.first_map, context.ident);
+
+	size_t resolved = master_count;
+	for (const auto & version_map : context.plugin_maps)
 	{
-		const auto it_ver = version_map.find(item_key);
-		if (it_ver != version_map.end() && it_ver->second > max_count)
-			max_count = it_ver->second;
+		const size_t plugin_count = version_count(version_map, context.ident);
+		if (plugin_count != master_count)
+			resolved = plugin_count;
 	}
 
-	return max_count;
+	return resolved;
+}
+
+struct occurrence_context_t
+{
+	const std::string & ident;
+	size_t occurrence;
+	const item_levels_map_t & first_map;
+	const std::vector<item_levels_map_t> & plugin_maps;
+};
+
+static std::optional<uint16_t> level_at(const item_levels_map_t & map, const std::string & ident, size_t occurrence)
+{
+	const auto it_map = map.find(ident);
+	if (it_map == map.end() || occurrence >= it_map->second.size())
+		return std::nullopt;
+
+	return it_map->second[occurrence];
+}
+
+static uint16_t resolve_occurrence_level(const occurrence_context_t & context)
+{
+	const auto master_level = level_at(context.first_map, context.ident, context.occurrence);
+
+	uint16_t resolved = master_level.value_or(0);
+	bool has_resolved = master_level.has_value();
+
+	for (const auto & version_map : context.plugin_maps)
+	{
+		const auto plugin_level = level_at(version_map, context.ident, context.occurrence);
+		if (!plugin_level.has_value())
+			continue;
+
+		if (!master_level.has_value() || *plugin_level != *master_level)
+		{
+			resolved = *plugin_level;
+			has_resolved = true;
+		}
+	}
+
+	return has_resolved ? resolved : master_level.value_or(0);
 }
 
 static std::vector<list_item_t> build_merged_items(
-    const item_count_map_t & first_map,
-    const std::vector<item_count_map_t> & non_first_maps)
+    const item_levels_map_t & first_map,
+    const std::vector<item_levels_map_t> & plugin_maps)
 {
-	std::set<std::pair<std::string, uint16_t>> all_keys;
-	for (const auto & [key, count] : first_map)
-		all_keys.insert(key);
+	std::set<std::string> all_idents;
+	for (const auto & [ident, levels] : first_map)
+		all_idents.insert(ident);
 
-	for (const auto & version_map : non_first_maps)
+	for (const auto & version_map : plugin_maps)
 	{
-		for (const auto & [key, count] : version_map)
-			all_keys.insert(key);
+		for (const auto & [ident, levels] : version_map)
+			all_idents.insert(ident);
 	}
 
 	std::vector<list_item_t> merged;
-	for (const auto & item_key : all_keys)
+	for (const auto & ident : all_idents)
 	{
-		if (is_item_deleted(item_key, first_map, non_first_maps))
+		if (is_item_deleted(ident, first_map, plugin_maps))
 			continue;
 
-		const auto merged_count = compute_merged_count(item_key, non_first_maps);
-		for (size_t i = 0; i < merged_count; ++i)
-			merged.push_back({ item_key.first, item_key.second });
+		const count_context_t count_context { ident, first_map, plugin_maps };
+		const auto count = merged_occurrence_count(count_context);
+		for (size_t occurrence = 0; occurrence < count; ++occurrence)
+		{
+			const occurrence_context_t context { ident, occurrence, first_map, plugin_maps };
+			merged.push_back({ ident, resolve_occurrence_level(context) });
+		}
 	}
 
 	return merged;
@@ -1388,24 +1502,24 @@ merge_result_t leveled_list_merge_t::merge(const merge_input_t & input)
 		return { false, {} };
 
 	const auto & first_content = versions.front();
-	const auto first_map = build_item_count_map(extract_list_items(first_content));
+	const auto first_map = build_item_levels_map(extract_list_items(first_content));
 
-	std::vector<item_count_map_t> non_first_maps;
+	std::vector<item_levels_map_t> plugin_maps;
 	std::string winning_content;
 
 	for (size_t vi = 1; vi < versions.size(); ++vi)
 	{
-		non_first_maps.push_back(build_item_count_map(extract_list_items(versions[vi])));
+		plugin_maps.push_back(build_item_levels_map(extract_list_items(versions[vi])));
 		winning_content = versions[vi];
 	}
 
-	if (non_first_maps.empty())
+	if (plugin_maps.empty())
 		return { false, {} };
 
-	auto merged = build_merged_items(first_map, non_first_maps);
+	auto merged = build_merged_items(first_map, plugin_maps);
 	sort_merged_items(merged);
 
-	const auto header_part = extract_list_header(winning_content);
+	const auto header_part = merge_header_part(versions, input.rec_type);
 	const auto record = build_merged_list_record(input.rec_type, header_part, merged);
 
 	if (record == winning_content)

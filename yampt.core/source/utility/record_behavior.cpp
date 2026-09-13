@@ -21,12 +21,22 @@ static constexpr sub_record_rule_t npc_sub_rules[] = {
 	{ "NPDT", 52, skip_if_size_differs | element_wise_merge },
 	{ "NPDT", 12, skip_if_size_differs | element_wise_merge },
 	{ "AIDT", 12, element_wise_merge },
+	{ "FLAG", 4, element_wise_merge },
 };
 
 static constexpr sub_record_rule_t crea_sub_rules[] = {
 	{ "NPDT", 96, element_wise_merge },
 	{ "AI_W", 14, element_wise_merge },
 	{ "AIDT", 12, element_wise_merge },
+	{ "FLAG", 4, element_wise_merge },
+};
+
+static constexpr sub_record_rule_t cont_sub_rules[] = {
+	{ "FLAG", 4, element_wise_merge },
+};
+
+static constexpr sub_record_rule_t levi_sub_rules[] = {
+	{ "DATA", 4, element_wise_merge },
 };
 
 static constexpr sub_record_rule_t weap_sub_rules[] = {
@@ -51,18 +61,18 @@ static constexpr sub_record_rule_t generic_sub_rules[] = {
 
 static constexpr record_behavior_t behavior_table[] = {
 	{ "CELL", decode_mode_t::cell, copy_strategy_t::header_and_selected_group, nullptr, 0, &cell_wildcard, nullptr, 0 },
-	{ "LEVI", decode_mode_t::leveled, copy_strategy_t::whole_record, nullptr, 0, nullptr, nullptr, 0 },
-	{ "LEVC", decode_mode_t::leveled, copy_strategy_t::whole_record, nullptr, 0, nullptr, nullptr, 0 },
+	{ "LEVI", decode_mode_t::leveled, copy_strategy_t::whole_record, levi_sub_rules, 1, nullptr, nullptr, 0 },
+	{ "LEVC", decode_mode_t::leveled, copy_strategy_t::whole_record, levi_sub_rules, 1, nullptr, nullptr, 0 },
 	{ "FACT", decode_mode_t::faction, copy_strategy_t::whole_record, fact_sub_rules, 1, nullptr, nullptr, 0 },
-	{ "CONT", decode_mode_t::container, copy_strategy_t::whole_record, nullptr, 0, nullptr, nullptr, 0 },
+	{ "CONT", decode_mode_t::container, copy_strategy_t::whole_record, cont_sub_rules, 1, nullptr, nullptr, 0 },
 	{ "BSGN", decode_mode_t::container, copy_strategy_t::whole_record, nullptr, 0, nullptr, nullptr, 0 },
 	{ "RACE", decode_mode_t::container, copy_strategy_t::whole_record, race_sub_rules, 1, nullptr, nullptr, 0 },
-	{ "NPC_", decode_mode_t::container, copy_strategy_t::whole_record, npc_sub_rules, 3, nullptr, nullptr, 0 },
+	{ "NPC_", decode_mode_t::container, copy_strategy_t::whole_record, npc_sub_rules, 4, nullptr, nullptr, 0 },
 	{ "CREA",
 	  decode_mode_t::container,
 	  copy_strategy_t::whole_record,
 	  crea_sub_rules,
-	  3,
+	  4,
 	  nullptr,
 	  crea_paired_rules,
 	  1 },
