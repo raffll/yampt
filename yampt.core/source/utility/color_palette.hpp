@@ -69,6 +69,11 @@ inline constexpr auto light_palette = []()
 	palette[static_cast<size_t>(color_name_t::conflict_this_conflict_loses)] = { 255, 0, 0 };
 	palette[static_cast<size_t>(color_name_t::conflict_this_deleted)] = { 100, 100, 100 };
 
+	palette[static_cast<size_t>(color_name_t::excluded_background)] = { 235, 235, 235 };
+	palette[static_cast<size_t>(color_name_t::excluded_text)] = { 140, 140, 140 };
+	palette[static_cast<size_t>(color_name_t::locked_background)] = { 210, 228, 245 };
+	palette[static_cast<size_t>(color_name_t::locked_text)] = { 40, 90, 170 };
+
 	return palette;
 }();
 
@@ -127,6 +132,11 @@ inline constexpr auto dark_palette = []()
 	palette[static_cast<size_t>(color_name_t::conflict_this_conflict_wins)] = { 255, 165, 100 };
 	palette[static_cast<size_t>(color_name_t::conflict_this_conflict_loses)] = { 255, 80, 80 };
 	palette[static_cast<size_t>(color_name_t::conflict_this_deleted)] = { 140, 140, 140 };
+
+	palette[static_cast<size_t>(color_name_t::excluded_background)] = { 45, 45, 45 };
+	palette[static_cast<size_t>(color_name_t::excluded_text)] = { 130, 130, 130 };
+	palette[static_cast<size_t>(color_name_t::locked_background)] = { 40, 60, 90 };
+	palette[static_cast<size_t>(color_name_t::locked_text)] = { 130, 175, 235 };
 
 	return palette;
 }();

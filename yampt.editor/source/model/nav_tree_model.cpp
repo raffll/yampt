@@ -255,22 +255,6 @@ bool nav_tree_model_t::has_whole_record_lock(const std::string & rec_type, const
 	return false;
 }
 
-QString nav_tree_model_t::record_status_glyphs(size_t file_idx, const conflict_entry_t & entry) const
-{
-	QString glyphs;
-
-	const int plugin_idx = m_tree[file_idx].plugin_idx;
-	const bool is_merged_patch_active =
-	    m_scan.is_active_plugin(plugin_idx) && m_scan.plugin_filename(plugin_idx) == merged_patch::filename;
-	if (is_merged_patch_active && has_whole_record_lock(entry.rec_type, entry.record_id))
-		glyphs += QString::fromUtf8(plugin_icon::glyph::lock);
-
-	if (m_exclusion_resolver.is_record_excluded(entry.rec_type, entry.record_id))
-		glyphs += QString::fromUtf8(plugin_icon::glyph::no_entry);
-
-	return glyphs;
-}
-
 void nav_tree_model_t::build_tree()
 {
 	m_tree.clear();
@@ -339,7 +323,7 @@ void nav_tree_model_t::build_tree()
 
 QModelIndex nav_tree_model_t::index(int row, int column, const QModelIndex & parent) const
 {
-	if (column < 0 || column >= 3)
+	if (column < 0 || column >= 2)
 		return {};
 
 	if (!parent.isValid())
@@ -428,7 +412,7 @@ int nav_tree_model_t::rowCount(const QModelIndex & parent) const
 
 int nav_tree_model_t::columnCount(const QModelIndex &) const
 {
-	return 3;
+	return 2;
 }
 
 QVariant nav_tree_model_t::headerData(int section, Qt::Orientation orientation, int role) const
@@ -442,8 +426,6 @@ QVariant nav_tree_model_t::headerData(int section, Qt::Orientation orientation, 
 		return QStringLiteral("ID");
 	case 1:
 		return QStringLiteral("Name");
-	case 2:
-		return QStringLiteral("Status");
 	}
 
 	return {};
@@ -753,9 +735,6 @@ QVariant nav_tree_model_t::data_for_file_node(int row, int column, int role) con
 	if (role == Qt::DisplayRole && column == 0)
 		return file_node_display_text(file_node);
 
-	if (role == Qt::DisplayRole && column == 2)
-		return file_node_icons(file_node);
-
 	if (role == Qt::BackgroundRole || role == Qt::ForegroundRole || role == Qt::FontRole)
 		return file_node_appearance(file_node, role);
 
@@ -774,29 +753,36 @@ QVariant nav_tree_model_t::file_node_display_text(const file_node_t & file_node)
 
 	const auto & filename = m_scan.plugin_filename(file_node.plugin_idx);
 
+	plugin_icon::tier_flags_t flags;
+	flags.filename = filename;
+	flags.is_overridden = plugin_icon::path_is_overwrite(m_scan.plugin_path(file_node.plugin_idx));
+	flags.is_guard = m_filter.patch_plugins() && m_filter.patch_plugins()->count(filename);
+	flags.is_active = m_scan.is_active_plugin(file_node.plugin_idx);
+
+	const auto icons = plugin_icon::prefix(flags).trimmed();
+
 	std::string label = display_buffer;
 	if (m_filter.dirty_plugins() && m_filter.dirty_plugins()->count(filename))
 		label = "* " + label;
 
-	return QString::fromUtf8(label.c_str());
-}
+	QString text = QString::fromUtf8(label.c_str());
+	if (!icons.isEmpty())
+		text = icons + " " + text;
 
-QVariant nav_tree_model_t::file_node_icons(const file_node_t & file_node) const
-{
-	const auto & filename = m_scan.plugin_filename(file_node.plugin_idx);
-
-	plugin_icon::tier_flags_t flags;
-	flags.filename = filename;
-	flags.is_overridden = plugin_icon::path_is_overwrite(m_scan.plugin_path(file_node.plugin_idx));
-	flags.is_excluded = m_filter.excluded_plugins() && m_filter.excluded_plugins()->count(filename);
-	flags.is_guard = m_filter.patch_plugins() && m_filter.patch_plugins()->count(filename);
-	flags.is_active = m_scan.is_active_plugin(file_node.plugin_idx);
-
-	return plugin_icon::prefix(flags).trimmed();
+	return text;
 }
 
 QVariant nav_tree_model_t::file_node_appearance(const file_node_t & file_node, int role) const
 {
+	const auto & filename = m_scan.plugin_filename(file_node.plugin_idx);
+	const bool plugin_excluded = m_filter.excluded_plugins() && m_filter.excluded_plugins()->count(filename);
+
+	if (plugin_excluded && role == Qt::BackgroundRole)
+		return QBrush(theme_system_t::instance().get_color(color_name_t::excluded_background));
+
+	if (plugin_excluded && role == Qt::ForegroundRole)
+		return QBrush(theme_system_t::instance().get_color(color_name_t::excluded_text));
+
 	const auto & entries = m_scan.entries();
 	conflict_all_t worst_all = conflict_all_t::only_one;
 	conflict_this_t worst_this = conflict_this_t::unknown;
@@ -958,13 +944,22 @@ QVariant nav_tree_model_t::data_for_record(size_t file_idx, size_t group_idx, in
 
 			return QString::fromUtf8(decode_to_utf8(entry.dial_name, m_display_codepage));
 		}
-
-		if (column == 2)
-			return record_status_glyphs(file_idx, entry);
 	}
+
+	const int plugin_idx = m_tree[file_idx].plugin_idx;
+	const bool is_merged_patch_active =
+	    m_scan.is_active_plugin(plugin_idx) && m_scan.plugin_filename(plugin_idx) == merged_patch::filename;
+	const bool is_locked = is_merged_patch_active && has_whole_record_lock(entry.rec_type, entry.record_id);
+	const bool is_excluded = m_exclusion_resolver.is_record_excluded(entry.rec_type, entry.record_id);
 
 	if (role == Qt::BackgroundRole)
 	{
+		if (is_locked)
+			return QBrush(theme_system_t::instance().get_color(color_name_t::locked_background));
+
+		if (is_excluded)
+			return QBrush(theme_system_t::instance().get_color(color_name_t::excluded_background));
+
 		if (entry.conflict_all < conflict_all_t::no_conflict)
 			return {};
 
@@ -976,6 +971,12 @@ QVariant nav_tree_model_t::data_for_record(size_t file_idx, size_t group_idx, in
 
 	if (role == Qt::ForegroundRole)
 	{
+		if (is_locked)
+			return QBrush(theme_system_t::instance().get_color(color_name_t::locked_text));
+
+		if (is_excluded)
+			return QBrush(theme_system_t::instance().get_color(color_name_t::excluded_text));
+
 		if (record_color == conflict_this_t::unknown)
 			return {};
 

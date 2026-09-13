@@ -56,16 +56,15 @@ TEST_CASE("plugin_icon::prefix, regular plugin shows page base tier", "[u]")
 	REQUIRE(build(flags).startsWith(QString::fromUtf8(page)));
 }
 
-TEST_CASE("plugin_icon::prefix, exclude and guard are mutually exclusive with exclude winning", "[u]")
+TEST_CASE("plugin_icon::prefix, no excluded glyph and guard still shows", "[u]")
 {
 	plugin_icon::tier_flags_t flags;
 	flags.filename = "MyMod.esp";
-	flags.is_excluded = true;
 	flags.is_guard = true;
 
 	const auto result = build(flags);
-	REQUIRE(result.contains(QString::fromUtf8(no_entry)));
-	REQUIRE_FALSE(result.contains(QString::fromUtf8(shield)));
+	REQUIRE_FALSE(result.contains(QString::fromUtf8(no_entry)));
+	REQUIRE(result.contains(QString::fromUtf8(shield)));
 }
 
 TEST_CASE("plugin_icon::prefix, guard shield shows when not excluded", "[u]")
@@ -77,24 +76,61 @@ TEST_CASE("plugin_icon::prefix, guard shield shows when not excluded", "[u]")
 	REQUIRE(build(flags).contains(QString::fromUtf8(shield)));
 }
 
-TEST_CASE("plugin_icon::prefix, all tiers append in fixed order", "[u]")
+TEST_CASE("plugin_icon::prefix, shows a single role icon then active star", "[u]")
+{
+	plugin_icon::tier_flags_t flags;
+	flags.filename = "MyMod.esp";
+	flags.is_overridden = true;
+	flags.is_guard = true;
+	flags.is_active = true;
+
+	const auto result = build(flags);
+	const int shield_pos = result.indexOf(QString::fromUtf8(shield));
+	const int star_pos = result.indexOf(QString::fromUtf8(star));
+
+	REQUIRE(shield_pos >= 0);
+	REQUIRE(shield_pos < star_pos);
+	REQUIRE_FALSE(result.contains(QString::fromUtf8(page)));
+	REQUIRE_FALSE(result.contains(QString::fromUtf8(bolt)));
+}
+
+TEST_CASE("plugin_icon::role_icon, guard wins over overwrite and base type", "[u]")
+{
+	plugin_icon::tier_flags_t flags;
+	flags.filename = "Tribunal.esm";
+	flags.is_overridden = true;
+	flags.is_guard = true;
+
+	REQUIRE(plugin_icon::role_icon(flags) == QString::fromUtf8(shield));
+}
+
+TEST_CASE("plugin_icon::role_icon, merged patch wins over overwrite", "[u]")
 {
 	plugin_icon::tier_flags_t flags;
 	flags.filename = merged_patch::filename;
 	flags.is_overridden = true;
-	flags.is_excluded = true;
-	flags.is_active = true;
+
+	REQUIRE(plugin_icon::role_icon(flags) == QString::fromUtf8(gear));
+}
+
+TEST_CASE("plugin_icon::role_icon, overwrite wins over base type", "[u]")
+{
+	plugin_icon::tier_flags_t flags;
+	flags.filename = "Tribunal.esm";
+	flags.is_overridden = true;
+
+	REQUIRE(plugin_icon::role_icon(flags) == QString::fromUtf8(bolt));
+}
+
+TEST_CASE("plugin_icon::prefix, merged patch omits overwrite bolt", "[u]")
+{
+	plugin_icon::tier_flags_t flags;
+	flags.filename = merged_patch::filename;
+	flags.is_overridden = true;
 
 	const auto result = build(flags);
-	const int gear_pos = result.indexOf(QString::fromUtf8(gear));
-	const int bolt_pos = result.indexOf(QString::fromUtf8(bolt));
-	const int no_entry_pos = result.indexOf(QString::fromUtf8(no_entry));
-	const int star_pos = result.indexOf(QString::fromUtf8(star));
-
-	REQUIRE(gear_pos >= 0);
-	REQUIRE(gear_pos < bolt_pos);
-	REQUIRE(bolt_pos < no_entry_pos);
-	REQUIRE(no_entry_pos < star_pos);
+	REQUIRE(result.contains(QString::fromUtf8(gear)));
+	REQUIRE_FALSE(result.contains(QString::fromUtf8(bolt)));
 }
 
 TEST_CASE("plugin_icon::prefix, active star omitted when inactive", "[u]")

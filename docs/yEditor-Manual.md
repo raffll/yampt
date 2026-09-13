@@ -44,19 +44,18 @@ Text colors indicate how each specific plugin version relates to others:
 
 Records with no conflict (only one plugin defines them) show with no background color and black text.
 
-The tree has three columns: ID, Name, and Status. The ID and Name columns show the record identifier and its display name; the Status column, on the right, carries the status glyphs. For a plugin row the Status column holds one or more icons showing its role. A plugin can carry several at once, always in the same order: its file type first, then the overwrite marker, then its merge role, then the active marker — for example a regular overwrite plugin that is excluded and active reads 📄⚡🚫⭐.
+The tree has two columns: ID and Name, showing the record identifier and its display name. On a plugin row, a single role icon appears before the plugin filename in the ID column. When a plugin fits more than one role, the highest-priority one is shown, in the order guard, then merged patch, then overwrite copy, then file type. The active plugin additionally shows a star after its role icon — for example an active guard patch reads 🛡⭐ before its name.
 
 - 📜 — a master file that other plugins depend on.
 - 📄 — a regular plugin loaded from a mod folder or game data directory.
 - ⚙ — the merged patch produced by the auto-merge operation.
 - ⚡ — the plugin is loaded from MO2's overwrite folder, meaning a second (cleaned or patched) copy of the file exists and is being used instead of the original mod version.
 - 🛡 — a guard patch that acts as a priority barrier during auto-merge.
-- 🚫 — a plugin excluded from the merged patch. Its records are ignored during merge.
 - ⭐ — the active plugin: the one that currently receives copied records.
 
-When a plugin has field edits that have not yet been written to disk, an asterisk appears before the filename in the ID column. The asterisk disappears once the plugin is saved.
+A plugin excluded from the merged patch is not marked with an icon. Instead its whole row is shown on a light grey background with grey text in the navigation tree, and its column header in the record view is shown in grey text. Excluded records show the same grey styling on their own row in the navigation tree.
 
-For a record row the Status column shows 🔒 when the record is locked in the merged patch and 🚫 when the record itself matches the exclusion pattern. A plugin excluded from the merged patch is marked only on its own plugin row, not on each of its records.
+When a plugin has field edits that have not yet been written to disk, an asterisk appears before the filename in the ID column. The asterisk disappears once the plugin is saved.
 
 ## Record View
 
@@ -66,7 +65,7 @@ Each column represents one plugin's version. Column headers show the plugin file
 
 Empty cells mean that plugin does not include the sub-record. This happens when a plugin only modifies some fields of a record.
 
-A sub-record excluded from conflict detection and the merged patch is marked with 🚫 after its name in the first column, so you can see at a glance which sub-records are being skipped.
+A sub-record excluded from conflict detection and the merged patch is shown with a light grey background and grey text, so you can see at a glance which sub-records are being skipped.
 
 ## Dialogue Responses
 
@@ -177,11 +176,11 @@ To switch which plugin receives copies, right-click any plugin in the navigation
 
 Locking only applies to the merged patch, because a lock protects a value from being overwritten the next time the auto-merge runs. It is offered only when the merged patch is the active plugin; a hand-made plugin created with Create New Plugin has nothing to lock against, so the option does not appear there.
 
-Right-click a cell in the merged patch column and choose Lock in Merged Patch to freeze that value. You can lock a whole record, a single sub-record, a decoded field, an individual flag bit, or a group — the lock covers exactly what you right-clicked, following the same selection rules as copying. A locked cell is marked with a lock icon and keeps the exact value it had when you locked it. When the cell you right-clicked has nothing that can be locked, the option appears greyed out.
+Right-click a cell in the merged patch column and choose Lock in Merged Patch to freeze that value. You can lock a whole record, a single sub-record, a decoded field, an individual flag bit, or a group — the lock covers exactly what you right-clicked, following the same selection rules as copying. A locked cell is shown with a light blue background and blue text, and keeps the exact value it had when you locked it. When the cell you right-clicked has nothing that can be locked, the option appears greyed out.
 
 When you regenerate the merged patch, the auto-merge runs as usual and then every locked value is re-applied on top, so a lock is never overwritten by the merge. This is useful when the automatic result for one field is wrong and you want to pin your chosen value while still letting everything else re-merge. A group lock covers only the members that were in the group when you locked it; if a later merge adds a new member to the same group, the lock leaves it alone, and you can lock the new member separately if you want.
 
-You can also lock an entire record straight from the navigation tree: right-click a record under the merged patch and choose Lock in Merged Patch to freeze the whole record, or Unlock in Merged Patch to release it. This is the quickest way to pin a complete record such as a script or a leveled list. A locked record is marked with a lock icon in the navigation tree so you can see at a glance which records are held.
+You can also lock an entire record straight from the navigation tree: right-click a record under the merged patch and choose Lock in Merged Patch to freeze the whole record, or Unlock in Merged Patch to release it. This is the quickest way to pin a complete record such as a script or a leveled list. A locked record is shown with a light blue background and blue text in the navigation tree so you can see at a glance which records are held.
 
 Right-click a locked cell and choose Unlock in Merged Patch to remove the lock. Locks are remembered between sessions and stored alongside the merged patch itself, so each merged patch keeps its own locks — loading a different profile's merged patch shows that patch's locks, never another's.
 

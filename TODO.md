@@ -1,12 +1,6 @@
 # TODO
 
-remove status column
-move esp esm guard merged to left of plugin name
-all excluded plugins, records, subrecords in light grey backgroud, grey text
-all locked records and values in light blue background and blue text
-remove exclude and lock glyphs completely from both panels
-locking is not working for all fields
-merged patch dont need override indicator, plugin < override < merged patch < guard
+locked bit/field on a repeated sub-record (occurrence > 1) behind a flags group or cell-ref: coloring/menu shows it as not locked because occurrence is left at 0 on flags-group and cell-ref child rows (view_tree_decode.cpp / view_tree_decode_cell.cpp) and row_is_locked reads occurrence from the flags-group parent. reapply still writes it; only the match/display is wrong
 excluded plugins should be on list
 there should be list of locked records and subrecords
 locked records and subrecords should be kept as sidecar file for merged patch with binary data that will be reapplied after merged patch

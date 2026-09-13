@@ -93,7 +93,6 @@ private:
 
 	conflict_this_t record_foreground_for_plugin(const conflict_entry_t & entry, int plugin_idx) const;
 	bool has_whole_record_lock(const std::string & rec_type, const std::string & record_id) const;
-	QString record_status_glyphs(size_t file_idx, const conflict_entry_t & entry) const;
 
 	void build_tree();
 	void sort_records();
@@ -104,7 +103,6 @@ private:
 	QVariant data_for_root_level(int row, int column, int role) const;
 	QVariant data_for_file_node(int row, int column, int role) const;
 	QVariant file_node_display_text(const file_node_t & file_node) const;
-	QVariant file_node_icons(const file_node_t & file_node) const;
 	QVariant file_node_appearance(const file_node_t & file_node, int role) const;
 	QVariant data_for_esm_nodes(void * ptr, int row, int column, int role) const;
 	QVariant data_for_type_group(size_t file_idx, int row, int column, int role) const;

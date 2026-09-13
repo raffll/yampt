@@ -12,7 +12,6 @@ struct tier_flags_t
 {
 	std::string_view filename;
 	bool is_overridden = false;
-	bool is_excluded = false;
 	bool is_guard = false;
 	bool is_active = false;
 };
@@ -32,24 +31,26 @@ inline bool path_is_overwrite(std::string_view full_path)
 	       full_path.find("\\overwrite\\") != std::string_view::npos;
 }
 
-inline QString prefix(const tier_flags_t & flags)
+inline QString role_icon(const tier_flags_t & flags)
 {
-	QString icons;
+	if (flags.is_guard)
+		return QString::fromUtf8(glyph::shield);
 
 	if (flags.filename == merged_patch::filename)
-		icons += QString::fromUtf8(glyph::gear) + " ";
-	else if (has_esm_extension(flags.filename))
-		icons += QString::fromUtf8(glyph::scroll) + " ";
-	else
-		icons += QString::fromUtf8(glyph::page) + " ";
+		return QString::fromUtf8(glyph::gear);
 
 	if (flags.is_overridden)
-		icons += QString::fromUtf8(glyph::bolt) + " ";
+		return QString::fromUtf8(glyph::bolt);
 
-	if (flags.is_excluded)
-		icons += QString::fromUtf8(glyph::no_entry) + " ";
-	else if (flags.is_guard)
-		icons += QString::fromUtf8(glyph::shield) + " ";
+	if (has_esm_extension(flags.filename))
+		return QString::fromUtf8(glyph::scroll);
+
+	return QString::fromUtf8(glyph::page);
+}
+
+inline QString prefix(const tier_flags_t & flags)
+{
+	QString icons = role_icon(flags) + " ";
 
 	if (flags.is_active)
 		icons += QString::fromUtf8(glyph::star) + " ";

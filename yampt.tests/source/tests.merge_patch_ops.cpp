@@ -443,6 +443,38 @@ TEST_CASE("merge_patch_ops_t::patch_field, field_idx out of range fails", "[u]")
 	REQUIRE_FALSE(result.success);
 }
 
+TEST_CASE("merge_patch_ops_t::patch_field, restores whole string_var field", "[u]")
+{
+	auto merge = make_record("NPC_", make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("MergedName")));
+	auto source =
+	    make_record("NPC_", make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("FrozenName")));
+
+	auto result = merge_patch_ops_t::patch_field(merge, source, "NPC_", "FNAM", 0, 1, 0);
+
+	REQUIRE(result.success);
+
+	const auto merge_subs = sub_record_merge_t::parse_sub_records(result.content);
+	const auto fnam = sub_record_merge_t::find_by_type_and_occurrence(merge_subs, "FNAM", 0);
+	REQUIRE(fnam >= 0);
+	REQUIRE(merge_subs[fnam].data == make_string("FrozenName"));
+}
+
+TEST_CASE("merge_patch_ops_t::patch_field, restores string_var field of different length", "[u]")
+{
+	auto merge = make_record("BOOK", make_sub("NAME", make_string("id")) + make_sub("TEXT", make_string("short")));
+	auto source = make_record(
+	    "BOOK", make_sub("NAME", make_string("id")) + make_sub("TEXT", make_string("a much longer frozen text")));
+
+	auto result = merge_patch_ops_t::patch_field(merge, source, "BOOK", "TEXT", 0, 1, 0);
+
+	REQUIRE(result.success);
+
+	const auto merge_subs = sub_record_merge_t::parse_sub_records(result.content);
+	const auto text = sub_record_merge_t::find_by_type_and_occurrence(merge_subs, "TEXT", 0);
+	REQUIRE(text >= 0);
+	REQUIRE(merge_subs[text].data == make_string("a much longer frozen text"));
+}
+
 TEST_CASE("merge_patch_ops_t::extract_sub_type_from_field_name, type with description", "[u]")
 {
 	REQUIRE(merge_patch_ops_t::extract_sub_type_from_field_name("BNAM - Male Part Name") == "BNAM");

@@ -693,12 +693,7 @@ static QString truncate_for_display(const std::string & value)
 static QVariant sub_record_display(const view_tree_model_t::view_node_t & row, int column)
 {
 	if (column == 0)
-	{
-		if (row.is_excluded_sub_record)
-			return QString::fromStdString(row.label) + " " + QString::fromUtf8(plugin_icon::glyph::no_entry);
-
 		return QString::fromStdString(row.label);
-	}
 
 	if (hoists_single_leaf_child(row))
 	{
@@ -874,23 +869,29 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 	switch (role)
 	{
 	case Qt::DisplayRole:
-	{
-		auto display = sub_record_display(*node, index.column());
-		if (is_active_column(index.column()) && row_is_locked(*node, index))
-		{
-			const auto text = display.toString();
-			return text.isEmpty() ? QString::fromUtf8(plugin_icon::glyph::lock)
-			                      : text + " " + QString::fromUtf8(plugin_icon::glyph::lock);
-		}
-
-		return display;
-	}
+		return sub_record_display(*node, index.column());
 
 	case Qt::BackgroundRole:
+	{
+		if (is_active_column(index.column()) && row_is_locked(*node, index))
+			return QBrush(theme_system_t::instance().get_color(color_name_t::locked_background));
+
+		if (node->is_excluded_sub_record)
+			return QBrush(theme_system_t::instance().get_color(color_name_t::excluded_background));
+
 		return sub_record_background(*node, index.column());
+	}
 
 	case Qt::ForegroundRole:
+	{
+		if (is_active_column(index.column()) && row_is_locked(*node, index))
+			return QBrush(theme_system_t::instance().get_color(color_name_t::locked_text));
+
+		if (node->is_excluded_sub_record)
+			return QBrush(theme_system_t::instance().get_color(color_name_t::excluded_text));
+
 		return sub_record_foreground(*node, m_column_names.size(), index.column(), m_has_active_column);
+	}
 
 	case Qt::FontRole:
 	{
@@ -1074,7 +1075,6 @@ QVariant view_tree_model_t::headerData(int section, Qt::Orientation orientation,
 			flags.filename = name;
 			flags.is_overridden =
 			    m_scan_for_header && plugin_icon::path_is_overwrite(m_scan_for_header->plugin_path(pi));
-			flags.is_excluded = m_excluded_plugins && m_excluded_plugins->count(name);
 			flags.is_guard = m_patch_plugins && m_patch_plugins->count(name);
 			flags.is_active = m_scan_for_header && m_scan_for_header->is_active_plugin(pi);
 
@@ -1097,6 +1097,11 @@ QVariant view_tree_model_t::headerData(int section, Qt::Orientation orientation,
 			return {};
 
 		const auto & theme = theme_system_t::instance();
+
+		if (col < static_cast<int>(m_column_names.size()) && m_excluded_plugins &&
+		    m_excluded_plugins->count(m_column_names[col]))
+			return QBrush(theme.get_color(color_name_t::excluded_text));
+
 		return QBrush(theme.conflict_this_foreground(m_plugin_conflict_this[col]));
 	}
 
