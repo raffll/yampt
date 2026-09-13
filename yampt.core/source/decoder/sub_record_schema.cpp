@@ -859,10 +859,6 @@ static const field_def_t cell_cndt_grid_fields[] = {
 	{ "Grid Y", field_type_t::i32, 4, 4, nullptr, nullptr, 0, nullptr },
 };
 
-static const field_def_t dele_fields[] = {
-	{ "Deleted", field_type_t::u32, 0, 4, nullptr, nullptr, 0, nullptr },
-};
-
 static const field_def_t whgt_fields[] = {
 	{ "Water Height", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
 };
@@ -1087,7 +1083,6 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 		{ "CELL", "MVRF", 4, mvrf_fields, ARRAY_COUNT(mvrf_fields) },
 		{ "CELL", "CNDT", 8, cell_cndt_grid_fields, ARRAY_COUNT(cell_cndt_grid_fields) },
 		{ "CELL", "CNDT", 0, cell_cndt_fields, ARRAY_COUNT(cell_cndt_fields) },
-		{ "*", "DELE", 4, dele_fields, ARRAY_COUNT(dele_fields) },
 		{ "CELL", "WHGT", 4, whgt_fields, ARRAY_COUNT(whgt_fields) },
 		{ "CELL", "NAM0", 4, nam0_fields, ARRAY_COUNT(nam0_fields) },
 		{ "*", "INTV", 4, intv_4_fields, ARRAY_COUNT(intv_4_fields) },

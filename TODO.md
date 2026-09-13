@@ -1,8 +1,5 @@
 # TODO
 
-DELE - showing 0 or garbade inseatd of DELETED
-check priority excluded vs lock, should be mutualiy exclusive
-sound generator record without ID?
 bonus skills not merged?
 race merged patch is broken
 removing from merged patch also should lock that group as empty
@@ -100,3 +97,11 @@ record flags follow last-plugin-wins (intent unclear, needs investigation first)
   - merge behavior: audit every merge path (generic reconstruct_record, cell/armor reconstruct_*, leveled build_merged_list_record, DIAL/INFO) to confirm the merged record's header/flags come from the last plugin; fix any path that keeps an earlier header.
   - record-view display: header flags (Persistent/Blocked) are currently read into a header string (read_record_flags in view_tree_model.cpp) but may not be shown as a per-plugin, conflict-colored, comparable row like other fields. The note may want flags decoded as a normal comparable field so last-wins is visible.
   DECIDE after investigation: is there an actual bug, or is this already correct? Only then scope a fix.
+
+exclude vs lock should be mutually exclusive (needs decision): today exclusion and locking are independent mechanisms with no cross-enforcement, so a target can be both excluded and locked. Exclusion lives in three places — plugin-level (plugin_session_t::excluded_plugins), record-level (settings merge_exclusion_pattern via exclusion_resolver_t), and sub-record-level (settings sub_record_ignore_conflict ignore rules). Locking lives in merge_lock_t with scopes whole_record / sub_record / field / bit (plugin_scan_t active locks + sidecar). Note precedent already exists: excluding a plugin removes it from patch plugins and vice versa (view_context_menu.cpp ~220-248) — extend the same idea to exclude<->lock. Also note the design-decisions COLOR rule says "locked color takes precedence" — that's display only, separate from this state rule.
+  DECIDE:
+  - precedence: (a) exclude wins — excluding a target clears any lock on it and greys out the Lock action for excluded targets (recommended, since excluded content is skipped from the merge so a lock on it is meaningless); or (b) lock wins.
+  - scope matching: enforce at matching scope only (record-exclude vs whole-record-lock; sub-record ignore-rule vs sub-record/field/bit lock on that sub-record), or across all overlapping scopes.
+  - reconcile with the design-decisions color rule ("locked color takes precedence") so state precedence and color precedence don't contradict; update that rule if needed.
+
+one record shows a blank ID (SNDG?) — investigate then fix: in plugin_index.cpp derive_id, most record types (including SNDG) fall through to derive_sub_text_id(iter, "NAME", i), which returns the NAME text with null chars stripped, or the numeric fallback index only when NAME is entirely ABSENT. So a truly blank (non-numeric) ID means the record HAS a NAME sub-record whose content is empty after null-stripping. FIRST identify which record type/plugin shows the blank (the nav-tree group it sits under) to know whether an empty NAME is legitimate data or a derive bug. Safe minimal fix regardless of type: in derive_sub_text_id, when the stripped NAME text is empty, return the numeric fallback index instead of an empty string, so no record ever displays a blank ID. DECIDE whether that fallback is acceptable or the specific record type needs a dedicated id derivation.
