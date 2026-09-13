@@ -10,6 +10,7 @@
 #include <scanner/sub_record_merge.hpp>
 #include <utility/app_logger.hpp>
 #include <utility/record_behavior.hpp>
+#include <utility/string_utils.hpp>
 #include <filesystem>
 #include <set>
 #include <settings_store.hpp>
@@ -19,37 +20,6 @@
 #include <QFileInfo>
 #include <QMessageBox>
 #include <QSettings>
-
-namespace {
-
-std::set<std::string> parse_sub_record_rules(const std::string & input)
-{
-	std::set<std::string> result;
-	size_t start = 0;
-
-	while (start < input.size())
-	{
-		const auto comma = input.find(',', start);
-		const auto end = (comma == std::string::npos) ? input.size() : comma;
-
-		auto token_start = start;
-		while (token_start < end && input[token_start] == ' ')
-			++token_start;
-
-		auto token_end = end;
-		while (token_end > token_start && input[token_end - 1] == ' ')
-			--token_end;
-
-		if (token_end > token_start)
-			result.insert(input.substr(token_start, token_end - token_start));
-
-		start = (comma == std::string::npos) ? input.size() : comma + 1;
-	}
-
-	return result;
-}
-
-} // namespace
 
 merge_controller_t::merge_controller_t(
     plugin_session_t & session,
@@ -893,7 +863,7 @@ int merge_controller_t::create_merge_records()
 	config.fog_fix_enabled = m_settings.merge_fog_fix_enabled();
 	config.summon_fix_enabled = m_settings.merge_summon_fix_enabled();
 	config.cell_name_fix_enabled = m_settings.merge_cell_name_fix_enabled();
-	config.ignored_sub_records = parse_sub_record_rules(m_settings.sub_record_ignore_conflict());
+	config.ignored_sub_records = string_utils::split_trimmed_set(m_settings.sub_record_ignore_conflict(), ',');
 
 	auto_merge_t merge(m_session.scan());
 	merge.set_config(config);

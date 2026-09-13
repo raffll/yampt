@@ -468,29 +468,7 @@ void plugin_workspace_view_t::rebuild_after_load()
 
 void plugin_workspace_view_t::apply_user_conflict_rules()
 {
-	const auto rules_str = m_settings.sub_record_ignore_conflict();
-	std::set<std::string> rules;
-	size_t start = 0;
-
-	while (start < rules_str.size())
-	{
-		const auto comma = rules_str.find(',', start);
-		const auto end = (comma == std::string::npos) ? rules_str.size() : comma;
-
-		auto token_start = start;
-		while (token_start < end && rules_str[token_start] == ' ')
-			++token_start;
-
-		auto token_end = end;
-		while (token_end > token_start && rules_str[token_end - 1] == ' ')
-			--token_end;
-
-		if (token_end > token_start)
-			rules.insert(rules_str.substr(token_start, token_end - token_start));
-
-		start = (comma == std::string::npos) ? rules_str.size() : comma + 1;
-	}
-
+	const auto rules = string_utils::split_trimmed_set(m_settings.sub_record_ignore_conflict(), ',');
 	m_session->scan().set_user_ignore_conflict(rules);
 }
 

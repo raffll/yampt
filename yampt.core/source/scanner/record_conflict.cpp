@@ -210,6 +210,31 @@ conflict_policy_t record_conflict::find_conflict_policy(const std::string & reco
 	if (!rule)
 		return {};
 
-	return { has_flag(rule->flags, sub_rule_flag_t::skip_non_existent),
-		     has_flag(rule->flags, sub_rule_flag_t::ignore_conflict) };
+	return { has_flag(rule->flags, sub_rule_flag_t::skip_non_existent) };
+}
+
+std::vector<conflict_this_t> record_conflict::combine_worst_this(
+    size_t version_count,
+    const std::vector<std::vector<conflict_this_t>> & per_slot_this)
+{
+	std::vector<conflict_this_t> worst_this(version_count, conflict_this_t::unknown);
+
+	if (version_count == 0)
+		return worst_this;
+
+	worst_this[0] = conflict_this_t::master;
+
+	for (size_t i = 1; i < version_count; ++i)
+		worst_this[i] = conflict_this_t::identical_to_master;
+
+	for (const auto & slot_this : per_slot_this)
+	{
+		for (size_t i = 1; i < version_count && i < slot_this.size(); ++i)
+		{
+			if (slot_this[i] > worst_this[i])
+				worst_this[i] = slot_this[i];
+		}
+	}
+
+	return worst_this;
 }

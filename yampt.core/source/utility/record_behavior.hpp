@@ -6,9 +6,7 @@
 enum class sub_rule_flag_t : unsigned
 {
 	none = 0,
-	ignore_conflict = 1 << 0,
 	skip_non_existent = 1 << 1,
-	exclude_from_merge = 1 << 2,
 	skip_if_size_differs = 1 << 3,
 	element_wise_merge = 1 << 4,
 };

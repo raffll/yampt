@@ -1,13 +1,5 @@
 # TODO
 
-locked bit/field on a repeated sub-record (occurrence > 1) behind a flags group or cell-ref: coloring/menu shows it as not locked because occurrence is left at 0 on flags-group and cell-ref child rows (view_tree_decode.cpp / view_tree_decode_cell.cpp) and row_is_locked reads occurrence from the flags-group parent. reapply still writes it; only the match/display is wrong
-excluded plugins should be on list
-there should be list of locked records and subrecords
-locked records and subrecords should be kept as sidecar file for merged patch with binary data that will be reapplied after merged patch
-always allow to lock merged patch, even if not active
-in 3rd column show spell effects
-LTEX;INTV exluded by deaf
-if only 2 plugins, text is black, should be purple and grey
 in left panel show first non-empty/existing records, not exactly previous
 filed name default color should be also grey?
 mayve indicator that min/max are bounded
@@ -81,3 +73,12 @@ Root cause: FACT inter-faction reactions are stored as paired INTV (reaction val
 - rnam rank name can be #0 #1: FACT RNAM rank names repeat, so they must carry occurrence indices (#0, #1, ...) in both panels, matching the repeatable-subrecord numbering rule.
 - resolve NPC rank to rank name: an NPC's rank is a number; using the NPC's faction (ANAM) we can look up the faction's RNAM list and display "1 (Rank Name)" instead of a bare number.
 - NPC "door destination" misdecode: NPC ANAM (faction) appears to be decoded/labelled as a door destination field. Verify the NPC_ ANAM schema mapping is not colliding with the door ANAM/DNAM mapping.
+
+
+## Deferred (need decision)
+
+locked bit/field on a repeated sub-record (occurrence > 1) behind a flags group or cell-ref: coloring/menu shows it as not locked because occurrence is left at 0 on flags-group and cell-ref child rows (view_tree_decode.cpp / view_tree_decode_cell.cpp) and row_is_locked reads occurrence from the flags-group parent. reapply still writes it; only the match/display is wrong
+excluded plugins should be on list: add an "Excluded Plugins" tab to the Merged Patch settings page (merge_settings_view) listing the session's excluded plugins. Excluded plugins are session state (plugin_session_t, merge/excluded_plugins), not settings_store_t, so the settings dialog must be given the session. DECIDE: read-only list vs a Remove button that re-includes a plugin (needs session write-back + nav refresh + session save)
+there should be list of locked records and subrecords: a central list of all active merge locks (from plugin_scan_t::active_locks(), each merge_lock_t has rec_type/record_id/scope/sub_type). Mirror the excluded-plugins list placement (Merged Patch settings page tab). DECIDE with the excluded-plugins item: read-only vs a Remove button (remove_active_lock + reapply/refresh)
+always allow to lock merged patch, even if not active: currently the lock menu gates on is_on_active && is_on_merged_patch (view_context_menu.cpp), and locks live in the ACTIVE plugin's store (plugin_scan_t::active_locks / m_active_store), reapplied to the active merge output. To lock the merged patch while another plugin is active, locks must address the merged patch independently of the active store (dedicated merged-patch lock store, always loaded from the sidecar), and the menu gate must allow is_on_merged_patch regardless of active. Contradicts the current design-decisions rule "locking only when merged patch is active" — that rule needs updating too. DECIDE: on lock while not active, re-apply to on-disk merged patch immediately vs only record in sidecar for next merge regeneration
+in 3rd column show spell effects: predates nav-tree Status column removal (no 3rd column now). Likely means the record view — show a readable spell-effect summary on the collapsed ENAM group row (like the faction-reaction summary), e.g. "Restore Health, Self, 10pts, 30s". Raw ENAM fields already decode (Effect/Skill/Attribute/Range/Area/Duration/Mag). DECIDE exact presentation and where

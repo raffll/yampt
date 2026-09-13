@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
+#include <set>
 #include <string>
 #include <string_view>
 
@@ -85,6 +86,29 @@ inline std::string_view trim(std::string_view input)
 
 	const auto end = input.find_last_not_of(" \t\r\n");
 	return input.substr(start, end - start + 1);
+}
+
+inline std::set<std::string> split_trimmed_set(std::string_view input, char delimiter)
+{
+	std::set<std::string> result;
+	size_t start = 0;
+
+	while (start <= input.size())
+	{
+		const auto pos = input.find(delimiter, start);
+		const auto end = (pos == std::string_view::npos) ? input.size() : pos;
+		const auto token = trim(input.substr(start, end - start));
+
+		if (!token.empty())
+			result.emplace(token);
+
+		if (pos == std::string_view::npos)
+			break;
+
+		start = pos + 1;
+	}
+
+	return result;
 }
 
 inline int utf8_byte_to_char_offset(const std::string & utf8_text, int byte_offset)

@@ -270,3 +270,32 @@ TEST_CASE("string_utils::paths_equal, genuinely different paths not equal", "[u]
 {
 	REQUIRE(string_utils::paths_equal("C:/Users/a", "C:/Users/b") == false);
 }
+
+TEST_CASE("string_utils::split_trimmed_set, trims and skips empty tokens", "[u]")
+{
+	const auto result = string_utils::split_trimmed_set("CELL:NAM0, LTEX:INTV", ',');
+	REQUIRE(result.size() == 2);
+	REQUIRE(result.count("CELL:NAM0") == 1);
+	REQUIRE(result.count("LTEX:INTV") == 1);
+}
+
+TEST_CASE("string_utils::split_trimmed_set, ignores blank entries and dedups", "[u]")
+{
+	const auto result = string_utils::split_trimmed_set("a, ,a,  b  ,", ',');
+	REQUIRE(result.size() == 2);
+	REQUIRE(result.count("a") == 1);
+	REQUIRE(result.count("b") == 1);
+}
+
+TEST_CASE("string_utils::split_trimmed_set, empty input yields empty set", "[u]")
+{
+	REQUIRE(string_utils::split_trimmed_set("", ',').empty());
+	REQUIRE(string_utils::split_trimmed_set("   ", ',').empty());
+}
+
+TEST_CASE("string_utils::split_trimmed_set, single token without delimiter", "[u]")
+{
+	const auto result = string_utils::split_trimmed_set("  only ", ',');
+	REQUIRE(result.size() == 1);
+	REQUIRE(result.count("only") == 1);
+}

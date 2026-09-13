@@ -162,7 +162,7 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 	if (!row.children.empty() && row.is_ignored)
 		mark_children_ignored(row);
 
-	if (!row.children.empty() && !policy.ignore_conflict)
+	if (!row.children.empty())
 	{
 		row.row_conflict_all = conflict_all_t::unknown;
 		for (const auto & child : row.children)

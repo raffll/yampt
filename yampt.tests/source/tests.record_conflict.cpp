@@ -342,3 +342,42 @@ TEST_CASE("record_conflict::compute_conflict_this, all empty yields all unknown"
 	REQUIRE(result[1] == conflict_this_t::identical_to_master);
 	REQUIRE(result[2] == conflict_this_t::identical_to_master);
 }
+
+TEST_CASE("record_conflict::combine_worst_this, two versions no slots yields master and identical", "[u]")
+{
+	const auto result = record_conflict::combine_worst_this(2, {});
+
+	REQUIRE(result.size() == 2);
+	REQUIRE(result[0] == conflict_this_t::master);
+	REQUIRE(result[1] == conflict_this_t::identical_to_master);
+}
+
+TEST_CASE("record_conflict::combine_worst_this, identical slots keep identical", "[u]")
+{
+	std::vector<std::vector<conflict_this_t>> per_slot = {
+		{ conflict_this_t::master, conflict_this_t::identical_to_master }
+	};
+	const auto result = record_conflict::combine_worst_this(2, per_slot);
+
+	REQUIRE(result[0] == conflict_this_t::master);
+	REQUIRE(result[1] == conflict_this_t::identical_to_master);
+}
+
+TEST_CASE("record_conflict::combine_worst_this, conflicting slot upgrades column", "[u]")
+{
+	std::vector<std::vector<conflict_this_t>> per_slot = {
+		{ conflict_this_t::master, conflict_this_t::identical_to_master },
+		{ conflict_this_t::master, conflict_this_t::conflict_wins }
+	};
+	const auto result = record_conflict::combine_worst_this(2, per_slot);
+
+	REQUIRE(result[0] == conflict_this_t::master);
+	REQUIRE(result[1] == conflict_this_t::conflict_wins);
+}
+
+TEST_CASE("record_conflict::combine_worst_this, zero versions yields empty", "[u]")
+{
+	const auto result = record_conflict::combine_worst_this(0, {});
+
+	REQUIRE(result.empty());
+}

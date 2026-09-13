@@ -541,7 +541,7 @@ void settings_store_t::set_merge_cell_name_fix_enabled(bool value)
 
 std::string settings_store_t::sub_record_ignore_conflict() const
 {
-	return m_settings.value("SubRecordRules/IgnoreConflict", "CELL:NAM0").toString().toStdString();
+	return m_settings.value("SubRecordRules/IgnoreConflict", "CELL:NAM0, LTEX:INTV").toString().toStdString();
 }
 
 void settings_store_t::set_sub_record_ignore_conflict(const std::string & value)

@@ -285,24 +285,10 @@ static void evaluate_schema_fields(const sub_record_schema_t * schema, const slo
 	}
 }
 
-static void apply_worst_this(
-    conflict_entry_t & entry,
-    const conflict_accumulator_t & accum,
-    const std::vector<bool> & is_deleted)
+static void apply_worst_this(conflict_entry_t & entry, const conflict_accumulator_t & accum)
 {
-	(void)is_deleted;
 	const size_t ver_count = entry.versions.size();
-	std::vector<conflict_this_t> worst_this(ver_count, conflict_this_t::unknown);
-	worst_this[0] = conflict_this_t::master;
-
-	for (const auto & slot_ct : accum.per_slot_this)
-	{
-		for (size_t i = 1; i < ver_count; ++i)
-		{
-			if (slot_ct[i] > worst_this[i])
-				worst_this[i] = slot_ct[i];
-		}
-	}
+	const auto worst_this = record_conflict::combine_worst_this(ver_count, accum.per_slot_this);
 
 	for (size_t i = 1; i < ver_count; ++i)
 		entry.versions[i].status = worst_this[i];
@@ -383,10 +369,7 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 
 	entry.conflict_all = accum.worst_all;
 
-	if (accum.worst_all <= conflict_all_t::only_one)
-		return;
-
-	apply_worst_this(entry, accum, is_deleted);
+	apply_worst_this(entry, accum);
 }
 
 size_t plugin_scan_t::plugin_count() const
