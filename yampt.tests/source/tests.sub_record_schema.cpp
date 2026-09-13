@@ -16,6 +16,22 @@ TEST_CASE("sub_record_schema_t::find_schema, CELL FLTV lookup", "[u]")
 	REQUIRE(schema->field_count == 1);
 }
 
+TEST_CASE("sub_record_schema_t::find_schema, INFO FLTV resolves to float value", "[u]")
+{
+	const auto * schema = find_schema("INFO", "FLTV", 4);
+	REQUIRE(schema != nullptr);
+	REQUIRE(schema->field_count == 1);
+	REQUIRE(schema->fields[0].type == field_type_t::f32);
+}
+
+TEST_CASE("sub_record_schema_t::find_schema, CELL FLTV keeps lock level override", "[u]")
+{
+	const auto * schema = find_schema("CELL", "FLTV", 4);
+	REQUIRE(schema != nullptr);
+	REQUIRE(schema->field_count == 1);
+	REQUIRE(std::string(schema->fields[0].name) == "Lock Level");
+}
+
 TEST_CASE("sub_record_schema_t::find_schema, CELL NAM9 lookup", "[u]")
 {
 	const auto * schema = find_schema("CELL", "NAM9", 4);

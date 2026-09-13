@@ -1,7 +1,16 @@
 # TODO
 
-faction rep merge
-some float dialogue condition are hex
+remove status column
+move esp esm guard merged to left of plugin name
+all excluded plugins, records, subrecords in light grey backgroud, grey text
+all locked records and values in light blue background and blue text
+remove exclude and lock glyphs completely from both panels
+locking is not working for all fields
+merged patch dont need override indicator, plugin < override < merged patch < guard
+excluded plugins should be on list
+there should be list of locked records and subrecords
+locked records and subrecords should be kept as sidecar file for merged patch with binary data that will be reapplied after merged patch
+always allow to lock merged patch, even if not active
 in 3rd column show spell effects
 LTEX;INTV exluded by deaf
 if only 2 plugins, text is black, should be purple and grey
@@ -42,9 +51,6 @@ we can show entire hex in edit panel, with line numbers, fixed  colum,n and rows
 INTV is not merged, so there is hardcoded rule
 ingredient data can be sorted per effect
 Global var can be float or string in different p;lugin, what that mean???
-rnam rank name can be #0 #1
-If factin reaction shoul dignore empty? like cell?
-Some faction reactions are merged some not
 enam effect with #0
 creatiure npco not merged
 also npcs should follow remove spell rule
@@ -58,19 +64,26 @@ diff is broken, it should be per character
 book and script need also syntax coloring
 how to merge armor body part? ignore non existent? ninf cnam and bnasm?
 should_not_exist.esp in C:\OMEN\Morrowind\yampt\x64\Release\$(SolutionDir)
-remove status column
-move esp esm guard merged to left of plugin name
-all excluded plugins, records, subrecords in light grey backgroud, grey text
-all locked records and values in light blue background and blue text
-remove exclude and lock glyphs completely from both panels
-locking is not working for all fields
-merged patch dont need override indicator, plugin < override < merged patch < guard
-excluded plugins should be on list
-there should be list of locked records and subrecords
-locked records and subrecords should be kept as sidecar file for merged patch with binary data that will be reapplied after merged patch
-always allow to lock merged patch, even if not active
+
 
 
 editor: make field editing active-plugin-only; remove obsolete per-plugin in-place editing. Editing a non-active plugin column writes back to that plugin's own file (mutable_plugin + replace_record + mark_plugin_dirty + save_all_dirty), which is a separate path from active/merge editing. Since all record changes should target the active plugin (same store as Copy-to-Active), drop the source-plugin branch: the plugin_idx != -1 path in field_edit_controller (commit_to_source, field_edited signal, read_record_content/mutable_plugin/replace_record for edits), the "Direct Editing" settings page, and the m_editing_enabled half of editable_column_set_t::is_editable (leaving the active/merge column always editable). Also re-gate "Remove Record from Plugin" which currently keys off is_editing_enabled().
 
 newly created file, should be at the end, check modified time, and apply correctly
+
+
+## Faction (FACT) merge
+
+Root cause: FACT inter-faction reactions are stored as paired INTV (reaction value) + ANAM (reaction faction name) sub-records, but the merger matches sub-records positionally by (type, occurrence). It has no concept that INTV+ANAM form one reaction keyed by faction name. This is the common cause of the three reaction bugs below. Fix by adding a faction-specific keyed-union merge in sub_record_merge_t (parallel to merge_armor_parts / NPCO union), keying reactions on the ANAM faction name and emitting INTV+ANAM as a coupled pair. Header sub-records (NAME, FNAM, FADT, RNAM) keep the existing generic merge so FADT element-wise merge still applies.
+
+- faction rep merge: reactions present and identical in several plugins are dropped from the merged patch when the winner/base lists reactions in a different order (positional match fails). Union all reactions across plugins by faction name so every reaction appears once.
+- faction reaction absent-vs-conflict: a reaction present and identical in the plugins that define it but absent in one plugin is falsely flagged as a conflict. Absent reactions must be ignored, like CELL slots (skip_non_existent). Decide alongside the merge fix so conflict display and merge output agree.
+- some faction reactions merged, some not: same positional-matching root cause; resolved by the keyed-union merge.
+- reaction value conflict policy (same faction, different INTV across plugins): last-listed plugin wins, consistent with the merger's precedence. CONFIRM.
+- reaction removal policy (reaction present in base, deleted in a higher-priority plugin): decide whether to respect the removal or union everything (armor/NPCO currently union). CONFIRM before implementing.
+
+## Faction rank names
+
+- rnam rank name can be #0 #1: FACT RNAM rank names repeat, so they must carry occurrence indices (#0, #1, ...) in both panels, matching the repeatable-subrecord numbering rule.
+- resolve NPC rank to rank name: an NPC's rank is a number; using the NPC's faction (ANAM) we can look up the faction's RNAM list and display "1 (Rank Name)" instead of a bare number.
+- NPC "door destination" misdecode: NPC ANAM (faction) appears to be decoded/labelled as a door destination field. Verify the NPC_ ANAM schema mapping is not colliding with the door ANAM/DNAM mapping.

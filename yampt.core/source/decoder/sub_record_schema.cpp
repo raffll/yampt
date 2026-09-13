@@ -875,6 +875,10 @@ static const field_def_t intv_4_fields[] = {
 	{ "Value", field_type_t::i32, 0, 4, nullptr, nullptr, 0, nullptr },
 };
 
+static const field_def_t fltv_4_fields[] = {
+	{ "Value", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
+};
+
 static const field_def_t soun_data_fields[] = {
 	{ "Volume", field_type_t::u8, 0, 1, nullptr, nullptr, 0, nullptr },
 	{ "Min Range", field_type_t::u8, 1, 1, nullptr, nullptr, 0, nullptr },
@@ -1136,6 +1140,7 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 		{ "LAND", "WNAM", 0, land_binary_fields, ARRAY_COUNT(land_binary_fields) },
 		{ "LAND", "VCLR", 0, land_binary_fields, ARRAY_COUNT(land_binary_fields) },
 		{ "LAND", "VTEX", 0, land_binary_fields, ARRAY_COUNT(land_binary_fields) },
+		{ "*", "FLTV", 4, fltv_4_fields, ARRAY_COUNT(fltv_4_fields) },
 	};
 	return schemas;
 }
