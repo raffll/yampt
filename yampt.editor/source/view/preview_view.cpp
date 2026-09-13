@@ -321,6 +321,12 @@ void preview_view_t::show_range_hint()
 	m_message_label->setText(tr("Range: %1").arg(QString::fromStdString(hint)));
 }
 
+void preview_view_t::show_readonly_message(const QString & message)
+{
+	m_message_label->setStyleSheet("");
+	m_message_label->setText(message);
+}
+
 void preview_view_t::set_edit_controller(field_edit_controller_t * controller)
 {
 	m_edit_controller = controller;
@@ -410,6 +416,16 @@ void preview_view_t::update_selection(
 		m_pending_request.sub_type = occurrence.sub_type;
 		m_pending_request.occurrence = occurrence.occurrence;
 		m_pending_request.object_ref_index = occurrence.object_ref_index;
+	}
+
+	const bool is_leveled = (m_pending_request.record_type == "LEVI" || m_pending_request.record_type == "LEVC");
+	if (is_leveled && m_pending_request.sub_type == "INDX")
+	{
+		set_editing_enabled(false);
+		m_right_cached = (cell_value == non_existent_value) ? std::string {} : cell_value;
+		render_comparison();
+		show_readonly_message(tr("Auto-calculated, not editable"));
+		return;
 	}
 
 	m_original_value = cell_value;

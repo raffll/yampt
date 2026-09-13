@@ -26,6 +26,7 @@
 - [CHANGE] The Advanced Filters dialog now lists record types by their readable names (Cell, Creature, Dialogue Response) matching the navigation tree, instead of the raw four-letter codes
 - [CHANGE] The toolbar button that creates an empty active plugin is now labelled "Create New Plugin" (previously "New Plugin")
 - [CHANGE] A field's validation error now appears in the Edit panel next to the Apply button, prefixed "Error:", instead of in the status bar at the bottom of the window
+- [CHANGE] A leveled list's entry Count is no longer editable, since the game recomputes it automatically; selecting it shows "Auto-calculated, not editable" next to the Apply button
 - [FIX] The merge exclusion list in settings now shows each excluded record as its own row again; previously the whole pattern was loaded into a single row
 - [FIX] The navigation tree no longer jumps or scrolls away from where you were working when you exclude, include, guard, save, lock, or unlock — the scroll position and expanded state stay put
 - [FIX] An unused skill or attribute slot in a record (such as a race's empty bonus-skill slots) now reads "None" in the record view instead of the raw number 4294967295

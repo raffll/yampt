@@ -50,6 +50,7 @@ private:
 	void apply_diff_highlighting();
 	void show_error_message(const QString & message);
 	void show_range_hint();
+	void show_readonly_message(const QString & message);
 
 	QTextEdit * m_left_edit = nullptr;
 	QTextEdit * m_right_edit = nullptr;

@@ -1,6 +1,5 @@
 # TODO
 
-INDX - Count shoul be not editbale, but autocals always, so exclude kind of in grey?
 leveled items pc level is not merged
 calc for each item not merged
 id should also be not editable? allow to create new record?
