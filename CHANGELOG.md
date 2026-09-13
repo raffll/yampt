@@ -12,6 +12,7 @@
 - [NEW] Lock an entire record directly from the navigation tree: right-click a record under the merged patch and choose Lock in Merged Patch to freeze the whole record, or Unlock in Merged Patch to release it
 - [NEW] Fields that must merge together as a pair — such as a creature's attack damage minimum and maximum — are now marked in the record view with a bracket before their names (┌ on the minimum, └ on the maximum), showing that both values come from the same plugin during a merge
 - [NEW] Show Optional Fields (View menu): adds a placeholder row for each single-occurrence sub-record a record can have but currently does not, drawn on a white background with light grey text, so you can see which fields are available to add. The choice is remembered between sessions
+- [NEW] While editing a field, the Edit panel shows its accepted range next to the Apply button (for example "Range: 0 to 255" or "Range: up to 32 bytes"), so you know the limits before you type
 - [CHANGE] The navigation tree now has two columns — ID and Name. Plugin role icons appear before the plugin filename in the ID column
 - [CHANGE] A plugin now shows a single role icon instead of a stack: the highest-priority role wins, in the order guard, merged patch, overwrite copy, then file type (so the merged patch no longer shows the ⚡ overwrite marker). The active-plugin star is still shown after the role icon
 - [CHANGE] Land texture index (LTEX:INTV) is now excluded from conflict detection and the merged patch by default, since it is assigned per plugin and its differences are not real conflicts; it can be re-included from the Merged Patch settings
@@ -24,6 +25,7 @@
 - [CHANGE] The record view now shows sub-records in a fixed, consistent order for each record type: the record header, then simple single-value fields (with any optional placeholder rows in their usual position), then data blocks that expand into sub-values, then repeating content such as inventory items, spells, and body-part slots
 - [CHANGE] The Advanced Filters dialog now lists record types by their readable names (Cell, Creature, Dialogue Response) matching the navigation tree, instead of the raw four-letter codes
 - [CHANGE] The toolbar button that creates an empty active plugin is now labelled "Create New Plugin" (previously "New Plugin")
+- [CHANGE] A field's validation error now appears in the Edit panel next to the Apply button, prefixed "Error:", instead of in the status bar at the bottom of the window
 - [FIX] The merge exclusion list in settings now shows each excluded record as its own row again; previously the whole pattern was loaded into a single row
 - [FIX] The navigation tree no longer jumps or scrolls away from where you were working when you exclude, include, guard, save, lock, or unlock — the scroll position and expanded state stay put
 - [FIX] An unused skill or attribute slot in a record (such as a race's empty bonus-skill slots) now reads "None" in the record view instead of the raw number 4294967295
@@ -36,6 +38,7 @@
 - [FIX] Race records now merge field by field, so a race's skill bonuses, attributes, height, weight, and flags from different plugins are combined instead of the last plugin's entire race data replacing the rest
 - [FIX] Faction reactions now merge by faction rather than by position, so reactions listed in a different order across plugins no longer drop or get mismatched; a changed reaction value follows load order and a reaction removed by a plugin stays removed
 - [FIX] An NPC whose stats a plugin changed now carries that change into the merged patch, including when the change switches the NPC between auto-calculated and full hand-set stats. The stat block is resolved like any other field, so the last plugin in load order to change it wins instead of the change being dropped
+- [FIX] The Edit panel's difference highlighting now shows on editable fields as well as read-only ones, and updates as you type. Differences are marked character by character — the removed characters on the left pane and the added characters on the right — instead of highlighting whole lines
 
 ### Both Apps
 - [CHANGE] The log panel no longer wraps long lines; instead it scrolls horizontally, so each log entry stays on one line

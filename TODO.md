@@ -1,8 +1,5 @@
 # TODO
 
-diff dont work on editable fields
-figure out how to show valid ranges for fields
-move validation text from status to left of apply/combo buttons
 INDX - Count shoul be not editbale, but autocals always, so exclude kind of in grey?
 leveled items pc level is not merged
 calc for each item not merged

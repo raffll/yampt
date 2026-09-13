@@ -19,4 +19,6 @@ validate_result_t validate_field(
     codepage_t codepage,
     size_t existing_sub_size);
 
+std::string range_hint(const field_def_t & field, size_t existing_sub_size);
+
 } // namespace field_validator

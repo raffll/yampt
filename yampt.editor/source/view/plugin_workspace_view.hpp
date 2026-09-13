@@ -62,11 +62,6 @@ public:
 		return m_status_label;
 	}
 
-	QLabel * validation_label() const
-	{
-		return m_validation_label;
-	}
-
 	void refresh_views();
 	void reset_all_filters();
 
@@ -173,7 +168,6 @@ private:
 	lua_scan_result_t m_lua_scan_result;
 
 	QLabel * m_status_label = nullptr;
-	QLabel * m_validation_label = nullptr;
 	QProgressDialog * m_progress_dialog = nullptr;
 	QString m_progress_label;
 

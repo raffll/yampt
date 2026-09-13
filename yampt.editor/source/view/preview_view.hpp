@@ -34,7 +34,6 @@ protected:
 
 signals:
 	void edit_committed();
-	void validation_message(const QString & message);
 
 private slots:
 	void on_text_changed();
@@ -48,6 +47,9 @@ private:
 	void setup_scroll_sync();
 	void sync_scroll_from(QTextEdit * source_edit);
 	void render_comparison();
+	void apply_diff_highlighting();
+	void show_error_message(const QString & message);
+	void show_range_hint();
 
 	QTextEdit * m_left_edit = nullptr;
 	QTextEdit * m_right_edit = nullptr;
@@ -55,6 +57,7 @@ private:
 	QComboBox * m_value_selector = nullptr;
 	QPushButton * m_apply_button = nullptr;
 	QPushButton * m_diff_toggle_button = nullptr;
+	QLabel * m_message_label = nullptr;
 
 	field_edit_controller_t * m_edit_controller = nullptr;
 	const editable_column_set_t * m_editable_columns = nullptr;
