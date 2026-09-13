@@ -54,6 +54,10 @@ const sub_record_schema_t * find_schema(
     const std::string & sub_type,
     size_t data_size);
 
+const sub_record_schema_t * find_largest_schema(const std::string & record_type, const std::string & sub_type);
+
+const field_def_t * find_field_by_name(const sub_record_schema_t & schema, const char * field_name);
+
 const std::vector<sub_record_schema_t> & all_schemas();
 
 const char * effect_name_by_index(int index);

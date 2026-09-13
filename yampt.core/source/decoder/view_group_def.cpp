@@ -1,6 +1,8 @@
 #include "decoder/view_group_def.hpp"
 
 static const std::vector<view_group_def_t> definitions = {
+	{ "NPC_", "Travel Destination", { "DODT", "DNAM", nullptr } },
+	{ "CREA", "Travel Destination", { "DODT", "DNAM", nullptr } },
 	{ "*", "Door Destination", { "DODT", "DNAM", nullptr } },
 	{ "*", "Position", { "DATA", nullptr } },
 };

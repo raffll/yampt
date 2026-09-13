@@ -1159,6 +1159,37 @@ const sub_record_schema_t * find_schema(const std::string & record_type, const s
 	return nullptr;
 }
 
+const sub_record_schema_t * find_largest_schema(const std::string & record_type, const std::string & sub_type)
+{
+	const auto & schemas = build_schemas();
+	const sub_record_schema_t * largest = nullptr;
+
+	for (const auto & candidate : schemas)
+	{
+		if (candidate.sub_type != sub_type)
+			continue;
+
+		if (std::strcmp(candidate.parent_type, "*") != 0 && candidate.parent_type != record_type)
+			continue;
+
+		if (largest == nullptr || candidate.expected_size > largest->expected_size)
+			largest = &candidate;
+	}
+
+	return largest;
+}
+
+const field_def_t * find_field_by_name(const sub_record_schema_t & schema, const char * field_name)
+{
+	for (size_t field_index = 0; field_index < schema.field_count; ++field_index)
+	{
+		if (std::strcmp(schema.fields[field_index].name, field_name) == 0)
+			return &schema.fields[field_index];
+	}
+
+	return nullptr;
+}
+
 const std::vector<sub_record_schema_t> & all_schemas()
 {
 	return build_schemas();

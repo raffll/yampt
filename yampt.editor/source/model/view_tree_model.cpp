@@ -5,11 +5,13 @@
 #include <scanner/record_conflict.hpp>
 #include <utility/record_behavior.hpp>
 #include <algorithm>
+#include <array>
 #include <cstdio>
 #include <cstring>
 #include <iterator>
 #include <map>
 #include <set>
+#include <utility>
 #include <theme_system.hpp>
 #include <QBrush>
 #include <QCoreApplication>
@@ -168,7 +170,7 @@ size_t view_tree_model_t::setup_columns(plugin_scan_t & scan, const conflict_ent
 	return entry.versions.size();
 }
 
-static std::string read_record_flags(plugin_scan_t & scan, const record_version_t & ver)
+static std::string read_record_flag_bit(plugin_scan_t & scan, const record_version_t & ver, uint32_t mask)
 {
 	static constexpr size_t record_header_size = 16;
 	static constexpr size_t flags_offset = 12;
@@ -187,32 +189,12 @@ static std::string read_record_flags(plugin_scan_t & scan, const record_version_
 	}
 
 	if (content.size() < record_header_size)
-		return "";
+		return non_existent_value;
 
 	uint32_t flags = 0;
 	std::memcpy(&flags, content.data() + flags_offset, 4);
 
-	std::string result;
-	if (flags & 0x00000400)
-	{
-		if (!result.empty())
-			result += " | ";
-
-		result += "Persistent";
-	}
-
-	if (flags & 0x00002000)
-	{
-		if (!result.empty())
-			result += " | ";
-
-		result += "Blocked";
-	}
-
-	if (result.empty())
-		return "";
-
-	return result;
+	return (flags & mask) ? "Yes" : "No";
 }
 
 static bool check_all_identical(const std::vector<std::string> & values)
@@ -246,17 +228,43 @@ void view_tree_model_t::build_header_row(plugin_scan_t & scan, const conflict_en
 	sig_row.cell_conflict_this = record_conflict::compute_conflict_this(sig_row.values);
 	header_row.children.push_back(std::move(sig_row));
 
-	view_node_t flags_row;
-	flags_row.label = "Record Flags";
-	flags_row.values.resize(col_count);
+	view_node_t flags_group;
+	flags_group.label = "Record Flags";
+	flags_group.values.resize(col_count);
+	flags_group.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
+	flags_group.row_conflict_all = conflict_all_t::only_one;
 
-	for (size_t col = 0; col < entry.versions.size(); ++col)
-		flags_row.values[col] = read_record_flags(scan, entry.versions[col]);
+	static constexpr std::array<std::pair<const char *, uint32_t>, 2> record_flag_bits = {
+		{ { "Persistent", 0x00000400 }, { "Blocked", 0x00002000 } }
+	};
 
-	flags_row.all_identical = check_all_identical(flags_row.values);
-	flags_row.row_conflict_all = record_conflict::compute_conflict_all(flags_row.values);
-	flags_row.cell_conflict_this = record_conflict::compute_conflict_this(flags_row.values);
-	header_row.children.push_back(std::move(flags_row));
+	for (const auto & flag_bit : record_flag_bits)
+	{
+		view_node_t bit_row;
+		bit_row.label = flag_bit.first;
+		bit_row.values.resize(col_count);
+
+		for (size_t col = 0; col < entry.versions.size(); ++col)
+			bit_row.values[col] = read_record_flag_bit(scan, entry.versions[col], flag_bit.second);
+
+		bit_row.all_identical = check_all_identical(bit_row.values);
+		bit_row.row_conflict_all = record_conflict::compute_conflict_all(bit_row.values);
+		bit_row.cell_conflict_this = record_conflict::compute_conflict_this(bit_row.values);
+
+		if (bit_row.row_conflict_all > flags_group.row_conflict_all)
+			flags_group.row_conflict_all = bit_row.row_conflict_all;
+
+		for (size_t col = 0; col < col_count && col < bit_row.cell_conflict_this.size(); ++col)
+		{
+			if (bit_row.cell_conflict_this[col] > flags_group.cell_conflict_this[col])
+				flags_group.cell_conflict_this[col] = bit_row.cell_conflict_this[col];
+		}
+
+		flags_group.children.push_back(std::move(bit_row));
+	}
+
+	flags_group.all_identical = (flags_group.row_conflict_all <= conflict_all_t::no_conflict);
+	header_row.children.push_back(std::move(flags_group));
 
 	m_rows.push_back(std::move(header_row));
 }

@@ -162,7 +162,7 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 		row.cell_conflict_this = record_conflict::compute_conflict_this(row.values);
 	}
 
-	const auto * schema = find_schema(m_record_type, slot.type, first_size);
+	const auto * schema = find_largest_schema(m_record_type, slot.type);
 	if (schema && first_data)
 		decode_schema_children(row, schema, first_data, first_size, col_count, all_subs, col_indices, slot);
 	else if (first_data && first_size > 0 && !row.values.empty() && !row.values[0].empty() && row.values[0][0] == '<')
@@ -323,9 +323,21 @@ void view_tree_model_t::decode_schema_children(
 			}
 
 			const auto & sv = all_subs[col][idx];
-			frow.values[col] = decode_field(fdef, sv.data, sv.size, m_display_codepage);
 
-			if (fdef.type == field_type_t::scvr_subject && frow.label == fdef.name)
+			const auto * column_schema = find_schema(m_record_type, slot.type, sv.size);
+			const field_def_t * column_field =
+			    column_schema ? find_field_by_name(*column_schema, fdef.name) : nullptr;
+
+			if (column_schema && column_field == nullptr)
+			{
+				frow.values[col] = "Auto";
+				continue;
+			}
+
+			const auto & effective_field = column_field ? *column_field : fdef;
+			frow.values[col] = decode_field(effective_field, sv.data, sv.size, m_display_codepage);
+
+			if (effective_field.type == field_type_t::scvr_subject && frow.label == fdef.name)
 				frow.label = scvr_subject_label(sv.data, sv.size);
 		}
 
