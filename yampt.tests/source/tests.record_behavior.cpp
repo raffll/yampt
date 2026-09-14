@@ -127,3 +127,30 @@ TEST_CASE("record_behavior::record_allows_exclude, allowed by default including 
 	REQUIRE(record_allows_exclude("WEAP"));
 	REQUIRE(record_allows_exclude("XXXX"));
 }
+
+TEST_CASE("record_behavior::find_field_pair_role, CREA attack min max pairs", "[u]")
+{
+	REQUIRE(find_field_pair_role("CREA", "NPDT", 68) == field_pair_role_t::min_bound);
+	REQUIRE(find_field_pair_role("CREA", "NPDT", 72) == field_pair_role_t::max_bound);
+	REQUIRE(find_field_pair_role("CREA", "NPDT", 60) == field_pair_role_t::none);
+}
+
+TEST_CASE("record_behavior::find_field_pair_role, WEAP damage min max pairs", "[u]")
+{
+	REQUIRE(find_field_pair_role("WEAP", "WPDT", 22) == field_pair_role_t::min_bound);
+	REQUIRE(find_field_pair_role("WEAP", "WPDT", 23) == field_pair_role_t::max_bound);
+	REQUIRE(find_field_pair_role("WEAP", "WPDT", 24) == field_pair_role_t::min_bound);
+	REQUIRE(find_field_pair_role("WEAP", "WPDT", 25) == field_pair_role_t::max_bound);
+	REQUIRE(find_field_pair_role("WEAP", "WPDT", 26) == field_pair_role_t::min_bound);
+	REQUIRE(find_field_pair_role("WEAP", "WPDT", 27) == field_pair_role_t::max_bound);
+}
+
+TEST_CASE("record_behavior::find_field_pair_role, ENAM magnitude min max pairs", "[u]")
+{
+	REQUIRE(find_field_pair_role("ENCH", "ENAM", 16) == field_pair_role_t::min_bound);
+	REQUIRE(find_field_pair_role("ENCH", "ENAM", 20) == field_pair_role_t::max_bound);
+	REQUIRE(find_field_pair_role("ALCH", "ENAM", 16) == field_pair_role_t::min_bound);
+	REQUIRE(find_field_pair_role("ALCH", "ENAM", 20) == field_pair_role_t::max_bound);
+	REQUIRE(find_field_pair_role("SPEL", "ENAM", 16) == field_pair_role_t::min_bound);
+	REQUIRE(find_field_pair_role("INGR", "ENAM", 20) == field_pair_role_t::max_bound);
+}

@@ -18,6 +18,24 @@ static constexpr paired_merge_rule_t crea_paired_rules[] = {
 	{ "NPDT", 96, crea_npdt_attack_pairs, 3 },
 };
 
+static constexpr field_pair_rule_t weap_wpdt_damage_pairs[] = {
+	{ 22, 23, 1 },
+	{ 24, 25, 1 },
+	{ 26, 27, 1 },
+};
+
+static constexpr paired_merge_rule_t weap_paired_rules[] = {
+	{ "WPDT", 32, weap_wpdt_damage_pairs, 3 },
+};
+
+static constexpr field_pair_rule_t enam_magnitude_pairs[] = {
+	{ 16, 20, 4 },
+};
+
+static constexpr paired_merge_rule_t enam_paired_rules[] = {
+	{ "ENAM", 24, enam_magnitude_pairs, 1 },
+};
+
 static constexpr sub_record_rule_t npc_sub_rules[] = {
 	{ "NPDT", 52, skip_if_size_differs | element_wise_merge },
 	{ "NPDT", 12, skip_if_size_differs | element_wise_merge },
@@ -104,7 +122,11 @@ static constexpr record_behavior_t behavior_table[] = {
 	  .sub_rule_count = 4,
 	  .paired_rules = crea_paired_rules,
 	  .paired_rule_count = 1 },
-	{ .record_type = "WEAP", .sub_rules = weap_sub_rules, .sub_rule_count = 1 },
+	{ .record_type = "WEAP",
+	  .sub_rules = weap_sub_rules,
+	  .sub_rule_count = 1,
+	  .paired_rules = weap_paired_rules,
+	  .paired_rule_count = 1 },
 	{ .record_type = "ARMO",
 	  .decode_mode = decode_mode_t::armor,
 	  .sub_rules = armo_sub_rules,
@@ -114,9 +136,19 @@ static constexpr record_behavior_t behavior_table[] = {
 	  .decode_mode = decode_mode_t::armor,
 	  .merge_strategy = merge_strategy_t::armor_parts },
 	{ .record_type = "SCPT", .merge_strategy = merge_strategy_t::no_merge },
-	{ .record_type = "ENCH", .enam_effect_list = true },
-	{ .record_type = "SPEL", .enam_effect_list = true },
-	{ .record_type = "ALCH", .enam_effect_list = true },
+	{ .record_type = "ENCH",
+	  .enam_effect_list = true,
+	  .paired_rules = enam_paired_rules,
+	  .paired_rule_count = 1 },
+	{ .record_type = "SPEL",
+	  .enam_effect_list = true,
+	  .paired_rules = enam_paired_rules,
+	  .paired_rule_count = 1 },
+	{ .record_type = "ALCH",
+	  .enam_effect_list = true,
+	  .paired_rules = enam_paired_rules,
+	  .paired_rule_count = 1 },
+	{ .record_type = "INGR", .paired_rules = enam_paired_rules, .paired_rule_count = 1 },
 	{ .record_type = "LAND",
 	  .merge_excluded = true,
 	  .read_only_reason = read_only_reason_t::landscape_data,

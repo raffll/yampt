@@ -80,12 +80,10 @@ rc::Gen<handler_conflict_t> gen_conflict()
 
 } // namespace
 
-TEST_CASE(
-    "lua_tree_model_t::set_scan_result, groups match scan content",
-    "[Feature: lua-view-integration][Property 1: Lua section presence]")
+TEST_CASE("lua_tree_model_t::set_scan_result, groups match scan content", "[u][pbt][qt]")
 {
 	rc::prop(
-	    "Validates: Requirements 1.1, 1.3, 1.4",
+	    "a Lua section is present and its groups mirror the scan content",
 	    []()
 	{
 		lua_tree_model_t model;

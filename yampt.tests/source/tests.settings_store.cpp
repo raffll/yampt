@@ -47,7 +47,7 @@ rc::Gen<theme_t> gen_theme()
 TEST_CASE("settings_store_t::save, round-trip", "[pbt]")
 {
 	rc::prop(
-	    "Validates: Requirements 15.1",
+	    "saved settings reload to the same values",
 	    []()
 	{
 		const auto filename = QString("yampt_pbt_settings_store_test.ini");

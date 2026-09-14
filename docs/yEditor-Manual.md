@@ -69,7 +69,7 @@ Sub-records are shown in a fixed, consistent order: the record header first, the
 
 A sub-record excluded from conflict detection and the merged patch is shown with a light grey background and grey text, so you can see at a glance which sub-records are being skipped.
 
-Some fields are linked as a pair whose two values are always merged together from the same plugin, never taken from different plugins. A creature's attack damage minimum and maximum are such a pair. The two rows are marked in front of their names with a bracket, ┌ on the minimum and └ on the maximum, so you can see they move as one during a merge.
+Some fields are linked as a pair whose two values are always merged together from the same plugin, never taken from different plugins. Both rows are marked in front of their names with a 🔗 link icon, so you can see they move as one during a merge. This applies to a creature's attack damage minimum and maximum, a weapon's chop, slash, and thrust damage ranges, and the magnitude minimum and maximum of enchantment, spell, potion, and ingredient effects.
 
 ## Dialogue Responses
 

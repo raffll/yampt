@@ -108,10 +108,6 @@ TEST_CASE("sub_record_merge_t::merge, WPDT field change from intermediate surviv
 	REQUIRE(read_wpdt_speed(result.content) == 1.3f);
 }
 
-// ============================================================================
-// Requirement 1: Three-Way Sub-Record Merge â€” Generic
-// ============================================================================
-
 TEST_CASE("sub_record_merge_t::merge, 2 versions returns unchanged", "[u]")
 {
 	auto first = make_record("NPC_", make_sub("NAME", make_string("npc_id")) + make_sub("FNAM", make_string("Name")));
@@ -249,10 +245,6 @@ TEST_CASE("sub_record_merge_t::merge, preserves winner header flags", "[u]")
 	REQUIRE(output_flags == 0x0400);
 }
 
-// ============================================================================
-// Sub-Record Additions by Intermediate
-// ============================================================================
-
 TEST_CASE("sub_record_merge_t::merge, added sub-record preserved", "[u]")
 {
 	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("model.nif"));
@@ -379,10 +371,6 @@ TEST_CASE("sub_record_merge_t::merge, steel_cuirass scenario tribunal adds CNAM"
 	REQUIRE(result.content.find("CNAM") != std::string::npos);
 	REQUIRE(result.content.find("A_Steel_Cuir_Female") != std::string::npos);
 }
-
-// ============================================================================
-// Requirements 3, 4: Element-Wise Byte-Level Merge (NPC_ NPDT, CREA NPDT, AI_W)
-// ============================================================================
 
 TEST_CASE("sub_record_merge_t::merge, NPC NPDT element-wise byte merge", "[u]")
 {
@@ -561,10 +549,6 @@ TEST_CASE("sub_record_merge_t::merge, CREA AI_W element-wise merge", "[u]")
 	REQUIRE(result.content == expected);
 }
 
-// ============================================================================
-// Requirement 5: ENAM Per-Slot Merge
-// ============================================================================
-
 static std::string make_enam(
     uint16_t effect_id,
     uint8_t skill,
@@ -665,10 +649,6 @@ TEST_CASE("sub_record_merge_t::merge, ENAM winner removes slot removal stands", 
 	REQUIRE(result.content == make_record("ALCH", make_sub("NAME", make_string("id")) + make_sub("ENAM", enam1)));
 }
 
-// ============================================================================
-// Duplicate addition prevention
-// ============================================================================
-
 TEST_CASE("sub_record_merge_t::merge, duplicate addition not appended twice", "[u]")
 {
 	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("m.nif"));
@@ -700,10 +680,6 @@ TEST_CASE("sub_record_merge_t::merge, duplicate addition not appended twice", "[
 	}
 	REQUIRE(cnam_count == 1);
 }
-
-// ============================================================================
-// Autocalc NPC intermediate skipped
-// ============================================================================
 
 TEST_CASE("sub_record_merge_t::merge, autocalc intermediate skipped", "[u]")
 {
@@ -739,10 +715,6 @@ TEST_CASE("sub_record_merge_t::merge, autocalc intermediate skipped", "[u]")
 	REQUIRE(result.content == make_record("NPC_", subs_winner));
 }
 
-// ============================================================================
-// NPDT resolves by last-changer wins even when sizes differ
-// ============================================================================
-
 TEST_CASE("sub_record_merge_t::merge, only intermediate changed NPDT wins on size mismatch", "[u]")
 {
 	std::string npdt_52(52, '\0');
@@ -769,10 +741,6 @@ TEST_CASE("sub_record_merge_t::merge, only intermediate changed NPDT wins on siz
 	REQUIRE(result.changed);
 	REQUIRE(npdt_size(result.content) == 12);
 }
-
-// ============================================================================
-// NPC_ merge across 3+ plugins with mixed NPDT layouts (52-byte vs 12-byte)
-// ============================================================================
 
 static constexpr uint32_t npc_flag_autocalc = 0x0010;
 static constexpr size_t npdt_52_gold_offset = 48;
@@ -1018,10 +986,6 @@ TEST_CASE("sub_record_merge_t::merge, NPDT 52-byte intermediate wins over unchan
 	REQUIRE(read_npdt_gold(result.content, npdt_52_gold_offset) == 500);
 }
 
-// ============================================================================
-// ENAM byte-level merge (not whole-slot)
-// ============================================================================
-
 TEST_CASE("sub_record_merge_t::merge, ENAM per-byte merge", "[u]")
 {
 	auto enam_first = make_enam(79, 0, 0, 10, 2, 40);
@@ -1048,10 +1012,6 @@ TEST_CASE("sub_record_merge_t::merge, ENAM per-byte merge", "[u]")
 	auto expected = make_record("SPEL", make_sub("NAME", make_string("id")) + make_sub("ENAM", expected_enam));
 	REQUIRE(result.content == expected);
 }
-
-// ============================================================================
-// NPCO winner only
-// ============================================================================
 
 static std::string make_reaction_pairs(const std::vector<std::pair<std::string, int32_t>> & reactions)
 {
@@ -1254,10 +1214,6 @@ TEST_CASE("sub_record_merge_t::merge, NPCO deletes master item when a plugin omi
 	REQUIRE(result.content.find("item_b") != std::string::npos);
 }
 
-// ============================================================================
-// CELL records skipped from 3-way merge
-// ============================================================================
-
 TEST_CASE("sub_record_merge_t::merge, CELL returns winner unchanged", "[u]")
 {
 	auto subs_first =
@@ -1281,10 +1237,6 @@ TEST_CASE("sub_record_merge_t::merge, CELL returns winner unchanged", "[u]")
 	REQUIRE_FALSE(result.changed);
 	REQUIRE(result.content == winner);
 }
-
-// ============================================================================
-// Sub-record patching (drag and drop operation)
-// ============================================================================
 
 TEST_CASE("sub_record_merge_t::patch, single sub-record by index", "[u]")
 {
@@ -1377,10 +1329,6 @@ TEST_CASE("sub_record_merge_t::patch, second occurrence by index", "[u]")
 	REQUIRE(patched.find("ability_c") != std::string::npos);
 	REQUIRE(patched.find("ability_b") == std::string::npos);
 }
-
-// ============================================================================
-// Binary index resolution (col_type_indices mapping)
-// ============================================================================
 
 TEST_CASE("sub_record_merge_t::patch, binary index generic no reorder", "[u]")
 {
@@ -1491,10 +1439,6 @@ TEST_CASE("sub_record_merge_t::patch, reordered list binary index", "[u]")
 	REQUIRE(subs[binary_idx_from_view].data.find("ancestor_ghost") != std::string::npos);
 }
 
-// ============================================================================
-// SCPT records skipped from merge
-// ============================================================================
-
 TEST_CASE("sub_record_merge_t::merge, SCPT returns winner unchanged", "[u]")
 {
 	auto subs_first = make_sub(
@@ -1521,10 +1465,6 @@ TEST_CASE("sub_record_merge_t::merge, SCPT returns winner unchanged", "[u]")
 	REQUIRE_FALSE(result.changed);
 	REQUIRE(result.content == winner);
 }
-
-// ============================================================================
-// AIDT element-wise merge
-// ============================================================================
 
 TEST_CASE("sub_record_merge_t::merge, AIDT element-wise fight byte", "[u]")
 {
@@ -1561,10 +1501,6 @@ TEST_CASE("sub_record_merge_t::merge, AIDT element-wise fight byte", "[u]")
 	REQUIRE(static_cast<uint8_t>(result_subs[aidt_idx].data[5]) == 1);
 }
 
-// ============================================================================
-// ENAM magnitude pair fix
-// ============================================================================
-
 TEST_CASE("sub_record_merge_t::merge, ENAM mag min/max from same source", "[u]")
 {
 	auto enam_first = make_enam(79, 0, 0, 10, 40, 60);
@@ -1594,10 +1530,6 @@ TEST_CASE("sub_record_merge_t::merge, ENAM mag min/max from same source", "[u]")
 	REQUIRE(min_mag == max_mag);
 	REQUIRE((min_mag == 60 || min_mag == 40));
 }
-
-// ============================================================================
-// CREA NPDT attack pair fix
-// ============================================================================
 
 TEST_CASE("sub_record_merge_t::merge, CREA attack min/max paired", "[u]")
 {
@@ -1640,10 +1572,6 @@ TEST_CASE("sub_record_merge_t::merge, CREA attack min/max paired", "[u]")
 	REQUIRE(atk1_min == 5);
 	REQUIRE(atk1_max == 10);
 }
-
-// ============================================================================
-// Leveled list merge LEVC
-// ============================================================================
 
 TEST_CASE("leveled_list_merge_t::merge, LEVC creature list", "[u]")
 {

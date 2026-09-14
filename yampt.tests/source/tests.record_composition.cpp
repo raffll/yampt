@@ -46,7 +46,7 @@ const std::vector<std::string> all_record_types = {
 
 } // namespace
 
-TEST_CASE("record_composition, every composed sub-record type has a schema", "[u]")
+TEST_CASE("sub_record_schema_t::record_composition, every composed sub-record type has a schema", "[u]")
 {
 	for (const auto & record_type : all_record_types)
 	{
@@ -58,12 +58,12 @@ TEST_CASE("record_composition, every composed sub-record type has a schema", "[u
 	}
 }
 
-TEST_CASE("record_composition, unknown record type has empty composition", "[u]")
+TEST_CASE("sub_record_schema_t::record_composition, unknown record type has empty composition", "[u]")
 {
 	REQUIRE(record_composition("ZZZZ").empty());
 }
 
-TEST_CASE("record_composition, kind flags match known sub-records", "[u]")
+TEST_CASE("sub_record_schema_t::record_composition, kind flags match known sub-records", "[u]")
 {
 	REQUIRE(entry_of("NPC_", "NPCO")->kind == sub_record_kind_t::repeatable);
 	REQUIRE(entry_of("NPC_", "NPDT")->kind == sub_record_kind_t::multi_value);
@@ -73,7 +73,7 @@ TEST_CASE("record_composition, kind flags match known sub-records", "[u]")
 	REQUIRE(entry_of("ARMO", "AODT")->kind == sub_record_kind_t::multi_value);
 }
 
-TEST_CASE("record_composition, labels are set for shared per-parent sub-records", "[u]")
+TEST_CASE("sub_record_schema_t::record_composition, labels are set for shared per-parent sub-records", "[u]")
 {
 	REQUIRE(std::string(entry_of("DOOR", "ANAM")->label) == "Close Sound");
 	REQUIRE(std::string(entry_of("NPC_", "ANAM")->label) == "Faction");
@@ -81,7 +81,7 @@ TEST_CASE("record_composition, labels are set for shared per-parent sub-records"
 	REQUIRE(std::string(entry_of("ALCH", "TEXT")->label) == "Icon");
 }
 
-TEST_CASE("record_composition, MGEF and SKIL and SCPT have no NAME", "[u]")
+TEST_CASE("sub_record_schema_t::record_composition, MGEF and SKIL and SCPT have no NAME", "[u]")
 {
 	REQUIRE(index_of("MGEF", "NAME") < 0);
 	REQUIRE(index_of("SKIL", "NAME") < 0);

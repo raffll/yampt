@@ -69,10 +69,6 @@ static std::string make_levi_header(
 	       make_sub("NNAM", std::string(1, static_cast<char>(chance_none))) + make_sub("INDX", make_uint32(item_count));
 }
 
-// ============================================================================
-// Requirement 2: Occurrence-Counted Leveled List Merge
-// ============================================================================
-
 TEST_CASE("leveled_list_merge_t::merge, plugin count increase applied", "[u]")
 {
 	auto first_subs = make_levi_header("list_id", 1, 0, 1) + make_levi_entry("iron_sword", 1);
@@ -171,10 +167,6 @@ TEST_CASE("leveled_list_merge_t::merge, winner header used", "[u]")
 	uint8_t chance = static_cast<uint8_t>(result.content[nnam_pos + 8]);
 	REQUIRE(chance == 50);
 }
-
-// ============================================================================
-// Requirement 15: Leveled List Deletion Detection
-// ============================================================================
 
 TEST_CASE("leveled_list_merge_t::merge, mod removes item entirely", "[u]")
 {
@@ -287,10 +279,6 @@ TEST_CASE("leveled_list_merge_t::merge, LEVC creature list works same", "[u]")
 	REQUIRE(result.content.find("mudcrab") != std::string::npos);
 }
 
-// ============================================================================
-// Per-occurrence PC level merge (item ID keyed, level merges by precedence)
-// ============================================================================
-
 static uint16_t read_entry_level(const std::string & content, const std::string & item_id)
 {
 	const auto id_pos = content.find(item_id);
@@ -399,10 +387,6 @@ TEST_CASE("leveled_list_merge_t::merge, duplicate weighting preserved not collap
 
 	REQUIRE(count_occurrences(result.content, "iron_sword") == 3);
 }
-
-// ============================================================================
-// Occurrence count resolved as a conflict (last plugin that changed it wins)
-// ============================================================================
 
 TEST_CASE("leveled_list_merge_t::merge, count change wins over master", "[u]")
 {
@@ -513,10 +497,6 @@ TEST_CASE("leveled_list_merge_t::merge, added item count from last plugin", "[u]
 	REQUIRE(count_occurrences(result.content, "new_item") == 2);
 }
 
-// ============================================================================
-// End-to-end merge through real plugin files on disk
-// ============================================================================
-
 static std::string make_tes3_header_record()
 {
 	std::string hedr(300, '\0');
@@ -581,10 +561,6 @@ TEST_CASE("auto_merge_t::execute, leveled list entry level merges from plugin fi
 	fs::remove(plugin_path);
 	fs::remove(revert_path);
 }
-
-// ============================================================================
-// Leveled list DATA flags merge per bit
-// ============================================================================
 
 static uint32_t read_data_flags(const std::string & content)
 {
@@ -726,10 +702,6 @@ TEST_CASE("auto_merge_t::execute, NPC FLAG merges per bit from plugin files", "[
 	fs::remove(plugin1_path);
 	fs::remove(plugin2_path);
 }
-
-// ============================================================================
-// Landscape (LAND) is never written to the merged patch
-// ============================================================================
 
 static std::string make_land(int32_t grid_x, int32_t grid_y, const std::string & height_data)
 {

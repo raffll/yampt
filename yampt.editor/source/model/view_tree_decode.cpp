@@ -12,11 +12,8 @@ static const std::string autocalc_absent_value { "Auto" };
 
 static std::string apply_pair_prefix(const std::string & label, field_pair_role_t role)
 {
-	if (role == field_pair_role_t::min_bound)
-		return "\u250c " + label;
-
-	if (role == field_pair_role_t::max_bound)
-		return "\u2514 " + label;
+	if (role == field_pair_role_t::min_bound || role == field_pair_role_t::max_bound)
+		return "\U0001f517 " + label;
 
 	return label;
 }

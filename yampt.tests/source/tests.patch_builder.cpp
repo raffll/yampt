@@ -78,7 +78,7 @@ rc::Gen<operation_t> gen_operation()
 TEST_CASE("patch_builder_t::add_record, collection invariants", "[pbt]")
 {
 	rc::prop(
-	    "Validates: Requirements 5.1 - add increases count and find_content returns content",
+	    "add increases the count and find_content returns the stored content",
 	    []()
 	{
 		patch_builder_t builder;
@@ -98,7 +98,7 @@ TEST_CASE("patch_builder_t::add_record, collection invariants", "[pbt]")
 	});
 
 	rc::prop(
-	    "Validates: Requirements 5.1 - remove_record makes find_content return nullptr",
+	    "remove_record makes find_content return nullptr",
 	    []()
 	{
 		patch_builder_t builder;
@@ -115,7 +115,7 @@ TEST_CASE("patch_builder_t::add_record, collection invariants", "[pbt]")
 	});
 
 	rc::prop(
-	    "Validates: Requirements 5.1 - random operations maintain consistent record_count",
+	    "random operations keep record_count consistent",
 	    []()
 	{
 		patch_builder_t builder;

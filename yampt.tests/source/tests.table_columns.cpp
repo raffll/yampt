@@ -114,7 +114,7 @@ TEST_CASE("table_columns_t::set_for_kind, switches layout", "[u]")
 	REQUIRE(columns.contains(col_key) == true);
 }
 
-TEST_CASE("table_columns_t, default constructor is dict layout", "[u]")
+TEST_CASE("table_columns_t::table_columns_t, default constructor is dict layout", "[u]")
 {
 	const table_columns_t columns;
 	REQUIRE(columns.count() == 5);

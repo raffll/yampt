@@ -3,12 +3,10 @@
 #include <view/count_label_format.hpp>
 #include <rapidcheck.h>
 
-TEST_CASE(
-    "count_label_format::format, status label Lua count format",
-    "[Feature: lua-view-integration][Property 8: Status label Lua count format]")
+TEST_CASE("count_label_format::format, status label Lua count format", "[u][pbt]")
 {
 	rc::prop(
-	    "Validates: Requirements 6.1, 6.2",
+	    "the status label renders the plugin and record counts in the expected format",
 	    []()
 	{
 		const auto plugins = *rc::gen::inRange<size_t>(0, 100);
