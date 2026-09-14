@@ -372,11 +372,6 @@ void view_tree_model_t::set_editable_columns(const editable_column_set_t * edita
 	m_editable_columns = editable;
 }
 
-bool view_tree_model_t::is_editing_enabled() const
-{
-	return m_editable_columns != nullptr && m_editable_columns->is_editing_enabled();
-}
-
 void view_tree_model_t::clear()
 {
 	beginResetModel();

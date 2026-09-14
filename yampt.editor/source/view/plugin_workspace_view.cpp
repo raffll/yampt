@@ -86,12 +86,6 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 	m_merge_controller->set_lock_changed_callback([this](const std::string & rec_type, const std::string & record_id)
 	{ on_merge_lock_changed(rec_type, record_id); });
 
-	m_merge_controller->set_record_removal_callback([this](const record_removal_record_t & removal)
-	{
-		m_edit_history.record_record_removal(removal);
-		m_history_view->update_history(m_edit_history.entries());
-	});
-
 	m_merge_controller->set_progress_callback([this](int done, int total) { update_progress(done, total); });
 
 	m_merge_controller->set_phase_callback([this](const std::string & label)
@@ -181,23 +175,10 @@ void plugin_workspace_view_t::setup_connections()
 	    m_edit_controller,
 	    &field_edit_controller_t::record_modified,
 	    this,
-	    [this](bool is_merge_edit)
+	    [this]()
 	{
 		refresh_all_views();
-		if (is_merge_edit)
-			m_merge_controller->save_active_plugin();
-		else
-			emit unsaved_changes_changed(true);
-	});
-
-	connect(
-	    m_edit_controller,
-	    &field_edit_controller_t::field_edited,
-	    this,
-	    [this](const field_edit_record_t & edit)
-	{
-		m_edit_history.record_field_edit(edit);
-		m_history_view->update_history(m_edit_history.entries());
+		m_merge_controller->save_active_plugin();
 	});
 
 	connect(m_preview, &preview_view_t::edit_committed, this, [this]() { refresh_all_views(); });
@@ -469,7 +450,6 @@ bool plugin_workspace_view_t::apply_user_conflict_rules()
 void plugin_workspace_view_t::on_settings_changed()
 {
 	const bool conflict_rules_changed = apply_user_conflict_rules();
-	m_editable_columns.set_editing_enabled(m_settings.editing_enabled());
 
 	const auto codepage = static_cast<codepage_t>(m_settings.display_codepage());
 	m_record_view->model()->set_display_codepage(codepage);
@@ -992,7 +972,6 @@ void plugin_workspace_view_t::restore_session_state()
 
 	m_conflicts_only = settings.value("view/conflicts_only", false).toBool();
 	m_hide_duplicates = settings.value("view/hide_duplicates", false).toBool();
-	m_editable_columns.set_editing_enabled(m_settings.editing_enabled());
 
 	m_record_view->model()->set_show_deleted_strikeout(settings.value("view/show_deleted_strikeout", false).toBool());
 	m_nav_view->set_show_deleted_strikeout(m_record_view->model()->show_deleted_strikeout());

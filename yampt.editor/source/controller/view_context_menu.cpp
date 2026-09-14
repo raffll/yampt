@@ -170,13 +170,6 @@ void view_context_menu_t::show_nav_menu(const QPoint & global_pos, const nav_tre
 		menu.addSeparator();
 
 		add_exclude_record_action(menu, info);
-
-		menu.addSeparator();
-
-		auto * remove_action = menu.addAction(
-		    QCoreApplication::translate("yEditor", "Remove Record from Plugin"),
-		    [this, info]() { confirm_remove_record_from_plugin(info); });
-		remove_action->setEnabled(m_record_view.model()->is_editing_enabled());
 	}
 	else if (info.rec_type.empty() && info.record_id.empty())
 	{
@@ -322,33 +315,6 @@ void view_context_menu_t::apply_record_exclusion_pattern(
 	m_session.save_session_state(QDir(settings_store_t::settings_dir()).filePath("yEditor.ini"));
 	m_nav_view.set_exclusion_pattern(pattern);
 	m_nav_view.notify_record_changed(info.rec_type, info.record_id);
-}
-
-void view_context_menu_t::confirm_remove_record_from_plugin(const nav_tree_model_t::node_info_t & info)
-{
-	const auto & filename = m_session.scan().plugin_filename(info.plugin_idx);
-
-	const auto title = QCoreApplication::translate("yEditor", "Remove Record");
-	const auto message =
-	    QCoreApplication::translate(
-	        "yEditor",
-	        "Remove record %1:%2 from \"%3\"?\n\nThis cannot be undone. The record is dropped from the "
-	        "plugin in memory and disappears from the file when you save it.")
-	        .arg(QString::fromStdString(info.rec_type))
-	        .arg(QString::fromStdString(info.record_id))
-	        .arg(QString::fromStdString(filename));
-
-	const auto choice =
-	    QMessageBox::question(nullptr, title, message, QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
-
-	if (choice != QMessageBox::Yes)
-		return;
-
-	if (!m_merge.remove_record_from_plugin(info.plugin_idx, info.rec_type, info.record_id))
-		return;
-
-	if (m_on_unsaved_changed)
-		m_on_unsaved_changed(m_session.has_any_unsaved());
 }
 
 void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModelIndex & index)

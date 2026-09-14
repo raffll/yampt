@@ -44,11 +44,6 @@ void merge_controller_t::set_lock_changed_callback(lock_changed_fn_t lock_change
 	m_lock_changed = std::move(lock_changed_fn);
 }
 
-void merge_controller_t::set_record_removal_callback(record_removal_fn_t removal_fn)
-{
-	m_record_removal = std::move(removal_fn);
-}
-
 void merge_controller_t::set_progress_callback(progress_fn_t progress_fn)
 {
 	m_progress = std::move(progress_fn);
@@ -807,51 +802,6 @@ void merge_controller_t::reapply_locks()
 		if (result.success)
 			m_session.scan().copy_record_to_active_raw(lock.rec_type, lock.record_id, result.content);
 	}
-}
-
-bool merge_controller_t::remove_record_from_plugin(
-    int plugin_idx,
-    const std::string & rec_type,
-    const std::string & record_id)
-{
-	if (plugin_idx < 0 || m_session.scan().is_active_plugin(plugin_idx))
-		return false;
-
-	const auto * entry = m_session.scan().find(rec_type, record_id);
-	if (!entry)
-		return false;
-
-	size_t record_index = 0;
-	bool found = false;
-	for (const auto & version : entry->versions)
-	{
-		if (version.plugin_idx != plugin_idx)
-			continue;
-
-		record_index = version.record_index;
-		found = true;
-		break;
-	}
-
-	if (!found)
-		return false;
-
-	const auto & plugin_filename = m_session.scan().plugin_filename(plugin_idx);
-
-	m_session.scan().mutable_plugin(plugin_idx).remove_record(record_index);
-	m_session.mark_plugin_dirty(plugin_idx);
-	m_session.scan().rebuild_conflicts();
-
-	if (m_refresh)
-		m_refresh();
-	else
-		m_nav_view.rebuild_preserving_state();
-
-	if (m_record_removal)
-		m_record_removal({ plugin_filename, rec_type, record_id });
-
-	m_log("[info] removed " + rec_type + ":" + record_id + " from " + plugin_filename);
-	return true;
 }
 
 int merge_controller_t::create_merge_records()

@@ -21,7 +21,6 @@ public:
 	using log_fn_t = std::function<void(const std::string &)>;
 	using refresh_fn_t = std::function<void()>;
 	using lock_changed_fn_t = std::function<void(const std::string & rec_type, const std::string & record_id)>;
-	using record_removal_fn_t = std::function<void(const record_removal_record_t &)>;
 	using progress_fn_t = std::function<void(int done, int total)>;
 	using phase_fn_t = std::function<void(const std::string & label)>;
 
@@ -34,7 +33,6 @@ public:
 
 	void set_refresh_callback(refresh_fn_t refresh_fn);
 	void set_lock_changed_callback(lock_changed_fn_t lock_changed_fn);
-	void set_record_removal_callback(record_removal_fn_t removal_fn);
 	void set_progress_callback(progress_fn_t progress_fn);
 	void set_phase_callback(phase_fn_t phase_fn);
 
@@ -92,7 +90,6 @@ public:
 	void toggle_active_lock(const merge_lock_t & lock);
 	bool is_active_locked(const merge_lock_t & lock) const;
 
-	bool remove_record_from_plugin(int plugin_idx, const std::string & rec_type, const std::string & record_id);
 
 	void save_active_plugin();
 	void sync_active_locks();
@@ -138,7 +135,6 @@ private:
 	log_fn_t m_log;
 	refresh_fn_t m_refresh;
 	lock_changed_fn_t m_lock_changed;
-	record_removal_fn_t m_record_removal;
 	progress_fn_t m_progress;
 	phase_fn_t m_phase;
 };

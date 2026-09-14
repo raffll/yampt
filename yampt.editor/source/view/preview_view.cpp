@@ -375,14 +375,9 @@ void preview_view_t::update_selection(
 		return;
 	}
 
-	const int plugin_idx =
-	    model->is_active_column(column) ? -1 : model->column_plugin_indices()[static_cast<size_t>(column) - 1];
-
 	m_pending_request.record_type = model->record_type();
 	m_pending_request.record_id = model->record_id();
 	m_pending_request.codepage = model->display_codepage();
-	m_pending_request.plugin_idx = plugin_idx;
-	m_pending_request.record_index = model->record_index_for_column(column);
 	m_pending_request.field = {};
 
 	const auto field_variant = model->data(index, view_tree_model_t::field_def_role);

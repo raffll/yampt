@@ -2,7 +2,7 @@
 
 
 
-editor: make field editing active-plugin-only; remove obsolete per-plugin in-place editing. Editing a non-active plugin column writes back to that plugin's own file (mutable_plugin + replace_record + mark_plugin_dirty + save_all_dirty), which is a separate path from active/merge editing. Since all record changes should target the active plugin (same store as Copy-to-Active), drop the source-plugin branch: the plugin_idx != -1 path in field_edit_controller (commit_to_source, field_edited signal, read_record_content/mutable_plugin/replace_record for edits), the "Direct Editing" settings page, and the m_editing_enabled half of editable_column_set_t::is_editable (leaving the active/merge column always editable). Also re-gate "Remove Record from Plugin" which currently keys off is_editing_enabled().
+record active-plugin / merged-patch field edits in edit history: field edits now always target the active plugin (commit_to_merge). Previously only the removed per-plugin path fed edit history (field_edited -> edit_log_t::record_field_edit). Now no field edit is recorded in history. Re-wire the active/merge edit to record into edit_log_t (the API + unit tests still exist in edit_log). DECIDE: what identifies the edit in the history line (active plugin filename vs "Merged Patch"), and whether to also record the source-value provenance.
 newly created file, should be at the end, check modified time, and apply correctly
 
 diff in wrong place
@@ -90,3 +90,10 @@ race merged patch is broken (vague — need a concrete repro): "broken" is unspe
 removing from merged patch should lock that group as empty: when the user removes a sub-record/group from the merged patch (Remove Sub-Record / Remove Group in view_context_menu / merge_controller), the next auto-merge re-adds it because nothing records the intent "this stays absent". Removal should also create a lock marking that group/sub-record as intentionally empty, so a re-merge does not reintroduce it. Requires a lock scope/flag meaning "locked absent" (distinct from the current locks that pin a value) — e.g. an is_empty/absent flag on merge_lock_t, honored during auto-merge to skip re-adding. DECIDE: new lock variant vs a separate "removed" set in the sidecar; how it interacts with the exclude-vs-lock mutual-exclusivity item; and whether removing a single field (vs whole sub-record/group) can be locked-absent too.
 
 ENAM effect list positional merge (last list-merge type): keyed_list_merge now handles NPCO, NPCS, and FACT reactions; leveled lists were already correct. ENAM effects (spells/enchants/potions/ingredients, slots 0..7) must NOT be keyed — merge positionally/index-based like TES3Merge EffectList: for each slot i, if the winner's effect differs from master take the winner's; a slot present in a plugin but absent in master is added; absent slots are "not overriding" (exclude-empty), never a removal. There is an existing merge_enam_phase in sub_record_merge.cpp (currently slot-concatenation style) — verify it matches this rule and adjust if needed; add failing-first tests. Effects have no stable identity and can legitimately repeat, which is why they stay positional.
+
+min/max special character show as ?
+
+cell merged patch dont merge data
+
+Global, Name in nav can show Short/Float
+
