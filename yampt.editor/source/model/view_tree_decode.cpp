@@ -330,7 +330,10 @@ void view_tree_model_t::decode_schema_children(
 
 			if (column_schema && column_field == nullptr)
 			{
-				frow.values[col] = "Auto";
+				const bool npdt_autocalc = (m_record_type == "NPC_" || m_record_type == "CREA") &&
+				                           slot.type == "NPDT" && sv.size < schema->expected_size;
+
+				frow.values[col] = npdt_autocalc ? "Auto" : "Error";
 				continue;
 			}
 

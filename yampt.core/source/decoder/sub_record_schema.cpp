@@ -1140,6 +1140,8 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 		{ "REGN", "CNAM", 4, regn_cnam_fields, ARRAY_COUNT(regn_cnam_fields) },
 		{ "*", "INDX", 4, indx_fields, ARRAY_COUNT(indx_fields) },
 		{ "*", "INDX", 1, armo_indx_fields, ARRAY_COUNT(armo_indx_fields) },
+		{ "ARMO", "INDX", 1, armo_indx_fields, ARRAY_COUNT(armo_indx_fields) },
+		{ "CLOT", "INDX", 1, armo_indx_fields, ARRAY_COUNT(armo_indx_fields) },
 		{ "BOOK", "TEXT", 0, text_fields, ARRAY_COUNT(text_fields) },
 		{ "ALCH", "TEXT", 0, text_fields, ARRAY_COUNT(text_fields) },
 		{ "ARMO", "ENAM", 0, enam_name_string_fields, ARRAY_COUNT(enam_name_string_fields) },
@@ -1232,7 +1234,24 @@ const sub_record_schema_t * find_largest_schema(const std::string & record_type,
 		if (std::strcmp(candidate.parent_type, "*") != 0 && candidate.parent_type != record_type)
 			continue;
 
-		if (largest == nullptr || candidate.expected_size > largest->expected_size)
+		if (largest == nullptr)
+		{
+			largest = &candidate;
+			continue;
+		}
+
+		const bool candidate_specific = std::strcmp(candidate.parent_type, "*") != 0;
+		const bool largest_specific = std::strcmp(largest->parent_type, "*") != 0;
+
+		if (candidate_specific != largest_specific)
+		{
+			if (candidate_specific)
+				largest = &candidate;
+
+			continue;
+		}
+
+		if (candidate.expected_size > largest->expected_size)
 			largest = &candidate;
 	}
 
