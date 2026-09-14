@@ -68,6 +68,46 @@ static size_t npdt_size(const std::string & record)
 	return size_val;
 }
 
+static std::string make_wpdt(float speed)
+{
+	std::string data(32, '\0');
+	std::memcpy(data.data() + 12, &speed, 4);
+	return data;
+}
+
+static float read_wpdt_speed(const std::string & record)
+{
+	const auto pos = record.find("WPDT");
+	REQUIRE(pos != std::string::npos);
+
+	float speed = 0.0f;
+	std::memcpy(&speed, record.data() + pos + 8 + 12, 4);
+	return speed;
+}
+
+TEST_CASE("sub_record_merge_t::merge, WPDT field change from intermediate survives", "[u]")
+{
+	auto subs_master = make_sub("NAME", make_string("mace")) + make_sub("WPDT", make_wpdt(1.5f));
+	auto subs_patch = make_sub("NAME", make_string("mace")) + make_sub("WPDT", make_wpdt(1.3f));
+	auto subs_unique = make_sub("NAME", make_string("mace")) + make_sub("WPDT", make_wpdt(1.5f));
+	auto subs_winner = make_sub("NAME", make_string("mace")) + make_sub("WPDT", make_wpdt(1.5f));
+
+	merge_input_t input;
+	input.rec_type = "WEAP";
+	input.record_id = "mace";
+	input.version_contents = {
+		make_record("WEAP", subs_master),
+		make_record("WEAP", subs_patch),
+		make_record("WEAP", subs_unique),
+		make_record("WEAP", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(read_wpdt_speed(result.content) == 1.3f);
+}
+
 // ============================================================================
 // Requirement 1: Three-Way Sub-Record Merge â€” Generic
 // ============================================================================
