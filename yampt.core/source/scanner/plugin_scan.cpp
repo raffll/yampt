@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <memory>
 #include <set>
+#include <thread>
 
 void plugin_scan_t::load_plugin(const std::string & path)
 {
@@ -153,10 +154,12 @@ void plugin_scan_t::rebuild_conflicts(const conflict_progress_fn_t & progress_fn
 		}
 	}
 
-	const size_t total_entries = m_entries.size();
-	constexpr size_t progress_stride = 256;
+	compute_all_conflicts(progress_fn);
+}
 
-	for (size_t entry_index = 0; entry_index < total_entries; ++entry_index)
+void plugin_scan_t::process_entry_range(size_t begin_index, size_t end_index)
+{
+	for (size_t entry_index = begin_index; entry_index < end_index; ++entry_index)
 	{
 		auto & entry = m_entries[entry_index];
 
@@ -167,9 +170,37 @@ void plugin_scan_t::rebuild_conflicts(const conflict_progress_fn_t & progress_fn
 
 		if (entry.versions.size() >= 2)
 			compute_conflict(entry);
+	}
+}
 
-		if (progress_fn && entry_index % progress_stride == 0)
-			progress_fn(entry_index, total_entries);
+void plugin_scan_t::compute_all_conflicts(const conflict_progress_fn_t & progress_fn)
+{
+	const size_t total_entries = m_entries.size();
+
+	const unsigned int hardware_threads = std::thread::hardware_concurrency();
+	const size_t worker_count = hardware_threads == 0 ? 1 : static_cast<size_t>(hardware_threads);
+
+	constexpr size_t min_entries_per_batch = 512;
+	const size_t batch_size = std::max(min_entries_per_batch, worker_count * min_entries_per_batch);
+
+	for (size_t batch_start = 0; batch_start < total_entries; batch_start += batch_size)
+	{
+		const size_t batch_end = std::min(batch_start + batch_size, total_entries);
+		const size_t batch_count = batch_end - batch_start;
+		const size_t chunk = (batch_count + worker_count - 1) / worker_count;
+
+		std::vector<std::thread> workers;
+		for (size_t chunk_start = batch_start; chunk_start < batch_end; chunk_start += chunk)
+		{
+			const size_t chunk_end = std::min(chunk_start + chunk, batch_end);
+			workers.emplace_back([this, chunk_start, chunk_end] { process_entry_range(chunk_start, chunk_end); });
+		}
+
+		for (auto & worker : workers)
+			worker.join();
+
+		if (progress_fn)
+			progress_fn(batch_end, total_entries);
 	}
 
 	if (progress_fn)
@@ -312,8 +343,7 @@ slot_result_t plugin_scan_t::build_slot_result(const conflict_entry_t & entry)
 			continue;
 		}
 
-		m_plugins[ver.plugin_idx]->esm.select_record(ver.record_index);
-		contents[i] = m_plugins[ver.plugin_idx]->esm.get_record().content;
+		contents[i] = m_plugins[ver.plugin_idx]->esm.record_content_at(ver.record_index);
 
 		const auto & plugin_entries = m_plugins[ver.plugin_idx]->index.entries();
 		if (ver.record_index < plugin_entries.size() && plugin_entries[ver.record_index].has_dele)
@@ -333,11 +363,17 @@ const conflict_policy_t & plugin_scan_t::cached_conflict_policy(
     const std::string & sub_type)
 {
 	const std::string cache_key = rec_type + std::string(1, '\0') + sub_type;
-	auto it = m_conflict_policy_cache.find(cache_key);
-	if (it != m_conflict_policy_cache.end())
-		return it->second;
+
+	{
+		std::shared_lock<std::shared_mutex> read_lock(*m_conflict_policy_mutex);
+		auto it = m_conflict_policy_cache.find(cache_key);
+		if (it != m_conflict_policy_cache.end())
+			return it->second;
+	}
 
 	const auto policy = record_conflict::find_conflict_policy(rec_type, sub_type);
+
+	std::unique_lock<std::shared_mutex> write_lock(*m_conflict_policy_mutex);
 	return m_conflict_policy_cache.emplace(cache_key, policy).first->second;
 }
 

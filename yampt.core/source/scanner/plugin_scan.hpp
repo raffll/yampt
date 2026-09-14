@@ -7,7 +7,9 @@
 #include "record_conflict.hpp"
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <set>
+#include <shared_mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -107,6 +109,8 @@ private:
 	};
 
 	void compute_conflict(conflict_entry_t & entry);
+	void compute_all_conflicts(const conflict_progress_fn_t & progress_fn);
+	void process_entry_range(size_t begin_index, size_t end_index);
 	const conflict_policy_t & cached_conflict_policy(const std::string & rec_type, const std::string & sub_type);
 
 	slot_result_t build_slot_result(const conflict_entry_t & entry);
@@ -143,4 +147,5 @@ private:
 	std::unordered_map<std::string, size_t> m_entry_lookup;
 	std::set<std::string> m_user_ignore_conflict;
 	std::unordered_map<std::string, conflict_policy_t> m_conflict_policy_cache;
+	std::unique_ptr<std::shared_mutex> m_conflict_policy_mutex = std::make_unique<std::shared_mutex>();
 };
