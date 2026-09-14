@@ -26,7 +26,6 @@ struct conflict_entry_t
 	conflict_all_t conflict_all = conflict_all_t::unknown;
 	bool has_dele = false;
 	std::vector<record_version_t> versions;
-	std::unique_ptr<slot_result_t> slot_result;
 };
 
 class plugin_scan_t
@@ -54,6 +53,7 @@ public:
 
 	const std::vector<conflict_entry_t> & entries() const;
 	const conflict_entry_t * find(const std::string & type, const std::string & id) const;
+	std::unique_ptr<slot_result_t> build_slot_result_for(const conflict_entry_t & entry);
 	std::vector<std::string> all_types() const;
 
 	void copy_record_to_active(int source_plugin, size_t record_index);
@@ -105,6 +105,8 @@ private:
 	};
 
 	void compute_conflict(conflict_entry_t & entry);
+
+	slot_result_t build_slot_result(const conflict_entry_t & entry);
 	void insert_or_update_version(version_descriptor_t desc);
 
 	struct loaded_plugin_t

@@ -161,6 +161,7 @@ private:
 		std::vector<std::vector<sub_record_view_t>> & all_sub_records;
 		std::vector<std::string> & content_storage;
 		size_t col_count;
+		const slot_result_t * slot_result = nullptr;
 	};
 
 	struct slot_build_context_t

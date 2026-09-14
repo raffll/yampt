@@ -628,3 +628,69 @@ TEST_CASE("plugin_scan_t::merge_dialogue, orphan PNAM/NNAM references ignored", 
 	REQUIRE(content1.find("lore text one") != std::string::npos);
 	REQUIRE(content2.find("lore text two") != std::string::npos);
 }
+
+static std::string make_weap_record(const std::string & weap_id, const std::string & display_name)
+{
+	std::string subs;
+	subs += make_sub_record("NAME", null_terminated(weap_id));
+	subs += make_sub_record("FNAM", null_terminated(display_name));
+	subs += make_sub_record("WPDT", std::string(32, '\0'));
+	return make_record("WEAP", subs);
+}
+
+struct slot_result_fixture_t
+{
+	plugin_scan_t scan;
+	std::vector<std::string> temp_files;
+
+	void add_plugin(const std::string & filename, const std::string & content)
+	{
+		const auto path = get_temp_path(filename);
+		write_binary_file(path, content);
+		scan.load_plugin(path);
+		temp_files.push_back(path);
+	}
+
+	~slot_result_fixture_t()
+	{
+		for (const auto & path : temp_files)
+			std::filesystem::remove(path);
+	}
+};
+
+TEST_CASE("plugin_scan_t::rebuild_conflicts, computes conflict status for overridden record", "[i]")
+{
+	slot_result_fixture_t fixture;
+
+	const auto plugin_a = make_plugin({ make_weap_record("iron_dagger", "Iron Dagger") });
+	const auto plugin_b = make_plugin({ make_weap_record("iron_dagger", "Steel Dagger") });
+
+	fixture.add_plugin("yampt_test_slotresult_a.esm", plugin_a);
+	fixture.add_plugin("yampt_test_slotresult_b.esp", plugin_b);
+	fixture.scan.rebuild_conflicts();
+
+	const auto * entry = fixture.scan.find("WEAP", "iron_dagger");
+	REQUIRE(entry != nullptr);
+	REQUIRE(entry->versions.size() == 2);
+	REQUIRE(entry->conflict_all > conflict_all_t::only_one);
+}
+
+TEST_CASE("plugin_scan_t::build_slot_result_for, rebuilds alignment on demand", "[i]")
+{
+	slot_result_fixture_t fixture;
+
+	const auto plugin_a = make_plugin({ make_weap_record("iron_dagger", "Iron Dagger") });
+	const auto plugin_b = make_plugin({ make_weap_record("iron_dagger", "Steel Dagger") });
+
+	fixture.add_plugin("yampt_test_buildslot_a.esm", plugin_a);
+	fixture.add_plugin("yampt_test_buildslot_b.esp", plugin_b);
+	fixture.scan.rebuild_conflicts();
+
+	const auto * entry = fixture.scan.find("WEAP", "iron_dagger");
+	REQUIRE(entry != nullptr);
+
+	const auto slot_result = fixture.scan.build_slot_result_for(*entry);
+	REQUIRE(slot_result != nullptr);
+	REQUIRE(slot_result->contents.size() == 2);
+	REQUIRE_FALSE(slot_result->aligned.empty());
+}

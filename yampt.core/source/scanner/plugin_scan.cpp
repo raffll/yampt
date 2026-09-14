@@ -294,7 +294,7 @@ static void apply_worst_this(conflict_entry_t & entry, const conflict_accumulato
 		entry.versions[i].status = worst_this[i];
 }
 
-void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
+slot_result_t plugin_scan_t::build_slot_result(const conflict_entry_t & entry)
 {
 	const size_t ver_count = entry.versions.size();
 
@@ -306,23 +306,35 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 		const auto & ver = entry.versions[i];
 
 		if (ver.plugin_idx == m_active_plugin_idx)
-			contents[i] = m_active_store.record_content(ver.record_index);
-		else
 		{
-			m_plugins[ver.plugin_idx]->esm.select_record(ver.record_index);
-			contents[i] = m_plugins[ver.plugin_idx]->esm.get_record().content;
-
-			const auto & plugin_entries = m_plugins[ver.plugin_idx]->index.entries();
-			if (ver.record_index < plugin_entries.size() && plugin_entries[ver.record_index].has_dele)
-				is_deleted[i] = true;
+			contents[i] = m_active_store.record_content(ver.record_index);
+			continue;
 		}
+
+		m_plugins[ver.plugin_idx]->esm.select_record(ver.record_index);
+		contents[i] = m_plugins[ver.plugin_idx]->esm.get_record().content;
+
+		const auto & plugin_entries = m_plugins[ver.plugin_idx]->index.entries();
+		if (ver.record_index < plugin_entries.size() && plugin_entries[ver.record_index].has_dele)
+			is_deleted[i] = true;
 	}
 
-	entry.slot_result =
-	    std::make_unique<slot_result_t>(conflict_slots::build(entry.rec_type, std::move(contents), is_deleted));
+	return conflict_slots::build(entry.rec_type, std::move(contents), is_deleted);
+}
+
+std::unique_ptr<slot_result_t> plugin_scan_t::build_slot_result_for(const conflict_entry_t & entry)
+{
+	return std::make_unique<slot_result_t>(build_slot_result(entry));
+}
+
+void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
+{
+	const size_t ver_count = entry.versions.size();
+
+	const slot_result_t sr = build_slot_result(entry);
+	const auto & is_deleted = sr.is_deleted;
 
 	conflict_accumulator_t accum;
-	const auto & sr = *entry.slot_result;
 
 	for (const auto & slot : sr.aligned)
 	{
@@ -627,7 +639,6 @@ void plugin_scan_t::recompute_single_conflict(const std::string & rec_type, cons
 	    [](const record_version_t & lhs, const record_version_t & rhs) { return lhs.plugin_idx < rhs.plugin_idx; });
 
 	entry.conflict_all = conflict_all_t::only_one;
-	entry.slot_result.reset();
 
 	if (entry.versions.size() >= 2)
 		compute_conflict(entry);

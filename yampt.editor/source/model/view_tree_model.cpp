@@ -69,6 +69,9 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 
 	load_sub_records(scan, entry, context);
 
+	const auto slot_result = scan.build_slot_result_for(entry);
+	context.slot_result = slot_result.get();
+
 	const auto * behavior = find_record_behavior(m_record_type);
 
 	switch (behavior->decode_mode)

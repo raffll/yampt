@@ -251,16 +251,8 @@ void view_tree_model_t::set_record_generic(record_context_t & context, const con
 	std::vector<sub_slot_t> unified_slots;
 	std::vector<std::unordered_map<std::string, std::vector<size_t>>> col_type_indices(col_count);
 
-	if (entry.slot_result)
-	{
-		alignment_context_t align_ctx { all_subs, col_count, unified_slots, col_type_indices };
-		content_alignment_t::build_from_slot_result(*entry.slot_result, align_ctx);
-	}
-	else
-	{
-		alignment_context_t align_ctx { all_subs, col_count, unified_slots, col_type_indices };
-		content_alignment_t::build_occurrence_based(align_ctx);
-	}
+	alignment_context_t align_ctx { all_subs, col_count, unified_slots, col_type_indices };
+	content_alignment_t::build_from_slot_result(*context.slot_result, align_ctx);
 
 	for (const auto & slot : unified_slots)
 	{
