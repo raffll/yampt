@@ -47,6 +47,7 @@
 - [FIX] A book or scroll's skill is now read correctly in the record view (it was previously misread from the wrong bytes)
 - [FIX] Start Script and Land Texture records now show their fields (script data, texture index and path) in the record view instead of raw bytes
 - [FIX] Interior cells no longer show Grid X and Grid Y in the record view, since those coordinates only apply to exterior cells; the interior cell's data previously displayed meaningless numbers in those rows
+- [FIX] Conflicting values are now colored in the record view even when only one plugin and the merged patch define a record; previously a differing merged-patch value showed in the plain no-conflict color instead of the conflict colors
 
 ### Both Apps
 - [CHANGE] The log panel no longer wraps long lines; instead it scrolls horizontally, so each log entry stays on one line

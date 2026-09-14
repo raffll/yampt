@@ -840,17 +840,9 @@ static QVariant sub_record_background(const view_tree_model_t::view_node_t & row
 	return QBrush(theme.conflict_all_background(row.row_conflict_all));
 }
 
-static QVariant sub_record_foreground(
-    const view_tree_model_t::view_node_t & row,
-    size_t column_count,
-    int column,
-    bool has_active_column)
+static QVariant sub_record_foreground(const view_tree_model_t::view_node_t & row, int column)
 {
 	const auto & cell_conflicts = row.cell_conflict_this;
-	const size_t real_columns = has_active_column ? column_count - 1 : column_count;
-	if (real_columns <= 1)
-		return {};
-
 	const auto & theme = theme_system_t::instance();
 
 	if (column == 0)
@@ -998,7 +990,7 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 		if (node->is_optional_placeholder)
 			return QBrush(theme_system_t::instance().get_color(color_name_t::optional_placeholder_text));
 
-		return sub_record_foreground(*node, m_column_names.size(), index.column(), m_has_active_column);
+		return sub_record_foreground(*node, index.column());
 	}
 
 	case Qt::FontRole:

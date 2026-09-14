@@ -6,7 +6,6 @@ editor: make field editing active-plugin-only; remove obsolete per-plugin in-pla
 newly created file, should be at the end, check modified time, and apply correctly
 
 diff in wrong place
-speed up computing conflicts
 
 optional filerds, should show decoded fields, or optional should showonly single values for now, make sure they are sorted as existent
 
