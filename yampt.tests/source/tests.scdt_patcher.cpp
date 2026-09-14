@@ -276,128 +276,215 @@ TEST_CASE("scdt_patcher_t::apply_text_patch, does not match inside identifier", 
 	REQUIRE(stored_size == new_text.size());
 }
 
-TEST_CASE("scdt_patcher_t::apply_message_patch, multi-segment", "[u]")
+TEST_CASE("scdt_patcher_t::apply_text_patch, addtopic opcode picks correct occurrence", "[u]")
 {
-	std::string seg_old_0 = "Hello";
-	std::string seg_old_1 = "World";
-	std::string seg_old_2 = "End";
-	std::string seg_new_0 = "Witaj";
-	std::string seg_new_1 = "Swiecie";
-	std::string seg_new_2 = "Koniec";
+	const std::string shared = "scrib";
+	const std::string new_text = "pedrak";
+	const std::string place_opcode = std::string("\xe6\x10", 2);
+	const std::string topic_opcode = std::string("\x22\x10", 2);
 
 	std::string scdt;
 	scdt += std::string(2, '\x00');
-	scdt += size_word(seg_old_0.size());
-	scdt += seg_old_0;
-	scdt += size_byte(seg_old_1.size() + 1);
-	scdt += seg_old_1;
-	scdt += std::string(1, '\x00');
-	scdt += size_byte(seg_old_2.size() + 1);
-	scdt += seg_old_2;
-	scdt += std::string(1, '\x00');
+	scdt += place_opcode;
+	scdt += size_byte(shared.size());
+	scdt += shared;
+	scdt += std::string(2, '\x00');
+	scdt += topic_opcode;
+	scdt += size_byte(shared.size());
+	scdt += shared;
 	scdt += std::string(3, '\x00');
 
-	std::vector<std::string> segments_old = { seg_old_0, seg_old_1, seg_old_2 };
-	std::vector<std::string> segments_new = { seg_new_0, seg_new_1, seg_new_2 };
+	text_patch_params_t params;
+	params.new_text = new_text;
+	params.pad_short_to_minimum = true;
+	params.required_opcode = topic_opcode;
 
 	scdt_patcher_t patcher(scdt);
-	const auto & result = patcher.apply_message_patch(segments_old, segments_new);
+	const auto & result = patcher.apply_text_patch(shared, params);
 
 	REQUIRE(result.success);
 
 	const auto & patched = patcher.get_scdt();
 
-	auto pos_0 = patched.find(seg_new_0);
-	REQUIRE(pos_0 != std::string::npos);
-	auto size_lo = static_cast<unsigned char>(patched[pos_0 - 2]);
-	auto size_hi = static_cast<unsigned char>(patched[pos_0 - 1]);
-	size_t stored_first_size = size_lo | (size_hi << 8);
-	REQUIRE(stored_first_size == seg_new_0.size());
+	const auto place_pos = patched.find(place_opcode);
+	REQUIRE(place_pos != std::string::npos);
+	REQUIRE(patched.compare(place_pos + place_opcode.size() + 1, shared.size(), shared) == 0);
 
-	auto pos_1 = patched.find(seg_new_1, pos_0);
-	REQUIRE(pos_1 != std::string::npos);
-	auto stored_second_size = static_cast<unsigned char>(patched[pos_1 - 1]);
-	REQUIRE(stored_second_size == seg_new_1.size() + 1);
-	REQUIRE(patched[pos_1 + seg_new_1.size()] == '\x00');
-
-	auto pos_2 = patched.find(seg_new_2, pos_1);
-	REQUIRE(pos_2 != std::string::npos);
-	auto stored_third_size = static_cast<unsigned char>(patched[pos_2 - 1]);
-	REQUIRE(stored_third_size == seg_new_2.size() + 1);
-	REQUIRE(patched[pos_2 + seg_new_2.size()] == '\x00');
+	const auto topic_pos = patched.find(topic_opcode);
+	REQUIRE(topic_pos != std::string::npos);
+	REQUIRE(patched.compare(topic_pos + topic_opcode.size() + 1, new_text.size(), new_text) == 0);
 }
 
-TEST_CASE("scdt_patcher_t::apply_message_patch, later button inserts trailing null", "[u]")
+static size_t blob_stored_size_word(const std::string & scdt, size_t blob_pos)
 {
-	std::string seg_old_0 = "First";
-	std::string seg_old_1 = "Iron";
-	std::string seg_new_0 = "First";
-	std::string seg_new_1 = "Fe";
+	const auto lo = static_cast<unsigned char>(scdt[blob_pos - 2]);
+	const auto hi = static_cast<unsigned char>(scdt[blob_pos - 1]);
+	return static_cast<size_t>(lo) | (static_cast<size_t>(hi) << 8);
+}
+
+TEST_CASE("scdt_patcher_t::apply_message_patch, messagebox single string", "[u]")
+{
+	const std::string old_blob = "'Hurricane of the North'";
+	const std::string new_blob = "'Huragan Polnocy'";
 
 	std::string scdt;
-	scdt += std::string(2, '\x00');
-	scdt += size_word(seg_old_0.size());
-	scdt += seg_old_0;
-	scdt += size_byte(seg_old_1.size() + 1);
-	scdt += seg_old_1;
-	scdt += std::string(1, '\x00');
-	scdt += size_byte(3);
-	scdt += "Tel";
-	scdt += std::string(1, '\x00');
+	scdt += std::string(4, '\x00');
+	scdt += std::string(1, '\x10');
+	scdt += size_word(old_blob.size());
+	scdt += old_blob;
 	scdt += std::string(3, '\x00');
 
-	std::vector<std::string> segments_old = { seg_old_0, seg_old_1 };
-	std::vector<std::string> segments_new = { seg_new_0, seg_new_1 };
-
 	scdt_patcher_t patcher(scdt);
-	const auto & result = patcher.apply_message_patch(segments_old, segments_new);
+	const auto & result = patcher.apply_message_patch(old_blob, new_blob);
 
 	REQUIRE(result.success);
 
 	const auto & patched = patcher.get_scdt();
-
-	auto pos_1 = patched.find(seg_new_1);
-	REQUIRE(pos_1 != std::string::npos);
-
-	auto stored_size = static_cast<unsigned char>(patched[pos_1 - 1]);
-	REQUIRE(stored_size == seg_new_1.size() + 1);
-
-	REQUIRE(patched[pos_1 + seg_new_1.size()] == '\x00');
-
-	auto tel_pos = patched.find("Tel", pos_1);
-	REQUIRE(tel_pos != std::string::npos);
-	auto tel_size = static_cast<unsigned char>(patched[tel_pos - 1]);
-	REQUIRE(tel_size == 3);
+	const auto pos = patched.find(new_blob);
+	REQUIRE(pos != std::string::npos);
+	REQUIRE(blob_stored_size_word(patched, pos) == new_blob.size());
+	REQUIRE(patched.find(old_blob) == std::string::npos);
 }
 
-TEST_CASE("scdt_patcher_t::apply_message_patch, unchanged segments", "[u]")
+TEST_CASE("scdt_patcher_t::apply_message_patch, messagebox keeps vertical bar literal", "[u]")
 {
-	std::string seg_0 = "Keep";
-	std::string seg_1 = "Same";
-	std::string seg_2 = "Text";
+	const std::string old_blob = "Thorn Fleet Yards, Black Marsh | 3E 371 Empire of Tamriel";
+	const std::string new_blob = "Stocznie flotowe Thorna | Cesarstwo Tamriel 3E 371";
 
 	std::string scdt;
 	scdt += std::string(2, '\x00');
-	scdt += size_word(seg_0.size());
-	scdt += seg_0;
-	scdt += size_byte(seg_1.size() + 1);
-	scdt += seg_1;
-	scdt += std::string(1, '\x00');
-	scdt += size_byte(seg_2.size() + 1);
-	scdt += seg_2;
-	scdt += std::string(1, '\x00');
+	scdt += std::string(1, '\x10');
+	scdt += size_word(old_blob.size());
+	scdt += old_blob;
+	scdt += std::string(4, '\x00');
+
+	scdt_patcher_t patcher(scdt);
+	const auto & result = patcher.apply_message_patch(old_blob, new_blob);
+
+	REQUIRE(result.success);
+
+	const auto & patched = patcher.get_scdt();
+	const auto pos = patched.find(new_blob);
+	REQUIRE(pos != std::string::npos);
+	REQUIRE(blob_stored_size_word(patched, pos) == new_blob.size());
+	REQUIRE(patched.find('|') != std::string::npos);
+	REQUIRE(patched.find('\x0a') == std::string::npos);
+}
+
+TEST_CASE("scdt_patcher_t::apply_message_patch, choice whole argument blob with quotes and numbers", "[u]")
+{
+	const std::string old_blob = "\"House Hlaalu will support the Empire's claim.\" 11 \"Nevermind.\" 10";
+	const std::string new_blob = "\"Rod Hlaalu poprze roszczenia Cesarstwa.\" 11 \"Niewazne.\" 10";
+
+	std::string scdt;
+	scdt += std::string(2, '\x00');
+	scdt += std::string(1, '\xc9');
+	scdt += std::string(1, '\x10');
+	scdt += size_word(old_blob.size());
+	scdt += old_blob;
+	scdt += std::string(4, '\x00');
+
+	scdt_patcher_t patcher(scdt);
+	const auto & result = patcher.apply_message_patch(old_blob, new_blob);
+
+	REQUIRE(result.success);
+
+	const auto & patched = patcher.get_scdt();
+	const auto pos = patched.find(new_blob);
+	REQUIRE(pos != std::string::npos);
+	REQUIRE(blob_stored_size_word(patched, pos) == new_blob.size());
+	REQUIRE(patched.find(old_blob) == std::string::npos);
+	REQUIRE(patched[pos] == '"');
+}
+
+TEST_CASE("scdt_patcher_t::apply_message_patch, second occurrence resolved by size field", "[u]")
+{
+	const std::string old_blob = "Nevermind.";
+	const std::string new_blob = "Niewazne.";
+
+	std::string scdt;
+	scdt += std::string(1, '\x10');
+	scdt += size_word(3);
+	scdt += "abc";
+	scdt += std::string(2, '\x00');
+	scdt += "Nevermind.";
+	scdt += std::string(2, '\x00');
+	scdt += std::string(1, '\x10');
+	scdt += size_word(old_blob.size());
+	scdt += old_blob;
 	scdt += std::string(3, '\x00');
 
-	std::vector<std::string> segments_old = { seg_0, seg_1, seg_2 };
-	std::vector<std::string> segments_new = { seg_0, seg_1, seg_2 };
+	scdt_patcher_t patcher(scdt);
+	const auto & result = patcher.apply_message_patch(old_blob, new_blob);
+
+	REQUIRE(result.success);
+
+	const auto & patched = patcher.get_scdt();
+	const auto pos = patched.find(new_blob);
+	REQUIRE(pos != std::string::npos);
+	REQUIRE(blob_stored_size_word(patched, pos) == new_blob.size());
+}
+
+TEST_CASE("scdt_patcher_t::apply_message_patch, unchanged blob leaves scdt intact", "[u]")
+{
+	const std::string blob = "Keep this exact.";
+
+	std::string scdt;
+	scdt += std::string(2, '\x00');
+	scdt += std::string(1, '\x10');
+	scdt += size_word(blob.size());
+	scdt += blob;
+	scdt += std::string(3, '\x00');
 
 	const auto original_scdt = scdt;
 
 	scdt_patcher_t patcher(scdt);
-	const auto & result = patcher.apply_message_patch(segments_old, segments_new);
+	const auto & result = patcher.apply_message_patch(blob, blob);
 
 	REQUIRE(result.success);
 	REQUIRE(patcher.get_scdt() == original_scdt);
+}
+
+TEST_CASE("scdt_patcher_t::apply_message_patch, blob not present fails", "[u]")
+{
+	std::string scdt;
+	scdt += std::string(2, '\x00');
+	scdt += std::string(1, '\x10');
+	scdt += size_word(5);
+	scdt += "Hello";
+	scdt += std::string(3, '\x00');
+
+	scdt_patcher_t patcher(scdt);
+	const auto & result = patcher.apply_message_patch("Absent", "Nieobecny");
+
+	REQUIRE_FALSE(result.success);
+}
+
+TEST_CASE("scdt_patcher_t::apply_message_patch, size field must match blob length", "[u]")
+{
+	const std::string old_blob = "Yes";
+	const std::string new_blob = "Tak";
+
+	std::string scdt;
+	scdt += std::string(1, '\x10');
+	scdt += size_word(99);
+	scdt += old_blob;
+	scdt += std::string(2, '\x00');
+	scdt += std::string(1, '\x10');
+	scdt += size_word(old_blob.size());
+	scdt += old_blob;
+	scdt += std::string(3, '\x00');
+
+	scdt_patcher_t patcher(scdt);
+	const auto & result = patcher.apply_message_patch(old_blob, new_blob);
+
+	REQUIRE(result.success);
+
+	const auto & patched = patcher.get_scdt();
+	const auto pos = patched.find(new_blob);
+	REQUIRE(pos != std::string::npos);
+	REQUIRE(blob_stored_size_word(patched, pos) == new_blob.size());
+	REQUIRE(patched.find(old_blob) != std::string::npos);
 }
 
 TEST_CASE("scdt_patcher_t::apply_text_patch, addtopic pads short text to four bytes", "[u]")
@@ -457,4 +544,67 @@ TEST_CASE("scdt_patcher_t::apply_text_patch, addtopic exact size for four or mor
 	auto stored_size = static_cast<unsigned char>(patched[pos - 1]);
 	REQUIRE(stored_size == new_text.size());
 	REQUIRE(patched.size() == original_size - (old_text.size() - new_text.size()));
+}
+
+TEST_CASE("scdt_patcher_t::apply_button_patch, patches null-terminated button segment", "[u]")
+{
+	const std::string message = "Choose a color.";
+	const std::string btn_old = "White";
+	const std::string btn_new = "Bialy";
+
+	std::string scdt;
+	scdt += std::string(1, '\x10');
+	scdt += size_word(message.size());
+	scdt += message;
+	scdt += std::string(1, '\x00');
+	scdt += std::string(1, '\x02');
+	scdt += size_byte(std::string("Red").size() + 1);
+	scdt += "Red";
+	scdt += std::string(1, '\x00');
+	scdt += size_byte(btn_old.size() + 1);
+	scdt += btn_old;
+	scdt += std::string(1, '\x00');
+	scdt += std::string(3, '\x00');
+
+	scdt_patcher_t patcher(scdt);
+	const auto & msg_result = patcher.apply_message_patch(message, message);
+	REQUIRE(msg_result.success);
+
+	const auto & result = patcher.apply_button_patch(btn_old, btn_new);
+	REQUIRE(result.success);
+
+	const auto & patched = patcher.get_scdt();
+	const auto pos = patched.find(btn_new);
+	REQUIRE(pos != std::string::npos);
+
+	const auto stored_size = static_cast<unsigned char>(patched[pos - 1]);
+	REQUIRE(stored_size == btn_new.size() + 1);
+	REQUIRE(patched[pos + btn_new.size()] == '\x00');
+}
+
+TEST_CASE("scdt_patcher_t::apply_button_patch, size field must include null terminator", "[u]")
+{
+	const std::string btn_old = "Yes";
+	const std::string btn_new = "Tak";
+
+	std::string scdt;
+	scdt += std::string(1, '\x10');
+	scdt += size_byte(btn_old.size());
+	scdt += btn_old;
+	scdt += std::string(2, '\x00');
+	scdt += size_byte(btn_old.size() + 1);
+	scdt += btn_old;
+	scdt += std::string(1, '\x00');
+	scdt += std::string(3, '\x00');
+
+	scdt_patcher_t patcher(scdt);
+	const auto & result = patcher.apply_button_patch(btn_old, btn_new);
+
+	REQUIRE(result.success);
+
+	const auto & patched = patcher.get_scdt();
+	const auto pos = patched.find(btn_new);
+	REQUIRE(pos != std::string::npos);
+	REQUIRE(static_cast<unsigned char>(patched[pos - 1]) == btn_new.size() + 1);
+	REQUIRE(patched.find(btn_old) != std::string::npos);
 }

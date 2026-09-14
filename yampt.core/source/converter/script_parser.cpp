@@ -17,6 +17,17 @@ compiled_patch_kind_t compiled_patch_kind_for(const std::string & keyword)
 	return compiled_patch_kind_t::plain;
 }
 
+std::string required_opcode_for(const std::string & keyword)
+{
+	if (keyword == "addtopic")
+		return std::string("\x22\x10", 2);
+
+	if (keyword == "showmap")
+		return std::string("\x52\x11", 2);
+
+	return {};
+}
+
 size_t find_whole_word(const std::string & text_line, const std::string & keyword)
 {
 	auto is_word_char = [](char value) { return std::isalnum(static_cast<unsigned char>(value)) || value == '_'; };
@@ -292,7 +303,7 @@ void script_parser_t::convert_line(const std::string & keyword, const int pos_in
 	find_new_text(text_type);
 	insert_new_text();
 
-	convert_text_in_compiled(compiled_patch_kind_for(keyword));
+	convert_text_in_compiled(keyword);
 
 	m_is_done = true;
 }
@@ -341,7 +352,7 @@ void script_parser_t::convert_line_unquoted(const std::string & keyword, const r
 
 	find_new_text(text_type);
 	insert_new_text();
-	convert_text_in_compiled(compiled_patch_kind_t::plain);
+	convert_text_in_compiled(keyword);
 
 	m_is_done = true;
 }
@@ -450,8 +461,10 @@ void script_parser_t::insert_new_text()
 	app_logger_t::add_log(">>> " + m_new_line + "\r\n", true);
 }
 
-void script_parser_t::convert_text_in_compiled(const compiled_patch_kind_t kind)
+void script_parser_t::convert_text_in_compiled(const std::string & keyword)
 {
+	const auto kind = compiled_patch_kind_for(keyword);
+
 	if (m_new_text == m_old_text)
 		return;
 
@@ -469,6 +482,7 @@ void script_parser_t::convert_text_in_compiled(const compiled_patch_kind_t kind)
 	params.new_text = m_new_text;
 	params.is_getpccell = kind == compiled_patch_kind_t::getpccell;
 	params.pad_short_to_minimum = kind == compiled_patch_kind_t::addtopic;
+	params.required_opcode = required_opcode_for(keyword);
 
 	const auto result = m_patcher->apply_text_patch(m_old_text, params);
 
@@ -555,56 +569,115 @@ void script_parser_t::convert_message_in_compiled()
 		return;
 	}
 
-	std::vector<std::string> splitted_line = split_line(m_line);
-	std::vector<std::string> splitted_new_line = split_line(m_new_line);
+	const auto old_blob = build_message_blob(m_line);
+	const auto new_blob = build_message_blob(m_new_line);
 
-	if (splitted_line.size() != splitted_new_line.size())
+	if (old_blob.empty() || new_blob.empty())
 	{
 		app_logger_t::add_log("[error] incompatible messages\r\n", true);
 		m_error = true;
 		return;
 	}
 
-	for (auto & segment : splitted_line)
-		replace_vertical_lines_by_new_line(segment);
+	app_logger_t::add_log("[debug] old_blob=[" + old_blob + "] new_blob=[" + new_blob + "]\r\n", true);
 
-	for (auto & segment : splitted_new_line)
-		replace_vertical_lines_by_new_line(segment);
-
-	const auto result = m_patcher->apply_message_patch(splitted_line, splitted_new_line);
+	const auto result = m_patcher->apply_message_patch(old_blob, new_blob);
 	if (!result.success)
 	{
 		app_logger_t::add_log("[error] message not found in SCDT\r\n", true);
 		m_error = true;
+		return;
+	}
+
+	convert_buttons_in_compiled();
+}
+
+void script_parser_t::convert_buttons_in_compiled()
+{
+	if (m_keyword != "messagebox")
+		return;
+
+	const auto old_buttons = build_button_list(m_line);
+	const auto new_buttons = build_button_list(m_new_line);
+
+	if (old_buttons.size() != new_buttons.size())
+	{
+		app_logger_t::add_log("[error] button count mismatch\r\n", true);
+		m_error = true;
+		return;
+	}
+
+	for (size_t index = 0; index < old_buttons.size(); ++index)
+	{
+		const auto button_result = m_patcher->apply_button_patch(old_buttons[index], new_buttons[index]);
+		if (!button_result.success)
+		{
+			app_logger_t::add_log("[error] button not found in SCDT\r\n", true);
+			m_error = true;
+			return;
+		}
 	}
 }
 
-std::vector<std::string> script_parser_t::split_line(const std::string & cur_line) const
+std::vector<std::string> script_parser_t::build_button_list(const std::string & cur_line) const
 {
-	std::string cur_line_tr = cur_line.substr(m_keyword_pos);
-	if (cur_line_tr.find(";") != std::string::npos)
+	auto argument_text = cur_line.substr(m_keyword_pos + m_keyword.size());
+
+	const auto comment_pos = argument_text.find(';');
+	if (comment_pos != std::string::npos)
+		argument_text = argument_text.substr(0, comment_pos);
+
+	std::vector<std::string> buttons;
+	static const std::regex quote_regex("\"([^\"]*)\"", std::regex::optimize);
+	std::sregex_iterator it_current(argument_text.begin(), argument_text.end(), quote_regex);
+	std::sregex_iterator it_end;
+
+	bool first = true;
+	for (; it_current != it_end; ++it_current)
 	{
-		cur_line_tr = cur_line_tr.substr(0, cur_line_tr.find(";"));
+		if (first)
+		{
+			first = false;
+			continue;
+		}
+
+		buttons.push_back((*it_current)[1].str());
 	}
 
-	std::vector<std::string> splitted_line;
-	std::regex re("\"(.*?)\"", std::regex::optimize);
-	std::sregex_iterator next(cur_line_tr.begin(), cur_line_tr.end(), re);
-	std::sregex_iterator end;
-	std::smatch found;
-	while (next != end)
+	return buttons;
+}
+
+std::string script_parser_t::build_message_blob(const std::string & cur_line) const
+{
+	auto argument_text = cur_line.substr(m_keyword_pos + m_keyword.size());
+
+	const auto comment_pos = argument_text.find(';');
+	if (comment_pos != std::string::npos)
+		argument_text = argument_text.substr(0, comment_pos);
+
+	const auto first_quote = argument_text.find('"');
+	if (first_quote == std::string::npos)
+		return {};
+
+	if (m_keyword == "choice")
 	{
-		found = *next;
-		splitted_line.push_back(found[1].str());
-		next++;
+		auto blob = argument_text.substr(first_quote);
+		while (!blob.empty() && (blob.back() == ' ' || blob.back() == '\t' || blob.back() == '\r' || blob.back() == '\n'))
+			blob.pop_back();
+
+		return blob;
 	}
 
-	if (m_keyword == "say" && splitted_line.size() > 0)
-	{
-		splitted_line.erase(splitted_line.begin());
-	}
+	const auto quote_index = m_keyword == "say" ? 1 : 0;
+	const auto token = script_token::extract_token_at(argument_text, quote_index);
+	if (!token.found)
+		return {};
 
-	return splitted_line;
+	auto value = token.value;
+	if (value.size() >= 2 && value.front() == '"' && value.back() == '"')
+		value = value.substr(1, value.size() - 2);
+
+	return value;
 }
 
 void script_parser_t::trim_last_new_line_chars()
@@ -635,12 +708,4 @@ void script_parser_t::dump_error()
 	app_logger_t::add_log("\r\n----------------------------------------------------------\r\n", true);
 	app_logger_t::add_log(m_old_script, true);
 	app_logger_t::add_log("\r\n----------------------------------------------------------\r\n", true);
-}
-
-void script_parser_t::replace_vertical_lines_by_new_line(std::string & message)
-{
-	while (message.find("|") != std::string::npos)
-	{
-		message.replace(message.find("|"), 1, "\x0A");
-	}
 }
