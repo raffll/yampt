@@ -165,6 +165,7 @@ const std::vector<std::string> & optional_sub_records(const std::string & record
 		{ "CREA", { "NAME", "MODL", "FNAM", "SCRI", "XSCL", "NPDT", "FLAG", "AIDT" } },
 		{ "DOOR", { "NAME", "FNAM", "MODL", "SCIP", "SNAM", "ANAM" } },
 		{ "ENCH", { "NAME", "ENDT" } },
+		{ "FACT", { "NAME", "FNAM", "FADT", "RNAM", "ANAM", "INTV" } },
 		{ "GLOB", { "NAME", "FNAM", "FLTV" } },
 		{ "GMST", { "NAME", "STRV", "INTV", "FLTV" } },
 		{ "INGR", { "NAME", "MODL", "FNAM", "ITEX", "SCRI", "IRDT" } },
