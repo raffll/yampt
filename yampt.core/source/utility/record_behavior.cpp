@@ -165,7 +165,6 @@ const std::vector<std::string> & optional_sub_records(const std::string & record
 		{ "CREA", { "NAME", "MODL", "FNAM", "SCRI", "XSCL", "NPDT", "FLAG", "AIDT" } },
 		{ "DOOR", { "NAME", "FNAM", "MODL", "SCIP", "SNAM", "ANAM" } },
 		{ "ENCH", { "NAME", "ENDT" } },
-		{ "FACT", { "NAME", "FNAM", "FADT", "RNAM", "ANAM", "INTV" } },
 		{ "GLOB", { "NAME", "FNAM", "FLTV" } },
 		{ "GMST", { "NAME", "STRV", "INTV", "FLTV" } },
 		{ "INGR", { "NAME", "MODL", "FNAM", "ITEX", "SCRI", "IRDT" } },
@@ -192,6 +191,21 @@ const std::vector<std::string> & optional_sub_records(const std::string & record
 		return empty;
 
 	return it_roster->second;
+}
+
+const std::vector<std::string> & sub_record_sort_order()
+{
+	static const std::vector<std::string> order = {
+		"NAME", "FNAM", "MODL", "RNAM", "CNAM", "ANAM", "BNAM", "KNAM", "SNAM", "TNAM", "ONAM",
+		"PNAM", "INAM", "ITEX", "PTEX", "CVFX", "BVFX", "HVFX", "AVFX", "CSND", "BSND", "HSND",
+		"ASND", "DESC", "TEXT", "STRV", "INTV", "FLTV", "SCRI", "SCPT", "SCVR", "INDX", "XSCL",
+		"NPDT", "RADT", "CLDT", "FADT", "AADT", "WPDT", "AODT", "CTDT", "BKDT", "ALDT",
+		"IRDT", "MCDT", "LKDT", "PBDT", "RIDT", "LHDT", "ENDT", "SPDT", "SKDT", "MEDT", "CNDT",
+		"AIDT", "WEAT", "DATA", "FLAG", "AMBI", "WHGT", "NAM0", "ENAM", "NPCO", "NPCS", "AI_W",
+		"AI_T", "AI_F", "AI_E", "AI_A", "DODT", "DNAM"
+	};
+
+	return order;
 }
 
 bool is_repeatable_sub_record(const std::string & record_type, const std::string & sub_type)

@@ -142,13 +142,13 @@ void view_tree_model_t::sort_rows_by_canonical_order()
 	if (m_record_type == "CELL")
 		return;
 
-	const auto & roster = optional_sub_records(m_record_type);
+	const auto & order = sub_record_sort_order();
 
 	std::stable_sort(
 	    m_rows.begin(),
 	    m_rows.end(),
-	    [this, &roster](const view_node_t & lhs, const view_node_t & rhs)
-	    { return view_row_order::rank(classify_row(lhs), roster) < view_row_order::rank(classify_row(rhs), roster); });
+	    [this, &order](const view_node_t & lhs, const view_node_t & rhs)
+	    { return view_row_order::rank(classify_row(lhs), order) < view_row_order::rank(classify_row(rhs), order); });
 }
 
 size_t view_tree_model_t::setup_columns(plugin_scan_t & scan, const conflict_entry_t & entry)

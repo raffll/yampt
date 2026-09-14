@@ -65,7 +65,7 @@ Each column represents one plugin's version. Column headers show the plugin file
 
 Empty cells mean that plugin does not include the sub-record. This happens when a plugin only modifies some fields of a record.
 
-Sub-records are shown in a fixed, consistent order for each record type: the record header first, then the simple single-value fields (including any optional placeholder rows in their usual position), then the data blocks that expand into sub-values, and finally repeating content such as inventory items, spells, or body-part slots. The order is the same every time you open a record of that type, so fields are always where you expect them.
+Sub-records are shown in a fixed, consistent order: the record header first, then the simple single-value fields (including any optional placeholder rows in their usual position), then the data blocks that expand into sub-values, and finally repeating content such as inventory items, spells, or body-part slots. The order follows one shared sequence used for every record type, so a sub-record that several record types share, such as the display name or model path, always appears in the same relative position. The order is the same every time you open a record, so fields are always where you expect them.
 
 A sub-record excluded from conflict detection and the merged patch is shown with a light grey background and grey text, so you can see at a glance which sub-records are being skipped.
 

@@ -1,5 +1,6 @@
 #include <catch2/catch_all.hpp>
 #include <model/view_row_order.hpp>
+#include <utility/record_behavior.hpp>
 
 namespace {
 
@@ -124,4 +125,28 @@ TEST_CASE("view_row_order::rank, FACT RNAM sits after FADT and before reactions"
 
 	REQUIRE(fadt < rnam);
 	REQUIRE(rnam < reaction);
+}
+
+TEST_CASE("sub_record_sort_order, begins with NAME FNAM MODL", "[u]")
+{
+	const auto & order = sub_record_sort_order();
+
+	REQUIRE(order.size() >= 3);
+	REQUIRE(order[0] == "NAME");
+	REQUIRE(order[1] == "FNAM");
+	REQUIRE(order[2] == "MODL");
+}
+
+TEST_CASE("view_row_order::rank, shared field keeps identical rank across record types", "[u]")
+{
+	const auto & order = sub_record_sort_order();
+
+	const int fnam_first = view_row_order::rank(make_single("FNAM"), order);
+	const int fnam_second = view_row_order::rank(make_single("FNAM"), order);
+	const int modl = view_row_order::rank(make_single("MODL"), order);
+	const int scri = view_row_order::rank(make_single("SCRI"), order);
+
+	REQUIRE(fnam_first == fnam_second);
+	REQUIRE(fnam_first < modl);
+	REQUIRE(modl < scri);
 }
