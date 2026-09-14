@@ -365,3 +365,46 @@ TEST_CASE("sub_record_merge_t::merge_cell_refs, refs sorted by index", "[u]")
 	REQUIRE(part.groups[0].frmr_index == 2);
 	REQUIRE(part.groups[1].frmr_index == 5);
 }
+
+static uint32_t read_cell_data_flags(const std::string & content)
+{
+	auto part = sub_record_merge_t::partition_cell(content);
+	for (const auto & entry : part.header)
+	{
+		if (entry.type == "DATA" && entry.data.size() >= 4)
+		{
+			uint32_t value = 0;
+			std::memcpy(&value, entry.data.data(), 4);
+			return value;
+		}
+	}
+
+	return 0;
+}
+
+TEST_CASE("sub_record_merge_t::merge, CELL routes through cell ref merge for DATA", "[u]")
+{
+	constexpr uint32_t cell_flag_interior = 0x01;
+	constexpr uint32_t cell_flag_has_water = 0x02;
+
+	auto hdr_first = make_sub("NAME", make_string("TestCell")) +
+	                 make_sub("DATA", make_cell_data(cell_flag_interior, 0, 0));
+	auto hdr_inter = make_sub("NAME", make_string("TestCell")) +
+	                 make_sub("DATA", make_cell_data(cell_flag_interior | cell_flag_has_water, 0, 0));
+	auto hdr_winner = make_sub("NAME", make_string("TestCell")) +
+	                  make_sub("DATA", make_cell_data(cell_flag_interior, 0, 0));
+
+	merge_input_t input;
+	input.rec_type = "CELL";
+	input.record_id = "TestCell";
+	input.version_contents = {
+		make_record("CELL", hdr_first),
+		make_record("CELL", hdr_inter),
+		make_record("CELL", hdr_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE((read_cell_data_flags(result.content) & cell_flag_has_water) != 0);
+}

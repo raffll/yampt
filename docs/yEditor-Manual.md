@@ -161,6 +161,7 @@ The auto-merge performs several operations:
 
 - **Leveled list merge** — combines entries from all plugins that modify leveled item or creature lists. Entries added by any plugin are kept and an entry removed by a plugin stays removed. When a plugin changes an existing entry's PC level, or changes how many times an item appears in the list, that change is applied with the last plugin in load order winning; an entry deliberately listed more than once to weight its chance is preserved.
 - **Three-way record merge** — for object records modified by multiple plugins, compares each plugin's changes against the master. Non-conflicting field changes from different plugins are combined into one record. Flag fields merge one bit at a time, so two plugins that each toggle a different flag on the same field both take effect.
+- **Cell merge** — a cell's settings (water, sleep, lighting, region) merge with the same three-way rules as other records, and the objects placed in the cell are combined so a reference added by any plugin is kept. Previously a cell was taken whole from the last plugin, discarding every other plugin's cell changes.
 - **Bug fixes** — optionally corrects known engine bugs: fog density values outside valid range, summon persistence flags, and cell name reverts.
 
 Landscape (LAND) records are never written to the merged patch. Landscape is bulk terrain data that cannot be combined meaningfully, so it is left to load-order handling rather than merged.

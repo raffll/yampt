@@ -622,7 +622,7 @@ void sub_record_merge_t::merge_matched_entry(const matched_entry_t & entries, co
 merge_result_t sub_record_merge_t::merge(const merge_input_t & input)
 {
 	if (input.rec_type == "CELL")
-		return { false, input.version_contents.back() };
+		return merge_cell_refs(input);
 
 	if (input.rec_type == "SCPT")
 		return { false, input.version_contents.back() };
