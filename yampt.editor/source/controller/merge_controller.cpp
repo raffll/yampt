@@ -220,6 +220,14 @@ bool merge_controller_t::prompt_save_active_before_switch()
 	return true;
 }
 
+static void stamp_current_modified_time(const std::string & path)
+{
+	std::error_code error_code;
+	std::filesystem::last_write_time(path, std::filesystem::file_time_type::clock::now(), error_code);
+	if (error_code)
+		app_logger_t::add_log("[warning] could not set modified time on \"" + path + "\"\r\n");
+}
+
 void merge_controller_t::create_new_plugin(const std::string & filename)
 {
 	if (filename.empty())
@@ -236,7 +244,10 @@ void merge_controller_t::create_new_plugin(const std::string & filename)
 
 	const auto saved_path = resolve_active_output_path();
 	if (!saved_path.empty())
+	{
+		stamp_current_modified_time(saved_path);
 		m_session.scan().reload_active_plugin(saved_path);
+	}
 
 	m_session.scan().rebuild_conflicts();
 

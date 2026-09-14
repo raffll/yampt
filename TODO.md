@@ -3,8 +3,6 @@
 
 
 record active-plugin / merged-patch field edits in edit history: field edits now always target the active plugin (commit_to_merge). Previously only the removed per-plugin path fed edit history (field_edited -> edit_log_t::record_field_edit). Now no field edit is recorded in history. Re-wire the active/merge edit to record into edit_log_t (the API + unit tests still exist in edit_log). DECIDE: what identifies the edit in the history line (active plugin filename vs "Merged Patch"), and whether to also record the source-value provenance.
-newly created file, should be at the end, check modified time, and apply correctly
-
 diff in wrong place
 
 optional filerds, should show decoded fields, or optional should showonly single values for now, make sure they are sorted as existent
@@ -97,3 +95,4 @@ cell merged patch dont merge data
 
 Global, Name in nav can show Short/Float
 
+loading plugins starts witrh 100%
