@@ -62,6 +62,14 @@ enum class copy_strategy_t
 	header_and_selected_group
 };
 
+enum class merge_strategy_t
+{
+	generic,
+	cell_refs,
+	armor_parts,
+	no_merge
+};
+
 struct record_behavior_t
 {
 	const char * record_type;
@@ -73,6 +81,12 @@ struct record_behavior_t
 	const paired_merge_rule_t * paired_rules;
 	size_t paired_rule_count;
 	bool atomic_groups = false;
+	merge_strategy_t merge_strategy = merge_strategy_t::generic;
+	bool enam_effect_list = false;
+	bool merge_excluded = false;
+	const char * leveled_item_sub_type = nullptr;
+	const char * const * keyed_list_sub_types = nullptr;
+	size_t keyed_list_sub_type_count = 0;
 };
 
 enum class field_pair_role_t
@@ -93,3 +107,10 @@ field_pair_role_t find_field_pair_role(
     size_t field_offset);
 
 bool is_repeatable_sub_record(const std::string & record_type, const std::string & sub_type);
+
+bool is_keyed_list_sub_type(const std::string & record_type, const std::string & sub_type);
+merge_strategy_t merge_strategy_for(const std::string & record_type);
+bool is_enam_effect_list(const std::string & record_type);
+bool is_merge_excluded(const std::string & record_type);
+decode_mode_t decode_mode_for(const std::string & record_type);
+const char * leveled_item_sub_type_for(const std::string & record_type);

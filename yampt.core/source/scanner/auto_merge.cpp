@@ -1,4 +1,5 @@
 #include "auto_merge.hpp"
+#include "../utility/record_behavior.hpp"
 #include "cell_name_fixer.hpp"
 #include "fog_fixer.hpp"
 #include "plugin_scan.hpp"
@@ -157,14 +158,16 @@ bool auto_merge_t::should_skip_group(
 	if (!is_type_enabled(group.rec_type))
 		return true;
 
-	if (group.rec_type == "INFO")
+	const auto decode_mode = decode_mode_for(group.rec_type);
+
+	if (decode_mode == decode_mode_t::info)
 		return true;
 
 	if (has_exclusion && std::regex_search(group.record_id, exclusion_regex))
 		return true;
 
-	const bool is_leveled = (group.rec_type == "LEVI" || group.rec_type == "LEVC");
-	const bool is_dialogue = (group.rec_type == "DIAL");
+	const bool is_leveled = decode_mode == decode_mode_t::leveled;
+	const bool is_dialogue = decode_mode == decode_mode_t::dial;
 
 	if (!is_leveled && !is_dialogue && group.versions.size() < 3)
 		return true;
@@ -189,12 +192,11 @@ bool auto_merge_t::should_skip_group(
 
 void auto_merge_t::dispatch_group(const record_group_t & group, merge_counters_t & counters)
 {
-	const bool is_leveled = (group.rec_type == "LEVI" || group.rec_type == "LEVC");
-	const bool is_dialogue = (group.rec_type == "DIAL");
+	const auto decode_mode = decode_mode_for(group.rec_type);
 
-	if (is_leveled)
+	if (decode_mode == decode_mode_t::leveled)
 		process_leveled_list(group, counters);
-	else if (is_dialogue)
+	else if (decode_mode == decode_mode_t::dial)
 		process_dialogue(group, counters);
 	else
 		process_three_way(group, counters);
@@ -469,7 +471,7 @@ bool auto_merge_t::is_plugin_included(int plugin_idx) const
 
 bool auto_merge_t::is_type_enabled(const std::string & rec_type) const
 {
-	if (rec_type == "LAND")
+	if (is_merge_excluded(rec_type))
 		return false;
 
 	return m_config.disabled_types.count(rec_type) == 0;

@@ -52,6 +52,8 @@ static constexpr sub_record_rule_t fact_sub_rules[] = {
 	{ "FADT", 240, element_wise_merge },
 };
 
+static constexpr const char * fact_keyed_list_sub_types[] = { "ANAM", "INTV" };
+
 static constexpr sub_record_rule_t race_sub_rules[] = {
 	{ "RADT", 140, element_wise_merge },
 };
@@ -61,10 +63,57 @@ static constexpr sub_record_rule_t generic_sub_rules[] = {
 };
 
 static constexpr record_behavior_t behavior_table[] = {
-	{ "CELL", decode_mode_t::cell, copy_strategy_t::header_and_selected_group, nullptr, 0, &cell_wildcard, nullptr, 0, true },
-	{ "LEVI", decode_mode_t::leveled, copy_strategy_t::whole_record, levi_sub_rules, 1, nullptr, nullptr, 0 },
-	{ "LEVC", decode_mode_t::leveled, copy_strategy_t::whole_record, levi_sub_rules, 1, nullptr, nullptr, 0 },
-	{ "FACT", decode_mode_t::faction, copy_strategy_t::whole_record, fact_sub_rules, 1, nullptr, nullptr, 0 },
+	{ "CELL",
+	  decode_mode_t::cell,
+	  copy_strategy_t::header_and_selected_group,
+	  nullptr,
+	  0,
+	  &cell_wildcard,
+	  nullptr,
+	  0,
+	  true,
+	  merge_strategy_t::cell_refs },
+	{ "LEVI",
+	  decode_mode_t::leveled,
+	  copy_strategy_t::whole_record,
+	  levi_sub_rules,
+	  1,
+	  nullptr,
+	  nullptr,
+	  0,
+	  false,
+	  merge_strategy_t::generic,
+	  false,
+	  false,
+	  "INAM" },
+	{ "LEVC",
+	  decode_mode_t::leveled,
+	  copy_strategy_t::whole_record,
+	  levi_sub_rules,
+	  1,
+	  nullptr,
+	  nullptr,
+	  0,
+	  false,
+	  merge_strategy_t::generic,
+	  false,
+	  false,
+	  "CNAM" },
+	{ "FACT",
+	  decode_mode_t::faction,
+	  copy_strategy_t::whole_record,
+	  fact_sub_rules,
+	  1,
+	  nullptr,
+	  nullptr,
+	  0,
+	  false,
+	  merge_strategy_t::generic,
+	  false,
+	  false,
+	  nullptr,
+	  fact_keyed_list_sub_types,
+	  2 },
 	{ "CONT", decode_mode_t::container, copy_strategy_t::whole_record, cont_sub_rules, 1, nullptr, nullptr, 0 },
 	{ "BSGN", decode_mode_t::container, copy_strategy_t::whole_record, nullptr, 0, nullptr, nullptr, 0 },
 	{ "RACE", decode_mode_t::container, copy_strategy_t::whole_record, race_sub_rules, 1, nullptr, nullptr, 0 },
@@ -78,8 +127,81 @@ static constexpr record_behavior_t behavior_table[] = {
 	  crea_paired_rules,
 	  1 },
 	{ "WEAP", decode_mode_t::generic, copy_strategy_t::whole_record, weap_sub_rules, 1, nullptr, nullptr, 0 },
-	{ "ARMO", decode_mode_t::armor, copy_strategy_t::whole_record, armo_sub_rules, 1, nullptr, nullptr, 0 },
-	{ "CLOT", decode_mode_t::armor, copy_strategy_t::whole_record, nullptr, 0, nullptr, nullptr, 0 },
+	{ "ARMO",
+	  decode_mode_t::armor,
+	  copy_strategy_t::whole_record,
+	  armo_sub_rules,
+	  1,
+	  nullptr,
+	  nullptr,
+	  0,
+	  false,
+	  merge_strategy_t::armor_parts },
+	{ "CLOT",
+	  decode_mode_t::armor,
+	  copy_strategy_t::whole_record,
+	  nullptr,
+	  0,
+	  nullptr,
+	  nullptr,
+	  0,
+	  false,
+	  merge_strategy_t::armor_parts },
+	{ "SCPT",
+	  decode_mode_t::generic,
+	  copy_strategy_t::whole_record,
+	  nullptr,
+	  0,
+	  nullptr,
+	  nullptr,
+	  0,
+	  false,
+	  merge_strategy_t::no_merge },
+	{ "ENCH",
+	  decode_mode_t::generic,
+	  copy_strategy_t::whole_record,
+	  nullptr,
+	  0,
+	  nullptr,
+	  nullptr,
+	  0,
+	  false,
+	  merge_strategy_t::generic,
+	  true },
+	{ "SPEL",
+	  decode_mode_t::generic,
+	  copy_strategy_t::whole_record,
+	  nullptr,
+	  0,
+	  nullptr,
+	  nullptr,
+	  0,
+	  false,
+	  merge_strategy_t::generic,
+	  true },
+	{ "ALCH",
+	  decode_mode_t::generic,
+	  copy_strategy_t::whole_record,
+	  nullptr,
+	  0,
+	  nullptr,
+	  nullptr,
+	  0,
+	  false,
+	  merge_strategy_t::generic,
+	  true },
+	{ "LAND",
+	  decode_mode_t::generic,
+	  copy_strategy_t::whole_record,
+	  nullptr,
+	  0,
+	  nullptr,
+	  nullptr,
+	  0,
+	  false,
+	  merge_strategy_t::generic,
+	  false,
+	  true },
 	{ "DIAL", decode_mode_t::dial, copy_strategy_t::whole_record, nullptr, 0, nullptr, nullptr, 0 },
 	{ "INFO", decode_mode_t::info, copy_strategy_t::whole_record, nullptr, 0, nullptr, nullptr, 0 },
 };
@@ -97,6 +219,43 @@ const record_behavior_t * find_record_behavior(const std::string & record_type)
 	}
 
 	return &generic_behavior;
+}
+
+bool is_keyed_list_sub_type(const std::string & record_type, const std::string & sub_type)
+{
+	const auto * behavior = find_record_behavior(record_type);
+	for (size_t i = 0; i < behavior->keyed_list_sub_type_count; ++i)
+	{
+		if (sub_type == behavior->keyed_list_sub_types[i])
+			return true;
+	}
+
+	return false;
+}
+
+merge_strategy_t merge_strategy_for(const std::string & record_type)
+{
+	return find_record_behavior(record_type)->merge_strategy;
+}
+
+bool is_enam_effect_list(const std::string & record_type)
+{
+	return find_record_behavior(record_type)->enam_effect_list;
+}
+
+bool is_merge_excluded(const std::string & record_type)
+{
+	return find_record_behavior(record_type)->merge_excluded;
+}
+
+decode_mode_t decode_mode_for(const std::string & record_type)
+{
+	return find_record_behavior(record_type)->decode_mode;
+}
+
+const char * leveled_item_sub_type_for(const std::string & record_type)
+{
+	return find_record_behavior(record_type)->leveled_item_sub_type;
 }
 
 const sub_record_rule_t * find_sub_record_rule(

@@ -475,7 +475,7 @@ std::string sub_record_merge_t::merge_enam_slots(
 
 bool sub_record_merge_t::is_enam_record_type(const std::string & rec_type)
 {
-	return rec_type == "ENCH" || rec_type == "SPEL" || rec_type == "ALCH";
+	return is_enam_effect_list(rec_type);
 }
 
 sub_record_sequence_t sub_record_merge_t::replace_enam_entries(
@@ -539,7 +539,7 @@ void sub_record_merge_t::apply_intermediate(
 		if (intermediate[i].type == "NPCS")
 			continue;
 
-		if (rec_type == "FACT" && (intermediate[i].type == "ANAM" || intermediate[i].type == "INTV"))
+		if (is_keyed_list_sub_type(rec_type, intermediate[i].type))
 			continue;
 
 		const auto occurrence = find_occurrence_index(intermediate, i);
@@ -621,14 +621,20 @@ void sub_record_merge_t::merge_matched_entry(const matched_entry_t & entries, co
 
 merge_result_t sub_record_merge_t::merge(const merge_input_t & input)
 {
-	if (input.rec_type == "CELL")
+	switch (merge_strategy_for(input.rec_type))
+	{
+	case merge_strategy_t::cell_refs:
 		return merge_cell_refs(input);
 
-	if (input.rec_type == "SCPT")
+	case merge_strategy_t::armor_parts:
+		return merge_armor_parts(input);
+
+	case merge_strategy_t::no_merge:
 		return { false, input.version_contents.back() };
 
-	if (input.rec_type == "ARMO" || input.rec_type == "CLOT")
-		return merge_armor_parts(input);
+	case merge_strategy_t::generic:
+		return merge_generic(input);
+	}
 
 	return merge_generic(input);
 }
@@ -1247,7 +1253,7 @@ merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
 	if (has_entries_of_type(first_subs, "NPCS"))
 		output = merge_keyed_list_phase(input, first_subs, winner_subs, output, "NPCS", extract_npcs_spell_id);
 
-	if (input.rec_type == "FACT")
+	if (decode_mode_for(input.rec_type) == decode_mode_t::faction)
 	{
 		std::vector<std::vector<keyed_item_t>> reaction_versions;
 		reaction_versions.push_back(collect_faction_reactions(first_subs));
@@ -1429,7 +1435,14 @@ static std::string build_merged_list_record(
 	indx_sub += domain_types::convert_uint_to_string_byte_array(4);
 	indx_sub += std::string(reinterpret_cast<const char *>(&item_count), 4);
 
-	const std::string & item_sub_type = (rec_type == "LEVI") ? "INAM" : "CNAM";
+	const char * const item_sub_type_name = leveled_item_sub_type_for(rec_type);
+	if (item_sub_type_name == nullptr)
+	{
+		app_logger_t::add_log("[error] no leveled item sub-type for " + rec_type + "\r\n", true);
+		return {};
+	}
+
+	const std::string item_sub_type = item_sub_type_name;
 	std::string items_part;
 	for (const auto & item : merged_items)
 	{
