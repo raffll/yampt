@@ -72,6 +72,7 @@ struct record_behavior_t
 	const sub_record_rule_t * wildcard_rule;
 	const paired_merge_rule_t * paired_rules;
 	size_t paired_rule_count;
+	bool atomic_groups = false;
 };
 
 enum class field_pair_role_t

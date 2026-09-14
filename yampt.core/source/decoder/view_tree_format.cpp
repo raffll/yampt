@@ -368,7 +368,7 @@ static std::string decode_hex_bytes(const char * ptr, size_t available, size_t m
 	return hex_output;
 }
 
-static std::string global_type_name(char type_char)
+std::string global_type_name(char type_char)
 {
 	switch (type_char)
 	{

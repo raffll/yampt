@@ -362,3 +362,15 @@ TEST_CASE("view_tree_format::decode_field, scvr_subject keyed marker", "[u]")
 	auto result = decode_field(field, data, sizeof(data) - 1);
 	REQUIRE(result == "JX");
 }
+
+TEST_CASE("view_tree_format::global_type_name, known type chars", "[u]")
+{
+	REQUIRE(global_type_name('s') == "Short");
+	REQUIRE(global_type_name('l') == "Long");
+	REQUIRE(global_type_name('f') == "Float");
+}
+
+TEST_CASE("view_tree_format::global_type_name, unknown char is Error", "[u]")
+{
+	REQUIRE(global_type_name('x') == "Error");
+}

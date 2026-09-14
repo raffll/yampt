@@ -1,6 +1,7 @@
 #include "plugin_index.hpp"
 #include "../decoder/sub_record_iter.hpp"
 #include "../decoder/sub_record_schema.hpp"
+#include "../decoder/view_tree_format.hpp"
 #include "../utility/app_logger.hpp"
 #include "../utility/string_utils.hpp"
 #include <algorithm>
@@ -326,6 +327,22 @@ std::string plugin_index_t::derive_display_name(esm_reader_t & esm, size_t i)
 			text = string_utils::erase_null_chars(text);
 			return text;
 		}
+		return "";
+	}
+
+	if (rec_type == "GLOB")
+	{
+		while (iter.next(sub))
+		{
+			if (sub.type != "FNAM")
+				continue;
+
+			if (sub.size < 1)
+				break;
+
+			return global_type_name(sub.data[0]);
+		}
+
 		return "";
 	}
 

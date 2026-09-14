@@ -14,3 +14,4 @@ std::string decode_field(
     size_t data_size,
     codepage_t codepage = codepage_t::windows_1252);
 std::string make_sub_label(const std::string & sub_type, const std::string & record_type, size_t data_size);
+std::string global_type_name(char type_char);

@@ -237,8 +237,8 @@ void preview_view_t::apply_diff_highlighting()
 	m_left_edit->setExtraSelections({});
 	m_right_edit->setExtraSelections({});
 
-	const auto & left_text = m_left_cached;
-	const auto & right_text = m_right_cached;
+	const auto left_text = QString::fromStdString(m_left_cached).toStdString();
+	const auto right_text = QString::fromStdString(m_right_cached).toStdString();
 
 	if (!m_diff_coloring_enabled || left_text.empty() || right_text.empty() || left_text == right_text)
 		return;

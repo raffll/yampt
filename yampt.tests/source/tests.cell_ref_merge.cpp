@@ -408,3 +408,58 @@ TEST_CASE("sub_record_merge_t::merge, CELL routes through cell ref merge for DAT
 	REQUIRE(result.changed);
 	REQUIRE((read_cell_data_flags(result.content) & cell_flag_has_water) != 0);
 }
+
+static std::string make_frmr_group_with_owner(
+    uint32_t index,
+    const std::string & object_id,
+    float x_pos,
+    float y_pos,
+    float z_pos,
+    const std::string & owner_id)
+{
+	return make_sub("FRMR", make_uint32(index)) + make_sub("NAME", make_string(object_id)) +
+	       make_sub("DATA", make_position(x_pos, y_pos, z_pos)) + make_sub("ANAM", make_string(owner_id));
+}
+
+static std::string read_frmr_owner(const std::string & content, uint32_t frmr_index)
+{
+	auto part = sub_record_merge_t::partition_cell(content);
+	for (const auto & group : part.groups)
+	{
+		if (group.frmr_index != frmr_index)
+			continue;
+
+		for (const auto & entry : group.sub_records)
+		{
+			if (entry.type == "ANAM")
+				return entry.data;
+		}
+	}
+
+	return "";
+}
+
+TEST_CASE("sub_record_merge_t::merge_cell_refs, atomic reference takes whole object from last changer", "[u]")
+{
+	auto hdr = make_cell_header();
+
+	auto ref_master = make_frmr_group_with_owner(1, "barrel_01", 100.0f, 200.0f, 0.0f, make_string("Master"));
+	auto ref_moved = make_frmr_group_with_owner(1, "barrel_01", 500.0f, 600.0f, 0.0f, make_string("Master"));
+	auto ref_reowned = make_frmr_group_with_owner(1, "barrel_01", 100.0f, 200.0f, 0.0f, make_string("Fargoth"));
+
+	merge_input_t input;
+	input.rec_type = "CELL";
+	input.record_id = "TestCell";
+	input.version_contents = {
+		make_record("CELL", hdr + ref_master),
+		make_record("CELL", hdr + ref_moved),
+		make_record("CELL", hdr + ref_reowned),
+		make_record("CELL", hdr + ref_master),
+	};
+
+	auto result = sub_record_merge_t::merge_cell_refs(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(read_frmr_owner(result.content, 1) == make_string("Fargoth"));
+	REQUIRE(read_frmr_x_pos(result.content, 1) == Catch::Approx(100.0f));
+}

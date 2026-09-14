@@ -778,12 +778,45 @@ void sub_record_merge_t::collect_intermediate_additions(
 	}
 }
 
+static bool cell_refs_are_atomic()
+{
+	const auto * behavior = find_record_behavior("CELL");
+	return behavior != nullptr && behavior->atomic_groups;
+}
+
+static sub_record_sequence_t select_atomic_frmr_subs(
+    const std::vector<std::string> & versions,
+    uint32_t index,
+    const sub_record_sequence_t & first_subs,
+    const sub_record_sequence_t & winner_subs)
+{
+	if (winner_subs != first_subs)
+		return winner_subs;
+
+	for (size_t version_idx = versions.size() - 2; version_idx >= 1; --version_idx)
+	{
+		const auto inter_part = sub_record_merge_t::partition_cell(versions[version_idx]);
+		const auto inter_map = sub_record_merge_t::build_frmr_map(inter_part.groups);
+		const auto it_inter = inter_map.find(index);
+
+		if (it_inter == inter_map.end())
+			continue;
+
+		if (it_inter->second.sub_records != first_subs)
+			return it_inter->second.sub_records;
+	}
+
+	return winner_subs;
+}
+
 void sub_record_merge_t::merge_winner_frmr_groups(
     std::vector<frmr_group_t> & merged_groups,
     const std::vector<std::string> & versions,
     const frmr_map_t & first_map,
     const frmr_map_t & winner_map)
 {
+	const bool atomic = cell_refs_are_atomic();
+
 	for (const auto & [index, winner_group] : winner_map)
 	{
 		auto it_first = first_map.find(index);
@@ -791,6 +824,13 @@ void sub_record_merge_t::merge_winner_frmr_groups(
 		if (it_first == first_map.end())
 		{
 			merged_groups.push_back(winner_group);
+			continue;
+		}
+
+		if (atomic)
+		{
+			auto atomic_subs = select_atomic_frmr_subs(versions, index, it_first->second.sub_records, winner_group.sub_records);
+			merged_groups.push_back({ index, std::move(atomic_subs) });
 			continue;
 		}
 

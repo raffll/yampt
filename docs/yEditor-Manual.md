@@ -44,7 +44,7 @@ Text colors indicate how each specific plugin version relates to others:
 
 Records with no conflict (only one plugin defines them) show with no background color and black text.
 
-The tree has two columns: ID and Name, showing the record identifier and its display name. On a plugin row, a single role icon appears before the plugin filename in the ID column. When a plugin fits more than one role, the highest-priority one is shown, in the order guard, then merged patch, then overwrite copy, then file type. The active plugin additionally shows an [Active] label after its role icon — for example an active guard patch reads 🛡 [Active] before its name.
+The tree has two columns: ID and Name, showing the record identifier and its display name. For a global variable, the Name column shows its value type — Short, Long, or Float. On a plugin row, a single role icon appears before the plugin filename in the ID column. When a plugin fits more than one role, the highest-priority one is shown, in the order guard, then merged patch, then overwrite copy, then file type. The active plugin additionally shows an [Active] label after its role icon — for example an active guard patch reads 🛡 [Active] before its name.
 
 - 📜 — a master file that other plugins depend on.
 - 📄 — a regular plugin loaded from a mod folder or game data directory.
@@ -161,7 +161,7 @@ The auto-merge performs several operations:
 
 - **Leveled list merge** — combines entries from all plugins that modify leveled item or creature lists. Entries added by any plugin are kept and an entry removed by a plugin stays removed. When a plugin changes an existing entry's PC level, or changes how many times an item appears in the list, that change is applied with the last plugin in load order winning; an entry deliberately listed more than once to weight its chance is preserved.
 - **Three-way record merge** — for object records modified by multiple plugins, compares each plugin's changes against the master. Non-conflicting field changes from different plugins are combined into one record. Flag fields merge one bit at a time, so two plugins that each toggle a different flag on the same field both take effect.
-- **Cell merge** — a cell's settings (water, sleep, lighting, region) merge with the same three-way rules as other records, and the objects placed in the cell are combined so a reference added by any plugin is kept. Previously a cell was taken whole from the last plugin, discarding every other plugin's cell changes.
+- **Cell merge** — a cell's settings (water, sleep, lighting, region) merge with the same three-way rules as other records, and the objects placed in the cell are combined so a reference added by any plugin is kept. Each placed object is treated as a whole: when more than one plugin changes the same object, the last plugin's version of that object is taken in full, so a placed object never ends up combining, for example, its position from one plugin and its ownership from another.
 - **Bug fixes** — optionally corrects known engine bugs: fog density values outside valid range, summon persistence flags, and cell name reverts.
 
 Landscape (LAND) records are never written to the merged patch. Landscape is bulk terrain data that cannot be combined meaningfully, so it is left to load-order handling rather than merged.

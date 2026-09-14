@@ -398,8 +398,8 @@ void plugin_session_t::load_plugins_internal(const std::vector<std::string> & pa
 
 	for (const auto & path : paths)
 	{
-		++completed_steps;
 		emit load_progress(completed_steps, total_steps);
+		++completed_steps;
 
 		auto filename = path;
 		auto pos = filename.find_last_of("/\\");
