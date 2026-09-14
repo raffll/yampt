@@ -671,6 +671,14 @@ static const field_def_t cell_unam_fields[] = {
 	{ "Blocked", field_type_t::u8, 0, 1, nullptr, nullptr, 0, nullptr },
 };
 
+static const field_def_t cell_xsol_fields[] = {
+	{ "Soul", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t cell_xchg_fields[] = {
+	{ "Enchant Charge", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
+};
+
 static const field_def_t cell_dodt_fields[] = {
 	{ "X Position", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
 	{ "Y Position", field_type_t::f32, 4, 4, nullptr, nullptr, 0, nullptr },
@@ -1209,6 +1217,8 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 		{ "CELL", "FLTV", 4, cell_fltv_fields, ARRAY_COUNT(cell_fltv_fields) },
 		{ "CELL", "NAM9", 4, cell_nam9_fields, ARRAY_COUNT(cell_nam9_fields) },
 		{ "CELL", "UNAM", 1, cell_unam_fields, ARRAY_COUNT(cell_unam_fields) },
+		{ "CELL", "XSOL", 0, cell_xsol_fields, ARRAY_COUNT(cell_xsol_fields) },
+		{ "CELL", "XCHG", 4, cell_xchg_fields, ARRAY_COUNT(cell_xchg_fields) },
 		{ "GLOB", "FNAM", 0, glob_fnam_fields, ARRAY_COUNT(glob_fnam_fields) },
 		{ "GLOB", "FLTV", 4, glob_fltv_fields, ARRAY_COUNT(glob_fltv_fields) },
 		{ "SNDG", "DATA", 4, sndg_data_fields, ARRAY_COUNT(sndg_data_fields) },
