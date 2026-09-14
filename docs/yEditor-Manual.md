@@ -44,14 +44,14 @@ Text colors indicate how each specific plugin version relates to others:
 
 Records with no conflict (only one plugin defines them) show with no background color and black text.
 
-The tree has two columns: ID and Name, showing the record identifier and its display name. On a plugin row, a single role icon appears before the plugin filename in the ID column. When a plugin fits more than one role, the highest-priority one is shown, in the order guard, then merged patch, then overwrite copy, then file type. The active plugin additionally shows a star after its role icon — for example an active guard patch reads 🛡⭐ before its name.
+The tree has two columns: ID and Name, showing the record identifier and its display name. On a plugin row, a single role icon appears before the plugin filename in the ID column. When a plugin fits more than one role, the highest-priority one is shown, in the order guard, then merged patch, then overwrite copy, then file type. The active plugin additionally shows an [Active] label after its role icon — for example an active guard patch reads 🛡 [Active] before its name.
 
 - 📜 — a master file that other plugins depend on.
 - 📄 — a regular plugin loaded from a mod folder or game data directory.
 - ⚙ — the merged patch produced by the auto-merge operation.
 - ⚡ — the plugin is loaded from MO2's overwrite folder, meaning a second (cleaned or patched) copy of the file exists and is being used instead of the original mod version.
 - 🛡 — a guard patch that acts as a priority barrier during auto-merge.
-- ⭐ — the active plugin: the one that currently receives copied records.
+- [Active] — the active plugin: the one that currently receives copied records.
 
 A plugin excluded from the merged patch is not marked with an icon. Instead its whole row is shown on a light grey background with grey text in the navigation tree, and its column header in the record view is shown in grey text. Excluded records show the same grey styling on their own row in the navigation tree.
 

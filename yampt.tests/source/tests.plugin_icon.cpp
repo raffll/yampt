@@ -10,6 +10,11 @@ QString build(const plugin_icon::tier_flags_t & flags)
 	return plugin_icon::prefix(flags);
 }
 
+QString active_label()
+{
+	return QCoreApplication::translate("yEditor", "[Active]");
+}
+
 } // namespace
 
 TEST_CASE("plugin_icon::has_esm_extension, true only for .esm suffix", "[u]")
@@ -76,7 +81,7 @@ TEST_CASE("plugin_icon::prefix, guard shield shows when not excluded", "[u]")
 	REQUIRE(build(flags).contains(QString::fromUtf8(shield)));
 }
 
-TEST_CASE("plugin_icon::prefix, shows a single role icon then active star", "[u]")
+TEST_CASE("plugin_icon::prefix, shows a single role icon then active label", "[u]")
 {
 	plugin_icon::tier_flags_t flags;
 	flags.filename = "MyMod.esp";
@@ -86,10 +91,10 @@ TEST_CASE("plugin_icon::prefix, shows a single role icon then active star", "[u]
 
 	const auto result = build(flags);
 	const int shield_pos = result.indexOf(QString::fromUtf8(shield));
-	const int star_pos = result.indexOf(QString::fromUtf8(star));
+	const int active_pos = result.indexOf(active_label());
 
 	REQUIRE(shield_pos >= 0);
-	REQUIRE(shield_pos < star_pos);
+	REQUIRE(shield_pos < active_pos);
 	REQUIRE_FALSE(result.contains(QString::fromUtf8(page)));
 	REQUIRE_FALSE(result.contains(QString::fromUtf8(bolt)));
 }
@@ -133,13 +138,13 @@ TEST_CASE("plugin_icon::prefix, merged patch omits overwrite bolt", "[u]")
 	REQUIRE_FALSE(result.contains(QString::fromUtf8(bolt)));
 }
 
-TEST_CASE("plugin_icon::prefix, active star omitted when inactive", "[u]")
+TEST_CASE("plugin_icon::prefix, active label omitted when inactive", "[u]")
 {
 	plugin_icon::tier_flags_t flags;
 	flags.filename = "MyMod.esp";
 	flags.is_active = false;
 
-	REQUIRE_FALSE(build(flags).contains(QString::fromUtf8(star)));
+	REQUIRE_FALSE(build(flags).contains(active_label()));
 }
 
 TEST_CASE("plugin_icon::prefix, plain plugin emits only base tier and trailing space", "[u]")

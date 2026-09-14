@@ -179,12 +179,12 @@ When the Translate button is clicked with invalid state (no document, no row, no
 
 The navigation tree (left panel) and the record view column headers (right panel) must show the same icons for each plugin. The icon logic lives in two places — `nav_tree_model.cpp::file_node_display_text` and `view_tree_model.cpp::headerData` — and must produce identical results for the same plugin index. When adding or changing an icon, update both locations.
 
-Icons are built from independent tiers, appended in this fixed order. Each tier shows at most one icon; tiers do NOT suppress each other, so a plugin can carry several icons at once (e.g. `📄⚡🚫⭐`).
+Icons are built from independent tiers, appended in this fixed order. Each tier shows at most one marker; tiers do NOT suppress each other, so a plugin can carry several markers at once (e.g. `📄⚡🚫 [Active]`).
 
 1. Base type (exactly one): ⚙ merged patch (filename `Merged Patch.esp`) / 📜 master file (`.esm`) / 📄 regular plugin.
 2. MO2 overwrite (its own tier): ⚡ when the plugin path is under an `overwrite` folder, meaning a second version of the file exists.
 3. Merge participation (mutually exclusive, session-enforced): 🚫 excluded from merged patch, or 🛡 guard patch.
-4. Active target: ⭐ when this is the active plugin (the one that receives copied records).
+4. Active target: an `[Active]` label when this is the active plugin (the one that receives copied records).
 
 The per-record merge-lock indicator (🔒) is separate from the plugin-level tiers above: it is prepended to a record row in the navigation tree (`nav_tree_model.cpp::data_for_record`) and drawn on a locked cell in the record view (`view_tree_model.cpp` lock_cell_icon). 🔒 always means "merged-patch lock" and is shown only when the active plugin is the merged patch (filename `Merged Patch.esp`); excluded-from-merge is 🚫, never 🔒. Locks live in a dedicated in-memory store (`plugin_scan_t::m_merge_locks`) separate from the active-record store, so they are never cleared or leaked when the active plugin is switched.
 

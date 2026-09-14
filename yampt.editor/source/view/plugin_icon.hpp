@@ -4,6 +4,7 @@
 #include "plugin_icon_glyphs.hpp"
 #include <string>
 #include <string_view>
+#include <QCoreApplication>
 #include <QString>
 
 namespace plugin_icon {
@@ -53,7 +54,7 @@ inline QString prefix(const tier_flags_t & flags)
 	QString icons = role_icon(flags) + " ";
 
 	if (flags.is_active)
-		icons += QString::fromUtf8(glyph::star) + " ";
+		icons += QCoreApplication::translate("yEditor", "[Active]") + " ";
 
 	return icons;
 }
