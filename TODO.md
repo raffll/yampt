@@ -1,14 +1,11 @@
 # TODO
 
-INTV is not merged, so there is hardcoded rule
-ingredient data can be sorted per effect
 Global var can be float or string in different p;lugin, what that mean???
 enam effect with #0
 creatiure npco not merged
 also npcs should follow remove spell rule
 remove idle group in creature
 container also should follor remove item rule
-CTDT not resolving conflicts
 adding new item to list may be when show all fields can show one empty at the end of list???
 creature flags base? what mean?
 AI_F more meaningluf fiedl names and why is so big numbers there?

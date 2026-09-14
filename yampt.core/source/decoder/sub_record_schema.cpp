@@ -718,18 +718,18 @@ static const field_def_t ligh_lhdt_fields[] = {
 static const field_def_t ingr_irdt_fields[] = {
 	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
 	{ "Value", field_type_t::u32, 4, 4, nullptr, nullptr, 0, nullptr },
-	{ "Effect 1", field_type_t::i32, 8, 4, effect_names, nullptr, 0, nullptr },
-	{ "Effect 2", field_type_t::i32, 12, 4, effect_names, nullptr, 0, nullptr },
-	{ "Effect 3", field_type_t::i32, 16, 4, effect_names, nullptr, 0, nullptr },
-	{ "Effect 4", field_type_t::i32, 20, 4, effect_names, nullptr, 0, nullptr },
-	{ "Skill 1", field_type_t::i32, 24, 4, skill_names, nullptr, 0, nullptr },
-	{ "Skill 2", field_type_t::i32, 28, 4, skill_names, nullptr, 0, nullptr },
-	{ "Skill 3", field_type_t::i32, 32, 4, skill_names, nullptr, 0, nullptr },
-	{ "Skill 4", field_type_t::i32, 36, 4, skill_names, nullptr, 0, nullptr },
-	{ "Attribute 1", field_type_t::i32, 40, 4, attribute_names, nullptr, 0, nullptr },
-	{ "Attribute 2", field_type_t::i32, 44, 4, attribute_names, nullptr, 0, nullptr },
-	{ "Attribute 3", field_type_t::i32, 48, 4, attribute_names, nullptr, 0, nullptr },
-	{ "Attribute 4", field_type_t::i32, 52, 4, attribute_names, nullptr, 0, nullptr },
+	{ "Effect", field_type_t::i32, 8, 4, effect_names, nullptr, 0, "Effect 1" },
+	{ "Skill", field_type_t::i32, 24, 4, skill_names, nullptr, 0, "Effect 1" },
+	{ "Attribute", field_type_t::i32, 40, 4, attribute_names, nullptr, 0, "Effect 1" },
+	{ "Effect", field_type_t::i32, 12, 4, effect_names, nullptr, 0, "Effect 2" },
+	{ "Skill", field_type_t::i32, 28, 4, skill_names, nullptr, 0, "Effect 2" },
+	{ "Attribute", field_type_t::i32, 44, 4, attribute_names, nullptr, 0, "Effect 2" },
+	{ "Effect", field_type_t::i32, 16, 4, effect_names, nullptr, 0, "Effect 3" },
+	{ "Skill", field_type_t::i32, 32, 4, skill_names, nullptr, 0, "Effect 3" },
+	{ "Attribute", field_type_t::i32, 48, 4, attribute_names, nullptr, 0, "Effect 3" },
+	{ "Effect", field_type_t::i32, 20, 4, effect_names, nullptr, 0, "Effect 4" },
+	{ "Skill", field_type_t::i32, 36, 4, skill_names, nullptr, 0, "Effect 4" },
+	{ "Attribute", field_type_t::i32, 52, 4, attribute_names, nullptr, 0, "Effect 4" },
 };
 
 static const field_def_t scpt_schd_fields[] = {
@@ -1187,7 +1187,7 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 		{ "CELL", "NAM5", 4, cell_nam5_fields, ARRAY_COUNT(cell_nam5_fields) },
 		{ "CELL", "FLTV", 4, cell_fltv_fields, ARRAY_COUNT(cell_fltv_fields) },
 		{ "CELL", "NAM9", 4, cell_nam9_fields, ARRAY_COUNT(cell_nam9_fields) },
-		{ "GLOB", "FNAM", 1, glob_fnam_fields, ARRAY_COUNT(glob_fnam_fields) },
+		{ "GLOB", "FNAM", 0, glob_fnam_fields, ARRAY_COUNT(glob_fnam_fields) },
 		{ "GLOB", "FLTV", 4, glob_fltv_fields, ARRAY_COUNT(glob_fltv_fields) },
 		{ "SNDG", "DATA", 4, sndg_data_fields, ARRAY_COUNT(sndg_data_fields) },
 		{ "LAND", "DATA", 4, land_data_fields, ARRAY_COUNT(land_data_fields) },
@@ -1202,7 +1202,11 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 	return schemas;
 }
 
-const sub_record_schema_t * find_schema(const std::string & record_type, const std::string & sub_type, size_t data_size)
+static const sub_record_schema_t * match_schema(
+    const std::string & record_type,
+    const std::string & sub_type,
+    size_t data_size,
+    bool require_specific_parent)
 {
 	const auto & schemas = build_schemas();
 	for (const auto & s : schemas)
@@ -1210,7 +1214,12 @@ const sub_record_schema_t * find_schema(const std::string & record_type, const s
 		if (s.sub_type != sub_type)
 			continue;
 
-		if (std::strcmp(s.parent_type, "*") != 0 && s.parent_type != record_type)
+		const bool is_wildcard = std::strcmp(s.parent_type, "*") == 0;
+
+		if (require_specific_parent && is_wildcard)
+			continue;
+
+		if (!is_wildcard && s.parent_type != record_type)
 			continue;
 
 		if (s.expected_size != 0 && s.expected_size != data_size)
@@ -1219,6 +1228,14 @@ const sub_record_schema_t * find_schema(const std::string & record_type, const s
 		return &s;
 	}
 	return nullptr;
+}
+
+const sub_record_schema_t * find_schema(const std::string & record_type, const std::string & sub_type, size_t data_size)
+{
+	if (const auto * specific = match_schema(record_type, sub_type, data_size, true))
+		return specific;
+
+	return match_schema(record_type, sub_type, data_size, false);
 }
 
 const sub_record_schema_t * find_largest_schema(const std::string & record_type, const std::string & sub_type)
