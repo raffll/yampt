@@ -166,7 +166,10 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 		row.cell_conflict_this = record_conflict::compute_conflict_this(row.values);
 	}
 
-	const auto * schema = first_data ? find_largest_schema(m_record_type, slot.type) : nullptr;
+	const bool is_cell_data = (m_record_type == "CELL" && slot.type == "DATA");
+	const auto * schema = first_data ? (is_cell_data ? find_cell_data_schema(first_data, first_size)
+	                                                  : find_largest_schema(m_record_type, slot.type))
+	                                 : nullptr;
 	if (schema && first_data)
 		decode_schema_children(row, schema, first_data, first_size, col_count, all_subs, col_indices, slot);
 	else if (first_data && first_size > 0 && !row.values.empty() && !row.values[0].empty() && row.values[0][0] == '<')
@@ -328,7 +331,9 @@ void view_tree_model_t::decode_schema_children(
 
 			const auto & sv = all_subs[col][idx];
 
-			const auto * column_schema = find_schema(m_record_type, slot.type, sv.size);
+			const bool is_cell_data_column = (m_record_type == "CELL" && slot.type == "DATA");
+			const auto * column_schema = is_cell_data_column ? find_cell_data_schema(sv.data, sv.size)
+			                                                 : find_schema(m_record_type, slot.type, sv.size);
 			if (column_schema == nullptr)
 			{
 				app_logger_t::add_log(

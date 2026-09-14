@@ -9,6 +9,36 @@ TEST_CASE("sub_record_schema_t::find_schema, CELL NAM5 lookup", "[u]")
 	REQUIRE(schema->field_count == 4);
 }
 
+TEST_CASE("sub_record_schema_t::find_cell_data_schema, exterior has grid fields", "[u]")
+{
+	std::string data(12, '\0');
+
+	const auto * schema = find_cell_data_schema(data.data(), data.size());
+	REQUIRE(schema != nullptr);
+	REQUIRE(find_field_by_name(*schema, "Grid X") != nullptr);
+	REQUIRE(find_field_by_name(*schema, "Grid Y") != nullptr);
+}
+
+TEST_CASE("sub_record_schema_t::find_cell_data_schema, interior has no grid fields", "[u]")
+{
+	std::string data(12, '\0');
+	data[0] = 0x01;
+
+	const auto * schema = find_cell_data_schema(data.data(), data.size());
+	REQUIRE(schema != nullptr);
+	REQUIRE(find_field_by_name(*schema, "Flags") != nullptr);
+	REQUIRE(find_field_by_name(*schema, "Grid X") == nullptr);
+	REQUIRE(find_field_by_name(*schema, "Grid Y") == nullptr);
+}
+
+TEST_CASE("sub_record_schema_t::find_cell_data_schema, wrong size returns null", "[u]")
+{
+	std::string data(8, '\0');
+
+	REQUIRE(find_cell_data_schema(data.data(), data.size()) == nullptr);
+	REQUIRE(find_cell_data_schema(nullptr, 0) == nullptr);
+}
+
 TEST_CASE("sub_record_schema_t::find_schema, CELL FLTV lookup", "[u]")
 {
 	const auto * schema = find_schema("CELL", "FLTV", 4);

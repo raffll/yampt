@@ -8,10 +8,14 @@ static const char * const cell_flags[] = {
 	"Interior", "Has Water", "Illegal to Sleep", "_", "_", "_", "_", "Behave like Exterior",
 };
 
-static const field_def_t cell_data_fields[] = {
+static const field_def_t cell_data_exterior_fields[] = {
 	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, cell_flags, ARRAY_COUNT(cell_flags), nullptr },
 	{ "Grid X", field_type_t::i32, 4, 4, nullptr, nullptr, 0, nullptr },
 	{ "Grid Y", field_type_t::i32, 8, 4, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t cell_data_interior_fields[] = {
+	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, cell_flags, ARRAY_COUNT(cell_flags), nullptr },
 };
 
 static const char * const npc_flags[] = { "Female", "Essential", "Respawn", "Base", "Autocalc" };
@@ -1079,7 +1083,7 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 	static const std::vector<sub_record_schema_t> schemas = {
 		{ "TES3", "HEDR", 300, tes3_hedr_fields, ARRAY_COUNT(tes3_hedr_fields) },
 		{ "TES3", "DATA", 8, tes3_data_fields, ARRAY_COUNT(tes3_data_fields) },
-		{ "CELL", "DATA", 12, cell_data_fields, ARRAY_COUNT(cell_data_fields) },
+		{ "CELL", "DATA", 12, cell_data_exterior_fields, ARRAY_COUNT(cell_data_exterior_fields) },
 		{ "CELL", "AMBI", 16, cell_ambi_fields, ARRAY_COUNT(cell_ambi_fields) },
 		{ "*", "DODT", 24, cell_dodt_fields, ARRAY_COUNT(cell_dodt_fields) },
 		{ "CELL", "DATA", 24, cell_ref_data_fields, ARRAY_COUNT(cell_ref_data_fields) },
@@ -1289,6 +1293,28 @@ const sub_record_schema_t * find_largest_schema(const std::string & record_type,
 	}
 
 	return largest;
+}
+
+const sub_record_schema_t * find_cell_data_schema(const char * data, size_t data_size)
+{
+	constexpr size_t cell_data_size = 12;
+	constexpr size_t cell_flags_size = 4;
+	constexpr uint32_t cell_flag_interior = 0x01;
+
+	if (data == nullptr || data_size != cell_data_size)
+		return nullptr;
+
+	static const sub_record_schema_t exterior_schema {
+		"CELL", "DATA", cell_data_size, cell_data_exterior_fields, ARRAY_COUNT(cell_data_exterior_fields)
+	};
+	static const sub_record_schema_t interior_schema {
+		"CELL", "DATA", cell_data_size, cell_data_interior_fields, ARRAY_COUNT(cell_data_interior_fields)
+	};
+
+	uint32_t flags = 0;
+	std::memcpy(&flags, data, cell_flags_size);
+
+	return (flags & cell_flag_interior) ? &interior_schema : &exterior_schema;
 }
 
 const field_def_t * find_field_by_name(const sub_record_schema_t & schema, const char * field_name)

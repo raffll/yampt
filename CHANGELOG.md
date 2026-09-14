@@ -46,6 +46,7 @@
 - [FIX] Flag fields now merge one bit at a time, so changes to different flags of the same field made by different plugins are combined instead of the last plugin's whole set of flags overwriting the rest. This includes a leveled list's calculation flags (Calc for Each Item, Calc from All Levels) and the flag fields of NPCs, creatures, and containers
 - [FIX] A book or scroll's skill is now read correctly in the record view (it was previously misread from the wrong bytes)
 - [FIX] Start Script and Land Texture records now show their fields (script data, texture index and path) in the record view instead of raw bytes
+- [FIX] Interior cells no longer show Grid X and Grid Y in the record view, since those coordinates only apply to exterior cells; the interior cell's data previously displayed meaningless numbers in those rows
 
 ### Both Apps
 - [CHANGE] The log panel no longer wraps long lines; instead it scrolls horizontally, so each log entry stays on one line
