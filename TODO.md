@@ -8,6 +8,8 @@ newly created file, should be at the end, check modified time, and apply correct
 diff in wrong place
 speed up computing conflicts
 
+optional filerds, should show decoded fields, or optional should showonly single values for now, make sure they are sorted as existent
+
 ## Faction (FACT) merge
 
 Root cause: FACT inter-faction reactions are stored as paired INTV (reaction value) + ANAM (reaction faction name) sub-records, but the merger matches sub-records positionally by (type, occurrence). It has no concept that INTV+ANAM form one reaction keyed by faction name. This is the common cause of the three reaction bugs below. Fix by adding a faction-specific keyed-union merge in sub_record_merge_t (parallel to merge_armor_parts / NPCO union), keying reactions on the ANAM faction name and emitting INTV+ANAM as a coupled pair. Header sub-records (NAME, FNAM, FADT, RNAM) keep the existing generic merge so FADT element-wise merge still applies.
