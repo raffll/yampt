@@ -234,6 +234,7 @@
     <ClCompile Include="source\tests.keyword_trie.cpp" />
     <ClCompile Include="source\tests.theme_system.cpp" />
     <ClCompile Include="source\tests.sub_record_schema.cpp" />
+    <ClCompile Include="source\tests.record_behavior.cpp" />
     <ClCompile Include="source\tests.view_tree_format.cpp" />
     <ClCompile Include="source\tests.plugin_scan_merge.cpp" />
     <ClCompile Include="source\tests.sub_record_merge.cpp" />

@@ -521,7 +521,7 @@ static const field_def_t gmst_fltv_fields[] = {
 };
 
 static const field_def_t glob_fnam_fields[] = {
-	{ "Type", field_type_t::string_fixed, 0, 1, nullptr, nullptr, 0, nullptr },
+	{ "Type", field_type_t::global_type, 0, 1, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t glob_fltv_fields[] = {
@@ -718,18 +718,18 @@ static const field_def_t ligh_lhdt_fields[] = {
 static const field_def_t ingr_irdt_fields[] = {
 	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
 	{ "Value", field_type_t::u32, 4, 4, nullptr, nullptr, 0, nullptr },
-	{ "Effect", field_type_t::i32, 8, 4, effect_names, nullptr, 0, "Effect 1" },
-	{ "Skill", field_type_t::i32, 24, 4, skill_names, nullptr, 0, "Effect 1" },
-	{ "Attribute", field_type_t::i32, 40, 4, attribute_names, nullptr, 0, "Effect 1" },
-	{ "Effect", field_type_t::i32, 12, 4, effect_names, nullptr, 0, "Effect 2" },
-	{ "Skill", field_type_t::i32, 28, 4, skill_names, nullptr, 0, "Effect 2" },
-	{ "Attribute", field_type_t::i32, 44, 4, attribute_names, nullptr, 0, "Effect 2" },
-	{ "Effect", field_type_t::i32, 16, 4, effect_names, nullptr, 0, "Effect 3" },
-	{ "Skill", field_type_t::i32, 32, 4, skill_names, nullptr, 0, "Effect 3" },
-	{ "Attribute", field_type_t::i32, 48, 4, attribute_names, nullptr, 0, "Effect 3" },
-	{ "Effect", field_type_t::i32, 20, 4, effect_names, nullptr, 0, "Effect 4" },
-	{ "Skill", field_type_t::i32, 36, 4, skill_names, nullptr, 0, "Effect 4" },
-	{ "Attribute", field_type_t::i32, 52, 4, attribute_names, nullptr, 0, "Effect 4" },
+	{ "Effect", field_type_t::i32, 8, 4, effect_names, nullptr, 0, "Effect #0" },
+	{ "Skill", field_type_t::i32, 24, 4, skill_names, nullptr, 0, "Effect #0" },
+	{ "Attribute", field_type_t::i32, 40, 4, attribute_names, nullptr, 0, "Effect #0" },
+	{ "Effect", field_type_t::i32, 12, 4, effect_names, nullptr, 0, "Effect #1" },
+	{ "Skill", field_type_t::i32, 28, 4, skill_names, nullptr, 0, "Effect #1" },
+	{ "Attribute", field_type_t::i32, 44, 4, attribute_names, nullptr, 0, "Effect #1" },
+	{ "Effect", field_type_t::i32, 16, 4, effect_names, nullptr, 0, "Effect #2" },
+	{ "Skill", field_type_t::i32, 32, 4, skill_names, nullptr, 0, "Effect #2" },
+	{ "Attribute", field_type_t::i32, 48, 4, attribute_names, nullptr, 0, "Effect #2" },
+	{ "Effect", field_type_t::i32, 20, 4, effect_names, nullptr, 0, "Effect #3" },
+	{ "Skill", field_type_t::i32, 36, 4, skill_names, nullptr, 0, "Effect #3" },
+	{ "Attribute", field_type_t::i32, 52, 4, attribute_names, nullptr, 0, "Effect #3" },
 };
 
 static const field_def_t scpt_schd_fields[] = {

@@ -192,3 +192,28 @@ const std::vector<std::string> & optional_sub_records(const std::string & record
 
 	return it_roster->second;
 }
+
+bool is_repeatable_sub_record(const std::string & record_type, const std::string & sub_type)
+{
+	static const std::map<std::string, std::set<std::string>> repeatable = {
+		{ "NPC_", { "NPCO", "NPCS", "AI_W", "AI_T", "AI_F", "AI_E", "AI_A", "DODT", "DNAM" } },
+		{ "CREA", { "NPCO", "NPCS", "AI_W", "AI_T", "AI_F", "AI_E", "AI_A", "DODT", "DNAM" } },
+		{ "CONT", { "NPCO" } },
+		{ "RACE", { "NPCS" } },
+		{ "BSGN", { "NPCS" } },
+		{ "FACT", { "RNAM", "ANAM", "INTV" } },
+		{ "REGN", { "SNAM" } },
+		{ "SPEL", { "ENAM" } },
+		{ "ENCH", { "ENAM" } },
+		{ "ALCH", { "ENAM" } },
+		{ "INGR", { "ENAM" } },
+		{ "LEVI", { "INAM", "INTV" } },
+		{ "LEVC", { "CNAM", "INTV" } },
+	};
+
+	const auto it_record = repeatable.find(record_type);
+	if (it_record == repeatable.end())
+		return false;
+
+	return it_record->second.count(sub_type) > 0;
+}

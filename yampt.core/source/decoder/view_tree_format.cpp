@@ -368,6 +368,21 @@ static std::string decode_hex_bytes(const char * ptr, size_t available, size_t m
 	return hex_output;
 }
 
+static std::string global_type_name(char type_char)
+{
+	switch (type_char)
+	{
+	case 's':
+		return "Short";
+	case 'l':
+		return "Long";
+	case 'f':
+		return "Float";
+	default:
+		return "Error";
+	}
+}
+
 std::string decode_field(const field_def_t & field, const char * data, size_t data_size, codepage_t codepage)
 {
 	if (field.type == field_type_t::bool_bit)
@@ -479,6 +494,9 @@ std::string decode_field(const field_def_t & field, const char * data, size_t da
 
 	case field_type_t::scvr_subject:
 		return scvr_subject_display(data, data_size);
+
+	case field_type_t::global_type:
+		return global_type_name(ptr[0]);
 	}
 
 	return "";

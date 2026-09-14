@@ -25,7 +25,8 @@ enum class field_type_t
 	raw,
 	scvr_type,
 	scvr_operator,
-	scvr_subject
+	scvr_subject,
+	global_type
 };
 
 struct field_def_t

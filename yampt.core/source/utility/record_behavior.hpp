@@ -92,3 +92,5 @@ field_pair_role_t find_field_pair_role(
     size_t field_offset);
 
 const std::vector<std::string> & optional_sub_records(const std::string & record_type);
+
+bool is_repeatable_sub_record(const std::string & record_type, const std::string & sub_type);

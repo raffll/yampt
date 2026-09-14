@@ -293,6 +293,20 @@ std::string encode_field(const encode_context_t & context)
 
 	case field_type_t::scvr_subject:
 		return encode_string_fixed(context);
+
+	case field_type_t::global_type:
+	{
+		if (context.input == "Short")
+			return "s";
+
+		if (context.input == "Long")
+			return "l";
+
+		if (context.input == "Float")
+			return "f";
+
+		return {};
+	}
 	}
 
 	return {};

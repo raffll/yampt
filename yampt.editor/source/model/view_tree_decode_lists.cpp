@@ -5,6 +5,7 @@
 #include <decoder/view_tree_format.hpp>
 #include <scanner/dial_info_align.hpp>
 #include <scanner/record_conflict.hpp>
+#include <utility/record_behavior.hpp>
 #include <algorithm>
 
 namespace {
@@ -262,7 +263,14 @@ void view_tree_model_t::set_record_generic(record_context_t & context, const con
 	}
 
 	for (const auto & slot : unified_slots)
-		m_rows.push_back(build_slot_row(col_count, all_subs, col_type_indices, slot));
+	{
+		auto row = build_slot_row(col_count, all_subs, col_type_indices, slot);
+
+		if (is_repeatable_sub_record(m_record_type, slot.type))
+			row.label += " #" + std::to_string(slot.occurrence);
+
+		m_rows.push_back(std::move(row));
+	}
 }
 
 void view_tree_model_t::set_record_info(record_context_t & context, const conflict_entry_t & entry)
@@ -427,15 +435,11 @@ void view_tree_model_t::collect_container_entries(record_context_t & context, sl
 
 void view_tree_model_t::emit_slot_rows(record_context_t & context, slot_build_context_t & build_ctx)
 {
-	std::unordered_map<std::string, int> type_counts;
-	for (const auto & slot : build_ctx.unified_slots)
-		++type_counts[slot.type];
-
 	for (const auto & slot : build_ctx.unified_slots)
 	{
 		auto row = build_slot_row(context.col_count, context.all_sub_records, build_ctx.col_type_indices, slot);
 
-		if (type_counts[slot.type] > 1)
+		if (is_repeatable_sub_record(m_record_type, slot.type))
 			row.label += " #" + std::to_string(slot.occurrence);
 
 		m_rows.push_back(std::move(row));
@@ -529,8 +533,12 @@ void view_tree_model_t::emit_faction_rows(record_context_t & context, slot_build
 
 		if (!is_pair)
 		{
-			m_rows.push_back(
-			    build_slot_row(col_count, context.all_sub_records, build_ctx.col_type_indices, unified[i]));
+			auto row = build_slot_row(col_count, context.all_sub_records, build_ctx.col_type_indices, unified[i]);
+
+			if (is_repeatable_sub_record(m_record_type, unified[i].type))
+				row.label += " #" + std::to_string(unified[i].occurrence);
+
+			m_rows.push_back(std::move(row));
 			continue;
 		}
 

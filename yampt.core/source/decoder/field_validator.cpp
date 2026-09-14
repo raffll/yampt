@@ -340,6 +340,11 @@ validate_result_t validate_field(
 
 	case field_type_t::scvr_subject:
 		return validate_string_fixed(input, codepage, field.size);
+
+	case field_type_t::global_type:
+		return (input == "Short" || input == "Long" || input == "Float")
+		           ? make_valid()
+		           : make_invalid("expected Short, Long or Float");
 	}
 
 	return make_invalid("unknown field type");
@@ -409,6 +414,7 @@ std::string range_hint(const field_def_t & field, size_t existing_sub_size)
 	case field_type_t::flags_u32:
 	case field_type_t::scvr_type:
 	case field_type_t::scvr_operator:
+	case field_type_t::global_type:
 		return {};
 	}
 

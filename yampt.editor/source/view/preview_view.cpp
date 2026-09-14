@@ -632,6 +632,16 @@ void preview_view_t::populate_value_selector()
 		break;
 	}
 
+	case field_type_t::global_type:
+	{
+		m_value_selector->addItem(tr("Short"));
+		m_value_selector->addItem(tr("Long"));
+		m_value_selector->addItem(tr("Float"));
+		m_value_selector->setCurrentText(QString::fromStdString(m_original_value));
+		m_value_selector->setVisible(true);
+		break;
+	}
+
 	default:
 		break;
 	}
