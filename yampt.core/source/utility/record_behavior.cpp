@@ -1,4 +1,5 @@
 #include "record_behavior.hpp"
+#include "../decoder/sub_record_schema.hpp"
 #include <cstring>
 #include <map>
 #include <set>
@@ -150,85 +151,13 @@ field_pair_role_t find_field_pair_role(
 	return field_pair_role_t::none;
 }
 
-const std::vector<std::string> & optional_sub_records(const std::string & record_type)
-{
-	static const std::map<std::string, std::vector<std::string>> roster = {
-		{ "ACTI", { "NAME", "MODL", "FNAM", "SCRI" } },
-		{ "ALCH", { "NAME", "MODL", "FNAM", "ITEX", "TEXT", "SCRI", "ALDT" } },
-		{ "APPA", { "NAME", "MODL", "FNAM", "ITEX", "SCRI", "AADT" } },
-		{ "ARMO", { "NAME", "MODL", "FNAM", "ITEX", "SCRI", "ENAM", "AODT" } },
-		{ "BOOK", { "NAME", "MODL", "FNAM", "ITEX", "SCRI", "TEXT", "BKDT" } },
-		{ "BSGN", { "NAME", "FNAM", "TNAM", "DESC" } },
-		{ "CLAS", { "NAME", "FNAM", "DESC", "CLDT" } },
-		{ "CLOT", { "NAME", "MODL", "FNAM", "ITEX", "ENAM", "SCRI", "CTDT" } },
-		{ "CONT", { "NAME", "MODL", "FNAM", "CNDT", "FLAG" } },
-		{ "CREA", { "NAME", "MODL", "FNAM", "SCRI", "XSCL", "NPDT", "FLAG", "AIDT" } },
-		{ "DOOR", { "NAME", "FNAM", "MODL", "SCIP", "SNAM", "ANAM" } },
-		{ "ENCH", { "NAME", "ENDT" } },
-		{ "GLOB", { "NAME", "FNAM", "FLTV" } },
-		{ "GMST", { "NAME", "STRV", "INTV", "FLTV" } },
-		{ "INGR", { "NAME", "MODL", "FNAM", "ITEX", "SCRI", "IRDT" } },
-		{ "LIGH", { "NAME", "FNAM", "MODL", "SCPT", "ITEX", "SNAM", "LHDT" } },
-		{ "LOCK", { "NAME", "MODL", "FNAM", "ITEX", "SCRI", "LKDT" } },
-		{ "MGEF",
-		  { "ITEX", "PTEX", "CVFX", "BVFX", "HVFX", "AVFX", "DESC", "CSND", "BSND", "HSND", "ASND", "INDX", "MEDT" } },
-		{ "MISC", { "NAME", "MODL", "FNAM", "ITEX", "ENAM", "SCRI", "MCDT" } },
-		{ "NPC_", { "NAME", "FNAM", "MODL", "RNAM", "ANAM", "BNAM", "CNAM", "KNAM", "SCRI", "NPDT", "FLAG", "AIDT" } },
-		{ "PROB", { "NAME", "MODL", "FNAM", "ITEX", "SCRI", "PBDT" } },
-		{ "REPA", { "NAME", "MODL", "FNAM", "ITEX", "SCRI", "RIDT" } },
-		{ "SKIL", { "DESC", "INDX", "SKDT" } },
-		{ "SNDG", { "NAME", "SNAM", "CNAM", "DATA" } },
-		{ "SOUN", { "NAME", "FNAM", "DATA" } },
-		{ "SPEL", { "NAME", "FNAM", "SPDT" } },
-		{ "STAT", { "NAME", "MODL" } },
-		{ "WEAP", { "NAME", "MODL", "FNAM", "ITEX", "ENAM", "SCRI", "WPDT" } },
-	};
-
-	static const std::vector<std::string> empty;
-
-	const auto it_roster = roster.find(record_type);
-	if (it_roster == roster.end())
-		return empty;
-
-	return it_roster->second;
-}
-
-const std::vector<std::string> & sub_record_sort_order()
-{
-	static const std::vector<std::string> order = {
-		"NAME", "FNAM", "MODL", "RNAM", "CNAM", "ANAM", "BNAM", "KNAM", "SNAM", "TNAM", "ONAM",
-		"PNAM", "INAM", "ITEX", "PTEX", "CVFX", "BVFX", "HVFX", "AVFX", "CSND", "BSND", "HSND",
-		"ASND", "DESC", "TEXT", "STRV", "INTV", "FLTV", "SCRI", "SCPT", "SCVR", "INDX", "XSCL",
-		"NPDT", "RADT", "CLDT", "FADT", "AADT", "WPDT", "AODT", "CTDT", "BKDT", "ALDT",
-		"IRDT", "MCDT", "LKDT", "PBDT", "RIDT", "LHDT", "ENDT", "SPDT", "SKDT", "MEDT", "CNDT",
-		"AIDT", "WEAT", "DATA", "FLAG", "AMBI", "WHGT", "NAM0", "ENAM", "NPCO", "NPCS", "AI_W",
-		"AI_T", "AI_F", "AI_E", "AI_A", "DODT", "DNAM"
-	};
-
-	return order;
-}
-
 bool is_repeatable_sub_record(const std::string & record_type, const std::string & sub_type)
 {
-	static const std::map<std::string, std::set<std::string>> repeatable = {
-		{ "NPC_", { "NPCO", "NPCS", "AI_W", "AI_T", "AI_F", "AI_E", "AI_A", "DODT", "DNAM" } },
-		{ "CREA", { "NPCO", "NPCS", "AI_W", "AI_T", "AI_F", "AI_E", "AI_A", "DODT", "DNAM" } },
-		{ "CONT", { "NPCO" } },
-		{ "RACE", { "NPCS" } },
-		{ "BSGN", { "NPCS" } },
-		{ "FACT", { "RNAM", "ANAM", "INTV" } },
-		{ "REGN", { "SNAM" } },
-		{ "SPEL", { "ENAM" } },
-		{ "ENCH", { "ENAM" } },
-		{ "ALCH", { "ENAM" } },
-		{ "INGR", { "ENAM" } },
-		{ "LEVI", { "INAM", "INTV" } },
-		{ "LEVC", { "CNAM", "INTV" } },
-	};
+	for (const auto & entry : record_composition(record_type))
+	{
+		if (sub_type == entry.sub_type)
+			return entry.kind == sub_record_kind_t::repeatable;
+	}
 
-	const auto it_record = repeatable.find(record_type);
-	if (it_record == repeatable.end())
-		return false;
-
-	return it_record->second.count(sub_type) > 0;
+	return false;
 }

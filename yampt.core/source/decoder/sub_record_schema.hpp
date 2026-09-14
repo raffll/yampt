@@ -48,6 +48,8 @@ struct sub_record_schema_t
 	size_t expected_size;
 	const field_def_t * fields;
 	size_t field_count;
+	bool repeatable = false;
+	const char * label = nullptr;
 };
 
 const sub_record_schema_t * find_schema(
@@ -60,6 +62,22 @@ const sub_record_schema_t * find_largest_schema(const std::string & record_type,
 const field_def_t * find_field_by_name(const sub_record_schema_t & schema, const char * field_name);
 
 const std::vector<sub_record_schema_t> & all_schemas();
+
+enum class sub_record_kind_t
+{
+	single_value,
+	multi_value,
+	repeatable
+};
+
+struct record_sub_record_t
+{
+	const char * sub_type;
+	const char * label;
+	sub_record_kind_t kind;
+};
+
+const std::vector<record_sub_record_t> & record_composition(const std::string & record_type);
 
 const char * effect_name_by_index(int index);
 const char * skill_name_by_index(int index);

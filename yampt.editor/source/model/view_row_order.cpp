@@ -28,6 +28,9 @@ int structural_tier(const row_kind_input_t & input)
 	if (input.is_info_chain)
 		return tier_list;
 
+	if (input.composition_tier >= 0)
+		return input.composition_tier;
+
 	if (input.is_optional_placeholder)
 		return input.has_schema ? tier_data_block : tier_single_value;
 

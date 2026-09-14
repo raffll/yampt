@@ -604,13 +604,22 @@ static std::string build_schema_label(const std::string & sub_type, const std::m
 
 std::string make_sub_label(const std::string & sub_type, const std::string & record_type, size_t data_size)
 {
+	const auto * schema = find_schema(record_type, sub_type, data_size);
+	if (schema && schema->label != nullptr)
+		return sub_type + " - " + schema->label;
+
 	const auto & ctx_descs = context_descriptions();
 	auto ctx_it = ctx_descs.find({ record_type, sub_type });
 	if (ctx_it != ctx_descs.end())
 		return sub_type + " - " + ctx_it->second;
 
+	for (const auto & entry : record_composition(record_type))
+	{
+		if (sub_type == entry.sub_type && entry.label != nullptr)
+			return sub_type + " - " + entry.label;
+	}
+
 	const auto & descs = sub_record_descriptions();
-	const auto * schema = find_schema(record_type, sub_type, data_size);
 
 	if (schema)
 		return build_schema_label(sub_type, descs);

@@ -1,4 +1,5 @@
 #include <catch2/catch_all.hpp>
+#include <decoder/sub_record_schema.hpp>
 #include <model/view_row_order.hpp>
 #include <utility/record_behavior.hpp>
 
@@ -127,26 +128,79 @@ TEST_CASE("view_row_order::rank, FACT RNAM sits after FADT and before reactions"
 	REQUIRE(rnam < reaction);
 }
 
-TEST_CASE("sub_record_sort_order, begins with NAME FNAM MODL", "[u]")
+static int index_of(const std::vector<std::string> & order, const std::string & type)
 {
-	const auto & order = sub_record_sort_order();
+	for (size_t position = 0; position < order.size(); ++position)
+	{
+		if (order[position] == type)
+			return static_cast<int>(position);
+	}
 
-	REQUIRE(order.size() >= 3);
-	REQUIRE(order[0] == "NAME");
-	REQUIRE(order[1] == "FNAM");
-	REQUIRE(order[2] == "MODL");
+	return -1;
 }
 
-TEST_CASE("view_row_order::rank, shared field keeps identical rank across record types", "[u]")
+static std::vector<std::string> composition_order(const std::string & record_type)
 {
-	const auto & order = sub_record_sort_order();
+	std::vector<std::string> order;
+	for (const auto & entry : record_composition(record_type))
+		order.push_back(entry.sub_type);
 
-	const int fnam_first = view_row_order::rank(make_single("FNAM"), order);
-	const int fnam_second = view_row_order::rank(make_single("FNAM"), order);
+	return order;
+}
+
+TEST_CASE("record_composition, NPC_ orders NAME before MODL before FNAM", "[u]")
+{
+	const auto order = composition_order("NPC_");
+
+	const int name = index_of(order, "NAME");
+	const int modl = index_of(order, "MODL");
+	const int fnam = index_of(order, "FNAM");
+
+	REQUIRE(name >= 0);
+	REQUIRE(name < modl);
+	REQUIRE(modl < fnam);
+}
+
+static bool schema_has_sub_type(const std::string & sub_type)
+{
+	for (const auto & schema : all_schemas())
+	{
+		if (sub_type == schema.sub_type)
+			return true;
+	}
+
+	return false;
+}
+
+TEST_CASE("record_composition, every composed sub-record type has a schema", "[u]")
+{
+	static const std::vector<std::string> record_types = {
+		"ACTI", "ALCH", "APPA", "ARMO", "BODY", "BOOK", "BSGN", "CLAS", "CLOT", "CONT", "CREA",
+		"DOOR", "ENCH", "GLOB", "GMST", "INGR", "LIGH", "LOCK", "MGEF", "MISC", "NPC_",
+		"PROB", "RACE", "REPA", "SKIL", "SNDG", "SOUN", "SPEL", "SSCR", "STAT", "WEAP",
+		"DIAL", "INFO", "FACT", "LEVI", "LEVC", "REGN", "SCPT", "PGRD", "LAND", "CELL", "LTEX"
+	};
+
+	for (const auto & record_type : record_types)
+	{
+		for (const auto & entry : record_composition(record_type))
+		{
+			INFO("composed sub-record without schema: " << record_type << " " << entry.sub_type);
+			REQUIRE(schema_has_sub_type(entry.sub_type));
+		}
+	}
+}
+
+TEST_CASE("view_row_order::rank, WEAP composition places NAME before MODL before FNAM before SCRI", "[u]")
+{
+	const auto order = composition_order("WEAP");
+
+	const int name = view_row_order::rank(make_single("NAME"), order);
 	const int modl = view_row_order::rank(make_single("MODL"), order);
+	const int fnam = view_row_order::rank(make_single("FNAM"), order);
 	const int scri = view_row_order::rank(make_single("SCRI"), order);
 
-	REQUIRE(fnam_first == fnam_second);
-	REQUIRE(fnam_first < modl);
-	REQUIRE(modl < scri);
+	REQUIRE(name < modl);
+	REQUIRE(modl < fnam);
+	REQUIRE(fnam < scri);
 }

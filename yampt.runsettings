@@ -3,6 +3,6 @@
   <Catch2Adapter>
     <FilenameFilter>yampt\.tests</FilenameFilter>
     <DiscoverCommandLine>--list-tests --reporter xml *</DiscoverCommandLine>
-    <WorkingDirectory>_EXE_DIR_
+    <WorkingDirectory>_EXE_DIR_</WorkingDirectory>
   </Catch2Adapter>
 </RunSettings>

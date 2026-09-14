@@ -137,6 +137,27 @@ view_row_order::row_kind_input_t view_tree_model_t::classify_row(const view_node
 	input.has_schema = find_largest_schema(m_record_type, row.type) != nullptr;
 	input.is_repeatable = is_repeatable_sub_record(m_record_type, row.type);
 
+	for (const auto & entry : record_composition(m_record_type))
+	{
+		if (row.type != entry.sub_type)
+			continue;
+
+		switch (entry.kind)
+		{
+		case sub_record_kind_t::single_value:
+			input.composition_tier = view_row_order::tier_single_value;
+			break;
+		case sub_record_kind_t::multi_value:
+			input.composition_tier = view_row_order::tier_data_block;
+			break;
+		case sub_record_kind_t::repeatable:
+			input.composition_tier = view_row_order::tier_list;
+			break;
+		}
+
+		break;
+	}
+
 	return input;
 }
 
@@ -145,7 +166,9 @@ void view_tree_model_t::sort_rows_by_canonical_order()
 	if (m_record_type == "CELL")
 		return;
 
-	const auto & order = sub_record_sort_order();
+	std::vector<std::string> order;
+	for (const auto & entry : record_composition(m_record_type))
+		order.push_back(entry.sub_type);
 
 	std::stable_sort(
 	    m_rows.begin(),
@@ -571,8 +594,11 @@ void view_tree_model_t::set_show_optional_placeholders(bool value)
 
 void view_tree_model_t::append_optional_placeholders(size_t col_count)
 {
-	const auto & roster = optional_sub_records(m_record_type);
-	if (roster.empty())
+	if (m_record_type == "CELL")
+		return;
+
+	const auto & composition = record_composition(m_record_type);
+	if (composition.empty())
 		return;
 
 	std::set<std::string> present_types;
@@ -583,14 +609,17 @@ void view_tree_model_t::append_optional_placeholders(size_t col_count)
 	}
 
 	bool added_any = false;
-	for (const auto & sub_type : roster)
+	for (const auto & entry : composition)
 	{
-		if (present_types.count(sub_type) > 0)
+		if (entry.kind == sub_record_kind_t::repeatable)
+			continue;
+
+		if (present_types.count(entry.sub_type) > 0)
 			continue;
 
 		view_node_t row;
-		row.type = sub_type;
-		row.label = make_sub_label(sub_type, m_record_type, 0);
+		row.type = entry.sub_type;
+		row.label = make_sub_label(entry.sub_type, m_record_type, 0);
 		row.is_optional_placeholder = true;
 		row.row_conflict_all = conflict_all_t::only_one;
 		row.values.assign(col_count, non_existent_value);

@@ -19,6 +19,7 @@ struct row_kind_input_t
 	bool is_optional_placeholder = false;
 	bool has_schema = false;
 	bool is_repeatable = false;
+	int composition_tier = -1;
 };
 
 int structural_tier(const row_kind_input_t & input);

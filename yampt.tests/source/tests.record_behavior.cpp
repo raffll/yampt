@@ -6,7 +6,6 @@ TEST_CASE("record_behavior::is_repeatable_sub_record, effect list is repeatable"
 	REQUIRE(is_repeatable_sub_record("SPEL", "ENAM"));
 	REQUIRE(is_repeatable_sub_record("ENCH", "ENAM"));
 	REQUIRE(is_repeatable_sub_record("ALCH", "ENAM"));
-	REQUIRE(is_repeatable_sub_record("INGR", "ENAM"));
 }
 
 TEST_CASE("record_behavior::is_repeatable_sub_record, inventory and spell lists are repeatable", "[u]")

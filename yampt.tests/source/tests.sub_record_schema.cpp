@@ -256,6 +256,17 @@ TEST_CASE("sub_record_schema_t::find_schema, BOOK BKDT scroll field is enum_u32"
 	REQUIRE(std::string(schema->fields[4].name) == "Enchant Points");
 }
 
+TEST_CASE("sub_record_schema_t::find_schema, BOOK BKDT skill is int32 at offset 12", "[u]")
+{
+	const auto * schema = find_schema("BOOK", "BKDT", 20);
+	REQUIRE(schema != nullptr);
+	REQUIRE(std::string(schema->fields[3].name) == "Skill");
+	REQUIRE(schema->fields[3].type == field_type_t::i32);
+	REQUIRE(schema->fields[3].offset == 12);
+	REQUIRE(schema->fields[3].size == 4);
+	REQUIRE(schema->fields[3].enum_names != nullptr);
+}
+
 TEST_CASE("sub_record_schema_t::find_schema, CLAS CLDT playable is bool_bit", "[u]")
 {
 	const auto * schema = find_schema("CLAS", "CLDT", 60);
@@ -279,6 +290,166 @@ TEST_CASE("sub_record_schema_t::find_schema, CLAS CLDT playable is bool_bit", "[
 	}
 	REQUIRE(found_playable);
 	REQUIRE(found_services);
+}
+
+static const field_def_t * field_by_name(const sub_record_schema_t * schema, const std::string & name)
+{
+	if (schema == nullptr)
+		return nullptr;
+
+	for (size_t i = 0; i < schema->field_count; ++i)
+	{
+		if (name == schema->fields[i].name)
+			return &schema->fields[i];
+	}
+
+	return nullptr;
+}
+
+TEST_CASE("sub_record_schema_t::find_schema, NPC_ NPDT 52 packed layout", "[u]")
+{
+	const auto * schema = find_schema("NPC_", "NPDT", 52);
+	REQUIRE(schema != nullptr);
+
+	const auto * level = field_by_name(schema, "Level");
+	REQUIRE(level != nullptr);
+	REQUIRE(level->type == field_type_t::u16);
+	REQUIRE(level->offset == 0);
+
+	const auto * strength = field_by_name(schema, "Strength");
+	REQUIRE(strength->type == field_type_t::u8);
+	REQUIRE(strength->offset == 2);
+
+	const auto * health = field_by_name(schema, "Health");
+	REQUIRE(health->type == field_type_t::u16);
+	REQUIRE(health->offset == 38);
+
+	const auto * gold = field_by_name(schema, "Gold");
+	REQUIRE(gold->type == field_type_t::u32);
+	REQUIRE(gold->offset == 48);
+}
+
+TEST_CASE("sub_record_schema_t::find_schema, NPC_ NPDT 12 autocalc layout", "[u]")
+{
+	const auto * schema = find_schema("NPC_", "NPDT", 12);
+	REQUIRE(schema != nullptr);
+
+	const auto * disposition = field_by_name(schema, "Disposition");
+	REQUIRE(disposition->offset == 2);
+
+	const auto * gold = field_by_name(schema, "Gold");
+	REQUIRE(gold->type == field_type_t::u32);
+	REQUIRE(gold->offset == 8);
+}
+
+TEST_CASE("sub_record_schema_t::find_schema, WEAP WPDT layout", "[u]")
+{
+	const auto * schema = find_schema("WEAP", "WPDT", 32);
+	REQUIRE(schema != nullptr);
+
+	const auto * type = field_by_name(schema, "Type");
+	REQUIRE(type->type == field_type_t::enum_u16);
+	REQUIRE(type->offset == 8);
+
+	const auto * health = field_by_name(schema, "Health");
+	REQUIRE(health->type == field_type_t::u16);
+	REQUIRE(health->offset == 10);
+
+	const auto * enchant = field_by_name(schema, "Enchant Points");
+	REQUIRE(enchant->type == field_type_t::u16);
+	REQUIRE(enchant->offset == 20);
+
+	const auto * chop_min = field_by_name(schema, "Chop Min");
+	REQUIRE(chop_min->type == field_type_t::u8);
+	REQUIRE(chop_min->offset == 22);
+
+	const auto * flags = field_by_name(schema, "Flags");
+	REQUIRE(flags->type == field_type_t::flags_u32);
+	REQUIRE(flags->offset == 28);
+}
+
+TEST_CASE("sub_record_schema_t::find_schema, ARMO AODT layout", "[u]")
+{
+	const auto * schema = find_schema("ARMO", "AODT", 24);
+	REQUIRE(schema != nullptr);
+	REQUIRE(field_by_name(schema, "Weight")->offset == 4);
+	REQUIRE(field_by_name(schema, "Value")->offset == 8);
+	REQUIRE(field_by_name(schema, "Health")->offset == 12);
+	REQUIRE(field_by_name(schema, "Enchant Points")->offset == 16);
+	REQUIRE(field_by_name(schema, "Armor Rating")->offset == 20);
+}
+
+TEST_CASE("sub_record_schema_t::find_schema, AIDT packed layout", "[u]")
+{
+	const auto * schema = find_schema("NPC_", "AIDT", 12);
+	REQUIRE(schema != nullptr);
+
+	const auto * hello = field_by_name(schema, "Hello");
+	REQUIRE(hello->type == field_type_t::u16);
+	REQUIRE(hello->offset == 0);
+
+	const auto * fight = field_by_name(schema, "Fight");
+	REQUIRE(fight->type == field_type_t::u8);
+	REQUIRE(fight->offset == 2);
+
+	const auto * services = field_by_name(schema, "Services");
+	REQUIRE(services->type == field_type_t::flags_u32);
+	REQUIRE(services->offset == 8);
+}
+
+TEST_CASE("sub_record_schema_t::find_schema, ENCH ENDT layout", "[u]")
+{
+	const auto * schema = find_schema("ENCH", "ENDT", 16);
+	REQUIRE(schema != nullptr);
+	REQUIRE(field_by_name(schema, "Type")->offset == 0);
+	REQUIRE(field_by_name(schema, "Cost")->offset == 4);
+	REQUIRE(field_by_name(schema, "Charge")->offset == 8);
+	REQUIRE(field_by_name(schema, "Flags")->offset == 12);
+}
+
+TEST_CASE("sub_record_schema_t::find_schema, REPA RIDT uses before quality", "[u]")
+{
+	const auto * schema = find_schema("REPA", "RIDT", 16);
+	REQUIRE(schema != nullptr);
+	REQUIRE(field_by_name(schema, "Uses")->offset == 8);
+	REQUIRE(field_by_name(schema, "Quality")->offset == 12);
+}
+
+TEST_CASE("sub_record_schema_t::find_schema, LOCK LKDT quality before uses", "[u]")
+{
+	const auto * schema = find_schema("LOCK", "LKDT", 16);
+	REQUIRE(schema != nullptr);
+	REQUIRE(field_by_name(schema, "Quality")->offset == 8);
+	REQUIRE(field_by_name(schema, "Uses")->offset == 12);
+}
+
+TEST_CASE("sub_record_schema_t::find_schema, CLOT CTDT value and enchant are u16", "[u]")
+{
+	const auto * schema = find_schema("CLOT", "CTDT", 12);
+	REQUIRE(schema != nullptr);
+	REQUIRE(field_by_name(schema, "Value")->type == field_type_t::u16);
+	REQUIRE(field_by_name(schema, "Value")->offset == 8);
+	REQUIRE(field_by_name(schema, "Enchant Points")->type == field_type_t::u16);
+	REQUIRE(field_by_name(schema, "Enchant Points")->offset == 10);
+}
+
+TEST_CASE("sub_record_schema_t::find_schema, SSCR DATA is a string", "[u]")
+{
+	const auto * schema = find_schema("SSCR", "DATA", 0);
+	REQUIRE(schema != nullptr);
+	REQUIRE(schema->field_count == 1);
+	REQUIRE(schema->fields[0].type == field_type_t::string_var);
+}
+
+TEST_CASE("sub_record_schema_t::find_schema, LTEX INTV index and DATA texture", "[u]")
+{
+	const auto * intv = find_schema("LTEX", "INTV", 4);
+	REQUIRE(intv != nullptr);
+	REQUIRE(intv->fields[0].type == field_type_t::u32);
+
+	const auto * data = find_schema("LTEX", "DATA", 0);
+	REQUIRE(data != nullptr);
+	REQUIRE(data->fields[0].type == field_type_t::string_var);
 }
 
 #include <decoder/view_tree_format.hpp>
