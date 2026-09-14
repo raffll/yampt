@@ -1317,6 +1317,23 @@ const sub_record_schema_t * find_cell_data_schema(const char * data, size_t data
 	return (flags & cell_flag_interior) ? &interior_schema : &exterior_schema;
 }
 
+bool has_content_dependent_schema(const std::string & record_type, const std::string & sub_type)
+{
+	return record_type == "CELL" && sub_type == "DATA";
+}
+
+const sub_record_schema_t * content_dependent_schema(
+    const std::string & record_type,
+    const std::string & sub_type,
+    const char * data,
+    size_t data_size)
+{
+	if (!has_content_dependent_schema(record_type, sub_type))
+		return nullptr;
+
+	return find_cell_data_schema(data, data_size);
+}
+
 const field_def_t * find_field_by_name(const sub_record_schema_t & schema, const char * field_name)
 {
 	for (size_t field_index = 0; field_index < schema.field_count; ++field_index)

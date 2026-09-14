@@ -44,6 +44,15 @@ private:
 		other
 	};
 
+	struct row_kind_caps_t
+	{
+		bool can_copy = false;
+		bool can_remove = false;
+		bool can_lock = false;
+	};
+
+	static row_kind_caps_t caps_for(row_kind_t kind);
+
 	struct view_menu_context_t
 	{
 		const QModelIndex & index;

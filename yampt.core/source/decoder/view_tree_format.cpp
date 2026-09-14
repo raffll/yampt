@@ -368,6 +368,21 @@ static std::string decode_hex_bytes(const char * ptr, size_t available, size_t m
 	return hex_output;
 }
 
+std::string flag_bit_value(const char * data, size_t data_size, const field_def_t & field, int bit_index)
+{
+	if (data == nullptr || field.offset >= data_size)
+		return "";
+
+	const size_t byte_count = (field.type == field_type_t::flags_u8)    ? 1
+	                          : (field.type == field_type_t::flags_u16) ? 2
+	                                                                     : 4;
+
+	uint32_t value = 0;
+	std::memcpy(&value, data + field.offset, std::min(byte_count, data_size - field.offset));
+
+	return (value & (1u << bit_index)) ? "Yes" : "No";
+}
+
 std::string global_type_name(char type_char)
 {
 	switch (type_char)

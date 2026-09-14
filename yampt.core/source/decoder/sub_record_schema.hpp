@@ -61,6 +61,13 @@ const sub_record_schema_t * find_largest_schema(const std::string & record_type,
 
 const sub_record_schema_t * find_cell_data_schema(const char * data, size_t data_size);
 
+bool has_content_dependent_schema(const std::string & record_type, const std::string & sub_type);
+const sub_record_schema_t * content_dependent_schema(
+    const std::string & record_type,
+    const std::string & sub_type,
+    const char * data,
+    size_t data_size);
+
 const field_def_t * find_field_by_name(const sub_record_schema_t & schema, const char * field_name);
 
 const std::vector<sub_record_schema_t> & all_schemas();

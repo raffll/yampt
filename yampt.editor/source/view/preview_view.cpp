@@ -5,6 +5,7 @@
 #include <decoder/scvr_condition.hpp>
 #include <scanner/record_conflict.hpp>
 #include <utility/char_diff.hpp>
+#include <utility/record_behavior.hpp>
 #include <string>
 #include <vector>
 #include <QAbstractItemView>
@@ -413,7 +414,7 @@ void preview_view_t::update_selection(
 		m_pending_request.object_ref_index = occurrence.object_ref_index;
 	}
 
-	const bool is_leveled = (m_pending_request.record_type == "LEVI" || m_pending_request.record_type == "LEVC");
+	const bool is_leveled = decode_mode_for(m_pending_request.record_type) == decode_mode_t::leveled;
 	if (is_leveled && m_pending_request.sub_type == "INDX")
 	{
 		set_editing_enabled(false);
@@ -423,10 +424,8 @@ void preview_view_t::update_selection(
 		return;
 	}
 
-	const bool is_info = (m_pending_request.record_type == "INFO");
-	const bool is_record_id =
-	    (is_info && m_pending_request.sub_type == "INAM") || (!is_info && m_pending_request.sub_type == "NAME");
-	if (is_record_id)
+	const char * const record_id_sub_type = record_id_sub_type_for(m_pending_request.record_type);
+	if (record_id_sub_type != nullptr && m_pending_request.sub_type == record_id_sub_type)
 	{
 		set_editing_enabled(false);
 		m_right_cached = (cell_value == non_existent_value) ? std::string {} : cell_value;
@@ -435,7 +434,7 @@ void preview_view_t::update_selection(
 		return;
 	}
 
-	if (m_pending_request.record_type == "LAND")
+	if (read_only_reason_for(m_pending_request.record_type) == read_only_reason_t::landscape_data)
 	{
 		set_editing_enabled(false);
 		m_right_cached = (cell_value == non_existent_value) ? std::string {} : cell_value;

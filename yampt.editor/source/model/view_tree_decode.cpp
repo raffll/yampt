@@ -40,19 +40,6 @@ static bool check_all_identical(const std::vector<std::string> & values)
 	return true;
 }
 
-static std::string read_flag_value(const sub_record_view_t & sv, const field_def_t & fdef, int bit_index)
-{
-	if (fdef.offset >= sv.size)
-		return "";
-
-	uint32_t value = 0;
-	const size_t byte_count = (fdef.type == field_type_t::flags_u8)    ? 1
-	                          : (fdef.type == field_type_t::flags_u16) ? 2
-	                                                                   : 4;
-	std::memcpy(&value, sv.data + fdef.offset, std::min(byte_count, sv.size - fdef.offset));
-	return (value & (1u << bit_index)) ? "Yes" : "No";
-}
-
 static std::string format_hex_chunk(const char * data_ptr, size_t data_size, size_t offset)
 {
 	if (offset >= data_size)
@@ -166,10 +153,11 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 		row.cell_conflict_this = record_conflict::compute_conflict_this(row.values);
 	}
 
-	const bool is_cell_data = (m_record_type == "CELL" && slot.type == "DATA");
-	const auto * schema = first_data ? (is_cell_data ? find_cell_data_schema(first_data, first_size)
-	                                                  : find_largest_schema(m_record_type, slot.type))
-	                                 : nullptr;
+	const sub_record_schema_t * schema = nullptr;
+	if (first_data && has_content_dependent_schema(m_record_type, slot.type))
+		schema = content_dependent_schema(m_record_type, slot.type, first_data, first_size);
+	else if (first_data)
+		schema = find_largest_schema(m_record_type, slot.type);
 	if (schema && first_data)
 		decode_schema_children(row, schema, first_data, first_size, col_count, all_subs, col_indices, slot);
 	else if (first_data && first_size > 0 && !row.values.empty() && !row.values[0].empty() && row.values[0][0] == '<')
@@ -270,7 +258,8 @@ void view_tree_model_t::decode_schema_children(
 						continue;
 					}
 
-					frow.values[col] = read_flag_value(subs[it_type->second[slot.occurrence]], fdef, bit);
+					const auto & flag_sv = subs[it_type->second[slot.occurrence]];
+					frow.values[col] = flag_bit_value(flag_sv.data, flag_sv.size, fdef, bit);
 				}
 
 				frow.all_identical = check_all_identical(frow.values);
@@ -331,9 +320,10 @@ void view_tree_model_t::decode_schema_children(
 
 			const auto & sv = all_subs[col][idx];
 
-			const bool is_cell_data_column = (m_record_type == "CELL" && slot.type == "DATA");
-			const auto * column_schema = is_cell_data_column ? find_cell_data_schema(sv.data, sv.size)
-			                                                 : find_schema(m_record_type, slot.type, sv.size);
+			const sub_record_schema_t * column_schema =
+			    has_content_dependent_schema(m_record_type, slot.type)
+			        ? content_dependent_schema(m_record_type, slot.type, sv.data, sv.size)
+			        : find_schema(m_record_type, slot.type, sv.size);
 			if (column_schema == nullptr)
 			{
 				app_logger_t::add_log(

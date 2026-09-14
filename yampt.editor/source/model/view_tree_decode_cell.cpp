@@ -41,19 +41,6 @@ static void propagate_conflict_upward(
 	}
 }
 
-static std::string read_flag_value(const sub_record_view_t & sv, const field_def_t & fdef, int bit_index)
-{
-	if (fdef.offset >= sv.size)
-		return "";
-
-	uint32_t value = 0;
-	const size_t byte_count = (fdef.type == field_type_t::flags_u8)    ? 1
-	                          : (fdef.type == field_type_t::flags_u16) ? 2
-	                                                                   : 4;
-	std::memcpy(&value, sv.data + fdef.offset, std::min(byte_count, sv.size - fdef.offset));
-	return (value & (1u << bit_index)) ? "1" : "0";
-}
-
 static std::string format_hex_chunk(const char * data_ptr, size_t data_size, size_t offset)
 {
 	if (offset >= data_size)
@@ -263,7 +250,8 @@ void view_tree_model_t::decode_schema_children_ref(
 					const auto & refs = col < col_refs.size() ? col_refs[col] : empty_refs;
 					const auto result = find_ref_sub_record(subs, refs, object_index, slot.type, slot.occurrence);
 
-					frow.values[col] = result.view.data ? read_flag_value(result.view, fdef, bit) : non_existent_value;
+					frow.values[col] =
+					    result.view.data ? flag_bit_value(result.view.data, result.view.size, fdef, bit) : non_existent_value;
 				}
 
 				frow.all_identical = check_all_identical(frow.values);

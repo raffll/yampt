@@ -111,6 +111,28 @@ static bool pattern_compiles(const std::string & pattern)
 	}
 }
 
+view_context_menu_t::row_kind_caps_t view_context_menu_t::caps_for(row_kind_t kind)
+{
+	switch (kind)
+	{
+	case row_kind_t::sub_record:
+	case row_kind_t::schema_record:
+		return { .can_copy = true, .can_remove = true, .can_lock = true };
+
+	case row_kind_t::group:
+	case row_kind_t::field_of_group:
+		return { .can_copy = true, .can_remove = true, .can_lock = true };
+
+	case row_kind_t::field_of_schema:
+		return { .can_copy = true, .can_remove = true, .can_lock = true };
+
+	case row_kind_t::other:
+		return {};
+	}
+
+	return {};
+}
+
 view_context_menu_t::view_context_menu_t(
     plugin_session_t & session,
     record_view_t & record_view,
@@ -138,7 +160,8 @@ void view_context_menu_t::show_nav_menu(const QPoint & global_pos, const nav_tre
 
 	if (!info.record_id.empty() && is_active)
 	{
-		if (m_session.scan().plugin_filename(info.plugin_idx) == merged_patch::filename)
+		if (m_session.scan().plugin_filename(info.plugin_idx) == merged_patch::filename &&
+		    record_allows_lock(info.rec_type))
 		{
 			merge_lock_t lock;
 			lock.rec_type = info.rec_type;
@@ -165,7 +188,8 @@ void view_context_menu_t::show_nav_menu(const QPoint & global_pos, const nav_tre
 		auto * copy_action = menu.addAction(
 		    QCoreApplication::translate("yEditor", "Copy Record to Active Plugin"),
 		    [this, info]() { m_merge.copy_whole_record(info.plugin_idx, info.rec_type, info.record_id); });
-		copy_action->setEnabled(m_session.scan().has_active() && !record_in_active);
+		copy_action->setEnabled(
+		    m_session.scan().has_active() && !record_in_active && record_allows_copy(info.rec_type));
 
 		menu.addSeparator();
 
@@ -264,6 +288,9 @@ void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_mo
 
 void view_context_menu_t::add_exclude_record_action(QMenu & menu, const nav_tree_model_t::node_info_t & info)
 {
+	if (!record_allows_exclude(info.rec_type))
+		return;
+
 	const auto current_pattern = m_settings.merge_exclusion_pattern();
 
 	exclusion_resolver_t resolver;
@@ -381,11 +408,19 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 		const bool record_in_active = m_session.scan().find_active_content(rec_type, record_id) != nullptr;
 
 		if (is_on_active && is_on_merged_patch)
-			build_lock_menu(menu, context);
+		{
+			if (record_allows_lock(rec_type))
+				build_lock_menu(menu, context);
+		}
 		else if (!record_in_active)
-			build_copy_to_merge_menu(menu, context);
-		else
+		{
+			if (record_allows_copy(rec_type))
+				build_copy_to_merge_menu(menu, context);
+		}
+		else if (record_allows_copy(rec_type))
+		{
 			build_source_copy_menu(menu, context);
+		}
 	}
 
 	if (kind == row_kind_t::sub_record || kind == row_kind_t::schema_record)
@@ -587,6 +622,9 @@ void view_context_menu_t::build_source_copy_menu(QMenu & menu, const view_menu_c
 
 void view_context_menu_t::build_merge_remove_menu(QMenu & menu, const view_menu_context_t & context)
 {
+	if (!caps_for(context.kind).can_remove)
+		return;
+
 	const auto & visible = m_record_view.model()->rows();
 
 	switch (context.kind)
@@ -741,7 +779,8 @@ void view_context_menu_t::build_lock_menu(QMenu & menu, const view_menu_context_
 	    lock.scope == lock_scope_t::sub_record || lock.scope == lock_scope_t::field || lock.scope == lock_scope_t::bit;
 	const bool invalid_sub_type = needs_sub_type && lock.sub_type.empty();
 	const bool invalid_group = lock.scope == lock_scope_t::group && lock.group_start < 0;
-	const bool can_lock = !invalid_sub_type && !invalid_group;
+	const bool can_lock =
+	    caps_for(context.kind).can_lock && record_allows_lock(context.rec_type) && !invalid_sub_type && !invalid_group;
 
 	const bool locked = can_lock && m_merge.is_active_locked(lock);
 

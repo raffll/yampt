@@ -377,7 +377,8 @@ void view_tree_model_t::set_record_info(record_context_t & context, const confli
 
 void view_tree_model_t::collect_leveled_entries(record_context_t & context, slot_build_context_t & build_ctx)
 {
-	const std::string id_type = (m_record_type == "LEVC") ? "CNAM" : "INAM";
+	const char * const id_type_name = leveled_item_sub_type_for(m_record_type);
+	const std::string id_type = id_type_name != nullptr ? id_type_name : std::string {};
 
 	alignment_rule_t rule;
 	rule.anchor_type = id_type;
@@ -445,7 +446,8 @@ void view_tree_model_t::emit_leveled_rows(record_context_t & context, slot_build
 	const auto & unified = build_ctx.unified_slots;
 	const auto col_count = context.col_count;
 	const bool is_creature = (m_record_type == "LEVC");
-	const std::string id_type = is_creature ? "CNAM" : "INAM";
+	const char * const id_type_name = leveled_item_sub_type_for(m_record_type);
+	const std::string id_type = id_type_name != nullptr ? id_type_name : std::string {};
 	int entry_index = 0;
 
 	for (size_t i = 0; i < unified.size(); ++i)

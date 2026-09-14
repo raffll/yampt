@@ -374,3 +374,23 @@ TEST_CASE("view_tree_format::global_type_name, unknown char is Error", "[u]")
 {
 	REQUIRE(global_type_name('x') == "Error");
 }
+
+TEST_CASE("view_tree_format::flag_bit_value, set and unset bits read Yes and No", "[u]")
+{
+	field_def_t field { "Flags", field_type_t::flags_u32, 0, 4, nullptr, nullptr, 0 };
+
+	uint32_t value = 0x2;
+	char data[4] = {};
+	std::memcpy(data, &value, 4);
+
+	REQUIRE(flag_bit_value(data, 4, field, 1) == "Yes");
+	REQUIRE(flag_bit_value(data, 4, field, 0) == "No");
+}
+
+TEST_CASE("view_tree_format::flag_bit_value, offset beyond size is empty", "[u]")
+{
+	field_def_t field { "Flags", field_type_t::flags_u8, 8, 1, nullptr, nullptr, 0 };
+
+	char data[4] = {};
+	REQUIRE(flag_bit_value(data, 4, field, 0).empty());
+}

@@ -70,16 +70,22 @@ enum class merge_strategy_t
 	no_merge
 };
 
+enum class read_only_reason_t
+{
+	editable,
+	landscape_data
+};
+
 struct record_behavior_t
 {
-	const char * record_type;
-	decode_mode_t decode_mode;
-	copy_strategy_t copy_strategy;
-	const sub_record_rule_t * sub_rules;
-	size_t sub_rule_count;
-	const sub_record_rule_t * wildcard_rule;
-	const paired_merge_rule_t * paired_rules;
-	size_t paired_rule_count;
+	const char * record_type = "*";
+	decode_mode_t decode_mode = decode_mode_t::generic;
+	copy_strategy_t copy_strategy = copy_strategy_t::whole_record;
+	const sub_record_rule_t * sub_rules = nullptr;
+	size_t sub_rule_count = 0;
+	const sub_record_rule_t * wildcard_rule = nullptr;
+	const paired_merge_rule_t * paired_rules = nullptr;
+	size_t paired_rule_count = 0;
 	bool atomic_groups = false;
 	merge_strategy_t merge_strategy = merge_strategy_t::generic;
 	bool enam_effect_list = false;
@@ -87,6 +93,11 @@ struct record_behavior_t
 	const char * leveled_item_sub_type = nullptr;
 	const char * const * keyed_list_sub_types = nullptr;
 	size_t keyed_list_sub_type_count = 0;
+	const char * record_id_sub_type = "NAME";
+	read_only_reason_t read_only_reason = read_only_reason_t::editable;
+	bool allows_copy = true;
+	bool allows_lock = true;
+	bool allows_exclude = true;
 };
 
 enum class field_pair_role_t
@@ -114,3 +125,8 @@ bool is_enam_effect_list(const std::string & record_type);
 bool is_merge_excluded(const std::string & record_type);
 decode_mode_t decode_mode_for(const std::string & record_type);
 const char * leveled_item_sub_type_for(const std::string & record_type);
+const char * record_id_sub_type_for(const std::string & record_type);
+read_only_reason_t read_only_reason_for(const std::string & record_type);
+bool record_allows_copy(const std::string & record_type);
+bool record_allows_lock(const std::string & record_type);
+bool record_allows_exclude(const std::string & record_type);
