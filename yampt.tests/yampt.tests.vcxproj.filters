@@ -53,7 +53,7 @@
     <ClCompile Include="source\tests.theme_system.cpp" />
     <ClCompile Include="source\tests.sub_record_schema.cpp" />
     <ClCompile Include="source\tests.record_behavior.cpp" />
-    <ClCompile Include="source\tests.view_row_order.cpp" />
+    <ClCompile Include="source\tests.record_composition.cpp" />
     <ClCompile Include="source\tests.view_tree_format.cpp" />
     <ClCompile Include="source\tests.sub_record_merge.cpp" />
     <ClCompile Include="source\tests.merge_byte_splice.cpp" />
@@ -158,7 +158,6 @@
     <ClCompile Include="..\yampt.editor\source\model\nav_tree_model.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\lua_tree_model.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\editable_column_set.cpp" />
-    <ClCompile Include="..\yampt.editor\source\model\view_row_order.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\view_tree_model.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\field_binary_resolver.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\view_tree_decode.cpp" />

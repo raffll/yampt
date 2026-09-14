@@ -1,7 +1,6 @@
 #include "view_tree_model.hpp"
 #include "../view/plugin_icon.hpp"
 #include "editable_column_set.hpp"
-#include "view_row_order.hpp"
 #include <decoder/view_tree_format.hpp>
 #include <scanner/record_conflict.hpp>
 #include <utility/record_behavior.hpp>
@@ -125,56 +124,31 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 	endResetModel();
 }
 
-view_row_order::row_kind_input_t view_tree_model_t::classify_row(const view_node_t & row) const
-{
-	view_row_order::row_kind_input_t input;
-	input.type = row.type;
-	input.size = row.size;
-	input.occurrence = row.occurrence;
-	input.has_children = !row.children.empty();
-	input.is_info_chain = row.is_info_chain;
-	input.is_optional_placeholder = row.is_optional_placeholder;
-	input.has_schema = find_largest_schema(m_record_type, row.type) != nullptr;
-	input.is_repeatable = is_repeatable_sub_record(m_record_type, row.type);
-
-	for (const auto & entry : record_composition(m_record_type))
-	{
-		if (row.type != entry.sub_type)
-			continue;
-
-		switch (entry.kind)
-		{
-		case sub_record_kind_t::single_value:
-			input.composition_tier = view_row_order::tier_single_value;
-			break;
-		case sub_record_kind_t::multi_value:
-			input.composition_tier = view_row_order::tier_data_block;
-			break;
-		case sub_record_kind_t::repeatable:
-			input.composition_tier = view_row_order::tier_list;
-			break;
-		}
-
-		break;
-	}
-
-	return input;
-}
-
 void view_tree_model_t::sort_rows_by_canonical_order()
 {
 	if (m_record_type == "CELL")
 		return;
 
-	std::vector<std::string> order;
-	for (const auto & entry : record_composition(m_record_type))
-		order.push_back(entry.sub_type);
+	const auto & composition = record_composition(m_record_type);
+
+	auto rank_of = [this, &composition](const view_node_t & row) -> int
+	{
+		if (row.type == "Record Header")
+			return -1;
+
+		for (size_t position = 0; position < composition.size(); ++position)
+		{
+			if (row.type == composition[position].sub_type)
+				return static_cast<int>(position);
+		}
+
+		return static_cast<int>(composition.size());
+	};
 
 	std::stable_sort(
 	    m_rows.begin(),
 	    m_rows.end(),
-	    [this, &order](const view_node_t & lhs, const view_node_t & rhs)
-	    { return view_row_order::rank(classify_row(lhs), order) < view_row_order::rank(classify_row(rhs), order); });
+	    [&rank_of](const view_node_t & lhs, const view_node_t & rhs) { return rank_of(lhs) < rank_of(rhs); });
 }
 
 size_t view_tree_model_t::setup_columns(plugin_scan_t & scan, const conflict_entry_t & entry)

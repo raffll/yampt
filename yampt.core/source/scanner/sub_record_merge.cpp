@@ -243,7 +243,7 @@ std::string sub_record_merge_t::merge_fields_three_way(const field_merge_input_t
 {
 	std::string result(input.current, input.size);
 
-	const auto * schema = find_largest_schema(input.rec_type, input.sub_type);
+	const auto * schema = find_schema(input.rec_type, input.sub_type, input.size);
 	if (!schema)
 	{
 		app_logger_t::add_log("[error] no schema for " + input.rec_type + ":" + input.sub_type + "\r\n", true);

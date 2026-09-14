@@ -1,6 +1,5 @@
 #pragma once
 
-#include "view_row_order.hpp"
 #include <decoder/content_alignment.hpp>
 #include <decoder/sub_record_iter.hpp>
 #include <decoder/sub_record_schema.hpp>
@@ -183,7 +182,6 @@ private:
 	void set_record_dial(plugin_scan_t & scan, record_context_t & context, const conflict_entry_t & entry);
 	void set_record_generic(record_context_t & context, const conflict_entry_t & entry);
 	void sort_rows_by_canonical_order();
-	view_row_order::row_kind_input_t classify_row(const view_node_t & row) const;
 	void append_optional_placeholders(size_t col_count);
 
 	void collect_leveled_entries(record_context_t & context, slot_build_context_t & build_ctx);

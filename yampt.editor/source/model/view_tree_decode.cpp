@@ -162,7 +162,7 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 		row.cell_conflict_this = record_conflict::compute_conflict_this(row.values);
 	}
 
-	const auto * schema = find_largest_schema(m_record_type, slot.type);
+	const auto * schema = first_data ? find_schema(m_record_type, slot.type, first_size) : nullptr;
 	if (schema && first_data)
 		decode_schema_children(row, schema, first_data, first_size, col_count, all_subs, col_indices, slot);
 	else if (first_data && first_size > 0 && !row.values.empty() && !row.values[0].empty() && row.values[0][0] == '<')

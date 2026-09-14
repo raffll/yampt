@@ -14,6 +14,18 @@ static bool check_all_identical(const std::vector<std::string> & values)
 	return true;
 }
 
+static void apply_cell_composition_label(view_tree_model_t::view_node_t & row, const std::string & section_key)
+{
+	for (const auto & entry : record_composition(section_key))
+	{
+		if (row.type != entry.sub_type || entry.label == nullptr)
+			continue;
+
+		row.label = row.type + " - " + entry.label;
+		return;
+	}
+}
+
 static void propagate_conflict_upward(
     view_tree_model_t::view_node_t & parent,
     const view_tree_model_t::view_node_t & child,
@@ -363,8 +375,6 @@ view_tree_model_t::view_node_t view_tree_model_t::build_ref_child(
 	}
 
 	const auto * schema = first_data ? find_schema(m_record_type, slot.type, first_size) : nullptr;
-	if (!schema && first_data)
-		schema = find_schema("*", slot.type, first_size);
 
 	if (schema && schema->field_count > 1)
 	{
@@ -372,6 +382,7 @@ view_tree_model_t::view_node_t view_tree_model_t::build_ref_child(
 		sub_group.type = slot.type;
 		sub_group.size = 0;
 		sub_group.label = make_sub_label(slot.type, m_record_type, first_size);
+		apply_cell_composition_label(sub_group, "CELL@ref");
 		sub_group.values.resize(col_count);
 		sub_group.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
 		sub_group.row_conflict_all = conflict_all_t::only_one;
@@ -440,6 +451,7 @@ view_tree_model_t::view_node_t view_tree_model_t::build_ref_child(
 	}
 
 	child_field.label = make_sub_label(slot.type, m_record_type, first_size);
+	apply_cell_composition_label(child_field, "CELL@ref");
 	child_field.all_identical = check_all_identical(child_field.values);
 	child_field.row_conflict_all = record_conflict::compute_conflict_all_skip_empty(child_field.values);
 	child_field.cell_conflict_this = record_conflict::compute_conflict_this_skip_empty(child_field.values);
@@ -485,6 +497,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 			continue;
 
 		auto row = build_slot_row(col_count, all_subs, col_header_indices, slot);
+		apply_cell_composition_label(row, "CELL");
 		m_rows.push_back(std::move(row));
 	}
 
