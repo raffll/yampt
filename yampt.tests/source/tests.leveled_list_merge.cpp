@@ -544,15 +544,21 @@ TEST_CASE("auto_merge_t::execute, leveled list entry level merges from plugin fi
 	const auto plugin_body = make_tes3_header_record() +
 	                         make_record("LEVI", make_levi_header("test_list", 1, 0, 1) +
 	                                                 make_levi_entry("dwe_long", 14));
+	const auto revert_body = make_tes3_header_record() +
+	                         make_record("LEVI", make_levi_header("test_list", 1, 0, 1) +
+	                                                 make_levi_entry("dwe_long", 13));
 
 	const auto master_path = temp_plugin_path("yampt_levi_master.esm");
 	const auto plugin_path = temp_plugin_path("yampt_levi_plugin.esp");
+	const auto revert_path = temp_plugin_path("yampt_levi_revert.esp");
 	write_plugin_file(master_path, master_body);
 	write_plugin_file(plugin_path, plugin_body);
+	write_plugin_file(revert_path, revert_body);
 
 	plugin_scan_t scan;
 	scan.load_plugin(master_path);
 	scan.load_plugin(plugin_path);
+	scan.load_plugin(revert_path);
 	scan.set_active_plugin("Merged Patch.esp");
 	scan.rebuild_conflicts();
 
@@ -573,6 +579,7 @@ TEST_CASE("auto_merge_t::execute, leveled list entry level merges from plugin fi
 
 	fs::remove(master_path);
 	fs::remove(plugin_path);
+	fs::remove(revert_path);
 }
 
 // ============================================================================

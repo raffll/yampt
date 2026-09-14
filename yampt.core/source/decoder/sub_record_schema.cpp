@@ -1017,6 +1017,50 @@ static const field_def_t info_nnam_fields[] = {
 	{ "Next Info", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
 };
 
+static const field_def_t enam_name_string_fields[] = {
+	{ "Enchantment", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t rgnn_string_fields[] = {
+	{ "Region", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t ptex_string_fields[] = {
+	{ "Particle Texture", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t cvfx_string_fields[] = {
+	{ "Casting Visual", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t bvfx_string_fields[] = {
+	{ "Bolt Visual", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t hvfx_string_fields[] = {
+	{ "Hit Visual", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t avfx_string_fields[] = {
+	{ "Area Visual", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t csnd_string_fields[] = {
+	{ "Casting Sound", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t bsnd_string_fields[] = {
+	{ "Bolt Sound", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t hsnd_string_fields[] = {
+	{ "Hit Sound", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t asnd_string_fields[] = {
+	{ "Area Sound", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
 static const std::vector<sub_record_schema_t> & build_schemas()
 {
 	static const std::vector<sub_record_schema_t> schemas = {
@@ -1097,6 +1141,22 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 		{ "*", "INDX", 4, indx_fields, ARRAY_COUNT(indx_fields) },
 		{ "*", "INDX", 1, armo_indx_fields, ARRAY_COUNT(armo_indx_fields) },
 		{ "BOOK", "TEXT", 0, text_fields, ARRAY_COUNT(text_fields) },
+		{ "ALCH", "TEXT", 0, text_fields, ARRAY_COUNT(text_fields) },
+		{ "ARMO", "ENAM", 0, enam_name_string_fields, ARRAY_COUNT(enam_name_string_fields) },
+		{ "BOOK", "ENAM", 0, enam_name_string_fields, ARRAY_COUNT(enam_name_string_fields) },
+		{ "CLOT", "ENAM", 0, enam_name_string_fields, ARRAY_COUNT(enam_name_string_fields) },
+		{ "MISC", "ENAM", 0, enam_name_string_fields, ARRAY_COUNT(enam_name_string_fields) },
+		{ "WEAP", "ENAM", 0, enam_name_string_fields, ARRAY_COUNT(enam_name_string_fields) },
+		{ "CELL", "RGNN", 0, rgnn_string_fields, ARRAY_COUNT(rgnn_string_fields) },
+		{ "MGEF", "PTEX", 0, ptex_string_fields, ARRAY_COUNT(ptex_string_fields) },
+		{ "MGEF", "CVFX", 0, cvfx_string_fields, ARRAY_COUNT(cvfx_string_fields) },
+		{ "MGEF", "BVFX", 0, bvfx_string_fields, ARRAY_COUNT(bvfx_string_fields) },
+		{ "MGEF", "HVFX", 0, hvfx_string_fields, ARRAY_COUNT(hvfx_string_fields) },
+		{ "MGEF", "AVFX", 0, avfx_string_fields, ARRAY_COUNT(avfx_string_fields) },
+		{ "MGEF", "CSND", 0, csnd_string_fields, ARRAY_COUNT(csnd_string_fields) },
+		{ "MGEF", "BSND", 0, bsnd_string_fields, ARRAY_COUNT(bsnd_string_fields) },
+		{ "MGEF", "HSND", 0, hsnd_string_fields, ARRAY_COUNT(hsnd_string_fields) },
+		{ "MGEF", "ASND", 0, asnd_string_fields, ARRAY_COUNT(asnd_string_fields) },
 		{ "*", "NAME", 0, name_string_fields, ARRAY_COUNT(name_string_fields) },
 		{ "*", "FNAM", 0, fnam_string_fields, ARRAY_COUNT(fnam_string_fields) },
 		{ "*", "MODL", 0, modl_string_fields, ARRAY_COUNT(modl_string_fields) },

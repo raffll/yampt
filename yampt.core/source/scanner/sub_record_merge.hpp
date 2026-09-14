@@ -99,15 +99,19 @@ public:
 	    const std::string & winner_data,
 	    const std::string & rec_type);
 
-	static bool needs_element_wise(const std::string & rec_type, const std::string & sub_type, size_t data_size);
-	static std::string merge_bytes_three_way(const char * first, const char * inter, const char * winner, size_t size);
-	static std::string merge_fields_three_way(
-	    const std::string & rec_type,
-	    const std::string & sub_type,
-	    const char * first,
-	    const char * inter,
-	    const char * winner,
-	    size_t size);
+	struct field_merge_input_t
+	{
+		std::string rec_type;
+		std::string sub_type;
+		const char * first;
+		const char * inter;
+		const char * winner;
+		const char * current;
+		size_t size;
+	};
+
+	static bool has_schema(const std::string & rec_type, const std::string & sub_type);
+	static std::string merge_fields_three_way(const field_merge_input_t & input);
 
 	struct keyed_item_t
 	{
@@ -151,6 +155,16 @@ private:
 	    const sub_record_sequence_t & output,
 	    const std::string & sub_type,
 	    const std::function<std::string(const sub_record_entry_t &)> & key_of);
+
+	struct matched_entry_t
+	{
+		const sub_record_entry_t & first_entry;
+		const sub_record_entry_t & inter_entry;
+		const sub_record_entry_t & winner_entry;
+		sub_record_entry_t & output_entry;
+	};
+
+	static void merge_matched_entry(const matched_entry_t & entries, const std::string & rec_type);
 
 	static void apply_intermediate_to_group(
 	    sub_record_sequence_t & output,

@@ -144,67 +144,41 @@ static bool is_flags_field(const field_def_t & field)
 	       field.type == field_type_t::flags_u32;
 }
 
-bool sub_record_merge_t::needs_element_wise(
-    const std::string & rec_type,
-    const std::string & sub_type,
-    size_t data_size)
+static size_t flag_byte_width(const field_def_t & field)
 {
-	const auto * behavior = find_record_behavior(rec_type);
-	const auto * rule = find_sub_record_rule(behavior, sub_type, data_size);
+	if (field.type == field_type_t::flags_u8)
+		return 1;
 
-	if (!rule)
-		return false;
+	if (field.type == field_type_t::flags_u16)
+		return 2;
 
-	return has_flag(rule->flags, sub_rule_flag_t::element_wise_merge);
+	return 4;
 }
 
-std::string sub_record_merge_t::merge_bytes_three_way(
-    const char * first,
-    const char * inter,
-    const char * winner,
-    size_t size)
+static void merge_field_bits(std::string & result, const sub_record_merge_t::field_merge_input_t & input, const field_def_t & field)
 {
-	std::string result(winner, size);
+	const size_t width = flag_byte_width(field);
 
-	for (size_t offset = 0; offset < size; ++offset)
-	{
-		if (inter[offset] != first[offset] && winner[offset] == first[offset])
-			result[offset] = inter[offset];
-	}
-
-	return result;
-}
-
-static bool field_range_differs(const char * lhs, const char * rhs, size_t offset, size_t length, size_t data_size)
-{
-	if (offset + length > data_size)
-		return false;
-
-	return std::memcmp(lhs + offset, rhs + offset, length) != 0;
-}
-
-static void merge_field_bits(
-    std::string & result,
-    const char * first,
-    const char * inter,
-    const char * winner,
-    const field_def_t & field)
-{
-	for (size_t byte_index = 0; byte_index < field.size; ++byte_index)
+	for (size_t byte_index = 0; byte_index < width; ++byte_index)
 	{
 		const size_t offset = field.offset + byte_index;
-		const unsigned char first_byte = static_cast<unsigned char>(first[offset]);
-		const unsigned char inter_byte = static_cast<unsigned char>(inter[offset]);
-		const unsigned char winner_byte = static_cast<unsigned char>(winner[offset]);
+		if (offset >= input.size)
+			return;
 
-		unsigned char merged = winner_byte;
+		const unsigned char first_byte = static_cast<unsigned char>(input.first[offset]);
+		const unsigned char inter_byte = static_cast<unsigned char>(input.inter[offset]);
+		const unsigned char winner_byte = static_cast<unsigned char>(input.winner[offset]);
+		const unsigned char current_byte = static_cast<unsigned char>(input.current[offset]);
+
+		unsigned char merged = current_byte;
 		for (int bit = 0; bit < 8; ++bit)
 		{
 			const unsigned char mask = static_cast<unsigned char>(1u << bit);
 			const bool inter_changed = (inter_byte & mask) != (first_byte & mask);
-			const bool winner_changed = (winner_byte & mask) != (first_byte & mask);
+			const bool winner_unchanged = (winner_byte & mask) == (first_byte & mask);
+			const bool current_unclaimed = (current_byte & mask) == (first_byte & mask);
 
-			if (inter_changed && !winner_changed)
+			if (inter_changed && winner_unchanged && current_unclaimed)
 				merged = static_cast<unsigned char>((merged & ~mask) | (inter_byte & mask));
 		}
 
@@ -212,37 +186,87 @@ static void merge_field_bits(
 	}
 }
 
-std::string sub_record_merge_t::merge_fields_three_way(
-    const std::string & rec_type,
-    const std::string & sub_type,
-    const char * first,
-    const char * inter,
-    const char * winner,
-    size_t size)
+static void merge_bool_bit(std::string & result, const sub_record_merge_t::field_merge_input_t & input, const field_def_t & field)
 {
-	const auto * schema = find_schema(rec_type, sub_type, size);
-	if (!schema)
-		return merge_bytes_three_way(first, inter, winner, size);
+	const size_t offset = field.offset;
+	if (offset >= input.size)
+		return;
 
-	std::string result(winner, size);
+	const int bit = static_cast<int>(field.size);
+	const unsigned char mask = static_cast<unsigned char>(1u << bit);
+	const unsigned char first_byte = static_cast<unsigned char>(input.first[offset]);
+	const unsigned char inter_byte = static_cast<unsigned char>(input.inter[offset]);
+	const unsigned char winner_byte = static_cast<unsigned char>(input.winner[offset]);
+	const unsigned char current_byte = static_cast<unsigned char>(input.current[offset]);
+
+	const bool inter_changed = (inter_byte & mask) != (first_byte & mask);
+	const bool winner_unchanged = (winner_byte & mask) == (first_byte & mask);
+	const bool current_unclaimed = (current_byte & mask) == (first_byte & mask);
+
+	if (inter_changed && winner_unchanged && current_unclaimed)
+		result[offset] = static_cast<char>((current_byte & ~mask) | (inter_byte & mask));
+}
+
+static size_t field_span(const field_def_t & field, size_t size)
+{
+	if (field.size == 0)
+		return size > field.offset ? size - field.offset : 0;
+
+	return field.size;
+}
+
+static bool span_differs(const char * lhs, const char * rhs, size_t offset, size_t length)
+{
+	return std::memcmp(lhs + offset, rhs + offset, length) != 0;
+}
+
+static void merge_value_field(std::string & result, const sub_record_merge_t::field_merge_input_t & input, const field_def_t & field)
+{
+	const size_t length = field_span(field, input.size);
+	if (length == 0 || field.offset + length > input.size)
+		return;
+
+	const bool inter_changed = span_differs(input.inter, input.first, field.offset, length);
+	const bool winner_unchanged = !span_differs(input.winner, input.first, field.offset, length);
+	const bool current_unclaimed = !span_differs(input.current, input.first, field.offset, length);
+
+	if (inter_changed && winner_unchanged && current_unclaimed)
+		std::memcpy(result.data() + field.offset, input.inter + field.offset, length);
+}
+
+bool sub_record_merge_t::has_schema(const std::string & rec_type, const std::string & sub_type)
+{
+	return find_largest_schema(rec_type, sub_type) != nullptr;
+}
+
+std::string sub_record_merge_t::merge_fields_three_way(const field_merge_input_t & input)
+{
+	std::string result(input.current, input.size);
+
+	const auto * schema = find_largest_schema(input.rec_type, input.sub_type);
+	if (!schema)
+	{
+		app_logger_t::add_log("[error] no schema for " + input.rec_type + ":" + input.sub_type + "\r\n", true);
+		return result;
+	}
 
 	for (size_t field_index = 0; field_index < schema->field_count; ++field_index)
 	{
 		const auto & field = schema->fields[field_index];
-		if (field.offset + field.size > size)
-			continue;
 
 		if (is_flags_field(field))
 		{
-			merge_field_bits(result, first, inter, winner, field);
+			merge_field_bits(result, input, field);
 			continue;
 		}
 
-		const bool inter_changed = field_range_differs(inter, first, field.offset, field.size, size);
-		const bool winner_changed = field_range_differs(winner, first, field.offset, field.size, size);
+		if (field.type == field_type_t::bool_bit)
+		{
+			merge_bool_bit(result, input, field);
+			continue;
+		}
 
-		if (inter_changed && !winner_changed)
-			std::memcpy(result.data() + field.offset, inter + field.offset, field.size);
+		merge_value_field(result, input, field);
 	}
 
 	return result;
@@ -395,6 +419,23 @@ static void fix_magnitude_pair(
 	result.replace(slot_offset, enam_slot_size, merged_slot);
 }
 
+static std::string merge_enam_slot_bytes(
+    const char * first,
+    const char * inter,
+    const char * winner,
+    size_t size)
+{
+	std::string result(winner, size);
+
+	for (size_t offset = 0; offset < size; ++offset)
+	{
+		if (inter[offset] != first[offset] && winner[offset] == first[offset])
+			result[offset] = inter[offset];
+	}
+
+	return result;
+}
+
 std::string sub_record_merge_t::merge_enam_slots(
     const std::vector<std::string> & first_enams,
     const std::vector<std::string> & inter_enams,
@@ -416,7 +457,7 @@ std::string sub_record_merge_t::merge_enam_slots(
 			continue;
 		}
 
-		result += merge_bytes_three_way(
+		result += merge_enam_slot_bytes(
 		    first_enams[slot].data(), inter_enams[slot].data(), winner_enams[slot].data(), enam_slot_size);
 
 		fix_magnitude_pair(
@@ -530,33 +571,52 @@ void sub_record_merge_t::apply_intermediate(
 		if (output_idx < 0)
 			continue;
 
-		if (needs_element_wise(rec_type, intermediate[i].type, first[first_idx].data.size()) &&
-		    intermediate[i].data.size() == first[first_idx].data.size() &&
-		    output[output_idx].data.size() == first[first_idx].data.size())
-		{
-			const auto current_data = output[output_idx].data;
+		const matched_entry_t entries {
+			first[static_cast<size_t>(first_idx)],
+			intermediate[i],
+			winner[static_cast<size_t>(winner_idx)],
+			output[static_cast<size_t>(output_idx)]
+		};
 
-			output[output_idx].data = merge_fields_three_way(
-			    rec_type,
-			    intermediate[i].type,
-			    first[first_idx].data.data(),
-			    intermediate[i].data.data(),
-			    current_data.data(),
-			    first[first_idx].data.size());
-
-			apply_paired_rules(output[output_idx].data, first[first_idx].data, intermediate[i], current_data, rec_type);
-
-			continue;
-		}
-
-		if (winner[winner_idx].data != first[first_idx].data)
-			continue;
-
-		if (output[output_idx].data != first[first_idx].data)
-			continue;
-
-		output[output_idx].data = intermediate[i].data;
+		merge_matched_entry(entries, rec_type);
 	}
+}
+
+void sub_record_merge_t::merge_matched_entry(const matched_entry_t & entries, const std::string & rec_type)
+{
+	const auto & first_data = entries.first_entry.data;
+	const auto & inter_data = entries.inter_entry.data;
+	const auto & winner_data = entries.winner_entry.data;
+
+	const bool same_size = inter_data.size() == first_data.size() &&
+	                       entries.output_entry.data.size() == first_data.size() &&
+	                       winner_data.size() == first_data.size();
+
+	if (same_size && has_schema(rec_type, entries.inter_entry.type))
+	{
+		const field_merge_input_t input {
+			rec_type,
+			entries.inter_entry.type,
+			first_data.data(),
+			inter_data.data(),
+			winner_data.data(),
+			entries.output_entry.data.data(),
+			first_data.size()
+		};
+
+		entries.output_entry.data = merge_fields_three_way(input);
+		apply_paired_rules(entries.output_entry.data, first_data, entries.inter_entry, winner_data, rec_type);
+
+		return;
+	}
+
+	if (winner_data != first_data)
+		return;
+
+	if (entries.output_entry.data != first_data)
+		return;
+
+	entries.output_entry.data = inter_data;
 }
 
 merge_result_t sub_record_merge_t::merge(const merge_input_t & input)
@@ -645,10 +705,14 @@ void sub_record_merge_t::apply_intermediate_to_group(
 		if (output_idx < 0)
 			continue;
 
-		if (winner[winner_idx].data != first[first_idx].data)
-			continue;
+		const matched_entry_t entries {
+			first[static_cast<size_t>(first_idx)],
+			intermediate[i],
+			winner[static_cast<size_t>(winner_idx)],
+			output[static_cast<size_t>(output_idx)]
+		};
 
-		output[output_idx].data = intermediate[i].data;
+		merge_matched_entry(entries, "CELL");
 	}
 }
 
@@ -1502,16 +1566,13 @@ merge_result_t leveled_list_merge_t::merge(const merge_input_t & input)
 		return { false, {} };
 
 	const auto & first_content = versions.front();
-	const auto first_map = build_item_levels_map(extract_list_items(first_content));
+	auto master_items = extract_list_items(first_content);
+	const auto first_map = build_item_levels_map(master_items);
 
 	std::vector<item_levels_map_t> plugin_maps;
-	std::string winning_content;
 
 	for (size_t vi = 1; vi < versions.size(); ++vi)
-	{
 		plugin_maps.push_back(build_item_levels_map(extract_list_items(versions[vi])));
-		winning_content = versions[vi];
-	}
 
 	if (plugin_maps.empty())
 		return { false, {} };
@@ -1522,8 +1583,12 @@ merge_result_t leveled_list_merge_t::merge(const merge_input_t & input)
 	const auto header_part = merge_header_part(versions, input.rec_type);
 	const auto record = build_merged_list_record(input.rec_type, header_part, merged);
 
-	if (record == winning_content)
-		return { false, winning_content };
+	sort_merged_items(master_items);
+	const auto master_header_part = merge_header_part({ first_content, first_content }, input.rec_type);
+	const auto master_record = build_merged_list_record(input.rec_type, master_header_part, master_items);
+
+	if (record == master_record)
+		return { false, first_content };
 
 	return { true, record };
 }

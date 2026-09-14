@@ -3,6 +3,7 @@
 #include "fog_fixer.hpp"
 #include "plugin_scan.hpp"
 #include "summon_fixer.hpp"
+#include <algorithm>
 #include <map>
 #include <regex>
 #include <unordered_map>
@@ -171,11 +172,15 @@ bool auto_merge_t::should_skip_group(
 	if (is_leveled || is_dialogue)
 	{
 		const auto & first_ver = group.versions.front();
-		const auto & last_ver = group.versions.back();
 		const auto first_content = m_scan.read_record_content(first_ver.plugin_idx, first_ver.record_index);
-		const auto last_content = m_scan.read_record_content(last_ver.plugin_idx, last_ver.record_index);
 
-		if (first_content == last_content)
+		const bool any_version_differs = std::any_of(
+		    group.versions.begin() + 1,
+		    group.versions.end(),
+		    [&](const version_ref_t & ver)
+		{ return m_scan.read_record_content(ver.plugin_idx, ver.record_index) != first_content; });
+
+		if (!any_version_differs)
 			return true;
 	}
 

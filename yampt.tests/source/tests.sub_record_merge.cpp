@@ -992,7 +992,8 @@ TEST_CASE("sub_record_merge_t::merge, NPDT 52-byte intermediate wins over unchan
 	npdt_master[npdt_12_gold_offset] = 30;
 
 	std::string npdt_inter(52, '\0');
-	npdt_inter[npdt_52_gold_offset] = 500;
+	const uint32_t inter_gold = 500;
+	std::memcpy(npdt_inter.data() + npdt_52_gold_offset, &inter_gold, 4);
 
 	std::string npdt_winner(12, '\0');
 	npdt_winner[npdt_12_gold_offset] = 30;

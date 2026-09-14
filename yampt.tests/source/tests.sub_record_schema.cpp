@@ -183,16 +183,18 @@ TEST_CASE("sub_record_schema_t::find_schema, SPEL ENAM 24-byte matches", "[u]")
 	REQUIRE(std::string(schema->fields[0].name) == "Effect");
 }
 
-TEST_CASE("sub_record_schema_t::find_schema, CLOT ENAM does not match effect schema", "[u]")
+TEST_CASE("sub_record_schema_t::find_schema, CLOT ENAM resolves to enchant name string", "[u]")
 {
 	const auto * schema = find_schema("CLOT", "ENAM", 24);
-	REQUIRE(schema == nullptr);
+	REQUIRE(schema != nullptr);
+	REQUIRE(std::string(schema->fields[0].name) == "Enchantment");
 }
 
-TEST_CASE("sub_record_schema_t::find_schema, ARMO ENAM does not match effect schema", "[u]")
+TEST_CASE("sub_record_schema_t::find_schema, ARMO ENAM resolves to enchant name string", "[u]")
 {
 	const auto * schema = find_schema("ARMO", "ENAM", 24);
-	REQUIRE(schema == nullptr);
+	REQUIRE(schema != nullptr);
+	REQUIRE(std::string(schema->fields[0].name) == "Enchantment");
 }
 
 TEST_CASE("sub_record_schema_t::find_schema, ENCH ENAM 24-byte matches", "[u]")
@@ -386,7 +388,7 @@ TEST_CASE("view_tree_format::make_sub_label, BSGN TNAM context override", "[u]")
 TEST_CASE("view_tree_format::make_sub_label, NPC_ DNAM context override", "[u]")
 {
 	auto label = make_sub_label("DNAM", "NPC_", 10);
-	REQUIRE(label == "DNAM - Hair Model");
+	REQUIRE(label == "DNAM - Travel Destination");
 }
 
 TEST_CASE("view_tree_format::make_sub_label, CREA CNAM context override", "[u]")
