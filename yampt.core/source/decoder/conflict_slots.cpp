@@ -1,4 +1,5 @@
 #include "conflict_slots.hpp"
+#include "sub_record_schema.hpp"
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
@@ -306,10 +307,10 @@ static void build_fact_slots(slot_result_t & result)
 	align_paired_entries(ver_entries, all_faction_names, "INTV", "ANAM", intv_occ, anam_occ, result);
 }
 
-static constexpr size_t npco_record_size = 36;
-static constexpr size_t npco_id_offset = 4;
-static constexpr size_t npco_id_length = 32;
-static constexpr size_t npcs_record_size = 32;
+static constexpr size_t npco_record_size = npco_layout::record_size;
+static constexpr size_t npco_id_offset = npco_layout::item_id_offset;
+static constexpr size_t npco_id_length = npco_layout::item_id_length;
+static constexpr size_t npcs_record_size = npcs_layout::record_size;
 
 static void extract_npco_entries(
     const std::vector<std::vector<sub_record_view_t>> & parsed,

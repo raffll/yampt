@@ -714,3 +714,28 @@ TEST_CASE("view_tree_format::make_sub_label, ALCH TEXT context override", "[u]")
 	auto label = make_sub_label("TEXT", "ALCH", 20);
 	REQUIRE(label == "TEXT - Icon");
 }
+
+TEST_CASE("sub_record_schema_t::enam_layout, matches ENAM schema field offsets", "[u]")
+{
+	const auto * schema = find_schema("SPEL", "ENAM", enam_layout::slot_size);
+	REQUIRE(schema != nullptr);
+
+	const auto * mag_min = find_field_by_name(*schema, "Mag Min");
+	const auto * mag_max = find_field_by_name(*schema, "Mag Max");
+	REQUIRE(mag_min != nullptr);
+	REQUIRE(mag_max != nullptr);
+
+	REQUIRE(mag_min->offset == enam_layout::magnitude_min_offset);
+	REQUIRE(mag_max->offset == enam_layout::magnitude_max_offset);
+	REQUIRE(mag_min->size == enam_layout::magnitude_field_size);
+	REQUIRE(enam_layout::slot_size == 24);
+}
+
+TEST_CASE("sub_record_schema_t::npc_list_layout, NPCO and NPCS record sizes", "[u]")
+{
+	REQUIRE(npco_layout::record_size == 36);
+	REQUIRE(npco_layout::item_id_offset == 4);
+	REQUIRE(npco_layout::item_id_length == 32);
+	REQUIRE(npcs_layout::record_size == 32);
+	REQUIRE(fact_layout::reaction_value_size == 4);
+}

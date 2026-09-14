@@ -564,10 +564,10 @@ static std::string make_enam(
 	int32_t range = 0;
 	int32_t area = 0;
 	std::memcpy(result.data() + 4, &range, 4);
-	std::memcpy(result.data() + 8, &duration, 4);
-	std::memcpy(result.data() + 12, &min_mag, 4);
-	std::memcpy(result.data() + 16, &max_mag, 4);
-	std::memcpy(result.data() + 20, &area, 4);
+	std::memcpy(result.data() + 8, &area, 4);
+	std::memcpy(result.data() + 12, &duration, 4);
+	std::memcpy(result.data() + 16, &min_mag, 4);
+	std::memcpy(result.data() + 20, &max_mag, 4);
 	return result;
 }
 
@@ -1214,7 +1214,7 @@ TEST_CASE("sub_record_merge_t::merge, NPCO deletes master item when a plugin omi
 	REQUIRE(result.content.find("item_b") != std::string::npos);
 }
 
-TEST_CASE("sub_record_merge_t::merge, CELL returns winner unchanged", "[u]")
+TEST_CASE("sub_record_merge_t::merge, CELL three-way merges DATA field from intermediate", "[u]")
 {
 	auto subs_first =
 	    make_sub("NAME", make_string("cell")) + make_sub("DATA", make_bytes({ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
@@ -1234,8 +1234,13 @@ TEST_CASE("sub_record_merge_t::merge, CELL returns winner unchanged", "[u]")
 
 	auto result = sub_record_merge_t::merge(input);
 
-	REQUIRE_FALSE(result.changed);
-	REQUIRE(result.content == winner);
+	REQUIRE(result.changed);
+
+	auto result_subs = sub_record_merge_t::parse_sub_records(result.content);
+	auto data_idx = sub_record_merge_t::find_by_type_and_occurrence(result_subs, "DATA", 0);
+	REQUIRE(data_idx >= 0);
+	REQUIRE(result_subs[data_idx].data.size() == 12);
+	REQUIRE(static_cast<unsigned char>(result_subs[data_idx].data[4]) == 5);
 }
 
 TEST_CASE("sub_record_merge_t::patch, single sub-record by index", "[u]")
@@ -1524,11 +1529,44 @@ TEST_CASE("sub_record_merge_t::merge, ENAM mag min/max from same source", "[u]")
 
 	int32_t min_mag = 0;
 	int32_t max_mag = 0;
-	std::memcpy(&min_mag, result_subs[enam_idx].data.data() + 12, 4);
-	std::memcpy(&max_mag, result_subs[enam_idx].data.data() + 16, 4);
+	std::memcpy(&min_mag, result_subs[enam_idx].data.data() + 16, 4);
+	std::memcpy(&max_mag, result_subs[enam_idx].data.data() + 20, 4);
 
 	REQUIRE(min_mag == max_mag);
 	REQUIRE((min_mag == 60 || min_mag == 40));
+}
+
+TEST_CASE("sub_record_merge_t::merge, ENAM magnitude pair not coupled to duration", "[u]")
+{
+	auto enam_first = make_enam(79, 0, 0, 10, 40, 60);
+	auto enam_inter = make_enam(79, 0, 0, 10, 55, 60);
+	auto enam_winner = make_enam(79, 0, 0, 99, 40, 60);
+
+	merge_input_t input;
+	input.rec_type = "SPEL";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("SPEL", make_sub("NAME", make_string("id")) + make_sub("ENAM", enam_first)),
+		make_record("SPEL", make_sub("NAME", make_string("id")) + make_sub("ENAM", enam_inter)),
+		make_record("SPEL", make_sub("NAME", make_string("id")) + make_sub("ENAM", enam_winner)),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	auto result_subs = sub_record_merge_t::parse_sub_records(result.content);
+	auto enam_idx = sub_record_merge_t::find_by_type_and_occurrence(result_subs, "ENAM", 0);
+	REQUIRE(enam_idx >= 0);
+
+	int32_t duration = 0;
+	int32_t min_mag = 0;
+	int32_t max_mag = 0;
+	std::memcpy(&duration, result_subs[enam_idx].data.data() + 12, 4);
+	std::memcpy(&min_mag, result_subs[enam_idx].data.data() + 16, 4);
+	std::memcpy(&max_mag, result_subs[enam_idx].data.data() + 20, 4);
+
+	REQUIRE(duration == 99);
+	REQUIRE(min_mag == 55);
+	REQUIRE(max_mag == 60);
 }
 
 TEST_CASE("sub_record_merge_t::merge, CREA attack min/max paired", "[u]")

@@ -72,6 +72,31 @@ const field_def_t * find_field_by_name(const sub_record_schema_t & schema, const
 
 const std::vector<sub_record_schema_t> & all_schemas();
 
+namespace enam_layout
+{
+constexpr size_t slot_size = 24;
+constexpr size_t magnitude_min_offset = 16;
+constexpr size_t magnitude_max_offset = 20;
+constexpr size_t magnitude_field_size = 4;
+} // namespace enam_layout
+
+namespace npco_layout
+{
+constexpr size_t record_size = 36;
+constexpr size_t item_id_offset = 4;
+constexpr size_t item_id_length = 32;
+} // namespace npco_layout
+
+namespace npcs_layout
+{
+constexpr size_t record_size = 32;
+} // namespace npcs_layout
+
+namespace fact_layout
+{
+constexpr size_t reaction_value_size = 4;
+} // namespace fact_layout
+
 enum class sub_record_kind_t
 {
 	single_value,

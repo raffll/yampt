@@ -443,9 +443,9 @@ TEST_CASE("sub_record_merge_t::merge_cell_refs, atomic reference takes whole obj
 {
 	auto hdr = make_cell_header();
 
-	auto ref_master = make_frmr_group_with_owner(1, "barrel_01", 100.0f, 200.0f, 0.0f, make_string("Master"));
-	auto ref_moved = make_frmr_group_with_owner(1, "barrel_01", 500.0f, 600.0f, 0.0f, make_string("Master"));
-	auto ref_reowned = make_frmr_group_with_owner(1, "barrel_01", 100.0f, 200.0f, 0.0f, make_string("Fargoth"));
+	auto ref_master = make_frmr_group_with_owner(1, "barrel_01", 100.0f, 200.0f, 0.0f, "Master");
+	auto ref_moved = make_frmr_group_with_owner(1, "barrel_01", 500.0f, 600.0f, 0.0f, "Master");
+	auto ref_reowned = make_frmr_group_with_owner(1, "barrel_01", 100.0f, 200.0f, 0.0f, "Fargoth");
 
 	merge_input_t input;
 	input.rec_type = "CELL";

@@ -244,3 +244,40 @@ A cell's placed objects — each an `FRMR` object-index sub-record followed by a
 `merge_winner_frmr_groups` (sub_record_merge.cpp) checks `cell_refs_are_atomic()` and, when true, calls `select_atomic_frmr_subs` for a reference present in both master and the winner: the whole object is taken from the **last-listed plugin that changed it** vs the master (winner checked first, then intermediates high→low). If no plugin changed the reference, the master/winner copy is kept. Only when `atomic_groups` is false does the per-object path fall back to the field-wise `merge_frmr_group` (`apply_intermediate_to_group` → `merge_matched_entry`).
 
 Consequence: a placed object never ends up combining, e.g., its position from one plugin with its ownership or lock state from another. Reference **presence** is still a union keyed on FRMR index (an object added by any plugin is kept; an object absent from a plugin follows the existing winner/first logic). This atomic rule applies to CELL references only — ARMO/CLOT part-groups and all other sub-records keep their existing merge behavior. Do NOT extend `atomic_groups` to other record types without a decision, and do NOT revert CELL references to field-wise merge.
+
+## Merge/Decode Invariants and Binary Layout Constants (comprehension-critical)
+
+These are the non-obvious invariants behind the hardest merge/decode code. They are NOT evident from names alone; do not "simplify" past them.
+
+### Binary layout constants live in one place
+
+ESM sub-record byte layouts that the merger and the conflict-slot builder both depend on are declared ONCE as named `constexpr` namespaces in `yampt.core/source/decoder/sub_record_schema.hpp`, and both `sub_record_merge.cpp` and `conflict_slots.cpp` read them. Never re-hardcode these offsets/sizes as literals in algorithm code:
+
+- `enam_layout` — ENAM effect slot (24 bytes). Authoritative UESP layout: Effect@0 (u16), Skill@2 (i8), Attribute@3 (i8), Range@4 (u32), Area@8 (u32), Duration@12 (u32), Magnitude Min@16 (u32), Magnitude Max@20 (u32). `magnitude_min_offset = 16`, `magnitude_max_offset = 20`. (A prior bug hardcoded the pair as {12,16} — Duration+MagMin — silently coupling the wrong fields. Kept correct only because the schema `enam_fields` was right; the merger literal was not.)
+- `npco_layout` — NPCO inventory item (36 bytes; item ID at offset 4, length 32).
+- `npcs_layout` — NPCS spell/ability ID (32-byte fixed record).
+- `fact_layout` — FACT reaction value is a 4-byte int32 (paired with the ANAM faction name).
+
+The ENAM magnitude pair is ALSO registered as a `paired_merge_rule_t` in `record_behavior.cpp` (offsets 16/20) so min and max merge together from one plugin (see the ┌/└→🔗 pair-marker feature). The two must agree; both now derive from the same UESP-confirmed offsets.
+
+### The three-way "intermediate claims a piece" predicate
+
+The core sub-record merge rule is: a piece (bit / byte span) is taken from an intermediate plugin only when the intermediate CHANGED it relative to the master (first), the winner did NOT change it, and the output still holds the master value (unclaimed). This "claim-once, last-changer-wins" predicate is named once as `intermediate_claims_bit` (masked bit form) and `intermediate_claims_span` (memcmp form) in `sub_record_merge.cpp`; `merge_field_bits`, `merge_bool_bit`, and `merge_value_field` all call it. Do not re-inline the `inter_changed && winner_unchanged && current_unclaimed` triple — edit the shared helper. (`merge_enam_slot_bytes` uses a deliberately distinct 2-way byte form because it builds its result fresh from the winner; it is not the same predicate.)
+
+`merge_bool_bit` reuses `field_def_t::size` as a BIT INDEX (not a byte length) for `bool_bit` fields — a type pun that is intentional and load-bearing.
+
+### CELL FRMR reverse-scan
+
+The cell-ref merge loops iterate intermediates high-priority→low with `for (size_t idx = versions.size() - 2; idx >= 1; --idx)`, deliberately excluding master (index 0) and winner (back). This only terminates because `merge_cell_refs` guarantees `versions.size() >= 3`. The atomic-reference selection (whole object from the last plugin that changed it) is documented under "CELL References (FRMR) Merge Atomically".
+
+### dial_info OpenMW ordering
+
+`dial_info_align_t::resolve_openmw_order` reconstructs INFO topic order from PNAM (previous-INFO) back-links using a linked list + position map, splicing each INFO after its predecessor (front if PNAM empty, end if PNAM unknown), and re-splicing when a plugin redefines an existing INFO with a different PNAM. This mirrors OpenMW's dialogue linking; it is reverse-engineered game behavior with no external citation.
+
+### content_alignment sentinels
+
+`content_alignment.cpp` and `conflict_slots.cpp` align N plugin versions into unified slots. `SIZE_MAX` means "this sub-record is absent in this column"; `merge_column = -1` means "no merge column". These sentinels are load-bearing throughout the slot/cursor index arithmetic.
+
+### scdt_patcher null-terminator tolerance
+
+`scdt_patcher_t::validate_text_size` accepts a declared size of either `old_text.size()` OR `old_text.size() + 1` — the `+1` covers compiled MWScript strings that include a trailing null in the length field. Message segments use a 2-byte size field for the first segment and 1-byte for later segments. The getpccell `'X'`-marker/back-2-bytes trick is documented in project-paths.md.

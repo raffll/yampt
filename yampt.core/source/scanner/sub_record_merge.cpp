@@ -10,7 +10,7 @@
 #include <optional>
 #include <set>
 
-static constexpr size_t enam_slot_size = 24;
+static constexpr size_t enam_slot_size = enam_layout::slot_size;
 
 sub_record_sequence_t sub_record_merge_t::parse_sub_records(const std::string & content)
 {
@@ -155,6 +155,37 @@ static size_t flag_byte_width(const field_def_t & field)
 	return 4;
 }
 
+static bool intermediate_claims_bit(
+    unsigned char first_byte,
+    unsigned char inter_byte,
+    unsigned char winner_byte,
+    unsigned char current_byte,
+    unsigned char mask)
+{
+	const bool inter_changed = (inter_byte & mask) != (first_byte & mask);
+	const bool winner_unchanged = (winner_byte & mask) == (first_byte & mask);
+	const bool current_unclaimed = (current_byte & mask) == (first_byte & mask);
+
+	return inter_changed && winner_unchanged && current_unclaimed;
+}
+
+static bool span_differs(const char * lhs, const char * rhs, size_t offset, size_t length)
+{
+	return std::memcmp(lhs + offset, rhs + offset, length) != 0;
+}
+
+static bool intermediate_claims_span(
+    const sub_record_merge_t::field_merge_input_t & input,
+    size_t offset,
+    size_t length)
+{
+	const bool inter_changed = span_differs(input.inter, input.first, offset, length);
+	const bool winner_unchanged = !span_differs(input.winner, input.first, offset, length);
+	const bool current_unclaimed = !span_differs(input.current, input.first, offset, length);
+
+	return inter_changed && winner_unchanged && current_unclaimed;
+}
+
 static void merge_field_bits(std::string & result, const sub_record_merge_t::field_merge_input_t & input, const field_def_t & field)
 {
 	const size_t width = flag_byte_width(field);
@@ -174,11 +205,7 @@ static void merge_field_bits(std::string & result, const sub_record_merge_t::fie
 		for (int bit = 0; bit < 8; ++bit)
 		{
 			const unsigned char mask = static_cast<unsigned char>(1u << bit);
-			const bool inter_changed = (inter_byte & mask) != (first_byte & mask);
-			const bool winner_unchanged = (winner_byte & mask) == (first_byte & mask);
-			const bool current_unclaimed = (current_byte & mask) == (first_byte & mask);
-
-			if (inter_changed && winner_unchanged && current_unclaimed)
+			if (intermediate_claims_bit(first_byte, inter_byte, winner_byte, current_byte, mask))
 				merged = static_cast<unsigned char>((merged & ~mask) | (inter_byte & mask));
 		}
 
@@ -199,11 +226,7 @@ static void merge_bool_bit(std::string & result, const sub_record_merge_t::field
 	const unsigned char winner_byte = static_cast<unsigned char>(input.winner[offset]);
 	const unsigned char current_byte = static_cast<unsigned char>(input.current[offset]);
 
-	const bool inter_changed = (inter_byte & mask) != (first_byte & mask);
-	const bool winner_unchanged = (winner_byte & mask) == (first_byte & mask);
-	const bool current_unclaimed = (current_byte & mask) == (first_byte & mask);
-
-	if (inter_changed && winner_unchanged && current_unclaimed)
+	if (intermediate_claims_bit(first_byte, inter_byte, winner_byte, current_byte, mask))
 		result[offset] = static_cast<char>((current_byte & ~mask) | (inter_byte & mask));
 }
 
@@ -215,22 +238,13 @@ static size_t field_span(const field_def_t & field, size_t size)
 	return field.size;
 }
 
-static bool span_differs(const char * lhs, const char * rhs, size_t offset, size_t length)
-{
-	return std::memcmp(lhs + offset, rhs + offset, length) != 0;
-}
-
 static void merge_value_field(std::string & result, const sub_record_merge_t::field_merge_input_t & input, const field_def_t & field)
 {
 	const size_t length = field_span(field, input.size);
 	if (length == 0 || field.offset + length > input.size)
 		return;
 
-	const bool inter_changed = span_differs(input.inter, input.first, field.offset, length);
-	const bool winner_unchanged = !span_differs(input.winner, input.first, field.offset, length);
-	const bool current_unclaimed = !span_differs(input.current, input.first, field.offset, length);
-
-	if (inter_changed && winner_unchanged && current_unclaimed)
+	if (intermediate_claims_span(input, field.offset, length))
 		std::memcpy(result.data() + field.offset, input.inter + field.offset, length);
 }
 
@@ -405,7 +419,11 @@ static void fix_paired_fields(
 	}
 }
 
-static constexpr field_pair_rule_t enam_magnitude_pair = { 12, 16, 4 };
+static constexpr field_pair_rule_t enam_magnitude_pair = {
+	enam_layout::magnitude_min_offset,
+	enam_layout::magnitude_max_offset,
+	enam_layout::magnitude_field_size
+};
 
 static void fix_magnitude_pair(
     std::string & result,
@@ -1084,9 +1102,9 @@ merge_result_t sub_record_merge_t::merge_armor_parts(const merge_input_t & input
 	return { true, result };
 }
 
-static constexpr size_t npco_item_id_offset = 4;
-static constexpr size_t npco_item_id_length = 32;
-static constexpr size_t npco_sub_record_size = 36;
+static constexpr size_t npco_item_id_offset = npco_layout::item_id_offset;
+static constexpr size_t npco_item_id_length = npco_layout::item_id_length;
+static constexpr size_t npco_sub_record_size = npco_layout::record_size;
 
 static std::string extract_npco_item_id(const sub_record_entry_t & entry)
 {
@@ -1144,8 +1162,12 @@ static std::vector<sub_record_merge_t::keyed_item_t> collect_faction_reactions(c
 
 		int32_t existing_value = 0;
 		int32_t new_value = 0;
-		std::memcpy(&existing_value, it_existing->second.data(), std::min<size_t>(4, it_existing->second.size()));
-		std::memcpy(&new_value, value.data(), std::min<size_t>(4, value.size()));
+		std::memcpy(
+		    &existing_value,
+		    it_existing->second.data(),
+		    std::min<size_t>(fact_layout::reaction_value_size, it_existing->second.size()));
+		std::memcpy(
+		    &new_value, value.data(), std::min<size_t>(fact_layout::reaction_value_size, value.size()));
 
 		if (new_value < existing_value)
 			it_existing->second = value;
