@@ -257,6 +257,9 @@ void plugin_session_t::restore_active_plugin(const std::string & active_path)
 		if (m_scan.plugin_filename(i) != filename)
 			continue;
 
+		if (m_scan.active_plugin_index() == i)
+			return;
+
 		m_scan.set_active_from_loaded(i);
 		m_scan.rebuild_conflicts();
 		return;
