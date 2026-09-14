@@ -342,6 +342,21 @@ TEST_CASE("sub_record_schema_t::find_schema, NPC_ NPDT 12 autocalc layout", "[u]
 	REQUIRE(gold->offset == 8);
 }
 
+TEST_CASE("sub_record_schema_t::find_largest_schema, NPC_ NPDT always 52 layout", "[u]")
+{
+	const auto * schema = find_largest_schema("NPC_", "NPDT");
+	REQUIRE(schema != nullptr);
+	REQUIRE(schema->expected_size == 52);
+
+	const auto * health = field_by_name(schema, "Health");
+	REQUIRE(health != nullptr);
+	REQUIRE(health->offset == 38);
+
+	const auto * strength = field_by_name(schema, "Strength");
+	REQUIRE(strength != nullptr);
+	REQUIRE(strength->offset == 2);
+}
+
 TEST_CASE("sub_record_schema_t::find_schema, WEAP WPDT layout", "[u]")
 {
 	const auto * schema = find_schema("WEAP", "WPDT", 32);

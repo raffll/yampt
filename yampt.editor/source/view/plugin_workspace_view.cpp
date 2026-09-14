@@ -456,15 +456,19 @@ void plugin_workspace_view_t::rebuild_after_load()
 	emit active_plugin_changed(active_plugin_filename());
 }
 
-void plugin_workspace_view_t::apply_user_conflict_rules()
+bool plugin_workspace_view_t::apply_user_conflict_rules()
 {
 	const auto rules = string_utils::split_trimmed_set(m_settings.sub_record_ignore_conflict(), ',');
+	if (rules == m_session->scan().user_ignore_conflict())
+		return false;
+
 	m_session->scan().set_user_ignore_conflict(rules);
+	return true;
 }
 
 void plugin_workspace_view_t::on_settings_changed()
 {
-	apply_user_conflict_rules();
+	const bool conflict_rules_changed = apply_user_conflict_rules();
 	m_editable_columns.set_editing_enabled(m_settings.editing_enabled());
 
 	const auto codepage = static_cast<codepage_t>(m_settings.display_codepage());
@@ -475,7 +479,9 @@ void plugin_workspace_view_t::on_settings_changed()
 
 	if (m_session->scan().plugin_count() > 0)
 	{
-		m_session->scan().rebuild_conflicts();
+		if (conflict_rules_changed)
+			m_session->scan().rebuild_conflicts();
+
 		refresh_all_views();
 	}
 

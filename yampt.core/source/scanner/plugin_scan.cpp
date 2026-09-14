@@ -110,6 +110,7 @@ void plugin_scan_t::rebuild_conflicts(const conflict_progress_fn_t & progress_fn
 {
 	m_entries.clear();
 	m_entry_lookup.clear();
+	m_conflict_policy_cache.clear();
 
 	for (int pi = 0; pi < static_cast<int>(m_plugins.size()); ++pi)
 	{
@@ -327,6 +328,19 @@ std::unique_ptr<slot_result_t> plugin_scan_t::build_slot_result_for(const confli
 	return std::make_unique<slot_result_t>(build_slot_result(entry));
 }
 
+const conflict_policy_t & plugin_scan_t::cached_conflict_policy(
+    const std::string & rec_type,
+    const std::string & sub_type)
+{
+	const std::string cache_key = rec_type + std::string(1, '\0') + sub_type;
+	auto it = m_conflict_policy_cache.find(cache_key);
+	if (it != m_conflict_policy_cache.end())
+		return it->second;
+
+	const auto policy = record_conflict::find_conflict_policy(rec_type, sub_type);
+	return m_conflict_policy_cache.emplace(cache_key, policy).first->second;
+}
+
 void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 {
 	const size_t ver_count = entry.versions.size();
@@ -336,16 +350,19 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 
 	conflict_accumulator_t accum;
 
+	const bool wildcard_ignored = m_user_ignore_conflict.count(entry.rec_type + ":*") > 0;
+	if (wildcard_ignored)
+	{
+		entry.conflict_all = accum.worst_all;
+		apply_worst_this(entry, accum);
+		return;
+	}
+
 	for (const auto & slot : sr.aligned)
 	{
-		const auto policy = record_conflict::find_conflict_policy(entry.rec_type, slot.key.type);
+		const auto & policy = cached_conflict_policy(entry.rec_type, slot.key.type);
 
-		const auto specific_key = entry.rec_type + ":" + slot.key.type;
-		const auto wildcard_key = entry.rec_type + ":*";
-		const bool user_ignore =
-		    m_user_ignore_conflict.count(specific_key) > 0 || m_user_ignore_conflict.count(wildcard_key) > 0;
-
-		if (user_ignore)
+		if (m_user_ignore_conflict.count(entry.rec_type + ":" + slot.key.type) > 0)
 			continue;
 
 		std::vector<std::string> slot_values(ver_count);

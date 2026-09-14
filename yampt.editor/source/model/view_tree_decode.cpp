@@ -2,9 +2,13 @@
 #include <decoder/scvr_condition.hpp>
 #include <decoder/view_tree_format.hpp>
 #include <scanner/record_conflict.hpp>
+#include <utility/app_logger.hpp>
 #include <utility/record_behavior.hpp>
 #include <cstdio>
 #include <cstring>
+#include <string>
+
+static const std::string autocalc_absent_value { "Auto" };
 
 static std::string apply_pair_prefix(const std::string & label, field_pair_role_t role)
 {
@@ -162,7 +166,7 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 		row.cell_conflict_this = record_conflict::compute_conflict_this(row.values);
 	}
 
-	const auto * schema = first_data ? find_schema(m_record_type, slot.type, first_size) : nullptr;
+	const auto * schema = first_data ? find_largest_schema(m_record_type, slot.type) : nullptr;
 	if (schema && first_data)
 		decode_schema_children(row, schema, first_data, first_size, col_count, all_subs, col_indices, slot);
 	else if (first_data && first_size > 0 && !row.values.empty() && !row.values[0].empty() && row.values[0][0] == '<')
@@ -325,22 +329,26 @@ void view_tree_model_t::decode_schema_children(
 			const auto & sv = all_subs[col][idx];
 
 			const auto * column_schema = find_schema(m_record_type, slot.type, sv.size);
-			const field_def_t * column_field =
-			    column_schema ? find_field_by_name(*column_schema, fdef.name) : nullptr;
-
-			if (column_schema && column_field == nullptr)
+			if (column_schema == nullptr)
 			{
-				const bool npdt_autocalc = (m_record_type == "NPC_" || m_record_type == "CREA") &&
-				                           slot.type == "NPDT" && sv.size < schema->expected_size;
-
-				frow.values[col] = npdt_autocalc ? "Auto" : "Error";
+				app_logger_t::add_log(
+				    "[error] no schema for " + m_record_type + " " + slot.type + " size " +
+				        std::to_string(sv.size) + "\r\n",
+				    true);
+				frow.values[col] = non_existent_value;
 				continue;
 			}
 
-			const auto & effective_field = column_field ? *column_field : fdef;
-			frow.values[col] = decode_field(effective_field, sv.data, sv.size, m_display_codepage);
+			const field_def_t * column_field = find_field_by_name(*column_schema, fdef.name);
+			if (column_field == nullptr)
+			{
+				frow.values[col] = autocalc_absent_value;
+				continue;
+			}
 
-			if (effective_field.type == field_type_t::scvr_subject && frow.label == fdef.name)
+			frow.values[col] = decode_field(*column_field, sv.data, sv.size, m_display_codepage);
+
+			if (column_field->type == field_type_t::scvr_subject && frow.label == fdef.name)
 				frow.label = scvr_subject_label(sv.data, sv.size);
 		}
 

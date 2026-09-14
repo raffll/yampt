@@ -4,10 +4,12 @@
 #include "conflict_enums.hpp"
 #include "merge_patch_store.hpp"
 #include "plugin_index.hpp"
+#include "record_conflict.hpp"
 #include <functional>
 #include <memory>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 struct record_version_t
@@ -105,6 +107,7 @@ private:
 	};
 
 	void compute_conflict(conflict_entry_t & entry);
+	const conflict_policy_t & cached_conflict_policy(const std::string & rec_type, const std::string & sub_type);
 
 	slot_result_t build_slot_result(const conflict_entry_t & entry);
 	void insert_or_update_version(version_descriptor_t desc);
@@ -139,4 +142,5 @@ private:
 	std::vector<conflict_entry_t> m_entries;
 	std::unordered_map<std::string, size_t> m_entry_lookup;
 	std::set<std::string> m_user_ignore_conflict;
+	std::unordered_map<std::string, conflict_policy_t> m_conflict_policy_cache;
 };
