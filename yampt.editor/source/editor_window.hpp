@@ -44,6 +44,7 @@ private:
 	QAction * m_sidebar_toggle = nullptr;
 	QAction * m_bottom_toggle = nullptr;
 	QAction * m_sync_scroll_toggle = nullptr;
+	QAction * m_show_optional_action = nullptr;
 	QToolButton * m_no_filters_btn = nullptr;
 	QLineEdit * m_search_field = nullptr;
 	QToolButton * m_case_sensitive_btn = nullptr;

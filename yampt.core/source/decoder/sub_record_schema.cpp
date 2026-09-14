@@ -800,35 +800,35 @@ static const field_def_t ai_w_fields[] = {
 	{ "Distance", field_type_t::u16, 0, 2, nullptr, nullptr, 0, nullptr },
 	{ "Duration", field_type_t::u16, 2, 2, nullptr, nullptr, 0, nullptr },
 	{ "Time of Day", field_type_t::u8, 4, 1, nullptr, nullptr, 0, nullptr },
-	{ "Idle 1", field_type_t::u8, 5, 1, nullptr, nullptr, 0, "Idle" },
-	{ "Idle 2", field_type_t::u8, 6, 1, nullptr, nullptr, 0, "Idle" },
-	{ "Idle 3", field_type_t::u8, 7, 1, nullptr, nullptr, 0, "Idle" },
-	{ "Idle 4", field_type_t::u8, 8, 1, nullptr, nullptr, 0, "Idle" },
-	{ "Idle 5", field_type_t::u8, 9, 1, nullptr, nullptr, 0, "Idle" },
-	{ "Idle 6", field_type_t::u8, 10, 1, nullptr, nullptr, 0, "Idle" },
-	{ "Idle 7", field_type_t::u8, 11, 1, nullptr, nullptr, 0, "Idle" },
-	{ "Idle 8", field_type_t::u8, 12, 1, nullptr, nullptr, 0, "Idle" },
+	{ "Idle 1", field_type_t::u8, 5, 1, nullptr, nullptr, 0, nullptr },
+	{ "Idle 2", field_type_t::u8, 6, 1, nullptr, nullptr, 0, nullptr },
+	{ "Idle 3", field_type_t::u8, 7, 1, nullptr, nullptr, 0, nullptr },
+	{ "Idle 4", field_type_t::u8, 8, 1, nullptr, nullptr, 0, nullptr },
+	{ "Idle 5", field_type_t::u8, 9, 1, nullptr, nullptr, 0, nullptr },
+	{ "Idle 6", field_type_t::u8, 10, 1, nullptr, nullptr, 0, nullptr },
+	{ "Idle 7", field_type_t::u8, 11, 1, nullptr, nullptr, 0, nullptr },
+	{ "Idle 8", field_type_t::u8, 12, 1, nullptr, nullptr, 0, nullptr },
 	{ "Should Repeat", field_type_t::u8, 13, 1, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t ai_t_fields[] = {
-	{ "X", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
-	{ "Y", field_type_t::f32, 4, 4, nullptr, nullptr, 0, nullptr },
-	{ "Z", field_type_t::f32, 8, 4, nullptr, nullptr, 0, nullptr },
+	{ "X Position", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
+	{ "Y Position", field_type_t::f32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Z Position", field_type_t::f32, 8, 4, nullptr, nullptr, 0, nullptr },
 	{ "Should Repeat", field_type_t::u8, 12, 1, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t ai_f_fields[] = {
-	{ "X", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
-	{ "Y", field_type_t::f32, 4, 4, nullptr, nullptr, 0, nullptr },
-	{ "Z", field_type_t::f32, 8, 4, nullptr, nullptr, 0, nullptr },
+	{ "X Position", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
+	{ "Y Position", field_type_t::f32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Z Position", field_type_t::f32, 8, 4, nullptr, nullptr, 0, nullptr },
 	{ "Duration", field_type_t::u16, 12, 2, nullptr, nullptr, 0, nullptr },
-	{ "ID", field_type_t::string_fixed, 14, 32, nullptr, nullptr, 0, nullptr },
+	{ "Target ID", field_type_t::string_fixed, 14, 32, nullptr, nullptr, 0, nullptr },
 	{ "Should Repeat", field_type_t::u8, 46, 1, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t ai_a_fields[] = {
-	{ "ID", field_type_t::string_fixed, 0, 32, nullptr, nullptr, 0, nullptr },
+	{ "Target ID", field_type_t::string_fixed, 0, 32, nullptr, nullptr, 0, nullptr },
 	{ "Should Repeat", field_type_t::u8, 32, 1, nullptr, nullptr, 0, nullptr },
 };
 

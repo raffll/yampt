@@ -1,17 +1,5 @@
 # TODO
 
-creatiure npco not merged
-also npcs should follow remove spell rule
-remove idle group in creature
-container also should follor remove item rule
-adding new item to list may be when show all fields can show one empty at the end of list???
-creature flags base? what mean?
-AI_F more meaningluf fiedl names and why is so big numbers there?
-diff is broken, it should be per character
-book and script need also syntax coloring
-how to merge armor body part? ignore non existent? ninf cnam and bnasm?
-should_not_exist.esp in C:\OMEN\Morrowind\yampt\x64\Release\$(SolutionDir)
-show optional, enabled on load, but checkbox not checjked
 
 
 editor: make field editing active-plugin-only; remove obsolete per-plugin in-place editing. Editing a non-active plugin column writes back to that plugin's own file (mutable_plugin + replace_record + mark_plugin_dirty + save_all_dirty), which is a separate path from active/merge editing. Since all record changes should target the active plugin (same store as Copy-to-Active), drop the source-plugin branch: the plugin_idx != -1 path in field_edit_controller (commit_to_source, field_edited signal, read_record_content/mutable_plugin/replace_record for edits), the "Direct Editing" settings page, and the m_editing_enabled half of editable_column_set_t::is_editable (leaving the active/merge column always editable). Also re-gate "Remove Record from Plugin" which currently keys off is_editing_enabled().
@@ -37,6 +25,10 @@ Root cause: FACT inter-faction reactions are stored as paired INTV (reaction val
 
 
 ## Deferred (need decision)
+
+book and script need also syntax coloring
+
+adding new item to list may be when show all fields can show one empty at the end of list???
 
 show entire hex in edit panel with line numbers, fixed columns and rows (read-only hex dump): AGREED to option (a) read-only formatted hex dump (offset column + 16 hex bytes/row + ASCII gutter, monospaced) in the existing edit panes for binary/raw sub-records. INVESTIGATED: the edit panel receives its value from view_tree_model_t::full_value_at, which returns node->values[col] = format_value_full(...); for binary/raw that is a TRUNCATED 32-byte space-separated hex string (view_tree_format.cpp decode_hex_bytes, max_hex_bytes=32, "..." suffix), so the panel never gets the full bytes. Existing per-row hex in the record view is view_tree_decode.cpp decode_hex_children/format_hex_chunk (16-byte rows, no offset/ASCII column). AGREED IMPLEMENTATION (A1, string-based, lightest): (1) remove the 32-byte truncation for binary/raw in format_value_full (or add a full-hex path) so the full hex reaches the edit panel — the record-view cell stays short because truncate_for_display already caps at 120 chars; (2) in preview_view_t, when the selected field is binary/raw, render both panes as a read-only monospaced hex dump (offset in hex per 16-byte row, hex bytes, ASCII gutter). Add unit tests for the hex-dump formatter (extract it as a pure function). Alternative A2 (plumb raw sub-record bytes via field_binary_resolver into the panel) is cleaner but more wiring; A1 chosen. Scope: binary/raw sub-records only. Note LAND is now non-editable so its fields won't reach the panel; this mainly serves other unknown/binary sub-records.
 
