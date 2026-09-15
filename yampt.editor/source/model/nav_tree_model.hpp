@@ -21,7 +21,6 @@ public:
 
 	void rebuild();
 	void refresh_colors();
-	void set_excluded_plugins(const std::set<std::string> * excluded);
 	void set_patch_plugins(const std::set<std::string> * patch);
 	void set_dirty_plugins(const std::set<std::string> * dirty);
 	void set_editable_columns(const editable_column_set_t * editable);
@@ -56,6 +55,9 @@ public:
 
 	node_info_t node_at(const QModelIndex & index) const;
 	QModelIndex find_index(const std::string & rec_type, const std::string & record_id) const;
+	QModelIndex index_for_node(const node_info_t & info) const;
+	void notify_record_changed(const std::string & rec_type, const std::string & record_id);
+	void notify_plugin_changed(int plugin_idx);
 
 private:
 	plugin_scan_t & m_scan;
@@ -86,6 +88,7 @@ private:
 	const editable_column_set_t * m_editable_columns = nullptr;
 
 	conflict_this_t record_foreground_for_plugin(const conflict_entry_t & entry, int plugin_idx) const;
+	bool has_whole_record_lock(const std::string & rec_type, const std::string & record_id) const;
 
 	void build_tree();
 	void sort_records();

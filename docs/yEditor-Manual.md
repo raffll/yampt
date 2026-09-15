@@ -44,16 +44,18 @@ Text colors indicate how each specific plugin version relates to others:
 
 Records with no conflict (only one plugin defines them) show with no background color and black text.
 
-Each plugin in the tree is prefixed with an icon indicating its role:
+The tree has two columns: ID and Name, showing the record identifier and its display name. For a global variable, the Name column shows its value type — Short, Long, or Float. On a plugin row, a single role icon appears before the plugin filename in the ID column. When a plugin fits more than one role, the highest-priority one is shown, in the order guard, then merged patch, then overwrite copy, then file type. The active plugin additionally shows an [Active] label after its role icon — for example an active guard patch reads 🛡 [Active] before its name.
 
 - 📜 — a master file that other plugins depend on.
 - 📄 — a regular plugin loaded from a mod folder or game data directory.
-- ⚡ — an overridden plugin loaded from MO2's overwrite folder, meaning a cleaned or patched copy is being used instead of the original mod version.
 - ⚙ — the merged patch produced by the auto-merge operation.
+- ⚡ — the plugin is loaded from MO2's overwrite folder, meaning a second (cleaned or patched) copy of the file exists and is being used instead of the original mod version.
 - 🛡 — a guard patch that acts as a priority barrier during auto-merge.
-- 🔒 — a plugin excluded from the merged patch. Its records are ignored during merge.
+- [Active] — the active plugin: the one that currently receives copied records.
 
-When a plugin has field edits that have not yet been written to disk, an asterisk appears next to its name, after the icon and before the filename. The asterisk disappears once the plugin is saved.
+Content excluded from the merged patch is not marked in any special way. Whether a plugin, record, or sub-record is left out of the merge, it still appears and is colored by its conflict status exactly like everything else. Exclusion only affects what the auto-merge writes, not how content is shown.
+
+When a plugin has field edits that have not yet been written to disk, an asterisk appears before the filename in the ID column. The asterisk disappears once the plugin is saved.
 
 ## Record View
 
@@ -62,6 +64,10 @@ Clicking a record in the nav tree displays its full content in the record view. 
 Each column represents one plugin's version. Column headers show the plugin filename, colored by that plugin's conflict status for this record. Cells with differing values across plugins are highlighted to make conflicts visible.
 
 Empty cells mean that plugin does not include the sub-record. This happens when a plugin only modifies some fields of a record.
+
+Sub-records are shown in a fixed, consistent order: the record header first, then the simple single-value fields (including any optional placeholder rows in their usual position), then the data blocks that expand into sub-values, and finally repeating content such as inventory items, spells, or body-part slots. The order follows one shared sequence used for every record type, so a sub-record that several record types share, such as the display name or model path, always appears in the same relative position. The order is the same every time you open a record, so fields are always where you expect them.
+
+Some fields are linked as a pair whose two values are always merged together from the same plugin, never taken from different plugins. Both rows are marked in front of their names with a 🔗 link icon, so you can see they move as one during a merge. This applies to a creature's attack damage minimum and maximum, a weapon's chop, slash, and thrust damage ranges, and the magnitude minimum and maximum of enchantment, spell, potion, and ingredient effects.
 
 ## Dialogue Responses
 
@@ -73,27 +79,27 @@ Each row is labeled with the INFO's display name (typically the speaker NPC ID),
 
 ## Context Menus
 
-Right-click in the record view to access merge operations:
+Right-click in the record view to copy content into the active plugin (the merged patch by default; see Choosing the Active Plugin):
 
-- **Copy Record to Merged Patch** — copies the entire record from the selected plugin column into the merged patch.
-- **Copy Sub-Record to Merged Patch** — copies a single sub-record (one row) from a plugin column.
-- **Copy Field to Merged Patch** — copies a single decoded field within a sub-record from a plugin column.
-- **Copy Bit to Merged Patch** — copies a single flag bit (a row under a Flags field, such as Female) from a plugin column, changing only that bit in the merged patch and leaving the record's other flags as they are.
-- **Copy Group to Merged Patch** — copies a group of related sub-records (e.g. all fields of a referenced object in a cell).
-- **Remove Sub-Record from Merged Patch** / **Remove Group from Merged Patch** — removes content from the merged patch column.
-- **Exclude Sub-Record** / **Include Sub-Record** — toggles the sub-record type in the exclusion list. When the type is already excluded, the action reads "Include Sub-Record" and removes the rule; when the whole record type is excluded by a wildcard rule, the include option is greyed out. Excluding adds the sub-record type to the exclusion list in settings. The sub-record will be hidden from conflict detection and excluded from the merged patch. The rule is stored as `RECORD:SUB` (e.g. `CELL:NAM0`) and can be reviewed in Settings. Exclusion applies only to top-level sub-records; sub-records nested inside a cell's referenced objects are never excluded, so a rule such as `CELL:DATA` affects the cell's own data and leaves the referenced objects intact. This option is offered only on top-level sub-record rows.
+- **Copy Record to Active Plugin** — copies the entire record from the selected plugin column into the active plugin.
+- **Copy Sub-Record to Active Plugin** — copies a single sub-record (one row) from a plugin column.
+- **Copy Field to Active Plugin** — copies a single decoded field within a sub-record from a plugin column.
+- **Copy Bit to Active Plugin** — copies a single flag bit (a row under a Flags field, such as Female) from a plugin column, changing only that bit in the active plugin and leaving the record's other flags as they are.
+- **Copy Group to Active Plugin** — copies a group of related sub-records (e.g. all fields of a referenced object in a cell).
+- **Remove Sub-Record from Active Plugin** / **Remove Group from Active Plugin** — removes content from the active plugin's column.
+- **Exclude Sub-Record** / **Include Sub-Record** — adds or removes a rule that leaves this sub-record type out of the merged patch. When the sub-record is already excluded, the action reads "Include Sub-Record" and removes the rule; when the whole record type is excluded, the option is greyed out because the sub-record is already covered. The rule is stored in the merged-patch exclude list and can be reviewed and edited in Settings. Exclusion applies only to top-level sub-records; sub-records nested inside a cell's referenced objects are never excluded, so a rule such as `CELL:DATA` affects the cell's own data and leaves the referenced objects intact. This option is offered only on top-level sub-record rows.
 
-Right-click a record node belonging to the merged patch in the navigation tree to see the **Remove Record from Merged Patch** option, which deletes that record from the merged patch entirely.
+Right-click a record node belonging to the active plugin in the navigation tree to see the **Remove Record from Active Plugin** option, which deletes that record from the active plugin entirely.
 
-Right-click a record node belonging to a loaded plugin to see the **Copy Record to Merged Patch** option, which copies the whole record from that plugin into the merged patch. It is greyed out unless a merged patch exists and the record is not already in it.
+Right-click a record node belonging to another loaded plugin to see the **Copy Record to Active Plugin** option, which copies the whole record from that plugin into the active plugin. It is greyed out unless an active plugin exists and the record is not already in it.
 
 The same menu offers **Remove Record from Plugin**. After a confirmation prompt, the record is dropped from that plugin in memory and the plugin is marked as having unsaved changes. The record disappears from the file the next time you save the plugin. This removal cannot be undone; the only way to recover the record is to close the plugin without saving. The option is greyed out unless editing is enabled.
 
 Right-click a plugin node in the navigation tree for plugin-level options:
 
-- **Save** — writes the plugin's pending field edits to disk and removes its asterisk. This option is enabled only while the plugin has unsaved changes; when the plugin is already saved it appears greyed out.
 - **Exclude from Merged Patch** / **Include in Merged Patch** — excluded plugins are completely ignored during auto-merge. Their records will not appear in the merged patch regardless of conflicts.
 - **Mark as Guard Patch** — the guard patch acts as a priority barrier during auto-merge. Plugins loaded before the guard that modify the same records are ignored. Only the guard's version and later plugins are considered. If the final plugin's version matches master (reverting a change), the guard's version is used instead of letting the revert through.
+- **Save** — writes the plugin's pending field edits to disk and removes its asterisk. This option is enabled only while the plugin has unsaved changes; when the plugin is already saved it appears greyed out.
 
 ## View Menu
 
@@ -104,6 +110,7 @@ The View menu provides display options:
 - **Sync Scrolling** — locks the scroll position between the two comparison panes in the Edit panel so they stay aligned as you scroll either one. The setting is remembered between sessions.
 - **Show Only One Column Per Plugin** — when a plugin defines the same record more than once, collapses those versions into a single column showing only that plugin's last (winning) version, instead of one column per occurrence.
 - **Strike Out Deleted Records** — renders deleted records and cell references with strikethrough text, making them visually distinct from active content.
+- **Show Optional Fields** — adds a row for each sub-record a record can contain but currently does not, so you can see the fields that are available to add. These placeholder rows have a white background with light grey text and are empty in every plugin column. Only single-occurrence sub-records are shown this way; repeating content such as inventory items or spell effects is not. The setting is remembered between sessions.
 
 ## Toolbar Search
 
@@ -117,7 +124,7 @@ The toolbar search field filters the navigation tree by record ID or display nam
 - **.\*** — interpret the query as a regular expression.
 - **ID** — search in the record's internal ID (e.g. "iron_dagger", "balmora_guild").
 - **Name** — search in the record's display name (e.g. "Iron Dagger", "Balmora Mages Guild").
-- **Advanced Filters...** — opens the advanced filter dialog for filtering by conflict severity, per-plugin conflict status, record type, deleted status, and Lua handler criteria. The dialog opens pre-populated with the advanced criteria currently in effect, so adjustments build on the existing selection rather than starting from scratch.
+- **Advanced Filters...** — opens the advanced filter dialog for filtering by conflict severity, per-plugin conflict status, record type, deleted status, and Lua handler criteria. The record type list uses the same readable names as the navigation tree (for example Cell, Creature, Dialogue Response), not the raw four-letter codes. The dialog opens pre-populated with the advanced criteria currently in effect, so adjustments build on the existing selection rather than starting from scratch.
 - **No Filters** — a checkable toggle that shows whether any filters are active. When unchecked (filters are active), clicking it clears Conflicts Only, the search field, and the advanced filter in one action, returning the navigation tree to showing every record. When already checked, clicking it does nothing.
 
 Press Escape to clear the search field and remove the text filter.
@@ -126,13 +133,13 @@ Press Escape to clear the search field and remove the text filter.
 
 The Edit panel at the bottom of the window serves two purposes: text comparison and field editing.
 
-When you click a cell in the record view that has a conflict with a previous column, the Edit panel shows both values side by side. The lines that changed between the two versions are highlighted: removed lines have a red background on the left, added lines a green background on the right. The comparison ignores leading indentation, so a script that differs only in how its lines are indented reads as unchanged, while each pane still shows its own original layout with tabs rendered four characters wide.
+When you click a cell in the record view, the Edit panel shows its value on the right and, on the left, the value from the nearest earlier plugin column that actually defines this field. Columns that leave the field empty are skipped, so the left pane always shows a real previous value to compare against rather than a blank. The exact characters that differ between the two versions are highlighted: the characters missing from the left value are marked with a red background on the left pane, and the characters added in the right value are marked with a green background on the right pane. The highlighting works the same whether the right pane is read-only or editable, and while you type an edit the marks update to reflect the new value.
 
 The Diff button below the comparison turns this highlighting on and off. With it off, both panes show plain text with no coloring, which is useful for reading the raw content of each version. Toggling it keeps your current scroll position rather than jumping back to the top.
 
 Direct editing of loaded plugins is off by default. Turn it on in Settings under the Editing page, where a warning explains that editing a plugin rewrites it on save and can break it. The choice is remembered between sessions. The merged patch column is always editable regardless of this setting.
 
-When editing is enabled (via the Editing page in Settings), clicking a decoded field in any plugin's column activates the Edit panel as an editor. The right pane becomes editable and an Apply button appears. For enum fields (race, class, type), a dropdown selector shows all valid values. For flag fields (NPC flags, cell flags), the dropdown presents checkboxes for each flag bit. Free-text fields such as names and IDs accept direct text input. The panel validates the input against the field's constraints — numeric range, string length, and codepage encoding limits. When the value is invalid the field is marked red and the reason is shown next to the Apply button. The Apply button stays disabled until the value is both valid and different from the original. Clicking Apply updates the loaded plugin held in memory and refreshes the record view to reflect the new state. It does not write the plugin file at this point; the change is kept until you choose to save it.
+When editing is enabled (via the Editing page in Settings), clicking a decoded field in any plugin's column activates the Edit panel as an editor. The right pane becomes editable and an Apply button appears. For enum fields (race, class, type), a dropdown selector shows all valid values. For flag fields (NPC flags, cell flags), the dropdown presents checkboxes for each flag bit. Free-text fields such as names and IDs accept direct text input. The panel validates the input against the field's constraints — numeric range, string length, and codepage encoding limits. A message to the left of the value selector and Apply button shows the field's accepted range while you edit (for example "Range: 0 to 255" for a byte field or "Range: up to 32 bytes" for a name); if the value becomes invalid, the field is marked red and the message switches to "Error:" followed by the reason. Fields edited through a dropdown show no range message, since the list already limits the choices. Some fields the game recomputes on its own, such as a leveled list's entry Count, cannot be edited; selecting one shows "Auto-calculated, not editable" in that same message spot and leaves the field read-only. A record's ID field is likewise read-only, since it identifies the record and renaming it in place would break references; selecting it shows "Record ID, not editable". Landscape records are read-only in full — their terrain data is not something the editor lets you change — and selecting any of their fields shows "Landscape data, not editable". The Apply button stays disabled until the value is both valid and different from the original. Clicking Apply updates the loaded plugin held in memory and refreshes the record view to reflect the new state. It does not write the plugin file at this point; the change is kept until you choose to save it.
 
 A plugin with changes that have not yet been written to disk is marked with an asterisk next to its name in the navigation panel, and the window title also shows an asterisk while any loaded plugin has unsaved changes. This gives you a clear view of which plugins have pending edits, so you can make several changes and decide when to commit them.
 
@@ -150,23 +157,40 @@ Click **Create Merged Patch** in the toolbar to run the automatic merge. If any 
 
 The auto-merge performs several operations:
 
-- **Leveled list merge** — combines entries from all plugins that modify leveled item or creature lists. No entries are lost; duplicates are removed.
-- **Three-way record merge** — for object records modified by multiple plugins, compares each plugin's changes against the master. Non-conflicting field changes from different plugins are combined into one record.
+- **Leveled list merge** — combines entries from all plugins that modify leveled item or creature lists. Entries added by any plugin are kept and an entry removed by a plugin stays removed. When a plugin changes an existing entry's PC level, or changes how many times an item appears in the list, that change is applied with the last plugin in load order winning; an entry deliberately listed more than once to weight its chance is preserved.
+- **Three-way record merge** — for object records modified by multiple plugins, compares each plugin's changes against the master. Non-conflicting field changes from different plugins are combined into one record. Flag fields merge one bit at a time, so two plugins that each toggle a different flag on the same field both take effect.
+- **Cell merge** — a cell's settings (water, sleep, lighting, region) merge with the same three-way rules as other records, and the objects placed in the cell are combined so a reference added by any plugin is kept. Each placed object is treated as a whole: when more than one plugin changes the same object, the last plugin's version of that object is taken in full, so a placed object never ends up combining, for example, its position from one plugin and its ownership from another.
 - **Bug fixes** — optionally corrects known engine bugs: fog density values outside valid range, summon persistence flags, and cell name reverts.
+
+Some record types are never written to the merged patch, because their content cannot be combined field by field the way objects can: landscape (bulk terrain data), pathgrids, regions, scripts, and dialogue topics with their responses. These types still appear in the navigation tree so their conflicts remain visible, and you can still copy an individual record from any plugin into the active plugin by hand; they are simply left out of the automatic merge and handled by load order instead.
 
 A progress dialog shows how far the merge has got while records are processed. After auto-merge completes, the merged patch is saved automatically. The output location depends on how you loaded plugins: same folder for Open Folder, MO2 overwrite directory for Open MO2 Profile, or the OpenMW data directory for Open OpenMW Config.
 
-You can refine the auto-merge result manually. Use the record view context menu to copy individual sub-records from any plugin column into the merged patch, or remove sub-records that shouldn't be there. Changes are saved immediately.
+You can refine the auto-merge result manually. Use the record view context menu to copy individual sub-records from any plugin column into the active plugin, or remove sub-records that shouldn't be there. Changes are saved immediately.
+
+## Choosing the Active Plugin
+
+Copying always targets one plugin at a time, called the active plugin. It is marked with the ⭐ indicator in the navigation tree and record view, and its column is the one that accepts dropped and copied records. The merged patch is the active plugin by default, so if you only ever build merged patches nothing changes for you. The window title shows the active plugin's file name, so you can always see which plugin will receive copied records.
+
+Click **Create New Plugin** in the toolbar to create an empty plugin and make it the active target. You are asked for a file name; the plugin starts with no records and is written to the same output directory as the merged patch. From then on, copied records go into this new plugin instead of the merged patch. This is a convenient way to build a small hand-made plugin — for example a single-record fix — without running the auto-merge.
+
+Whenever a plugin is written — a new plugin created with an existing name, or the merged patch rebuilt — its modification date is set to the current moment. Because the Open Folder method orders plugins by modification date, this places the freshly written file last in load order, so it wins over everything it was built from, matching how the game and Mod Organizer 2 treat the newest file.
+
+To switch which plugin receives copies, right-click any plugin in the navigation tree and choose **Set as Active Plugin**. The option is greyed out for the plugin that is already active. Because only one plugin can be active at a time, switching first offers to save the current active plugin's changes so nothing is lost; you can save, discard, or cancel the switch. To go back to copying into the merged patch, set it as active again.
 
 ### Locking Merged Patch Values
 
-Right-click a cell in the merged patch column and choose Lock in Merged Patch to freeze that value. You can lock a whole record, a single sub-record, a decoded field, or an individual flag bit — the lock applies to whatever you right-clicked. A locked cell is marked with a lock icon and keeps the exact value it had when you locked it.
+Locking only applies to the merged patch, because a lock protects a value from being overwritten the next time the auto-merge runs. It is offered only when the merged patch is the active plugin; a hand-made plugin created with Create New Plugin has nothing to lock against, so the option does not appear there.
 
-When you regenerate the merged patch, the auto-merge runs as usual and then every locked value is re-applied on top, so a lock is never overwritten by the merge. This is useful when the automatic result for one field is wrong and you want to pin your chosen value while still letting everything else re-merge.
+Right-click a cell in the merged patch column and choose Lock in Merged Patch to freeze that value. You can lock a whole record, a single sub-record, a decoded field, an individual flag bit, or a group — the lock covers exactly what you right-clicked, following the same selection rules as copying. A locked cell is shown with a light blue background and blue text, and keeps the exact value it had when you locked it. When the cell you right-clicked has nothing that can be locked, the option appears greyed out.
 
-Right-click a locked cell and choose Unlock in Merged Patch to remove the lock. Locks are remembered between sessions.
+When you regenerate the merged patch, the auto-merge runs as usual and then every locked value is re-applied on top, so a lock is never overwritten by the merge. This is useful when the automatic result for one field is wrong and you want to pin your chosen value while still letting everything else re-merge. A group lock covers only the members that were in the group when you locked it; if a later merge adds a new member to the same group, the lock leaves it alone, and you can lock the new member separately if you want.
 
-A merged patch can be created even with a single plugin loaded. With one plugin there is nothing to merge automatically, so the patch starts empty; it still gives you a merged-patch column to copy records into by hand, which is a convenient way to build a small patch from one mod. The empty patch is written to disk like any other, and it gains its master references as you copy records into it.
+You can also lock an entire record straight from the navigation tree: right-click a record under the merged patch and choose Lock in Merged Patch to freeze the whole record, or Unlock in Merged Patch to release it. This is the quickest way to pin a complete record such as a script or a leveled list. A locked record is shown with a light blue background and blue text in the navigation tree so you can see at a glance which records are held.
+
+Right-click a locked cell and choose Unlock in Merged Patch to remove the lock. Locks are remembered between sessions and stored alongside the merged patch itself, so each merged patch keeps its own locks — loading a different profile's merged patch shows that patch's locks, never another's.
+
+A merged patch can be created even with a single plugin loaded. With one plugin there is nothing to merge automatically, so the patch starts empty; it still gives you a column to copy records into by hand, which is a convenient way to build a small patch from one mod. The empty patch is written to disk like any other, and it gains its master references as you copy records into it.
 
 ## Settings
 
@@ -174,9 +198,8 @@ Open Settings via Ctrl+, or the Tools menu. Five pages are available:
 
 - **Appearance** — choose between light and dark theme, and set the text codepage used to display plugin text. Choose Windows-1250 for Polish and Central European plugins, Windows-1251 for Russian, or Windows-1252 for English and other Western languages. The codepage applies to the navigation tree, the record view, and the Edit panel. Changing it updates the navigation tree and record view right away; the Edit panel refreshes the next time you select a record cell. Plugin files carry no encoding marker, so pick the codepage that matches the language of the plugins you are inspecting; choosing the wrong one makes accented or non-English characters appear as replacement symbols.
 - **Output Paths** — configure the merged patch output path for each loading mode (folder, MO2, OpenMW). Normally these are automatic and don't need changing.
-- **Merged Patch** — three sub-tabs control how auto-merge behaves:
-  - **Exclude Sub-Records** — a list of sub-records excluded from conflict detection and the merged patch. Each entry uses `RECORD:SUB` format (e.g. `CELL:NAM0`). Use `TYPE:*` to exclude an entire record type. Add entries via the input field or right-click a sub-record row in the record view and choose "Exclude Sub-Record."
-  - **Exclude by ID** — a list of regular expression patterns matched against record IDs. Records matching any pattern are skipped entirely during auto-merge.
+- **Merged Patch** — two sub-tabs control how auto-merge behaves:
+  - **Excludes** — one table listing everything left out of the merged patch. Each row has a kind and a target. The kind chooses what the rule matches: an entire plugin File (by filename), a Record ID (a regular expression matched against record IDs), a whole Record Type (a four-letter code such as REGN), or a single Sub-Record (in `TYPE:SUB` form such as `CELL:NAM0`). Pick a kind, type the target, and press Add; select a row and press Remove to delete it. Excluding only keeps the matched content out of the merged patch — it does not change how anything is shown or how conflicts are detected. Right-clicking a record or a sub-record in the record view adds the matching rule here automatically.
   - **Fixes** — toggle individual bug fixes applied during merge: fog density correction, summon persistence flag, and cell name reversion prevention.
 - **Editing** — turn direct editing of loaded plugins on or off. When on, clicking a decoded field in any plugin's column lets you edit it in place. This is off by default and carries a warning, because editing a plugin rewrites it on save and can break it if a value is malformed. The merged patch is always editable regardless of this setting. The choice is remembered between sessions.
 - **Cleaning** — toggle which cleaning operations the Clean All button performs. Evil GMSTs are Construction Set artifacts from Tribunal/Bloodmoon that can cause issues in mods that don't require those expansions. Junk cells are empty exterior cell records that only contain position data and serve no purpose. The Header Repair group provides additional fixes applied during cleaning: updating master file sizes in the plugin header to match the actual file sizes on disk, and updating the plugin version field to 1.3 (required by some engines).

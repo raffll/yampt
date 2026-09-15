@@ -159,7 +159,7 @@ struct merge_test_fixture_t
 
 		scan.load_plugin(master_path);
 		scan.load_plugin(plugin_path);
-		scan.set_merge_plugin("Merged Patch.esp");
+		scan.set_active_plugin("Merged Patch.esp");
 	}
 
 	~merge_test_fixture_t()
@@ -189,7 +189,7 @@ struct merge_test_fixture_t
 
 	const std::string & merged_content()
 	{
-		return scan.merge_record_content(0);
+		return scan.active_record_content(0);
 	}
 
 	void merge_leveled_list(const conflict_entry_t & entry)
@@ -205,7 +205,7 @@ struct merge_test_fixture_t
 
 		const auto result = leveled_list_merge_t::merge(input);
 		if (!result.content.empty())
-			scan.copy_record_to_merge_raw(entry.rec_type, entry.record_id, result.content);
+			scan.copy_record_to_active_raw(entry.rec_type, entry.record_id, result.content);
 	}
 };
 
@@ -235,7 +235,7 @@ TEST_CASE("plugin_scan_t::merge_leveled_list, additions-only preserving master",
 
 	fixture.merge_leveled_list(entry);
 
-	REQUIRE(fixture.scan.merge_record_count() == 1);
+	REQUIRE(fixture.scan.active_record_count() == 1);
 	auto items = extract_items_from_content(fixture.merged_content());
 
 	REQUIRE(items.size() == 3);
@@ -270,7 +270,7 @@ TEST_CASE("plugin_scan_t::merge_leveled_list, deduplication by item and level", 
 
 	fixture.merge_leveled_list(entry);
 
-	REQUIRE(fixture.scan.merge_record_count() == 1);
+	REQUIRE(fixture.scan.active_record_count() == 1);
 	auto items = extract_items_from_content(fixture.merged_content());
 
 	REQUIRE(items.size() == 3);
@@ -309,7 +309,7 @@ TEST_CASE("plugin_scan_t::merge_leveled_list, header from winner", "[i]")
 
 	fixture.merge_leveled_list(entry);
 
-	REQUIRE(fixture.scan.merge_record_count() == 1);
+	REQUIRE(fixture.scan.active_record_count() == 1);
 
 	auto merged_data = find_sub_record(fixture.merged_content(), "DATA");
 	auto merged_nnam = find_sub_record(fixture.merged_content(), "NNAM");
@@ -345,7 +345,7 @@ TEST_CASE("plugin_scan_t::merge_leveled_list, same item different levels are dis
 
 	fixture.merge_leveled_list(entry);
 
-	REQUIRE(fixture.scan.merge_record_count() == 1);
+	REQUIRE(fixture.scan.active_record_count() == 1);
 	auto items = extract_items_from_content(fixture.merged_content());
 
 	REQUIRE(items.size() == 3);
@@ -405,7 +405,7 @@ struct merge_dialogue_fixture_t
 
 	void setup_merge()
 	{
-		scan.set_merge_plugin("Merged.esp");
+		scan.set_active_plugin("Merged.esp");
 		scan.rebuild_conflicts();
 	}
 
@@ -413,14 +413,14 @@ struct merge_dialogue_fixture_t
 	{
 		const auto & winning_ver = entry.versions.back();
 		std::string winning_dial = scan.read_record_content(winning_ver.plugin_idx, winning_ver.record_index);
-		scan.copy_record_to_merge_raw("DIAL", entry.record_id, winning_dial);
+		scan.copy_record_to_active_raw("DIAL", entry.record_id, winning_dial);
 
 		std::vector<std::string> merged_info_ids;
 		std::map<std::string, std::string> info_contents;
 
 		for (const auto & ver : entry.versions)
 		{
-			if (scan.is_merge_plugin(ver.plugin_idx))
+			if (scan.is_active_plugin(ver.plugin_idx))
 				continue;
 
 			const auto & plugin_entries = scan.index(ver.plugin_idx).entries();
@@ -443,7 +443,7 @@ struct merge_dialogue_fixture_t
 		}
 
 		for (const auto & info_id : merged_info_ids)
-			scan.copy_record_to_merge_raw("INFO", info_id, info_contents[info_id]);
+			scan.copy_record_to_active_raw("INFO", info_id, info_contents[info_id]);
 	}
 
 	~merge_dialogue_fixture_t()
@@ -478,9 +478,9 @@ TEST_CASE("plugin_scan_t::merge_dialogue, DIAL content from last plugin", "[i]")
 
 	fixture.merge_dialogue(*entry);
 
-	REQUIRE(fixture.scan.merge_record_count() >= 1);
+	REQUIRE(fixture.scan.active_record_count() >= 1);
 
-	const auto & dial_content = fixture.scan.merge_record_content(0);
+	const auto & dial_content = fixture.scan.active_record_content(0);
 	const auto expected_dial_b = make_dial_record("greeting", 2);
 	REQUIRE(dial_content == expected_dial_b);
 }
@@ -512,11 +512,11 @@ TEST_CASE("plugin_scan_t::merge_dialogue, INFO ordering preserves first-seen pos
 
 	fixture.merge_dialogue(*entry);
 
-	REQUIRE(fixture.scan.merge_record_count() == 4);
+	REQUIRE(fixture.scan.active_record_count() == 4);
 
-	const auto & info1_content = fixture.scan.merge_record_content(1);
-	const auto & info2_content = fixture.scan.merge_record_content(2);
-	const auto & info3_content = fixture.scan.merge_record_content(3);
+	const auto & info1_content = fixture.scan.active_record_content(1);
+	const auto & info2_content = fixture.scan.active_record_content(2);
+	const auto & info3_content = fixture.scan.active_record_content(3);
 
 	REQUIRE(info1_content.find("alpha") != std::string::npos);
 	REQUIRE(info2_content.find("beta") != std::string::npos);
@@ -556,12 +556,12 @@ TEST_CASE("plugin_scan_t::merge_dialogue, all distinct INFO IDs included", "[i]"
 
 	fixture.merge_dialogue(*entry);
 
-	REQUIRE(fixture.scan.merge_record_count() == 5);
+	REQUIRE(fixture.scan.active_record_count() == 5);
 
-	const auto & content1 = fixture.scan.merge_record_content(1);
-	const auto & content2 = fixture.scan.merge_record_content(2);
-	const auto & content3 = fixture.scan.merge_record_content(3);
-	const auto & content4 = fixture.scan.merge_record_content(4);
+	const auto & content1 = fixture.scan.active_record_content(1);
+	const auto & content2 = fixture.scan.active_record_content(2);
+	const auto & content3 = fixture.scan.active_record_content(3);
+	const auto & content4 = fixture.scan.active_record_content(4);
 
 	REQUIRE(content1.find("info_x") != std::string::npos);
 	REQUIRE(content2.find("info_y") != std::string::npos);
@@ -594,9 +594,9 @@ TEST_CASE("plugin_scan_t::merge_dialogue, INFO content last-wins for duplicates"
 
 	fixture.merge_dialogue(*entry);
 
-	REQUIRE(fixture.scan.merge_record_count() == 2);
+	REQUIRE(fixture.scan.active_record_count() == 2);
 
-	const auto & info_content = fixture.scan.merge_record_content(1);
+	const auto & info_content = fixture.scan.active_record_content(1);
 	REQUIRE(info_content.find("updated rumor text") != std::string::npos);
 	REQUIRE(info_content.find("old rumor text") == std::string::npos);
 }
@@ -620,11 +620,77 @@ TEST_CASE("plugin_scan_t::merge_dialogue, orphan PNAM/NNAM references ignored", 
 
 	fixture.merge_dialogue(*entry);
 
-	REQUIRE(fixture.scan.merge_record_count() == 3);
+	REQUIRE(fixture.scan.active_record_count() == 3);
 
-	const auto & content1 = fixture.scan.merge_record_content(1);
-	const auto & content2 = fixture.scan.merge_record_content(2);
+	const auto & content1 = fixture.scan.active_record_content(1);
+	const auto & content2 = fixture.scan.active_record_content(2);
 
 	REQUIRE(content1.find("lore text one") != std::string::npos);
 	REQUIRE(content2.find("lore text two") != std::string::npos);
+}
+
+static std::string make_weap_record(const std::string & weap_id, const std::string & display_name)
+{
+	std::string subs;
+	subs += make_sub_record("NAME", null_terminated(weap_id));
+	subs += make_sub_record("FNAM", null_terminated(display_name));
+	subs += make_sub_record("WPDT", std::string(32, '\0'));
+	return make_record("WEAP", subs);
+}
+
+struct slot_result_fixture_t
+{
+	plugin_scan_t scan;
+	std::vector<std::string> temp_files;
+
+	void add_plugin(const std::string & filename, const std::string & content)
+	{
+		const auto path = get_temp_path(filename);
+		write_binary_file(path, content);
+		scan.load_plugin(path);
+		temp_files.push_back(path);
+	}
+
+	~slot_result_fixture_t()
+	{
+		for (const auto & path : temp_files)
+			std::filesystem::remove(path);
+	}
+};
+
+TEST_CASE("plugin_scan_t::rebuild_conflicts, computes conflict status for overridden record", "[i]")
+{
+	slot_result_fixture_t fixture;
+
+	const auto plugin_a = make_plugin({ make_weap_record("iron_dagger", "Iron Dagger") });
+	const auto plugin_b = make_plugin({ make_weap_record("iron_dagger", "Steel Dagger") });
+
+	fixture.add_plugin("yampt_test_slotresult_a.esm", plugin_a);
+	fixture.add_plugin("yampt_test_slotresult_b.esp", plugin_b);
+	fixture.scan.rebuild_conflicts();
+
+	const auto * entry = fixture.scan.find("WEAP", "iron_dagger");
+	REQUIRE(entry != nullptr);
+	REQUIRE(entry->versions.size() == 2);
+	REQUIRE(entry->conflict_all > conflict_all_t::only_one);
+}
+
+TEST_CASE("plugin_scan_t::build_slot_result_for, rebuilds alignment on demand", "[i]")
+{
+	slot_result_fixture_t fixture;
+
+	const auto plugin_a = make_plugin({ make_weap_record("iron_dagger", "Iron Dagger") });
+	const auto plugin_b = make_plugin({ make_weap_record("iron_dagger", "Steel Dagger") });
+
+	fixture.add_plugin("yampt_test_buildslot_a.esm", plugin_a);
+	fixture.add_plugin("yampt_test_buildslot_b.esp", plugin_b);
+	fixture.scan.rebuild_conflicts();
+
+	const auto * entry = fixture.scan.find("WEAP", "iron_dagger");
+	REQUIRE(entry != nullptr);
+
+	const auto slot_result = fixture.scan.build_slot_result_for(*entry);
+	REQUIRE(slot_result != nullptr);
+	REQUIRE(slot_result->contents.size() == 2);
+	REQUIRE_FALSE(slot_result->aligned.empty());
 }

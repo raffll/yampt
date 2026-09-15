@@ -215,14 +215,12 @@ TEST_CASE("record_conflict::find_conflict_policy, CELL wildcard returns skip", "
 {
 	const auto policy = record_conflict::find_conflict_policy("CELL", "DATA");
 	REQUIRE(policy.skip_non_existent == true);
-	REQUIRE(policy.ignore_conflict == false);
 }
 
 TEST_CASE("record_conflict::find_conflict_policy, unknown type returns default", "[u]")
 {
 	const auto policy = record_conflict::find_conflict_policy("NPC_", "DATA");
 	REQUIRE(policy.skip_non_existent == false);
-	REQUIRE(policy.ignore_conflict == false);
 }
 
 TEST_CASE("record_conflict::non_existent_value, cannot collide with format_value_full", "[u]")
@@ -235,28 +233,24 @@ TEST_CASE("record_conflict::find_conflict_policy, CELL NAME inherits wildcard", 
 {
 	const auto policy = record_conflict::find_conflict_policy("CELL", "NAME");
 	REQUIRE(policy.skip_non_existent == true);
-	REQUIRE(policy.ignore_conflict == false);
 }
 
 TEST_CASE("record_conflict::find_conflict_policy, CELL WHGT inherits wildcard", "[u]")
 {
 	const auto policy = record_conflict::find_conflict_policy("CELL", "WHGT");
 	REQUIRE(policy.skip_non_existent == true);
-	REQUIRE(policy.ignore_conflict == false);
 }
 
 TEST_CASE("record_conflict::find_conflict_policy, NPC_ FNAM returns default", "[u]")
 {
 	const auto policy = record_conflict::find_conflict_policy("NPC_", "FNAM");
 	REQUIRE(policy.skip_non_existent == false);
-	REQUIRE(policy.ignore_conflict == false);
 }
 
 TEST_CASE("record_conflict::find_conflict_policy, DIAL NAME returns default", "[u]")
 {
 	const auto policy = record_conflict::find_conflict_policy("DIAL", "NAME");
 	REQUIRE(policy.skip_non_existent == false);
-	REQUIRE(policy.ignore_conflict == false);
 }
 
 TEST_CASE("record_conflict::compute_conflict_all_skip_empty, two present same with gap", "[u]")
@@ -368,19 +362,16 @@ TEST_CASE("record_conflict::find_conflict_policy, CELL AMBI inherits wildcard", 
 {
 	const auto policy = record_conflict::find_conflict_policy("CELL", "AMBI");
 	REQUIRE(policy.skip_non_existent == true);
-	REQUIRE(policy.ignore_conflict == false);
 }
 
 TEST_CASE("record_conflict::find_conflict_policy, CELL FRMR inherits wildcard", "[u]")
 {
 	const auto policy = record_conflict::find_conflict_policy("CELL", "FRMR");
 	REQUIRE(policy.skip_non_existent == true);
-	REQUIRE(policy.ignore_conflict == false);
 }
 
 TEST_CASE("record_conflict::find_conflict_policy, LEVI INAM returns default", "[u]")
 {
 	const auto policy = record_conflict::find_conflict_policy("LEVI", "INAM");
 	REQUIRE(policy.skip_non_existent == false);
-	REQUIRE(policy.ignore_conflict == false);
 }

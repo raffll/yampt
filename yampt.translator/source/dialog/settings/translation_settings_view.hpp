@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../../translator/web_translator_config.hpp"
-#include <translation_example.hpp>
 #include <string>
+#include <translation_example.hpp>
 #include <unordered_map>
 #include <vector>
 #include <QWidget>

@@ -44,7 +44,7 @@ TEST_CASE("edit_log_t::clear, removes all entries", "[u]")
 	REQUIRE(log.entries().empty());
 }
 
-TEST_CASE("edit_log_t, preserves chronological append order", "[u]")
+TEST_CASE("edit_log_t::entries, preserves chronological append order", "[u]")
 {
 	edit_log_t log;
 	log.record_field_edit({ "A.esp", "NPC_", "first", "FNAM", "one" });

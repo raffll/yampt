@@ -1,9 +1,9 @@
 #include "translation_settings_view.hpp"
 #include "translator/translation_example_ops.hpp"
-#include <resource_paths.hpp>
-#include <settings_store.hpp>
 #include <utility/language_config.hpp>
 #include <filesystem>
+#include <resource_paths.hpp>
+#include <settings_store.hpp>
 #include <QComboBox>
 #include <QFormLayout>
 #include <QFrame>
@@ -277,7 +277,8 @@ void translation_settings_view_t::update_prompt_preview()
 
 void translation_settings_view_t::build_examples_tab(QVBoxLayout * parent)
 {
-	m_examples_empty_label = new QLabel(tr("No examples marked. Right-click a record and choose \"Mark as Example\"."), this);
+	m_examples_empty_label =
+	    new QLabel(tr("No examples marked. Right-click a record and choose \"Mark as Example\"."), this);
 	m_examples_empty_label->setStyleSheet("color: rgb(120, 120, 120); font-style: italic;");
 	m_examples_empty_label->setWordWrap(true);
 	parent->addWidget(m_examples_empty_label);

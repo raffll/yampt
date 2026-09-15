@@ -85,8 +85,7 @@ void editor_highlighter_t::apply_forbidden_chars(const QString & text)
 	{
 		const auto ch = text.at(i).unicode();
 
-		if (ch == '|' || ch == '~' || ch == '{' || ch == '}' ||
-		    (ch <= 0x1F && ch != 0x09 && ch != 0x0D && ch != 0x0A))
+		if (ch == '|' || ch == '~' || ch == '{' || ch == '}' || (ch <= 0x1F && ch != 0x09 && ch != 0x0D && ch != 0x0A))
 		{
 			auto merged = format(i);
 			merged.setBackground(theme_system_t::instance().get_color(color_name_t::syntax_forbidden_background));

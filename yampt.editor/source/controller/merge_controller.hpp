@@ -20,7 +20,7 @@ class merge_controller_t
 public:
 	using log_fn_t = std::function<void(const std::string &)>;
 	using refresh_fn_t = std::function<void()>;
-	using record_removal_fn_t = std::function<void(const record_removal_record_t &)>;
+	using lock_changed_fn_t = std::function<void(const std::string & rec_type, const std::string & record_id)>;
 	using progress_fn_t = std::function<void(int done, int total)>;
 	using phase_fn_t = std::function<void(const std::string & label)>;
 
@@ -32,12 +32,14 @@ public:
 	    log_fn_t log_fn);
 
 	void set_refresh_callback(refresh_fn_t refresh_fn);
-	void set_record_removal_callback(record_removal_fn_t removal_fn);
+	void set_lock_changed_callback(lock_changed_fn_t lock_changed_fn);
 	void set_progress_callback(progress_fn_t progress_fn);
 	void set_phase_callback(phase_fn_t phase_fn);
 
 	bool create_merged_patch();
 	void load_existing_merged_patch();
+	void create_new_plugin(const std::string & filename);
+	void set_active_plugin(int plugin_idx);
 	std::string resolve_output_directory() const;
 
 	void copy_whole_record(int plugin_idx, const std::string & rec_type, const std::string & record_id);
@@ -83,38 +85,47 @@ public:
 	    const std::string & record_id,
 	    view_tree_model_t::binary_range_t range);
 
-	void remove_record_from_merge(const std::string & rec_type, const std::string & record_id);
+	void remove_record_from_active(const std::string & rec_type, const std::string & record_id);
 
-	void toggle_merge_lock(const merge_lock_t & lock);
-	bool is_merge_locked(const merge_lock_t & lock) const;
+	void toggle_active_lock(const merge_lock_t & lock);
+	bool is_active_locked(const merge_lock_t & lock) const;
 
-	bool remove_record_from_plugin(int plugin_idx, const std::string & rec_type, const std::string & record_id);
 
-	void save_merged_patch();
+	void save_active_plugin();
+	void sync_active_locks();
 
 	bool save_plugin(int plugin_idx);
 	void save_all_dirty();
 
-	void debug_log(const std::string & message) const;
-
 private:
+	bool prompt_save_before_merge();
+	bool confirm_merged_patch_regeneration(int merged_idx);
+	void activate_merged_patch_target(int merged_idx);
+	void rebuild_merged_patch_conflicts();
 	int create_merge_records();
 	void reapply_locks();
 	std::string capture_locked_content(const merge_lock_t & lock) const;
-	std::string resolve_merge_output_path() const;
-	bool save_merge_to_file(
+	std::string resolve_active_output_path() const;
+	std::string output_dir_relative_for_source() const;
+	bool save_active_to_file(
 	    const std::string & output_path,
 	    const std::string & author,
 	    const std::string & description);
-	void refresh_after_merge(const std::string & rec_type, const std::string & record_id);
+	void refresh_after_active_edit(const std::string & rec_type, const std::string & record_id);
+	void relock_after_edit(const std::string & rec_type, const std::string & record_id);
+	bool prompt_save_active_before_switch();
 
 	std::string read_source_content(int plugin_idx, const std::string & rec_type, const std::string & record_id);
-	std::string ensure_merge_record(
+	std::string ensure_active_record(
 	    int plugin_idx,
 	    const std::string & rec_type,
 	    const std::string & record_id,
 	    const std::string & source_content);
 	int find_plugin_column(int plugin_idx) const;
+	int find_merged_patch_index() const;
+	std::string merged_patch_locks_path() const;
+	void save_merged_patch_locks() const;
+	void load_merged_patch_locks();
 	std::set<int> collect_contributing_plugins() const;
 	std::vector<patch_builder_t::master_entry_t> build_master_list(const std::set<int> & contributing) const;
 
@@ -124,7 +135,7 @@ private:
 	settings_store_t & m_settings;
 	log_fn_t m_log;
 	refresh_fn_t m_refresh;
-	record_removal_fn_t m_record_removal;
+	lock_changed_fn_t m_lock_changed;
 	progress_fn_t m_progress;
 	phase_fn_t m_phase;
 };

@@ -98,7 +98,8 @@ TEST_CASE("script_token::extract_token_at, position out of range not found", "[u
 
 TEST_CASE("script_token::extract_token_at, legacy xD1 byte still matched", "[u]")
 {
-	const std::string input = "Pel\xD1""agiad";
+	const std::string input = "Pel\xD1"
+	                          "agiad";
 	const auto result = script_token::extract_token_at(input, 0);
 	REQUIRE(result.found);
 	REQUIRE(result.value == input);

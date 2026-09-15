@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <set>
 #include <string>
@@ -30,6 +31,12 @@ struct sub_record_entry_t
 
 using sub_record_sequence_t = std::vector<sub_record_entry_t>;
 using leveled_list_input_t = merge_input_t;
+
+struct variable_size_merge_result_t
+{
+	sub_record_sequence_t output;
+	bool merged_size_differing = false;
+};
 
 struct frmr_group_t
 {
@@ -98,15 +105,29 @@ public:
 	    const std::string & winner_data,
 	    const std::string & rec_type);
 
-	static bool needs_element_wise(const std::string & rec_type, const std::string & sub_type, size_t data_size);
-	static std::string merge_bytes_three_way(const char * first, const char * inter, const char * winner, size_t size);
-	static std::string merge_fields_three_way(
-	    const std::string & rec_type,
-	    const std::string & sub_type,
-	    const char * first,
-	    const char * inter,
-	    const char * winner,
-	    size_t size);
+	struct field_merge_input_t
+	{
+		std::string rec_type;
+		std::string sub_type;
+		const char * first;
+		const char * inter;
+		const char * winner;
+		const char * current;
+		size_t size;
+	};
+
+	static bool has_schema(const std::string & rec_type, const std::string & sub_type);
+	static std::string merge_fields_three_way(const field_merge_input_t & input);
+
+	struct keyed_item_t
+	{
+		std::string key;
+		std::string data;
+
+		bool operator==(const keyed_item_t & other) const = default;
+	};
+
+	static std::vector<keyed_item_t> keyed_list_merge(const std::vector<std::vector<keyed_item_t>> & versions);
 
 	static std::vector<std::string> collect_enam_data(const sub_record_sequence_t & sequence);
 	static std::string merge_enam_slots(
@@ -122,8 +143,6 @@ public:
 	static frmr_map_t build_frmr_map(const std::vector<frmr_group_t> & groups);
 	static uint32_t read_frmr_index(const sub_record_entry_t & frmr_entry);
 
-	static merge_result_t merge_cell_refs(const merge_input_t & input);
-
 private:
 	static merge_result_t merge_generic(const merge_input_t & input);
 
@@ -133,53 +152,48 @@ private:
 	    const sub_record_sequence_t & winner_subs,
 	    const sub_record_sequence_t & output);
 
-	static sub_record_sequence_t merge_npco_phase(
+	static sub_record_sequence_t merge_keyed_list_phase(
 	    const merge_input_t & input,
 	    const sub_record_sequence_t & first_subs,
 	    const sub_record_sequence_t & winner_subs,
+	    const sub_record_sequence_t & output,
+	    const std::string & sub_type,
+	    const std::function<std::string(const sub_record_entry_t &)> & key_of);
+
+	static variable_size_merge_result_t merge_variable_size_phase(
+	    const merge_input_t & input,
+	    const sub_record_sequence_t & winner_subs,
 	    const sub_record_sequence_t & output);
 
-	static void apply_intermediate_to_group(
-	    sub_record_sequence_t & output,
-	    const sub_record_sequence_t & first,
-	    const sub_record_sequence_t & intermediate,
-	    const sub_record_sequence_t & winner);
-	static sub_record_sequence_t merge_frmr_group(
-	    const sub_record_sequence_t & first_subs,
-	    const sub_record_sequence_t & inter_subs,
-	    const sub_record_sequence_t & winner_subs);
-	static std::string reconstruct_cell(
-	    const std::string & winner_content,
-	    const sub_record_sequence_t & header,
-	    const std::vector<frmr_group_t> & groups);
-	static void collect_intermediate_additions(
-	    std::vector<frmr_group_t> & merged_groups,
-	    const std::vector<std::string> & versions,
-	    const frmr_map_t & first_map,
-	    const frmr_map_t & winner_map);
-	static void merge_winner_frmr_groups(
-	    std::vector<frmr_group_t> & merged_groups,
-	    const std::vector<std::string> & versions,
-	    const frmr_map_t & first_map,
-	    const frmr_map_t & winner_map);
+	struct matched_entry_t
+	{
+		const sub_record_entry_t & first_entry;
+		const sub_record_entry_t & inter_entry;
+		const sub_record_entry_t & winner_entry;
+		sub_record_entry_t & output_entry;
+	};
+
+	static void merge_matched_entry(const matched_entry_t & entries, const std::string & rec_type);
 
 	static merge_result_t merge_armor_parts(const merge_input_t & input);
-	static armor_partition_t partition_armor(const std::string & content);
+	static armor_partition_t partition_armor(const std::string & content, const std::string & rec_type);
 	static armor_part_map_t build_armor_part_map(const std::vector<armor_part_group_t> & groups);
 	static std::string reconstruct_armor(
 	    const std::string & winner_content,
 	    const sub_record_sequence_t & header,
 	    const std::vector<armor_part_group_t> & groups);
-	static void merge_winner_armor_groups(
-	    std::vector<armor_part_group_t> & merged_groups,
-	    const std::vector<std::string> & versions,
-	    const armor_part_map_t & first_map,
-	    const armor_part_map_t & winner_map);
-	static void collect_intermediate_armor_additions(
-	    std::vector<armor_part_group_t> & merged_groups,
-	    const std::vector<std::string> & versions,
-	    const armor_part_map_t & first_map,
-	    const armor_part_map_t & winner_map);
+
+	struct armor_merge_context_t
+	{
+		std::vector<armor_part_group_t> & merged_groups;
+		const std::vector<std::string> & versions;
+		const armor_part_map_t & first_map;
+		const armor_part_map_t & winner_map;
+		std::string rec_type;
+	};
+
+	static void merge_winner_armor_groups(const armor_merge_context_t & context);
+	static void collect_intermediate_armor_additions(const armor_merge_context_t & context);
 };
 
 class leveled_list_merge_t

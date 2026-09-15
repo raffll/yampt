@@ -222,6 +222,7 @@ std::string format_value_full(const char * data, size_t size, codepage_t codepag
 
 	return hex_output;
 }
+
 static std::string format_flags(uint32_t value, const field_def_t & field, int max_bits)
 {
 	if (field.flag_names && field.flag_count > 0)
@@ -367,6 +368,36 @@ static std::string decode_hex_bytes(const char * ptr, size_t available, size_t m
 	return hex_output;
 }
 
+std::string flag_bit_value(const char * data, size_t data_size, const field_def_t & field, int bit_index)
+{
+	if (data == nullptr || field.offset >= data_size)
+		return "";
+
+	const size_t byte_count = (field.type == field_type_t::flags_u8)    ? 1
+	                          : (field.type == field_type_t::flags_u16) ? 2
+	                                                                     : 4;
+
+	uint32_t value = 0;
+	std::memcpy(&value, data + field.offset, std::min(byte_count, data_size - field.offset));
+
+	return (value & (1u << bit_index)) ? "Yes" : "No";
+}
+
+std::string global_type_name(char type_char)
+{
+	switch (type_char)
+	{
+	case 's':
+		return "Short";
+	case 'l':
+		return "Long";
+	case 'f':
+		return "Float";
+	default:
+		return "Error";
+	}
+}
+
 std::string decode_field(const field_def_t & field, const char * data, size_t data_size, codepage_t codepage)
 {
 	if (field.type == field_type_t::bool_bit)
@@ -441,12 +472,18 @@ std::string decode_field(const field_def_t & field, const char * data, size_t da
 	{
 		uint16_t val = 0;
 		std::memcpy(&val, ptr, 2);
+		if (field.enum_names && val == 0xFFFF)
+			return "None";
+
 		return format_enum_lookup(val, field.enum_names);
 	}
 	case field_type_t::enum_u32:
 	{
 		uint32_t val = 0;
 		std::memcpy(&val, ptr, 4);
+		if (field.enum_names && val == 0xFFFFFFFF)
+			return "None";
+
 		return format_enum_lookup(val, field.enum_names);
 	}
 
@@ -472,6 +509,9 @@ std::string decode_field(const field_def_t & field, const char * data, size_t da
 
 	case field_type_t::scvr_subject:
 		return scvr_subject_display(data, data_size);
+
+	case field_type_t::global_type:
+		return global_type_name(ptr[0]);
 	}
 
 	return "";
@@ -496,9 +536,11 @@ static const std::map<std::pair<std::string, std::string>, const char *> & conte
 		{ { "CELL", "XCHG" }, "Charge" },
 		{ { "CELL", "XSOL" }, "Soul" },
 		{ { "NPC_", "ANAM" }, "Faction" },
+		{ { "NPC_", "DODT" }, "Travel Destination" },
+		{ { "CREA", "DODT" }, "Travel Destination" },
 		{ { "NPC_", "BNAM" }, "Head Model" },
 		{ { "NPC_", "CNAM" }, "Class" },
-		{ { "NPC_", "DNAM" }, "Hair Model" },
+		{ { "NPC_", "DNAM" }, "Travel Destination" },
 		{ { "NPC_", "KNAM" }, "Hair" },
 		{ { "NPC_", "CNDT" }, "Cell Travel" },
 		{ { "INFO", "ANAM" }, "Cell" },
@@ -577,13 +619,22 @@ static std::string build_schema_label(const std::string & sub_type, const std::m
 
 std::string make_sub_label(const std::string & sub_type, const std::string & record_type, size_t data_size)
 {
+	const auto * schema = find_schema(record_type, sub_type, data_size);
+	if (schema && schema->label != nullptr)
+		return sub_type + " - " + schema->label;
+
 	const auto & ctx_descs = context_descriptions();
 	auto ctx_it = ctx_descs.find({ record_type, sub_type });
 	if (ctx_it != ctx_descs.end())
 		return sub_type + " - " + ctx_it->second;
 
+	for (const auto & entry : record_composition(record_type))
+	{
+		if (sub_type == entry.sub_type && entry.label != nullptr)
+			return sub_type + " - " + entry.label;
+	}
+
 	const auto & descs = sub_record_descriptions();
-	const auto * schema = find_schema(record_type, sub_type, data_size);
 
 	if (schema)
 		return build_schema_label(sub_type, descs);
@@ -592,5 +643,5 @@ std::string make_sub_label(const std::string & sub_type, const std::string & rec
 	if (it != descs.end())
 		return sub_type + " - " + it->second;
 
-	return sub_type;
+	return sub_type + " - Data";
 }

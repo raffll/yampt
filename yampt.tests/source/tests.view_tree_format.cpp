@@ -34,6 +34,42 @@ TEST_CASE("view_tree_format::decode_field, enum_u32 shows name only", "[u]")
 	REQUIRE(result == "Pauldron");
 }
 
+TEST_CASE("view_tree_format::decode_field, enum_u32 sentinel -1 shows None", "[u]")
+{
+	static const char * const names[] = { "Block", "Armorer", "Long Blade", nullptr };
+	field_def_t field { "Bonus Skill", field_type_t::enum_u32, 0, 4, names, nullptr, 0 };
+
+	char data[4] = {};
+	uint32_t val = 0xFFFFFFFF;
+	std::memcpy(data, &val, 4);
+	auto result = decode_field(field, data, 4);
+	REQUIRE(result == "None");
+}
+
+TEST_CASE("view_tree_format::decode_field, enum_u16 sentinel -1 shows None", "[u]")
+{
+	static const char * const names[] = { "Short Blade", "Long Blade", nullptr };
+	field_def_t field { "Type", field_type_t::enum_u16, 0, 2, names, nullptr, 0 };
+
+	char data[2] = {};
+	uint16_t val = 0xFFFF;
+	std::memcpy(data, &val, 2);
+	auto result = decode_field(field, data, 2);
+	REQUIRE(result == "None");
+}
+
+TEST_CASE("view_tree_format::decode_field, enum_u32 valid index still resolves", "[u]")
+{
+	static const char * const names[] = { "Block", "Armorer", "Long Blade", nullptr };
+	field_def_t field { "Bonus Skill", field_type_t::enum_u32, 0, 4, names, nullptr, 0 };
+
+	char data[4] = {};
+	uint32_t val = 1;
+	std::memcpy(data, &val, 4);
+	auto result = decode_field(field, data, 4);
+	REQUIRE(result == "Armorer");
+}
+
 TEST_CASE("view_tree_format::decode_field, flags_u32 shows names only", "[u]")
 {
 	static const char * const flag_names[] = { "Interior", "Water", "Sleep", nullptr };
@@ -325,4 +361,36 @@ TEST_CASE("view_tree_format::decode_field, scvr_subject keyed marker", "[u]")
 	const char data[] = "04JX3B8_MeetVivec";
 	auto result = decode_field(field, data, sizeof(data) - 1);
 	REQUIRE(result == "JX");
+}
+
+TEST_CASE("view_tree_format::global_type_name, known type chars", "[u]")
+{
+	REQUIRE(global_type_name('s') == "Short");
+	REQUIRE(global_type_name('l') == "Long");
+	REQUIRE(global_type_name('f') == "Float");
+}
+
+TEST_CASE("view_tree_format::global_type_name, unknown char is Error", "[u]")
+{
+	REQUIRE(global_type_name('x') == "Error");
+}
+
+TEST_CASE("view_tree_format::flag_bit_value, set and unset bits read Yes and No", "[u]")
+{
+	field_def_t field { "Flags", field_type_t::flags_u32, 0, 4, nullptr, nullptr, 0 };
+
+	uint32_t value = 0x2;
+	char data[4] = {};
+	std::memcpy(data, &value, 4);
+
+	REQUIRE(flag_bit_value(data, 4, field, 1) == "Yes");
+	REQUIRE(flag_bit_value(data, 4, field, 0) == "No");
+}
+
+TEST_CASE("view_tree_format::flag_bit_value, offset beyond size is empty", "[u]")
+{
+	field_def_t field { "Flags", field_type_t::flags_u8, 8, 1, nullptr, nullptr, 0 };
+
+	char data[4] = {};
+	REQUIRE(flag_bit_value(data, 4, field, 0).empty());
 }

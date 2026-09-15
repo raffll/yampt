@@ -150,7 +150,7 @@ TEST_CASE("glossary_t::annotate, skips excluded statuses for glossary", "[u]")
 	REQUIRE(results.empty());
 }
 
-TEST_CASE("glossary_t::annotate, includes adapted status in glossary", "[u]")
+TEST_CASE("glossary_t::annotate, excludes adapted status from glossary", "[u]")
 {
 	auto dict = make_dict_with_fnam({ { "Sword", "Miecz" } }, status_t::adapted);
 	glossary_t manager;
@@ -158,8 +158,7 @@ TEST_CASE("glossary_t::annotate, includes adapted status in glossary", "[u]")
 
 	const auto results = manager.annotate("the Sword is sharp");
 
-	REQUIRE(results.size() == 1);
-	REQUIRE(results[0].kind == annotation_t::glossary_term);
+	REQUIRE(results.empty());
 }
 
 TEST_CASE("glossary_t::find_glossary_matches, word boundary check", "[u]")

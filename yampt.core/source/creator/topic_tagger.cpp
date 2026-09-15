@@ -1,9 +1,7 @@
 #include "creator/topic_tagger.hpp"
-
 #include <algorithm>
 
-namespace
-{
+namespace {
 constexpr char link_open = '@';
 constexpr char link_close = '#';
 constexpr std::size_t minimum_tag_length = 3;
@@ -49,7 +47,7 @@ bool should_skip_record(const record_entry_t & entry)
 
 	return false;
 }
-}
+} // namespace
 
 void topic_tagger_t::seed_topics(const dict_t & dict)
 {
@@ -82,8 +80,7 @@ void topic_tagger_t::seed_inflections(const std::vector<std::pair<std::string, s
 	}
 }
 
-namespace
-{
+namespace {
 struct accepted_span_t
 {
 	std::size_t start;
@@ -101,9 +98,7 @@ bool overlaps_any(const std::vector<accepted_span_t> & spans, std::size_t start,
 	return false;
 }
 
-void collect_matches(
-    const std::vector<keyword_match_t> & matches,
-    std::vector<accepted_span_t> & accepted)
+void collect_matches(const std::vector<keyword_match_t> & matches, std::vector<accepted_span_t> & accepted)
 {
 	for (const auto & match : matches)
 	{
@@ -116,7 +111,7 @@ void collect_matches(
 		accepted.push_back({ start, end });
 	}
 }
-}
+} // namespace
 
 topic_tag_result_t topic_tagger_t::tag_line(const std::string & line) const
 {

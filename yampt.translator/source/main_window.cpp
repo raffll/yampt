@@ -1,4 +1,3 @@
-#include <resource_paths.hpp>
 #include "main_window.hpp"
 #include "dialog/dict_selection_dialog.hpp"
 #include "dialog/first_run_dialog.hpp"
@@ -21,14 +20,15 @@
 #include "view/status_filter_view.hpp"
 #include "view/translation_suggestion_view.hpp"
 #include "view/validation_view.hpp"
-#include <translation_example.hpp>
 #include <translator/translation_example_ops.hpp>
 #include <utility/language_config.hpp>
 #include <utility/string_utils.hpp>
 #include <algorithm>
 #include <filesystem>
 #include <map>
+#include <resource_paths.hpp>
 #include <theme_system.hpp>
+#include <translation_example.hpp>
 #include <QAction>
 #include <QCloseEvent>
 #include <QCoreApplication>
@@ -130,13 +130,14 @@ main_window_t::main_window_t(QWidget * parent)
 	                                                                          m_extra_sel_translation,
 	                                                                          *m_grammar_check });
 
-	m_shortcuts_controller =
-	    std::make_unique<shortcuts_controller_t>(shortcuts_deps_t { m_editor_controller,
-	                                                                *m_table_model,
-	                                                                [this]() -> document_t * { return m_active_doc; },
-	                                                                [this](bool dirty) { set_unsaved_changes(dirty); },
-	                                                                [this]() { update_status_counts(); },
-	                                                                [this](int row) { load_record(row); } });
+	m_shortcuts_controller = std::make_unique<shortcuts_controller_t>(
+	    shortcuts_deps_t { m_editor_controller,
+	                       *m_table_model,
+	                       [this]() -> document_t * { return m_active_doc; },
+	                       [this](bool dirty) { set_unsaved_changes(dirty); },
+	                       [this]() { update_status_counts(); },
+	                       [this](int row) { load_record(row); },
+	                       [this]() { return m_table_view->selected_rows(); } });
 
 	connect_menu_signals();
 	connect_sidebar_signals();
@@ -172,8 +173,7 @@ main_window_t::main_window_t(QWidget * parent)
 			m_settings.set_native_tag(native);
 			m_settings.set_foreign_tag(foreign);
 
-			const auto languages =
-			    language_config::load(resource_paths::languages_file());
+			const auto languages = language_config::load(resource_paths::languages_file());
 
 			const auto * native_lang = language_config::find_by_code(languages, native);
 			const int encoding_index = native_lang ? codepage_to_index(native_lang->codepage) : 2;
@@ -187,8 +187,10 @@ main_window_t::main_window_t(QWidget * parent)
 				if (prefix.empty())
 					return;
 
-				const auto aff_path = string_utils::canonicalize_path(string_utils::join_path(dict_dir, prefix + ".aff"));
-				const auto dic_path = string_utils::canonicalize_path(string_utils::join_path(dict_dir, prefix + ".dic"));
+				const auto aff_path =
+				    string_utils::canonicalize_path(string_utils::join_path(dict_dir, prefix + ".aff"));
+				const auto dic_path =
+				    string_utils::canonicalize_path(string_utils::join_path(dict_dir, prefix + ".dic"));
 
 				if (!std::filesystem::exists(aff_path) || !std::filesystem::exists(dic_path))
 					return;
@@ -412,18 +414,10 @@ void main_window_t::rebuild_table_yaml(document_t * target_doc)
 
 	const auto raw_rows = target_doc->build_rows();
 
-	std::map<status_t, size_t> total_status_counts;
 	std::map<status_t, size_t> filtered_status_counts;
 
 	for (const auto & row : raw_rows)
-	{
-		total_status_counts[row.status]++;
-
-		if (m_row_filter.has_query() && !m_row_filter.matches(row))
-			continue;
-
 		filtered_status_counts[row.status]++;
-	}
 
 	std::vector<table_row_t> rows;
 	for (const auto & row : raw_rows)
@@ -439,8 +433,7 @@ void main_window_t::rebuild_table_yaml(document_t * target_doc)
 
 	int total = target_doc->total_count();
 	int translated = target_doc->translated_count();
-	m_table_display->apply_yaml(
-	    std::move(rows), total, translated, target_doc->path(), filtered_status_counts, total_status_counts);
+	m_table_display->apply_yaml(std::move(rows), total, translated, target_doc->path(), filtered_status_counts);
 	m_editor_controller.set_current_row(-1);
 	clear_editor_panels();
 }
@@ -697,6 +690,20 @@ void main_window_t::register_shortcuts()
 		    [this]() { shortcut_commit_status(status_t::translated); });
 	}
 
+	if (!m_set_untranslated_action && m_table_view)
+	{
+		m_set_untranslated_action = new QAction(m_table_view);
+		m_set_untranslated_action->setToolTip(tr("Clear translation and set status to Untranslated (Del)"));
+		m_set_untranslated_action->setShortcut(QKeySequence("Del"));
+		m_set_untranslated_action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+		m_table_view->addAction(m_set_untranslated_action);
+		connect(
+		    m_set_untranslated_action,
+		    &QAction::triggered,
+		    this,
+		    [this]() { reset_rows_to_original(m_table_view->selected_rows()); });
+	}
+
 	const auto resolve = [this](const std::string & action_name, const std::string & fallback)
 	{
 		const auto stored = m_settings.shortcut(action_name);
@@ -715,6 +722,19 @@ void main_window_t::register_shortcuts()
 
 	if (m_escape_action)
 		m_escape_action->setShortcut(resolve("escape", "Escape"));
+
+	m_copy_original_action->setText(tr("Copy Original"));
+	m_set_in_progress_action->setText(tr("Set In Progress"));
+	m_set_translated_action->setText(tr("Set Translated"));
+
+	if (m_set_untranslated_action)
+		m_set_untranslated_action->setText(tr("Set Untranslated"));
+
+	if (m_table_view)
+	{
+		m_table_view->set_status_actions(m_copy_original_action, m_set_in_progress_action, m_set_translated_action);
+		m_table_view->set_untranslated_action(m_set_untranslated_action);
+	}
 }
 
 void main_window_t::shortcut_copy_original()
@@ -731,6 +751,14 @@ void main_window_t::shortcut_commit_status(status_t new_status)
 		return;
 
 	m_shortcuts_controller->commit_status(new_status);
+}
+
+void main_window_t::reset_rows_to_original(const QList<int> & rows)
+{
+	if (!m_shortcuts_controller)
+		return;
+
+	m_shortcuts_controller->reset_to_original(rows);
 }
 
 void main_window_t::advance_to_next_row()
@@ -884,7 +912,7 @@ void main_window_t::update_status_counts()
 	m_filter_tree_view->update_sub_type_counts(
 	    result.counts.sub_type_total_counts, result.counts.sub_type_translated_counts);
 	m_filter_tree_view->set_total_count(total_translated, total);
-	m_status_filter_view->update_counts(result.counts.filtered_status_counts, result.counts.total_status_counts);
+	m_status_filter_view->update_counts(result.counts.filtered_status_counts);
 }
 
 void main_window_t::update_validation()

@@ -1,6 +1,5 @@
 #include "controller/field_edit_controller.hpp"
 #include "session/plugin_session.hpp"
-#include <utility/app_logger.hpp>
 #include <decoder/field_encoder.hpp>
 #include <decoder/field_validator.hpp>
 #include <decoder/sub_record_iter.hpp>
@@ -86,19 +85,8 @@ field_edit_controller_t::field_edit_controller_t(plugin_session_t & session, QOb
 
 edit_result_t field_edit_controller_t::commit_field_edit(const field_edit_request_t & request)
 {
-	std::string owned_content;
-	const std::string * content_ptr = nullptr;
-
-	if (request.plugin_idx == -1)
-	{
-		content_ptr = m_session.scan().find_merge_content(request.record_type, request.record_id);
-	}
-	else
-	{
-		owned_content = m_session.scan().read_record_content(request.plugin_idx, request.record_index);
-		if (!owned_content.empty())
-			content_ptr = &owned_content;
-	}
+	const std::string * content_ptr =
+	    m_session.scan().find_active_content(request.record_type, request.record_id);
 
 	if (!content_ptr)
 		return { false, "record content not found" };
@@ -106,16 +94,7 @@ edit_result_t field_edit_controller_t::commit_field_edit(const field_edit_reques
 	const auto & content = *content_ptr;
 	const auto sub_result = find_sub_record_offset(content, request);
 	if (!sub_result.found)
-	{
-		app_logger_t::add_log(
-		    "[debug] commit_field_edit: " + request.sub_type + " not found at occurrence " +
-		        std::to_string(request.occurrence) + " (object_ref_index " +
-		        std::to_string(request.object_ref_index) + ") in " + request.record_type + ":" + request.record_id +
-		        "\r\n",
-		    true);
-
 		return { false, "sub-record not found at expected occurrence" };
-	}
 
 	if (request.field.name == nullptr)
 		return { false, "no schema defined for this sub-record" };
@@ -139,10 +118,7 @@ edit_result_t field_edit_controller_t::commit_field_edit(const field_edit_reques
 	if (is_variable_size_field(request.field.type) || request.field.type == field_type_t::raw)
 		patched = field_encoder::patch_record_size(patched);
 
-	if (request.plugin_idx == -1)
-		return commit_to_merge(request, patched);
-
-	return commit_to_source(request, patched);
+	return commit_to_merge(request, patched);
 }
 
 edit_result_t field_edit_controller_t::commit_to_merge(
@@ -152,37 +128,9 @@ edit_result_t field_edit_controller_t::commit_to_merge(
 	const auto & rec_type = request.record_type;
 	const auto & record_id = request.record_id;
 
-	if (m_session.scan().is_merge_pinned(rec_type, record_id))
-		m_session.scan().pin_record_to_merge(rec_type, record_id, patched_content);
-	else
-		m_session.scan().copy_record_to_merge_raw(rec_type, record_id, patched_content);
+	m_session.scan().copy_record_to_active_raw(rec_type, record_id, patched_content);
 
 	m_session.scan().recompute_single_conflict(rec_type, record_id);
-	emit record_modified(true, {});
-	return { true, {} };
-}
-
-edit_result_t field_edit_controller_t::commit_to_source(
-    const field_edit_request_t & request,
-    const std::string & patched_content)
-{
-	auto & plugin = m_session.scan().mutable_plugin(request.plugin_idx);
-	plugin.select_record(request.record_index);
-	plugin.replace_record(patched_content);
-
-	m_session.mark_plugin_dirty(request.plugin_idx);
-	m_session.scan().recompute_single_conflict(request.record_type, request.record_id);
-
-	const auto & plugin_path = m_session.scan().plugin_path(request.plugin_idx);
-
-	const std::string field_name = request.field.name != nullptr ? request.field.name : std::string {};
-	emit field_edited(
-	    { m_session.scan().plugin_filename(request.plugin_idx),
-	      request.record_type,
-	      request.record_id,
-	      field_name,
-	      request.input_text });
-
-	emit record_modified(false, plugin_path);
+	emit record_modified();
 	return { true, {} };
 }

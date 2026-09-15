@@ -63,10 +63,6 @@ static std::string make_ambi(float fog_density)
 	return result;
 }
 
-// ============================================================================
-// Requirement 6: Fog Bug Fix
-// ============================================================================
-
 TEST_CASE("fog_fixer_t::apply, interior cell zero fog density gets fixed", "[u]")
 {
 	auto subs = make_sub("NAME", make_string("TestCell")) + make_sub("DATA", make_cell_data(0x01, 0, 0)) +
@@ -125,10 +121,6 @@ TEST_CASE("fog_fixer_t::apply, interior no AMBI sub-record skipped", "[u]")
 	REQUIRE(result.empty());
 }
 
-// ============================================================================
-// Requirement 7: Summon Persist Fix
-// ============================================================================
-
 TEST_CASE("summon_fixer_t::apply, known summon without flag gets fixed", "[u]")
 {
 	auto subs = make_sub("NAME", make_string("clannfear_summon"));
@@ -184,10 +176,6 @@ TEST_CASE("summon_fixer_t::apply, preserves existing flags", "[u]")
 	std::memcpy(&output_flags, result.data() + 12, 4);
 	REQUIRE(output_flags == 0x0402);
 }
-
-// ============================================================================
-// Requirement 8: Cell Name Reversion Fix
-// ============================================================================
 
 TEST_CASE("cell_name_fixer_t::apply, winner reverts rename gets fixed", "[u]")
 {

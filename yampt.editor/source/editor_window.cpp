@@ -38,7 +38,16 @@ editor_window_t::editor_window_t(QWidget * parent)
 	setup_toolbar();
 	restore_panel_state();
 
-	QTimer::singleShot(0, this, [this]() { m_plugin_workspace_view->restore_session_state(); });
+	QTimer::singleShot(
+	    0,
+	    this,
+	    [this]()
+	{
+		m_plugin_workspace_view->restore_session_state();
+
+		const QSignalBlocker blocker(m_show_optional_action);
+		m_show_optional_action->setChecked(m_plugin_workspace_view->is_show_optional_placeholders());
+	});
 
 	connect(
 	    &theme_system_t::instance(),
@@ -136,6 +145,17 @@ void editor_window_t::setup_menu_bar()
 	    m_plugin_workspace_view,
 	    &plugin_workspace_view_t::set_show_deleted_strikeout);
 
+	m_show_optional_action = new QAction(tr("Show &Optional Fields"), this);
+	m_show_optional_action->setCheckable(true);
+	m_show_optional_action->setChecked(m_plugin_workspace_view->is_show_optional_placeholders());
+	m_show_optional_action->setToolTip(tr("Show sub-records a record can have but does not"));
+	view_menu->addAction(m_show_optional_action);
+	connect(
+	    m_show_optional_action,
+	    &QAction::toggled,
+	    m_plugin_workspace_view,
+	    &plugin_workspace_view_t::set_show_optional_placeholders);
+
 	view_menu->addSeparator();
 
 	m_sync_scroll_toggle = new QAction(tr("S&ync Scrolling"), this);
@@ -168,7 +188,15 @@ void editor_window_t::setup_toolbar()
 	merge_btn->setText(tr("Create Merged Patch"));
 	merge_btn->setToolTip(tr("Create a merged patch from loaded plugins"));
 	toolbar->addWidget(merge_btn);
-	connect(merge_btn, &QToolButton::clicked, m_plugin_workspace_view, &plugin_workspace_view_t::on_create_merged_patch);
+	connect(
+	    merge_btn, &QToolButton::clicked, m_plugin_workspace_view, &plugin_workspace_view_t::on_create_merged_patch);
+
+	auto * new_plugin_btn = new QToolButton(this);
+	new_plugin_btn->setText(tr("Create New Plugin"));
+	new_plugin_btn->setToolTip(tr("Create an empty plugin and make it the active copy target"));
+	toolbar->addWidget(new_plugin_btn);
+	connect(
+	    new_plugin_btn, &QToolButton::clicked, m_plugin_workspace_view, &plugin_workspace_view_t::on_create_new_plugin);
 
 	auto * clean_btn = new QToolButton(this);
 	clean_btn->setText(tr("Clean All"));
@@ -190,10 +218,7 @@ void editor_window_t::setup_toolbar()
 	m_conflicts_action->setChecked(m_plugin_workspace_view->is_conflicts_only());
 	m_conflicts_action->setToolTip(tr("Show only conflicting records"));
 	connect(
-	    m_conflicts_action,
-	    &QAction::toggled,
-	    m_plugin_workspace_view,
-	    &plugin_workspace_view_t::set_conflicts_only);
+	    m_conflicts_action, &QAction::toggled, m_plugin_workspace_view, &plugin_workspace_view_t::set_conflicts_only);
 
 	auto * conflicts_btn = new QToolButton(this);
 	conflicts_btn->setDefaultAction(m_conflicts_action);
@@ -241,7 +266,12 @@ void editor_window_t::setup_toolbar()
 
 	connect(m_search_field, &QLineEdit::returnPressed, this, &editor_window_t::on_search_apply);
 	connect(filter_btn, &QToolButton::clicked, m_plugin_workspace_view, &plugin_workspace_view_t::on_advanced_filter);
-	connect(m_no_filters_btn, &QToolButton::clicked, this, [this](bool checked) {
+	connect(
+	    m_no_filters_btn,
+	    &QToolButton::clicked,
+	    this,
+	    [this](bool checked)
+	{
 		if (checked)
 			on_reset_filters();
 		else
@@ -257,13 +287,17 @@ void editor_window_t::setup_toolbar()
 	    &plugin_workspace_view_t::unsaved_changes_changed,
 	    this,
 	    &editor_window_t::set_unsaved_changes);
+	connect(
+	    m_plugin_workspace_view,
+	    &plugin_workspace_view_t::active_plugin_changed,
+	    this,
+	    &editor_window_t::set_active_plugin_name);
 
 	auto * escape_shortcut = new QShortcut(QKeySequence("Escape"), this);
 	connect(escape_shortcut, &QShortcut::activated, this, &editor_window_t::on_search_clear);
 
 	statusBar()->addWidget(m_plugin_workspace_view->status_label());
 	statusBar()->addPermanentWidget(m_plugin_workspace_view->count_label());
-	statusBar()->addPermanentWidget(m_plugin_workspace_view->validation_label());
 }
 
 void editor_window_t::load_config()
@@ -332,7 +366,28 @@ void editor_window_t::set_unsaved_changes(bool dirty)
 		return;
 
 	m_has_unsaved_changes = dirty;
-	setWindowTitle(m_has_unsaved_changes ? tr("yEditor *") : tr("yEditor"));
+	update_window_title();
+}
+
+void editor_window_t::set_active_plugin_name(const QString & filename)
+{
+	if (m_active_plugin_name == filename)
+		return;
+
+	m_active_plugin_name = filename;
+	update_window_title();
+}
+
+void editor_window_t::update_window_title()
+{
+	QString title = tr("yEditor");
+	if (!m_active_plugin_name.isEmpty())
+		title += tr(" - %1").arg(m_active_plugin_name);
+
+	if (m_has_unsaved_changes)
+		title += tr(" *");
+
+	setWindowTitle(title);
 }
 
 void editor_window_t::closeEvent(QCloseEvent * event)

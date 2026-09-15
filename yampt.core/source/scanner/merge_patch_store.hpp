@@ -8,7 +8,6 @@ struct merge_record_t
 	std::string rec_type;
 	std::string record_id;
 	std::string content;
-	bool pinned = false;
 };
 
 enum class lock_scope_t
@@ -19,6 +18,27 @@ enum class lock_scope_t
 	bit,
 	group
 };
+
+namespace merge_lock_scope {
+
+inline constexpr int min_value = static_cast<int>(lock_scope_t::whole_record);
+inline constexpr int max_value = static_cast<int>(lock_scope_t::group);
+
+inline bool is_valid_value(int value)
+{
+	return value >= min_value && value <= max_value;
+}
+
+inline bool scope_from_value(int value, lock_scope_t & out_scope)
+{
+	if (!is_valid_value(value))
+		return false;
+
+	out_scope = static_cast<lock_scope_t>(value);
+	return true;
+}
+
+} // namespace merge_lock_scope
 
 struct merge_lock_t
 {
@@ -38,8 +58,8 @@ struct merge_lock_t
 	bool same_target(const merge_lock_t & other) const
 	{
 		return rec_type == other.rec_type && record_id == other.record_id && scope == other.scope &&
-		    sub_type == other.sub_type && occurrence == other.occurrence && field_index == other.field_index &&
-		    bit_index == other.bit_index && group_start == other.group_start && group_end == other.group_end;
+		       sub_type == other.sub_type && occurrence == other.occurrence && field_index == other.field_index &&
+		       bit_index == other.bit_index && group_start == other.group_start && group_end == other.group_end;
 	}
 };
 
@@ -48,25 +68,21 @@ class merge_patch_store_t
 public:
 	void clear();
 	void add(const std::string & rec_type, const std::string & record_id, const std::string & content);
-	void add_pinned(const std::string & rec_type, const std::string & record_id, const std::string & content);
 	void remove(const std::string & rec_type, const std::string & record_id);
 
 	void update_or_add(const std::string & rec_type, const std::string & record_id, const std::string & content);
-	void update_or_add_pinned(const std::string & rec_type, const std::string & record_id, const std::string & content);
 
-	bool is_pinned(const std::string & rec_type, const std::string & record_id) const;
 	const std::string * find_content(const std::string & rec_type, const std::string & record_id) const;
-
-	std::vector<merge_record_t> collect_pinned() const;
-	void restore_pinned(const std::vector<merge_record_t> & pinned);
 
 	void add_lock(const merge_lock_t & lock);
 	void remove_lock(const merge_lock_t & lock);
 	bool has_lock(const merge_lock_t & lock) const;
+
 	const std::vector<merge_lock_t> & locks() const
 	{
 		return m_locks;
 	}
+
 	std::vector<merge_lock_t> locks_for(const std::string & rec_type, const std::string & record_id) const;
 	void set_locks(const std::vector<merge_lock_t> & locks);
 

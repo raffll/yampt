@@ -1,4 +1,5 @@
 #include "conflict_slots.hpp"
+#include "sub_record_schema.hpp"
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
@@ -73,7 +74,7 @@ static void align_slots_to_result(
 
 	for (const auto & slot : slots)
 	{
-		aligned_slot_t aligned{};
+		aligned_slot_t aligned {};
 		aligned.key.type = slot.type;
 		aligned.key.occurrence = slot.occurrence;
 		aligned.indices.resize(ver_count);
@@ -306,10 +307,10 @@ static void build_fact_slots(slot_result_t & result)
 	align_paired_entries(ver_entries, all_faction_names, "INTV", "ANAM", intv_occ, anam_occ, result);
 }
 
-static constexpr size_t npco_record_size = 36;
-static constexpr size_t npco_id_offset = 4;
-static constexpr size_t npco_id_length = 32;
-static constexpr size_t npcs_record_size = 32;
+static constexpr size_t npco_record_size = npco_layout::record_size;
+static constexpr size_t npco_id_offset = npco_layout::item_id_offset;
+static constexpr size_t npco_id_length = npco_layout::item_id_length;
+static constexpr size_t npcs_record_size = npcs_layout::record_size;
 
 static void extract_npco_entries(
     const std::vector<std::vector<sub_record_view_t>> & parsed,
@@ -385,7 +386,7 @@ static void align_single_entries(
 
 	for (const auto & target_id : all_ids)
 	{
-		aligned_slot_t aligned{};
+		aligned_slot_t aligned {};
 		aligned.key.type = slot_type;
 		aligned.key.occurrence = occurrence++;
 		aligned.indices.resize(ver_count);
@@ -490,7 +491,7 @@ static void extract_armor_groups(
 				continue;
 
 			uint32_t indx_value = 0;
-			std::memcpy(&indx_value, subs[j].data, 4);
+			std::memcpy(&indx_value, subs[j].data, object_index_layout::index_size);
 			auto indx_key = std::to_string(indx_value);
 
 			size_t bnam_idx = SIZE_MAX;
@@ -737,7 +738,7 @@ static void align_cell_header(
 
 	for (const auto & slot : header_slots)
 	{
-		aligned_slot_t aligned{};
+		aligned_slot_t aligned {};
 		aligned.key.type = slot.type;
 		aligned.key.occurrence = slot.occurrence;
 		aligned.indices.resize(ver_count);
@@ -812,7 +813,7 @@ static void align_ref_group_slots(
 
 	for (const auto & slot : ref_slots)
 	{
-		aligned_slot_t aligned{};
+		aligned_slot_t aligned {};
 		aligned.key.type = slot.type;
 		aligned.key.occurrence = slot.occurrence;
 		aligned.indices.resize(ver_count);

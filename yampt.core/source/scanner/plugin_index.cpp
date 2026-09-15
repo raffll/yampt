@@ -1,7 +1,9 @@
 #include "plugin_index.hpp"
 #include "../decoder/sub_record_iter.hpp"
 #include "../decoder/sub_record_schema.hpp"
+#include "../decoder/view_tree_format.hpp"
 #include "../utility/app_logger.hpp"
+#include "../utility/record_behavior.hpp"
 #include "../utility/string_utils.hpp"
 #include <algorithm>
 #include <set>
@@ -175,10 +177,12 @@ plugin_index_t::plugin_index_t(esm_reader_t & esm)
 		entry.record_id = derive_id(esm, i);
 		entry.display_name = derive_display_name(esm, i);
 
-		if (rec_type == "DIAL")
+		const auto decode_mode = decode_mode_for(rec_type);
+
+		if (decode_mode == decode_mode_t::dial)
 			current_dial = entry.record_id;
 
-		if (rec_type == "INFO")
+		if (decode_mode == decode_mode_t::info)
 		{
 			entry.dial_name = current_dial;
 			entry.record_id = current_dial + "|" + entry.record_id;
@@ -238,38 +242,176 @@ size_t plugin_index_t::count_by_type(const std::string & type) const
 	return count;
 }
 
+enum class id_strategy_t
+{
+	empty,
+	cell,
+	index_based,
+	script,
+	sub_text,
+	land,
+	pgrd
+};
+
+struct id_rule_t
+{
+	const char * rec_type;
+	id_strategy_t strategy;
+	const char * sub_key;
+};
+
+static constexpr id_rule_t id_rule_table[] = {
+	{ "TES3", id_strategy_t::empty, nullptr },
+	{ "CELL", id_strategy_t::cell, nullptr },
+	{ "SKIL", id_strategy_t::index_based, nullptr },
+	{ "MGEF", id_strategy_t::index_based, nullptr },
+	{ "SCPT", id_strategy_t::script, nullptr },
+	{ "DIAL", id_strategy_t::sub_text, "NAME" },
+	{ "INFO", id_strategy_t::sub_text, "INAM" },
+	{ "LAND", id_strategy_t::land, nullptr },
+	{ "PGRD", id_strategy_t::pgrd, nullptr },
+};
+
+static constexpr id_rule_t default_id_rule = { "*", id_strategy_t::sub_text, "NAME" };
+
+static const id_rule_t & find_id_rule(const std::string & rec_type)
+{
+	for (const auto & rule : id_rule_table)
+	{
+		if (rec_type == rule.rec_type)
+			return rule;
+	}
+
+	return default_id_rule;
+}
+
 std::string plugin_index_t::derive_id(esm_reader_t & esm, size_t i)
 {
 	const auto & rec_type = esm.get_record().id;
 	const auto & content = esm.get_record().content;
-
-	if (rec_type == "TES3")
-		return "";
+	const auto & rule = find_id_rule(rec_type);
 
 	sub_record_iter_t iter(content);
 
-	if (rec_type == "CELL")
+	switch (rule.strategy)
+	{
+	case id_strategy_t::empty:
+		return "";
+
+	case id_strategy_t::cell:
 		return derive_cell_id(iter, i);
 
-	if (rec_type == "SKIL" || rec_type == "MGEF")
+	case id_strategy_t::index_based:
 		return derive_index_based_id(iter, i);
 
-	if (rec_type == "SCPT")
+	case id_strategy_t::script:
 		return derive_script_id(iter, i);
 
-	if (rec_type == "DIAL")
-		return derive_sub_text_id(iter, "NAME", i);
+	case id_strategy_t::sub_text:
+		return derive_sub_text_id(iter, rule.sub_key, i);
 
-	if (rec_type == "INFO")
-		return derive_sub_text_id(iter, "INAM", i);
-
-	if (rec_type == "LAND")
+	case id_strategy_t::land:
 		return derive_land_id(iter, i);
 
-	if (rec_type == "PGRD")
+	case id_strategy_t::pgrd:
 		return derive_pgrd_id(iter, i);
+	}
 
 	return derive_sub_text_id(iter, "NAME", i);
+}
+
+enum class name_strategy_t
+{
+	index_named,
+	sub_text,
+	global_type
+};
+
+struct name_rule_t
+{
+	const char * rec_type;
+	name_strategy_t strategy;
+	const char * sub_key;
+	const char * (*name_by_index)(int index);
+};
+
+static constexpr name_rule_t name_rule_table[] = {
+	{ "MGEF", name_strategy_t::index_named, "INDX", effect_name_by_index },
+	{ "SKIL", name_strategy_t::index_named, "INDX", skill_name_by_index },
+	{ "INFO", name_strategy_t::sub_text, "ONAM", nullptr },
+	{ "GLOB", name_strategy_t::global_type, "FNAM", nullptr },
+};
+
+static constexpr name_rule_t default_name_rule = { "*", name_strategy_t::sub_text, "FNAM", nullptr };
+
+static const name_rule_t & find_name_rule(const std::string & rec_type)
+{
+	for (const auto & rule : name_rule_table)
+	{
+		if (rec_type == rule.rec_type)
+			return rule;
+	}
+
+	return default_name_rule;
+}
+
+static std::string derive_index_named(const std::string & content, const name_rule_t & rule)
+{
+	sub_record_iter_t iter(content);
+	sub_record_view_t sub;
+	while (iter.next(sub))
+	{
+		if (sub.type != rule.sub_key)
+			continue;
+
+		if (sub.size < indx_min_size)
+			break;
+
+		const int32_t index_val = static_cast<int32_t>(
+		    domain_types::convert_string_byte_array_to_uint(std::string(sub.data, grid_coord_size)));
+
+		const char * name = rule.name_by_index(index_val);
+		if (name)
+			return name;
+
+		break;
+	}
+
+	return "";
+}
+
+static std::string derive_sub_text_name(const std::string & content, const name_rule_t & rule)
+{
+	sub_record_iter_t iter(content);
+	sub_record_view_t sub;
+	while (iter.next(sub))
+	{
+		if (sub.type != rule.sub_key)
+			continue;
+
+		std::string text(sub.data, sub.size);
+		return string_utils::erase_null_chars(text);
+	}
+
+	return "";
+}
+
+static std::string derive_global_type_name(const std::string & content, const name_rule_t & rule)
+{
+	sub_record_iter_t iter(content);
+	sub_record_view_t sub;
+	while (iter.next(sub))
+	{
+		if (sub.type != rule.sub_key)
+			continue;
+
+		if (sub.size < 1)
+			break;
+
+		return global_type_name(sub.data[0]);
+	}
+
+	return "";
 }
 
 std::string plugin_index_t::derive_display_name(esm_reader_t & esm, size_t i)
@@ -277,67 +419,19 @@ std::string plugin_index_t::derive_display_name(esm_reader_t & esm, size_t i)
 	(void)i;
 	const auto & content = esm.get_record().content;
 	const auto & rec_type = esm.get_record().id;
+	const auto & rule = find_name_rule(rec_type);
 
-	if (rec_type == "MGEF" || rec_type == "SKIL")
+	switch (rule.strategy)
 	{
-		sub_record_iter_t iter(content);
-		sub_record_view_t sub;
-		while (iter.next(sub))
-		{
-			if (sub.type != "INDX")
-				continue;
+	case name_strategy_t::index_named:
+		return derive_index_named(content, rule);
 
-			if (sub.size < indx_min_size)
-				break;
+	case name_strategy_t::sub_text:
+		return derive_sub_text_name(content, rule);
 
-			int32_t index_val = static_cast<int32_t>(
-			    domain_types::convert_string_byte_array_to_uint(std::string(sub.data, grid_coord_size)));
-
-			if (rec_type == "MGEF")
-			{
-				const char * name = effect_name_by_index(index_val);
-				if (name)
-					return name;
-			}
-			else
-			{
-				const char * name = skill_name_by_index(index_val);
-				if (name)
-					return name;
-			}
-
-			break;
-		}
-
-		return "";
+	case name_strategy_t::global_type:
+		return derive_global_type_name(content, rule);
 	}
 
-	sub_record_iter_t iter(content);
-	sub_record_view_t sub;
-
-	if (rec_type == "INFO")
-	{
-		while (iter.next(sub))
-		{
-			if (sub.type != "ONAM")
-				continue;
-
-			std::string text(sub.data, sub.size);
-			text = string_utils::erase_null_chars(text);
-			return text;
-		}
-		return "";
-	}
-
-	while (iter.next(sub))
-	{
-		if (sub.type != "FNAM")
-			continue;
-
-		std::string text(sub.data, sub.size);
-		text = string_utils::erase_null_chars(text);
-		return text;
-	}
-
-	return "";
+	return derive_sub_text_name(content, default_name_rule);
 }

@@ -60,5 +60,10 @@ enum class color_name_t
 	conflict_this_conflict_loses,
 	conflict_this_deleted,
 
+	optional_placeholder_background,
+	optional_placeholder_text,
+	locked_background,
+	locked_text,
+
 	color_name_count
 };

@@ -1,12 +1,14 @@
-#include <settings_store.hpp>
 #include "view_context_menu.hpp"
+#include "../session/merged_patch_name.hpp"
 #include "../session/plugin_session.hpp"
 #include "../view/nav_tree_view.hpp"
 #include "../view/record_view.hpp"
 #include "merge_controller.hpp"
+#include <scanner/merge_exclusions.hpp>
 #include <scanner/record_conflict.hpp>
 #include <utility/record_behavior.hpp>
-#include <set>
+#include <algorithm>
+#include <settings_store.hpp>
 #include <string>
 #include <QAction>
 #include <QCoreApplication>
@@ -14,40 +16,26 @@
 #include <QMenu>
 #include <QMessageBox>
 
-static std::set<std::string> parse_ignore_rules(const std::string & serialized)
+view_context_menu_t::row_kind_caps_t view_context_menu_t::caps_for(row_kind_t kind)
 {
-	std::set<std::string> rules;
-	size_t start = 0;
-
-	while (start < serialized.size())
+	switch (kind)
 	{
-		auto comma = serialized.find(',', start);
-		if (comma == std::string::npos)
-			comma = serialized.size();
+	case row_kind_t::sub_record:
+	case row_kind_t::schema_record:
+		return { .can_copy = true, .can_remove = true, .can_lock = true };
 
-		auto token = serialized.substr(start, comma - start);
-		auto trim_start = token.find_first_not_of(' ');
-		if (trim_start != std::string::npos)
-			rules.insert(token.substr(trim_start));
+	case row_kind_t::group:
+	case row_kind_t::field_of_group:
+		return { .can_copy = true, .can_remove = true, .can_lock = true };
 
-		start = comma + 1;
+	case row_kind_t::field_of_schema:
+		return { .can_copy = true, .can_remove = true, .can_lock = true };
+
+	case row_kind_t::other:
+		return {};
 	}
 
-	return rules;
-}
-
-static std::string serialize_ignore_rules(const std::set<std::string> & rules)
-{
-	std::string result;
-	for (const auto & rule : rules)
-	{
-		if (!result.empty())
-			result += ", ";
-
-		result += rule;
-	}
-
-	return result;
+	return {};
 }
 
 view_context_menu_t::view_context_menu_t(
@@ -72,31 +60,51 @@ void view_context_menu_t::show_nav_menu(const QPoint & global_pos, const nav_tre
 	if (info.plugin_idx < 0)
 		return;
 
-	const bool is_merge = m_session.scan().is_merge_plugin(info.plugin_idx);
+	const bool is_active = m_session.scan().is_active_plugin(info.plugin_idx);
 	QMenu menu;
 
-	if (!info.record_id.empty() && is_merge)
+	if (!info.record_id.empty() && is_active)
 	{
-		menu.addAction(
-		    QCoreApplication::translate("yEditor", "Remove Record from Merged Patch"),
-		    [this, info]() { m_merge.remove_record_from_merge(info.rec_type, info.record_id); });
-	}
-	else if (!info.record_id.empty() && !is_merge)
-	{
-		const bool record_in_merge = m_session.scan().find_merge_content(info.rec_type, info.record_id) != nullptr;
-		auto * copy_action = menu.addAction(
-		    QCoreApplication::translate("yEditor", "Copy Record to Merged Patch"),
-		    [this, info]() { m_merge.copy_whole_record(info.plugin_idx, info.rec_type, info.record_id); });
-		copy_action->setEnabled(m_session.scan().has_merge() && !record_in_merge);
+		if (m_session.scan().plugin_filename(info.plugin_idx) == merged_patch::filename &&
+		    record_allows_lock(info.rec_type))
+		{
+			merge_lock_t lock;
+			lock.rec_type = info.rec_type;
+			lock.record_id = info.record_id;
+			lock.scope = lock_scope_t::whole_record;
+
+			const bool locked = m_merge.is_active_locked(lock);
+			const auto lock_label = locked ? QCoreApplication::translate("yEditor", "Unlock in Merged Patch")
+			                               : QCoreApplication::translate("yEditor", "Lock in Merged Patch");
+			menu.addAction(lock_label, [this, lock]() { m_merge.toggle_active_lock(lock); });
+		}
+
+		add_exclude_record_action(menu, info);
 
 		menu.addSeparator();
 
-		auto * remove_action = menu.addAction(
-		    QCoreApplication::translate("yEditor", "Remove Record from Plugin"),
-		    [this, info]() { confirm_remove_record_from_plugin(info); });
-		remove_action->setEnabled(m_record_view.model()->is_editing_enabled());
+		menu.addAction(
+		    QCoreApplication::translate("yEditor", "Remove Record from Active Plugin"),
+		    [this, info]() { m_merge.remove_record_from_active(info.rec_type, info.record_id); });
 	}
-	else if (info.rec_type.empty() && info.record_id.empty() && !is_merge)
+	else if (!info.record_id.empty() && !is_active)
+	{
+		const bool record_in_active = m_session.scan().find_active_content(info.rec_type, info.record_id) != nullptr;
+		auto * copy_action = menu.addAction(
+		    QCoreApplication::translate("yEditor", "Copy Record to Active Plugin"),
+		    [this, info]() { m_merge.copy_whole_record(info.plugin_idx, info.rec_type, info.record_id); });
+		copy_action->setEnabled(
+		    m_session.scan().has_active() && !record_in_active && record_allows_copy(info.rec_type));
+
+		menu.addSeparator();
+
+		add_exclude_record_action(menu, info);
+	}
+	else if (!info.rec_type.empty() && info.record_id.empty())
+	{
+		add_exclude_type_action(menu, info);
+	}
+	else if (info.rec_type.empty() && info.record_id.empty())
 	{
 		build_source_file_menu(menu, info);
 	}
@@ -110,97 +118,114 @@ void view_context_menu_t::show_nav_menu(const QPoint & global_pos, const nav_tre
 void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_model_t::node_info_t & info)
 {
 	const auto & filename = m_session.scan().plugin_filename(info.plugin_idx);
-	const bool excluded = m_session.excluded_plugins().count(filename) > 0;
 	const bool is_patch = m_session.patch_plugins().count(filename) > 0;
+	const bool is_active = m_session.scan().is_active_plugin(info.plugin_idx);
 
-	auto * save_action = menu.addAction(
-	    QCoreApplication::translate("yEditor", "Save"),
-	    [this, info]()
-	{
-		if (m_merge.save_plugin(info.plugin_idx))
-			m_nav_view.rebuild_preserving_state();
+	auto rules = merge_exclusions_t::parse(m_settings.merge_excludes());
+	const exclude_rule_t file_rule { exclude_kind_t::file, filename };
+	const bool excluded =
+	    std::any_of(rules.begin(), rules.end(), [&file_rule](const exclude_rule_t & rule) { return rule == file_rule; });
 
-		if (m_on_unsaved_changed)
-			m_on_unsaved_changed(m_session.has_any_unsaved());
-	});
-	save_action->setToolTip(QCoreApplication::translate("yEditor", "Write in-memory changes to the plugin file"));
-	save_action->setEnabled(m_session.is_plugin_dirty(info.plugin_idx));
+	auto * set_active_action = menu.addAction(
+	    QCoreApplication::translate("yEditor", "Set as Active Plugin"),
+	    [this, info]() { m_merge.set_active_plugin(info.plugin_idx); });
+	set_active_action->setToolTip(
+	    QCoreApplication::translate("yEditor", "Make this the plugin that receives copied records"));
+	set_active_action->setEnabled(!is_active);
 
 	menu.addSeparator();
 
 	menu.addAction(
 	    excluded ? QCoreApplication::translate("yEditor", "Include in Merged Patch")
 	             : QCoreApplication::translate("yEditor", "Exclude from Merged Patch"),
-	    [this, filename, excluded]()
-	{
-		auto excluded_copy = m_session.excluded_plugins();
-		if (excluded)
-		{
-			excluded_copy.erase(filename);
-		}
-		else
-		{
-			excluded_copy.insert(filename);
-
-			auto patch_copy = m_session.patch_plugins();
-			if (patch_copy.erase(filename) > 0)
-				m_session.set_patch_plugins(patch_copy);
-		}
-
-		m_session.set_excluded_plugins(excluded_copy);
-		m_session.save_session_state(QDir(settings_store_t::settings_dir()).filePath("yEditor.ini"));
-		m_nav_view.rebuild_preserving_state();
-	});
+	    [this, file_rule, excluded]() { apply_record_exclusion(file_rule, !excluded); });
 
 	menu.addAction(
 	    is_patch ? QCoreApplication::translate("yEditor", "Unmark as Guard Patch")
 	             : QCoreApplication::translate("yEditor", "Mark as Guard Patch"),
-	    [this, filename, is_patch]()
+	    [this, info, filename, is_patch]()
 	{
 		auto patch_copy = m_session.patch_plugins();
 		if (is_patch)
-		{
 			patch_copy.erase(filename);
-		}
 		else
-		{
 			patch_copy.insert(filename);
-
-			auto excluded_copy = m_session.excluded_plugins();
-			if (excluded_copy.erase(filename) > 0)
-				m_session.set_excluded_plugins(excluded_copy);
-		}
 
 		m_session.set_patch_plugins(patch_copy);
 		m_session.save_session_state(QDir(settings_store_t::settings_dir()).filePath("yEditor.ini"));
-		m_nav_view.rebuild_preserving_state();
+		m_nav_view.notify_plugin_changed(info.plugin_idx);
 	});
+
+	menu.addSeparator();
+
+	auto * save_action = menu.addAction(
+	    QCoreApplication::translate("yEditor", "Save"),
+	    [this, info]()
+	{
+		if (m_merge.save_plugin(info.plugin_idx))
+			m_nav_view.notify_plugin_changed(info.plugin_idx);
+
+		if (m_on_unsaved_changed)
+			m_on_unsaved_changed(m_session.has_any_unsaved());
+	});
+	save_action->setToolTip(QCoreApplication::translate("yEditor", "Write in-memory changes to the plugin file"));
+	save_action->setEnabled(m_session.is_plugin_dirty(info.plugin_idx));
 }
 
-void view_context_menu_t::confirm_remove_record_from_plugin(const nav_tree_model_t::node_info_t & info)
+void view_context_menu_t::add_exclude_record_action(QMenu & menu, const nav_tree_model_t::node_info_t & info)
 {
-	const auto & filename = m_session.scan().plugin_filename(info.plugin_idx);
+	const auto token = merge_exclusions::anchored_id_token(info.record_id);
+	auto rules = merge_exclusions_t::parse(m_settings.merge_excludes());
 
-	const auto title = QCoreApplication::translate("yEditor", "Remove Record");
-	const auto message = QCoreApplication::translate(
-	                         "yEditor",
-	                         "Remove record %1:%2 from \"%3\"?\n\nThis cannot be undone. The record is dropped from the "
-	                         "plugin in memory and disappears from the file when you save it.")
-	                         .arg(QString::fromStdString(info.rec_type))
-	                         .arg(QString::fromStdString(info.record_id))
-	                         .arg(QString::fromStdString(filename));
+	const bool excluded = std::any_of(
+	    rules.begin(),
+	    rules.end(),
+	    [&token](const exclude_rule_t & rule)
+	{ return rule.kind == exclude_kind_t::record_id && rule.target == token; });
 
-	const auto choice =
-	    QMessageBox::question(nullptr, title, message, QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+	const auto label = excluded ? QCoreApplication::translate("yEditor", "Include Record in Merged Patch")
+	                            : QCoreApplication::translate("yEditor", "Exclude Record from Merged Patch");
 
-	if (choice != QMessageBox::Yes)
-		return;
+	menu.addAction(
+	    label,
+	    [this, token, excluded]()
+	{ apply_record_exclusion({ exclude_kind_t::record_id, token }, !excluded); });
+}
 
-	if (!m_merge.remove_record_from_plugin(info.plugin_idx, info.rec_type, info.record_id))
-		return;
+void view_context_menu_t::add_exclude_type_action(QMenu & menu, const nav_tree_model_t::node_info_t & info)
+{
+	auto rules = merge_exclusions_t::parse(m_settings.merge_excludes());
+	const exclude_rule_t type_rule { exclude_kind_t::record_type, info.rec_type };
 
-	if (m_on_unsaved_changed)
-		m_on_unsaved_changed(m_session.has_any_unsaved());
+	const bool excluded =
+	    std::any_of(rules.begin(), rules.end(), [&type_rule](const exclude_rule_t & rule) { return rule == type_rule; });
+
+	const auto label = excluded ? QCoreApplication::translate("yEditor", "Include Type in Merged Patch")
+	                            : QCoreApplication::translate("yEditor", "Exclude Type from Merged Patch");
+
+	menu.addAction(label, [this, type_rule, excluded]() { apply_record_exclusion(type_rule, !excluded); });
+}
+
+void view_context_menu_t::apply_record_exclusion(const exclude_rule_t & rule, bool add_rule)
+{
+	auto rules = merge_exclusions_t::parse(m_settings.merge_excludes());
+
+	if (add_rule)
+	{
+		const bool present =
+		    std::any_of(rules.begin(), rules.end(), [&rule](const exclude_rule_t & other) { return other == rule; });
+		if (!present)
+			rules.push_back(rule);
+	}
+	else
+	{
+		rules.erase(
+		    std::remove(rules.begin(), rules.end(), rule),
+		    rules.end());
+	}
+
+	m_settings.set_merge_excludes(merge_exclusions_t::serialize(rules));
+	m_settings.sync();
 }
 
 void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModelIndex & index)
@@ -228,17 +253,8 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 
 	const int plugin_idx = has_valid_column ? m_record_view.model()->column_plugin_indices()[col] : -1;
 
-	const int bin_idx = (has_valid_column && col < static_cast<int>(row.binary_ranges.size()))
-	                        ? row.binary_ranges[col].start
-	                        : -1;
-
-	m_merge.debug_log(
-	    "show_view_menu: label=\"" + row.label + "\" type=\"" + row.type + "\" is_field_row=" +
-	    std::to_string(is_field_row) + " parent_row_idx=" + std::to_string(parent_row_idx) + " visible=" +
-	    std::to_string(visible.size()) + " col=" + std::to_string(col) + " has_valid_column=" +
-	    std::to_string(has_valid_column) + " has_merge=" + std::to_string(m_session.scan().has_merge()) +
-	    " schema_field_index=" + std::to_string(row.schema_field_index) + " bit_index=" +
-	    std::to_string(row.bit_index));
+	const int bin_idx =
+	    (has_valid_column && col < static_cast<int>(row.binary_ranges.size())) ? row.binary_ranges[col].start : -1;
 
 	const auto kind = [&]() -> row_kind_t
 	{
@@ -269,24 +285,33 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 	view_menu_context_t context { index, row, rec_type, record_id, plugin_idx, col, bin_idx, parent_row_idx, kind };
 	QMenu menu;
 
-	if (has_valid_column && m_session.scan().has_merge())
+	if (has_valid_column && m_session.scan().has_active())
 	{
-		const bool is_on_merge = m_session.scan().is_merge_plugin(plugin_idx);
-		const bool record_in_merge = m_session.scan().find_merge_content(rec_type, record_id) != nullptr;
+		const bool is_on_active = m_session.scan().is_active_plugin(plugin_idx);
+		const bool is_on_merged_patch = m_session.scan().plugin_filename(plugin_idx) == merged_patch::filename;
+		const bool record_in_active = m_session.scan().find_active_content(rec_type, record_id) != nullptr;
 
-		if (is_on_merge)
+		if (is_on_active && is_on_merged_patch)
 		{
-			build_merge_remove_menu(menu, context);
-			build_lock_menu(menu, context);
+			if (record_allows_lock(rec_type))
+				build_lock_menu(menu, context);
 		}
-		else if (!record_in_merge)
-			build_copy_to_merge_menu(menu, context);
-		else
+		else if (!record_in_active)
+		{
+			if (record_allows_copy(rec_type))
+				build_copy_to_merge_menu(menu, context);
+		}
+		else if (record_allows_copy(rec_type))
+		{
 			build_source_copy_menu(menu, context);
+		}
 	}
 
 	if (kind == row_kind_t::sub_record || kind == row_kind_t::schema_record)
 		build_sub_record_ignore_menu(menu, context);
+
+	if (has_valid_column && m_session.scan().has_active() && m_session.scan().is_active_plugin(plugin_idx))
+		build_merge_remove_menu(menu, context);
 
 	if (menu.actions().isEmpty())
 		return;
@@ -296,38 +321,37 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 
 void view_context_menu_t::build_sub_record_ignore_menu(QMenu & menu, const view_menu_context_t & context)
 {
-	const auto rule = context.rec_type + ":" + context.row.type;
-	const auto wildcard = context.rec_type + ":*";
-	const auto rules = parse_ignore_rules(m_settings.sub_record_ignore_conflict());
+	const auto target = context.rec_type + ":" + context.row.type;
+	auto rules = merge_exclusions_t::parse(m_settings.merge_excludes());
 
-	const bool excluded_by_rule = rules.count(rule) > 0;
-	const bool excluded_by_wildcard = rules.count(wildcard) > 0;
-	const bool already_excluded = excluded_by_rule || excluded_by_wildcard;
+	const bool excluded_by_sub = std::any_of(
+	    rules.begin(),
+	    rules.end(),
+	    [&target](const exclude_rule_t & rule)
+	{ return rule.kind == exclude_kind_t::sub_record && rule.target == target; });
 
 	if (!menu.actions().isEmpty())
 		menu.addSeparator();
 
-	const auto label = already_excluded ? QCoreApplication::translate("yEditor", "Include Sub-Record \"%1\"")
-	                                     : QCoreApplication::translate("yEditor", "Exclude Sub-Record \"%1\"");
+	const auto label = excluded_by_sub ? QCoreApplication::translate("yEditor", "Include Sub-Record \"%1\"")
+	                                   : QCoreApplication::translate("yEditor", "Exclude Sub-Record \"%1\"");
 
-	auto * action = menu.addAction(
-	    label.arg(QString::fromStdString(rule)),
-	    [this, rule, excluded_by_rule]() { toggle_ignore_rule(rule, excluded_by_rule); });
-
-	if (excluded_by_wildcard && !excluded_by_rule)
-		action->setEnabled(false);
+	menu.addAction(
+	    label.arg(QString::fromStdString(target)),
+	    [this, target, excluded_by_sub]() { toggle_ignore_rule(target, excluded_by_sub); });
 }
 
 void view_context_menu_t::toggle_ignore_rule(const std::string & rule, bool remove_rule)
 {
-	auto rules = parse_ignore_rules(m_settings.sub_record_ignore_conflict());
+	auto rules = merge_exclusions_t::parse(m_settings.merge_excludes());
+	const exclude_rule_t sub_rule { exclude_kind_t::sub_record, rule };
 
 	if (remove_rule)
-		rules.erase(rule);
-	else
-		rules.insert(rule);
+		rules.erase(std::remove(rules.begin(), rules.end(), sub_rule), rules.end());
+	else if (std::none_of(rules.begin(), rules.end(), [&sub_rule](const exclude_rule_t & other) { return other == sub_rule; }))
+		rules.push_back(sub_rule);
 
-	m_settings.set_sub_record_ignore_conflict(serialize_ignore_rules(rules));
+	m_settings.set_merge_excludes(merge_exclusions_t::serialize(rules));
 
 	if (m_on_settings_changed)
 		m_on_settings_changed();
@@ -340,7 +364,7 @@ void view_context_menu_t::build_copy_to_merge_menu(QMenu & menu, const view_menu
 	if (behavior->copy_strategy == copy_strategy_t::header_and_selected_group)
 	{
 		menu.addAction(
-		    QCoreApplication::translate("yEditor", "Copy Record to Merged Patch"),
+		    QCoreApplication::translate("yEditor", "Copy Record to Active Plugin"),
 		    [this, &context]()
 		{
 			m_merge.copy_cell_record(
@@ -350,7 +374,7 @@ void view_context_menu_t::build_copy_to_merge_menu(QMenu & menu, const view_menu
 	else
 	{
 		menu.addAction(
-		    QCoreApplication::translate("yEditor", "Copy Record to Merged Patch"),
+		    QCoreApplication::translate("yEditor", "Copy Record to Active Plugin"),
 		    [this, &context]() { m_merge.copy_whole_record(context.plugin_idx, context.rec_type, context.record_id); });
 	}
 }
@@ -370,8 +394,7 @@ field_binary_resolver::resolved_field_t view_context_menu_t::resolve_schema_fiel
 	return field_binary_resolver::resolve(ancestors, context.col, context.row.schema_field_index);
 }
 
-field_binary_resolver::resolved_bit_t view_context_menu_t::resolve_schema_bit(
-    const view_menu_context_t & context) const
+field_binary_resolver::resolved_bit_t view_context_menu_t::resolve_schema_bit(const view_menu_context_t & context) const
 {
 	std::vector<const view_tree_model_t::view_node_t *> ancestors;
 	QModelIndex ancestor_index = context.index.parent();
@@ -404,7 +427,7 @@ void view_context_menu_t::add_copy_bit_action(QMenu & menu, const view_menu_cont
 	params.bit.bit_index = resolved.bit_index;
 
 	menu.addAction(
-	    QCoreApplication::translate("yEditor", "Copy Bit to Merged Patch"),
+	    QCoreApplication::translate("yEditor", "Copy Bit to Active Plugin"),
 	    [this, params]() { m_merge.copy_bit(params); });
 }
 
@@ -418,7 +441,7 @@ void view_context_menu_t::build_source_copy_menu(QMenu & menu, const view_menu_c
 		const auto sub_type = context.row.type;
 		const auto bin_idx = context.bin_idx;
 		menu.addAction(
-		    QCoreApplication::translate("yEditor", "Copy Sub-Record to Merged Patch"),
+		    QCoreApplication::translate("yEditor", "Copy Sub-Record to Active Plugin"),
 		    [this, &context, sub_type, bin_idx]()
 		{ m_merge.copy_sub_record(context.plugin_idx, context.rec_type, context.record_id, sub_type, bin_idx); });
 		break;
@@ -427,7 +450,7 @@ void view_context_menu_t::build_source_copy_menu(QMenu & menu, const view_menu_c
 	case row_kind_t::group:
 	{
 		menu.addAction(
-		    QCoreApplication::translate("yEditor", "Copy Group to Merged Patch"),
+		    QCoreApplication::translate("yEditor", "Copy Group to Active Plugin"),
 		    [this, &context]()
 		{ m_merge.copy_group(context.plugin_idx, context.rec_type, context.record_id, context.parent_row_idx); });
 		break;
@@ -451,7 +474,7 @@ void view_context_menu_t::build_source_copy_menu(QMenu & menu, const view_menu_c
 		const int child_field_idx = context.row.schema_field_index;
 
 		menu.addAction(
-		    QCoreApplication::translate("yEditor", "Copy Field to Merged Patch"),
+		    QCoreApplication::translate("yEditor", "Copy Field to Active Plugin"),
 		    [this, &context, sub_type, sub_size, field_bin, child_field_idx]()
 		{
 			m_merge.copy_field(
@@ -469,7 +492,7 @@ void view_context_menu_t::build_source_copy_menu(QMenu & menu, const view_menu_c
 	case row_kind_t::field_of_group:
 	{
 		menu.addAction(
-		    QCoreApplication::translate("yEditor", "Copy Group to Merged Patch"),
+		    QCoreApplication::translate("yEditor", "Copy Group to Active Plugin"),
 		    [this, &context]()
 		{ m_merge.copy_group(context.plugin_idx, context.rec_type, context.record_id, context.parent_row_idx); });
 		break;
@@ -482,6 +505,9 @@ void view_context_menu_t::build_source_copy_menu(QMenu & menu, const view_menu_c
 
 void view_context_menu_t::build_merge_remove_menu(QMenu & menu, const view_menu_context_t & context)
 {
+	if (!caps_for(context.kind).can_remove)
+		return;
+
 	const auto & visible = m_record_view.model()->rows();
 
 	switch (context.kind)
@@ -493,8 +519,12 @@ void view_context_menu_t::build_merge_remove_menu(QMenu & menu, const view_menu_
 		{
 			const auto removed_type = context.row.type;
 			const auto bin_idx = context.bin_idx;
+
+			if (!menu.actions().isEmpty())
+				menu.addSeparator();
+
 			menu.addAction(
-			    QCoreApplication::translate("yEditor", "Remove Sub-Record from Merged Patch"),
+			    QCoreApplication::translate("yEditor", "Remove Sub-Record from Active Plugin"),
 			    [this, &context, bin_idx, removed_type]()
 			{ m_merge.remove_sub_record(context.rec_type, context.record_id, bin_idx, removed_type); });
 		}
@@ -519,8 +549,11 @@ void view_context_menu_t::build_merge_remove_menu(QMenu & menu, const view_menu_
 
 		if (merge_range.start >= 0)
 		{
+			if (!menu.actions().isEmpty())
+				menu.addSeparator();
+
 			menu.addAction(
-			    QCoreApplication::translate("yEditor", "Remove Group from Merged Patch"),
+			    QCoreApplication::translate("yEditor", "Remove Group from Active Plugin"),
 			    [this, &context, merge_range]()
 			{ m_merge.remove_group(context.rec_type, context.record_id, merge_range); });
 		}
@@ -536,8 +569,12 @@ void view_context_menu_t::build_merge_remove_menu(QMenu & menu, const view_menu_
 
 		const int merge_bin = resolved.binary_index;
 		const auto removed_type = resolved.sub_type;
+
+		if (!menu.actions().isEmpty())
+			menu.addSeparator();
+
 		menu.addAction(
-		    QCoreApplication::translate("yEditor", "Remove Sub-Record from Merged Patch"),
+		    QCoreApplication::translate("yEditor", "Remove Sub-Record from Active Plugin"),
 		    [this, &context, merge_bin, removed_type]()
 		{ m_merge.remove_sub_record(context.rec_type, context.record_id, merge_bin, removed_type); });
 
@@ -575,6 +612,7 @@ merge_lock_t view_context_menu_t::build_lock_for(const view_menu_context_t & con
 			lock.sub_size = resolved.sub_size;
 			lock.field_index = resolved.field_index;
 			lock.bit_index = resolved.bit_index;
+			lock.occurrence = resolved.occurrence;
 			break;
 		}
 
@@ -583,31 +621,29 @@ merge_lock_t view_context_menu_t::build_lock_for(const view_menu_context_t & con
 		lock.sub_type = resolved.sub_type;
 		lock.sub_size = resolved.sub_size;
 		lock.field_index = context.row.schema_field_index;
+		lock.occurrence = resolved.occurrence;
 		break;
 	}
 
 	case row_kind_t::group:
 	case row_kind_t::field_of_group:
 	{
+		lock.scope = lock_scope_t::group;
+
 		const auto & visible = m_record_view.model()->rows();
-		const bool valid_parent = context.kind == row_kind_t::field_of_group &&
-		    context.parent_row_idx >= 0 && context.parent_row_idx < static_cast<int>(visible.size());
-		const auto & group_row =
-		    (context.kind == row_kind_t::field_of_group && valid_parent) ? visible[context.parent_row_idx]
-		                                                                 : context.row;
+		if (context.parent_row_idx < 0 || context.parent_row_idx >= static_cast<int>(visible.size()))
+			break;
 
-		if (context.col >= 0 && context.col < static_cast<int>(group_row.binary_ranges.size()))
-		{
-			const auto & range = group_row.binary_ranges[context.col];
-			lock.scope = lock_scope_t::group;
-			lock.group_start = range.start;
-			lock.group_end = range.end_pos;
-		}
-		else
-		{
-			lock.scope = lock_scope_t::whole_record;
-		}
+		const auto & group_row = visible[context.parent_row_idx];
+		if (context.col < 0 || context.col >= static_cast<int>(group_row.binary_ranges.size()))
+			break;
 
+		const auto & range = group_row.binary_ranges[context.col];
+		if (range.start < 0)
+			break;
+
+		lock.group_start = range.start;
+		lock.group_end = range.end_pos;
 		break;
 	}
 
@@ -624,19 +660,20 @@ void view_context_menu_t::build_lock_menu(QMenu & menu, const view_menu_context_
 	const auto lock = build_lock_for(context);
 	const bool needs_sub_type =
 	    lock.scope == lock_scope_t::sub_record || lock.scope == lock_scope_t::field || lock.scope == lock_scope_t::bit;
-	if (needs_sub_type && lock.sub_type.empty())
-		return;
+	const bool invalid_sub_type = needs_sub_type && lock.sub_type.empty();
+	const bool invalid_group = lock.scope == lock_scope_t::group && lock.group_start < 0;
+	const bool can_lock =
+	    caps_for(context.kind).can_lock && record_allows_lock(context.rec_type) && !invalid_sub_type && !invalid_group;
 
-	if (lock.scope == lock_scope_t::group && lock.group_start < 0)
-		return;
-
-	const bool locked = m_merge.is_merge_locked(lock);
+	const bool locked = can_lock && m_merge.is_active_locked(lock);
 
 	if (!menu.actions().isEmpty())
 		menu.addSeparator();
 
 	const auto label = locked ? QCoreApplication::translate("yEditor", "Unlock in Merged Patch")
-	                           : QCoreApplication::translate("yEditor", "Lock in Merged Patch");
+	                          : QCoreApplication::translate("yEditor", "Lock in Merged Patch");
 
-	menu.addAction(label, [this, lock]() { m_merge.toggle_merge_lock(lock); });
+	auto * action =
+	    can_lock ? menu.addAction(label, [this, lock]() { m_merge.toggle_active_lock(lock); }) : menu.addAction(label);
+	action->setEnabled(can_lock);
 }

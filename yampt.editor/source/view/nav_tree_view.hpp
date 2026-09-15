@@ -19,11 +19,12 @@ public:
 	void rebuild();
 	void rebuild_preserving_state();
 	void refresh_colors();
+	void notify_record_changed(const std::string & rec_type, const std::string & record_id);
+	void notify_plugin_changed(int plugin_idx);
 	void set_filter(const nav_tree_model_t::filter_state_t & state);
 	void clear_filter();
 	void set_hide_duplicates(bool hide);
 	void set_show_deleted_strikeout(bool value);
-	void set_excluded_plugins(const std::set<std::string> * excluded);
 	void set_patch_plugins(const std::set<std::string> * patch);
 	void set_dirty_plugins(const std::set<std::string> * dirty);
 	void set_editable_columns(const editable_column_set_t * editable);
@@ -45,6 +46,8 @@ private:
 	bool eventFilter(QObject * obj, QEvent * event) override;
 	void save_expansion_state();
 	void restore_expansion_state();
+	void restore_selection(const nav_tree_model_t::node_info_t & info);
+	std::string node_path_key(const QModelIndex & index) const;
 
 	QTreeView * m_tree = nullptr;
 	nav_tree_model_t * m_model = nullptr;

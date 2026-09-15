@@ -1,4 +1,3 @@
-#include <resource_paths.hpp>
 #include "plugin_operations_controller.hpp"
 #include "../model/dict_document.hpp"
 #include "../view/display_name.hpp"
@@ -10,6 +9,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <map>
+#include <resource_paths.hpp>
 #include <set>
 #include <QComboBox>
 #include <QCoreApplication>

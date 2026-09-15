@@ -23,6 +23,7 @@ Copy-Item (Join-Path $outDir "yampt.exe") $packDir
 Copy-Item (Join-Path $outDir "yTranslator.exe") $packDir
 Copy-Item (Join-Path $outDir "yEditor.exe") $packDir
 Copy-Item (Join-Path $outDir "*.dll") $packDir
+Copy-Item $sevenZip $packDir
 
 $dictSrc = Join-Path $outDir "dictionaries"
 if (Test-Path $dictSrc) {
@@ -52,7 +53,7 @@ Copy-Item (Join-Path $repoRoot "README.md") $docsDst
 Copy-Item (Join-Path $repoRoot "CHANGELOG.md") $docsDst
 $docsSrc = Join-Path $repoRoot "docs"
 if (Test-Path $docsSrc) {
-    Copy-Item (Join-Path $docsSrc "*.md") $docsDst
+    Copy-Item (Join-Path $docsSrc "*.md") $docsDst -Exclude "AUDIT.md"
 }
 
 Push-Location $buildDir

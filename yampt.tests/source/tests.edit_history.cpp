@@ -112,5 +112,3 @@ TEST_CASE("edit_history_t::revert, unknown key returns failure", "[u]")
 	const auto result = history.revert(rec_type_t::cell, "unknown_key", 0);
 	REQUIRE(result.success == false);
 }
-
-

@@ -6,6 +6,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace script_token {
 
@@ -19,6 +20,13 @@ struct token_result_t
 token_result_t extract_token_at(const std::string & text_input, int position);
 
 } // namespace script_token
+
+enum class compiled_patch_kind_t
+{
+	plain,
+	getpccell,
+	addtopic
+};
 
 class script_parser_t
 {
@@ -55,15 +63,16 @@ private:
 	void remove_quotes();
 	void find_new_text(const rec_type_t text_type);
 	void insert_new_text();
-	void convert_text_in_compiled(const bool is_getpccell);
+	void convert_text_in_compiled(const std::string & keyword);
 	void convert_line();
 	void find_keyword();
 	void find_new_message();
 	void convert_message_in_compiled();
-	std::vector<std::string> split_line(const std::string & cur_line) const;
+	void convert_buttons_in_compiled();
+	std::string build_message_blob(const std::string & cur_line) const;
+	std::vector<std::string> build_button_list(const std::string & cur_line) const;
 	void trim_last_new_line_chars();
 	void dump_error();
-	void replace_vertical_lines_by_new_line(std::string & message);
 
 	const rec_type_t m_type;
 	const dict_merger_t * m_merger;

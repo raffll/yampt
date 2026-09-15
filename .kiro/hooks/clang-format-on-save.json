@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Clang Format on Save",
+      "trigger": "PostFileSave",
+      "description": "Runs clang-format in place on C/C++ files when saved",
+      "matcher": "\\.(cpp|hpp|c|h|cc|cxx|hxx)$",
+      "action": {
+        "type": "command",
+        "command": "$f = (ConvertFrom-Json ([Console]::In.ReadToEnd())).filePath; if ($f) { clang-format -i -- \"$f\" }"
+      }
+    }
+  ]
+}

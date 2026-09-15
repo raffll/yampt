@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <sstream>
 
+static constexpr size_t bytes_per_uint16 = 2;
 static constexpr size_t bytes_per_uint32 = 4;
 
 const std::vector<std::string> domain_types::script_keywords { "messagebox", "choice", "say" };
@@ -164,11 +165,10 @@ bool domain_types::is_fnam(const std::string & rec_id)
 
 size_t domain_types::convert_string_byte_array_to_uint(const std::string & str)
 {
-	assert(str.size() == bytes_per_uint32 || str.size() == 1);
+	assert(str.size() == 1 || str.size() == bytes_per_uint16 || str.size() == bytes_per_uint32);
 
 	char buffer[bytes_per_uint32] = {};
 	unsigned char ubuffer[bytes_per_uint32];
-	unsigned int result_value;
 	str.copy(buffer, str.size());
 	for (size_t i = 0; i < bytes_per_uint32; i++)
 	{
@@ -176,14 +176,13 @@ size_t domain_types::convert_string_byte_array_to_uint(const std::string & str)
 	}
 
 	if (str.size() == bytes_per_uint32)
-	{
-		return result_value = (ubuffer[0] | ubuffer[1] << 8 | ubuffer[2] << 16 | ubuffer[3] << 24);
-	}
+		return static_cast<unsigned int>(ubuffer[0] | ubuffer[1] << 8 | ubuffer[2] << 16 | ubuffer[3] << 24);
+
+	if (str.size() == bytes_per_uint16)
+		return static_cast<unsigned int>(ubuffer[0] | ubuffer[1] << 8);
 
 	if (str.size() == 1)
-	{
-		return result_value = ubuffer[0];
-	}
+		return ubuffer[0];
 
 	return std::string::npos;
 }

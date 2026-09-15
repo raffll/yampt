@@ -7,9 +7,15 @@
 #include <algorithm>
 #include <cstring>
 #include <map>
+#include <optional>
 #include <set>
 
-static constexpr size_t enam_slot_size = 24;
+static constexpr size_t enam_slot_size = enam_layout::slot_size;
+static constexpr size_t record_header_size = record_layout::header_size;
+static constexpr size_t record_size_field_offset = record_layout::size_field_offset;
+static constexpr size_t record_size_field_length = record_layout::size_field_length;
+static constexpr size_t object_index_size = object_index_layout::index_size;
+static constexpr size_t leveled_level_size = leveled_layout::level_size;
 
 sub_record_sequence_t sub_record_merge_t::parse_sub_records(const std::string & content)
 {
@@ -37,9 +43,9 @@ std::string sub_record_merge_t::reconstruct_record(
 	for (const auto & entry : output)
 		body += serialize_sub_record(entry);
 
-	std::string result = winner_content.substr(0, 16);
+	std::string result = winner_content.substr(0, record_header_size);
 	const auto body_size = domain_types::convert_uint_to_string_byte_array(body.size());
-	result.replace(4, 4, body_size);
+	result.replace(record_size_field_offset, record_size_field_length, body_size);
 	result += body;
 	return result;
 }
@@ -57,7 +63,6 @@ std::string sub_record_merge_t::filter_sub_records_by_rules(
 	bool in_reference_group = false;
 
 	const auto specific_key = rec_type + ":";
-	const auto wildcard_key = rec_type + ":*";
 
 	for (const auto & entry : subs)
 	{
@@ -71,9 +76,6 @@ std::string sub_record_merge_t::filter_sub_records_by_rules(
 		}
 
 		if (ignored_sub_records.count(specific_key + entry.type) > 0)
-			continue;
-
-		if (ignored_sub_records.count(wildcard_key) > 0)
 			continue;
 
 		filtered.push_back(entry);
@@ -137,75 +139,233 @@ int sub_record_merge_t::find_by_type_and_occurrence(
 	return -1;
 }
 
-bool sub_record_merge_t::needs_element_wise(
-    const std::string & rec_type,
-    const std::string & sub_type,
-    size_t data_size)
+static bool is_flags_field(const field_def_t & field)
 {
-	const auto * behavior = find_record_behavior(rec_type);
-	const auto * rule = find_sub_record_rule(behavior, sub_type, data_size);
-
-	if (!rule)
-		return false;
-
-	return has_flag(rule->flags, sub_rule_flag_t::element_wise_merge);
+	return field.type == field_type_t::flags_u8 || field.type == field_type_t::flags_u16 ||
+	       field.type == field_type_t::flags_u32;
 }
 
-std::string sub_record_merge_t::merge_bytes_three_way(
-    const char * first,
-    const char * inter,
-    const char * winner,
-    size_t size)
+static size_t flag_byte_width(const field_def_t & field)
 {
-	std::string result(winner, size);
+	if (field.type == field_type_t::flags_u8)
+		return 1;
 
-	for (size_t offset = 0; offset < size; ++offset)
+	if (field.type == field_type_t::flags_u16)
+		return 2;
+
+	return 4;
+}
+
+static bool intermediate_claims_bit(
+    unsigned char first_byte,
+    unsigned char inter_byte,
+    unsigned char winner_byte,
+    unsigned char current_byte,
+    unsigned char mask)
+{
+	const bool inter_changed = (inter_byte & mask) != (first_byte & mask);
+	const bool winner_unchanged = (winner_byte & mask) == (first_byte & mask);
+	const bool current_unclaimed = (current_byte & mask) == (first_byte & mask);
+
+	return inter_changed && winner_unchanged && current_unclaimed;
+}
+
+static bool span_differs(const char * lhs, const char * rhs, size_t offset, size_t length)
+{
+	return std::memcmp(lhs + offset, rhs + offset, length) != 0;
+}
+
+static bool intermediate_claims_span(
+    const sub_record_merge_t::field_merge_input_t & input,
+    size_t offset,
+    size_t length)
+{
+	const bool inter_changed = span_differs(input.inter, input.first, offset, length);
+	const bool winner_unchanged = !span_differs(input.winner, input.first, offset, length);
+	const bool current_unclaimed = !span_differs(input.current, input.first, offset, length);
+
+	return inter_changed && winner_unchanged && current_unclaimed;
+}
+
+static void merge_field_bits(std::string & result, const sub_record_merge_t::field_merge_input_t & input, const field_def_t & field)
+{
+	const size_t width = flag_byte_width(field);
+
+	for (size_t byte_index = 0; byte_index < width; ++byte_index)
 	{
-		if (inter[offset] != first[offset] && winner[offset] == first[offset])
-			result[offset] = inter[offset];
+		const size_t offset = field.offset + byte_index;
+		if (offset >= input.size)
+			return;
+
+		const unsigned char first_byte = static_cast<unsigned char>(input.first[offset]);
+		const unsigned char inter_byte = static_cast<unsigned char>(input.inter[offset]);
+		const unsigned char winner_byte = static_cast<unsigned char>(input.winner[offset]);
+		const unsigned char current_byte = static_cast<unsigned char>(input.current[offset]);
+
+		unsigned char merged = current_byte;
+		for (int bit = 0; bit < 8; ++bit)
+		{
+			const unsigned char mask = static_cast<unsigned char>(1u << bit);
+			if (intermediate_claims_bit(first_byte, inter_byte, winner_byte, current_byte, mask))
+				merged = static_cast<unsigned char>((merged & ~mask) | (inter_byte & mask));
+		}
+
+		result[offset] = static_cast<char>(merged);
+	}
+}
+
+static void merge_bool_bit(std::string & result, const sub_record_merge_t::field_merge_input_t & input, const field_def_t & field)
+{
+	const size_t offset = field.offset;
+	if (offset >= input.size)
+		return;
+
+	const int bit = static_cast<int>(field.size);
+	const unsigned char mask = static_cast<unsigned char>(1u << bit);
+	const unsigned char first_byte = static_cast<unsigned char>(input.first[offset]);
+	const unsigned char inter_byte = static_cast<unsigned char>(input.inter[offset]);
+	const unsigned char winner_byte = static_cast<unsigned char>(input.winner[offset]);
+	const unsigned char current_byte = static_cast<unsigned char>(input.current[offset]);
+
+	if (intermediate_claims_bit(first_byte, inter_byte, winner_byte, current_byte, mask))
+		result[offset] = static_cast<char>((current_byte & ~mask) | (inter_byte & mask));
+}
+
+static size_t field_span(const field_def_t & field, size_t size)
+{
+	if (field.size == 0)
+		return size > field.offset ? size - field.offset : 0;
+
+	return field.size;
+}
+
+static void merge_value_field(std::string & result, const sub_record_merge_t::field_merge_input_t & input, const field_def_t & field)
+{
+	const size_t length = field_span(field, input.size);
+	if (length == 0 || field.offset + length > input.size)
+		return;
+
+	if (intermediate_claims_span(input, field.offset, length))
+		std::memcpy(result.data() + field.offset, input.inter + field.offset, length);
+}
+
+bool sub_record_merge_t::has_schema(const std::string & rec_type, const std::string & sub_type)
+{
+	return find_largest_schema(rec_type, sub_type) != nullptr;
+}
+
+std::string sub_record_merge_t::merge_fields_three_way(const field_merge_input_t & input)
+{
+	std::string result(input.current, input.size);
+
+	const auto * schema = find_schema(input.rec_type, input.sub_type, input.size);
+	if (!schema)
+	{
+		app_logger_t::add_log("[error] no schema for " + input.rec_type + ":" + input.sub_type + "\r\n", true);
+		return result;
+	}
+
+	for (size_t field_index = 0; field_index < schema->field_count; ++field_index)
+	{
+		const auto & field = schema->fields[field_index];
+
+		if (is_flags_field(field))
+		{
+			merge_field_bits(result, input, field);
+			continue;
+		}
+
+		if (field.type == field_type_t::bool_bit)
+		{
+			merge_bool_bit(result, input, field);
+			continue;
+		}
+
+		merge_value_field(result, input, field);
 	}
 
 	return result;
 }
 
-static bool field_range_differs(
-    const char * lhs,
-    const char * rhs,
-    size_t offset,
-    size_t length,
-    size_t data_size)
+std::vector<sub_record_merge_t::keyed_item_t> sub_record_merge_t::keyed_list_merge(
+    const std::vector<std::vector<keyed_item_t>> & versions)
 {
-	if (offset + length > data_size)
-		return false;
+	if (versions.empty())
+		return {};
 
-	return std::memcmp(lhs + offset, rhs + offset, length) != 0;
-}
+	const auto & master = versions.front();
 
-std::string sub_record_merge_t::merge_fields_three_way(
-    const std::string & rec_type,
-    const std::string & sub_type,
-    const char * first,
-    const char * inter,
-    const char * winner,
-    size_t size)
-{
-	const auto * schema = find_schema(rec_type, sub_type, size);
-	if (!schema)
-		return merge_bytes_three_way(first, inter, winner, size);
+	std::map<std::string, std::string> master_data;
+	for (const auto & item : master)
+		master_data.emplace(item.key, item.data);
 
-	std::string result(winner, size);
-
-	for (size_t field_index = 0; field_index < schema->field_count; ++field_index)
+	auto find_in_version = [](const std::vector<keyed_item_t> & version, const std::string & key) -> const keyed_item_t *
 	{
-		const auto & field = schema->fields[field_index];
-		if (field.offset + field.size > size)
-			continue;
+		for (const auto & item : version)
+		{
+			if (item.key == key)
+				return &item;
+		}
 
-		const bool inter_changed = field_range_differs(inter, first, field.offset, field.size, size);
-		const bool winner_changed = field_range_differs(winner, first, field.offset, field.size, size);
+		return nullptr;
+	};
 
-		if (inter_changed && !winner_changed)
-			std::memcpy(result.data() + field.offset, inter + field.offset, field.size);
+	auto resolve_master_item = [&](const std::string & key) -> std::optional<std::string>
+	{
+		std::optional<std::string> decision = master_data.at(key);
+
+		for (size_t version_index = 1; version_index < versions.size(); ++version_index)
+		{
+			const auto * present = find_in_version(versions[version_index], key);
+
+			if (present == nullptr)
+			{
+				decision = std::nullopt;
+				continue;
+			}
+
+			if (present->data != master_data.at(key))
+				decision = present->data;
+		}
+
+		return decision;
+	};
+
+	auto highest_addition_data = [&](const std::string & key) -> std::string
+	{
+		for (size_t version_index = versions.size(); version_index-- > 1;)
+		{
+			const auto * present = find_in_version(versions[version_index], key);
+			if (present != nullptr)
+				return present->data;
+		}
+
+		return {};
+	};
+
+	std::vector<keyed_item_t> result;
+
+	for (const auto & item : master)
+	{
+		const auto decision = resolve_master_item(item.key);
+		if (decision.has_value())
+			result.push_back({ item.key, *decision });
+	}
+
+	std::set<std::string> emitted_keys;
+	for (const auto & item : result)
+		emitted_keys.insert(item.key);
+
+	for (const auto & version : versions)
+	{
+		for (const auto & item : version)
+		{
+			if (master_data.count(item.key) > 0 || emitted_keys.count(item.key) > 0)
+				continue;
+
+			result.push_back({ item.key, highest_addition_data(item.key) });
+			emitted_keys.insert(item.key);
+		}
 	}
 
 	return result;
@@ -260,7 +420,11 @@ static void fix_paired_fields(
 	}
 }
 
-static constexpr field_pair_rule_t enam_magnitude_pair = { 12, 16, 4 };
+static constexpr field_pair_rule_t enam_magnitude_pair = {
+	enam_layout::magnitude_min_offset,
+	enam_layout::magnitude_max_offset,
+	enam_layout::magnitude_field_size
+};
 
 static void fix_magnitude_pair(
     std::string & result,
@@ -272,6 +436,23 @@ static void fix_magnitude_pair(
 	std::string merged_slot = result.substr(slot_offset, enam_slot_size);
 	fix_paired_fields(merged_slot, first, inter, winner, &enam_magnitude_pair, 1);
 	result.replace(slot_offset, enam_slot_size, merged_slot);
+}
+
+static std::string merge_enam_slot_bytes(
+    const char * first,
+    const char * inter,
+    const char * winner,
+    size_t size)
+{
+	std::string result(winner, size);
+
+	for (size_t offset = 0; offset < size; ++offset)
+	{
+		if (inter[offset] != first[offset] && winner[offset] == first[offset])
+			result[offset] = inter[offset];
+	}
+
+	return result;
 }
 
 std::string sub_record_merge_t::merge_enam_slots(
@@ -295,7 +476,7 @@ std::string sub_record_merge_t::merge_enam_slots(
 			continue;
 		}
 
-		result += merge_bytes_three_way(
+		result += merge_enam_slot_bytes(
 		    first_enams[slot].data(), inter_enams[slot].data(), winner_enams[slot].data(), enam_slot_size);
 
 		fix_magnitude_pair(
@@ -313,7 +494,7 @@ std::string sub_record_merge_t::merge_enam_slots(
 
 bool sub_record_merge_t::is_enam_record_type(const std::string & rec_type)
 {
-	return rec_type == "ENCH" || rec_type == "SPEL" || rec_type == "ALCH";
+	return is_enam_effect_list(rec_type);
 }
 
 sub_record_sequence_t sub_record_merge_t::replace_enam_entries(
@@ -359,6 +540,24 @@ void sub_record_merge_t::apply_paired_rules(
 	}
 }
 
+static bool is_keyed_list_spec_sub_type(const std::string & rec_type, const std::string & sub_type);
+
+static bool is_variable_size_sub_type(const std::string & rec_type, const std::string & sub_type)
+{
+	const auto * behavior = find_record_behavior(rec_type);
+	if (!behavior)
+		return false;
+
+	for (size_t rule_idx = 0; rule_idx < behavior->sub_rule_count; ++rule_idx)
+	{
+		const auto & rule = behavior->sub_rules[rule_idx];
+		if (sub_type == rule.sub_type && has_flag(rule.flags, sub_rule_flag_t::skip_if_size_differs))
+			return true;
+	}
+
+	return false;
+}
+
 void sub_record_merge_t::apply_intermediate(
     sub_record_sequence_t & output,
     const sub_record_sequence_t & first,
@@ -371,7 +570,13 @@ void sub_record_merge_t::apply_intermediate(
 		if (is_enam_record_type(rec_type) && intermediate[i].type == "ENAM")
 			continue;
 
-		if (intermediate[i].type == "NPCO")
+		if (is_variable_size_sub_type(rec_type, intermediate[i].type))
+			continue;
+
+		if (is_keyed_list_spec_sub_type(rec_type, intermediate[i].type))
+			continue;
+
+		if (is_keyed_list_sub_type(rec_type, intermediate[i].type))
 			continue;
 
 		const auto occurrence = find_occurrence_index(intermediate, i);
@@ -403,52 +608,71 @@ void sub_record_merge_t::apply_intermediate(
 		if (output_idx < 0)
 			continue;
 
-		if (needs_element_wise(rec_type, intermediate[i].type, first[first_idx].data.size()) &&
-		    intermediate[i].data.size() == first[first_idx].data.size() &&
-		    output[output_idx].data.size() == first[first_idx].data.size())
-		{
-			const auto current_data = output[output_idx].data;
+		const matched_entry_t entries {
+			first[static_cast<size_t>(first_idx)],
+			intermediate[i],
+			winner[static_cast<size_t>(winner_idx)],
+			output[static_cast<size_t>(output_idx)]
+		};
 
-			output[output_idx].data = merge_fields_three_way(
-			    rec_type,
-			    intermediate[i].type,
-			    first[first_idx].data.data(),
-			    intermediate[i].data.data(),
-			    current_data.data(),
-			    first[first_idx].data.size());
-
-			apply_paired_rules(output[output_idx].data, first[first_idx].data, intermediate[i], current_data, rec_type);
-
-			continue;
-		}
-
-		if (winner[winner_idx].data != first[first_idx].data)
-			continue;
-
-		if (output[output_idx].data != first[first_idx].data)
-			continue;
-
-		output[output_idx].data = intermediate[i].data;
+		merge_matched_entry(entries, rec_type);
 	}
+}
+
+void sub_record_merge_t::merge_matched_entry(const matched_entry_t & entries, const std::string & rec_type)
+{
+	const auto & first_data = entries.first_entry.data;
+	const auto & inter_data = entries.inter_entry.data;
+	const auto & winner_data = entries.winner_entry.data;
+
+	const bool same_size = inter_data.size() == first_data.size() &&
+	                       entries.output_entry.data.size() == first_data.size() &&
+	                       winner_data.size() == first_data.size();
+
+	if (same_size && has_schema(rec_type, entries.inter_entry.type))
+	{
+		const field_merge_input_t input {
+			rec_type,
+			entries.inter_entry.type,
+			first_data.data(),
+			inter_data.data(),
+			winner_data.data(),
+			entries.output_entry.data.data(),
+			first_data.size()
+		};
+
+		entries.output_entry.data = merge_fields_three_way(input);
+		apply_paired_rules(entries.output_entry.data, first_data, entries.inter_entry, winner_data, rec_type);
+
+		return;
+	}
+
+	const bool inter_changed = inter_data != first_data;
+	const bool winner_unchanged = winner_data == first_data;
+	const bool output_unclaimed = entries.output_entry.data == winner_data;
+
+	if (inter_changed && winner_unchanged && output_unclaimed)
+		entries.output_entry.data = inter_data;
 }
 
 merge_result_t sub_record_merge_t::merge(const merge_input_t & input)
 {
-	if (input.rec_type == "CELL")
-		return { false, input.version_contents.back() };
-
-	if (input.rec_type == "SCPT")
-		return { false, input.version_contents.back() };
-
-	if (input.rec_type == "ARMO" || input.rec_type == "CLOT")
+	switch (merge_strategy_for(input.rec_type))
+	{
+	case merge_strategy_t::armor_parts:
 		return merge_armor_parts(input);
+
+	case merge_strategy_t::generic:
+		return merge_generic(input);
+	}
 
 	return merge_generic(input);
 }
 
 uint32_t sub_record_merge_t::read_frmr_index(const sub_record_entry_t & frmr_entry)
 {
-	return static_cast<uint32_t>(domain_types::convert_string_byte_array_to_uint(frmr_entry.data.substr(0, 4)));
+	return static_cast<uint32_t>(
+	    domain_types::convert_string_byte_array_to_uint(frmr_entry.data.substr(0, object_index_size)));
 }
 
 cell_partition_t sub_record_merge_t::partition_cell(const std::string & content)
@@ -491,178 +715,7 @@ frmr_map_t sub_record_merge_t::build_frmr_map(const std::vector<frmr_group_t> & 
 	return result;
 }
 
-void sub_record_merge_t::apply_intermediate_to_group(
-    sub_record_sequence_t & output,
-    const sub_record_sequence_t & first,
-    const sub_record_sequence_t & intermediate,
-    const sub_record_sequence_t & winner)
-{
-	for (size_t i = 0; i < intermediate.size(); ++i)
-	{
-		const auto occurrence = find_occurrence_index(intermediate, i);
-		const auto first_idx = find_by_type_and_occurrence(first, intermediate[i].type, occurrence);
-
-		if (first_idx < 0)
-			continue;
-
-		if (intermediate[i].data == first[first_idx].data)
-			continue;
-
-		const auto winner_idx = find_by_type_and_occurrence(winner, intermediate[i].type, occurrence);
-
-		if (winner_idx < 0)
-			continue;
-
-		const auto output_idx = find_by_type_and_occurrence(output, intermediate[i].type, occurrence);
-
-		if (output_idx < 0)
-			continue;
-
-		if (winner[winner_idx].data != first[first_idx].data)
-			continue;
-
-		output[output_idx].data = intermediate[i].data;
-	}
-}
-
-sub_record_sequence_t sub_record_merge_t::merge_frmr_group(
-    const sub_record_sequence_t & first_subs,
-    const sub_record_sequence_t & inter_subs,
-    const sub_record_sequence_t & winner_subs)
-{
-	auto output = winner_subs;
-	apply_intermediate_to_group(output, first_subs, inter_subs, winner_subs);
-	return output;
-}
-
-std::string sub_record_merge_t::reconstruct_cell(
-    const std::string & winner_content,
-    const sub_record_sequence_t & header,
-    const std::vector<frmr_group_t> & groups)
-{
-	std::string body;
-
-	for (const auto & entry : header)
-		body += serialize_sub_record(entry);
-
-	for (const auto & group : groups)
-	{
-		for (const auto & entry : group.sub_records)
-			body += serialize_sub_record(entry);
-	}
-
-	std::string result = winner_content.substr(0, 16);
-	const auto body_size = domain_types::convert_uint_to_string_byte_array(body.size());
-	result.replace(4, 4, body_size);
-	result += body;
-	return result;
-}
-
-void sub_record_merge_t::collect_intermediate_additions(
-    std::vector<frmr_group_t> & merged_groups,
-    const std::vector<std::string> & versions,
-    const frmr_map_t & first_map,
-    const frmr_map_t & winner_map)
-{
-	for (size_t version_idx = versions.size() - 2; version_idx >= 1; --version_idx)
-	{
-		const auto inter_part = partition_cell(versions[version_idx]);
-
-		for (const auto & group : inter_part.groups)
-		{
-			if (first_map.count(group.frmr_index) > 0)
-				continue;
-
-			if (winner_map.count(group.frmr_index) > 0)
-				continue;
-
-			const bool already_added = std::any_of(
-			    merged_groups.begin(),
-			    merged_groups.end(),
-			    [&](const frmr_group_t & existing) { return existing.frmr_index == group.frmr_index; });
-
-			if (!already_added)
-				merged_groups.push_back(group);
-		}
-	}
-}
-
-void sub_record_merge_t::merge_winner_frmr_groups(
-    std::vector<frmr_group_t> & merged_groups,
-    const std::vector<std::string> & versions,
-    const frmr_map_t & first_map,
-    const frmr_map_t & winner_map)
-{
-	for (const auto & [index, winner_group] : winner_map)
-	{
-		auto it_first = first_map.find(index);
-
-		if (it_first == first_map.end())
-		{
-			merged_groups.push_back(winner_group);
-			continue;
-		}
-
-		auto merged_subs = winner_group.sub_records;
-
-		for (size_t version_idx = versions.size() - 2; version_idx >= 1; --version_idx)
-		{
-			const auto inter_part = partition_cell(versions[version_idx]);
-			const auto inter_map = build_frmr_map(inter_part.groups);
-			auto it_inter = inter_map.find(index);
-
-			if (it_inter == inter_map.end())
-				continue;
-
-			merged_subs = merge_frmr_group(it_first->second.sub_records, it_inter->second.sub_records, merged_subs);
-		}
-
-		merged_groups.push_back({ index, std::move(merged_subs) });
-	}
-}
-
-merge_result_t sub_record_merge_t::merge_cell_refs(const merge_input_t & input)
-{
-	const auto & versions = input.version_contents;
-
-	if (versions.size() < 3)
-		return { false, versions.back() };
-
-	const auto & first_content = versions.front();
-	const auto & winner_content = versions.back();
-
-	const auto first_part = partition_cell(first_content);
-	const auto winner_part = partition_cell(winner_content);
-
-	auto merged_header = winner_part.header;
-
-	for (size_t version_idx = versions.size() - 2; version_idx >= 1; --version_idx)
-	{
-		const auto inter_part = partition_cell(versions[version_idx]);
-		apply_intermediate(merged_header, first_part.header, inter_part.header, winner_part.header, "CELL");
-	}
-
-	const auto first_map = build_frmr_map(first_part.groups);
-	const auto winner_map = build_frmr_map(winner_part.groups);
-
-	std::vector<frmr_group_t> merged_groups;
-	merge_winner_frmr_groups(merged_groups, versions, first_map, winner_map);
-	collect_intermediate_additions(merged_groups, versions, first_map, winner_map);
-
-	std::sort(
-	    merged_groups.begin(),
-	    merged_groups.end(),
-	    [](const frmr_group_t & lhs, const frmr_group_t & rhs) { return lhs.frmr_index < rhs.frmr_index; });
-
-	const auto result = reconstruct_cell(winner_content, merged_header, merged_groups);
-
-	if (result == winner_content)
-		return { false, winner_content };
-
-	return { true, result };
-}
-
-armor_partition_t sub_record_merge_t::partition_armor(const std::string & content)
+armor_partition_t sub_record_merge_t::partition_armor(const std::string & content, const std::string & rec_type)
 {
 	armor_partition_t result;
 	const auto subs = parse_sub_records(content);
@@ -671,13 +724,13 @@ armor_partition_t sub_record_merge_t::partition_armor(const std::string & conten
 
 	for (const auto & entry : subs)
 	{
-		const bool starts_body_part = entry.type == "INDX" && entry.data.size() >= 4;
+		const bool starts_body_part = entry.type == "INDX" && entry.data.size() >= object_index_size;
 
 		if (starts_body_part)
 		{
 			in_body_part = true;
 			uint32_t armor_index = 0;
-			std::memcpy(&armor_index, entry.data.data(), 4);
+			std::memcpy(&armor_index, entry.data.data(), object_index_size);
 
 			armor_part_group_t group;
 			group.armor_index = armor_index;
@@ -687,7 +740,7 @@ armor_partition_t sub_record_merge_t::partition_armor(const std::string & conten
 			continue;
 		}
 
-		const bool part_member = in_body_part && (entry.type == "BNAM" || entry.type == "CNAM");
+		const bool part_member = in_body_part && is_armor_part_sub_type(rec_type, entry.type);
 
 		if (part_member)
 		{
@@ -729,74 +782,70 @@ std::string sub_record_merge_t::reconstruct_armor(
 			body += serialize_sub_record(entry);
 	}
 
-	std::string result = winner_content.substr(0, 16);
+	std::string result = winner_content.substr(0, record_header_size);
 	const auto body_size = domain_types::convert_uint_to_string_byte_array(body.size());
-	result.replace(4, 4, body_size);
+	result.replace(record_size_field_offset, record_size_field_length, body_size);
 	result += body;
 	return result;
 }
 
-void sub_record_merge_t::merge_winner_armor_groups(
-    std::vector<armor_part_group_t> & merged_groups,
-    const std::vector<std::string> & versions,
-    const armor_part_map_t & first_map,
-    const armor_part_map_t & winner_map)
+void sub_record_merge_t::merge_winner_armor_groups(const armor_merge_context_t & context)
 {
-	for (const auto & [armor_index, winner_group] : winner_map)
+	for (const auto & [armor_index, winner_group] : context.winner_map)
 	{
-		auto it_first = first_map.find(armor_index);
+		auto it_first = context.first_map.find(armor_index);
 
-		if (it_first == first_map.end())
+		if (it_first == context.first_map.end())
 		{
-			merged_groups.push_back(winner_group);
+			context.merged_groups.push_back(winner_group);
 
 			continue;
 		}
 
 		auto merged_subs = winner_group.sub_records;
 
-		for (size_t version_idx = versions.size() - 2; version_idx >= 1; --version_idx)
+		for (size_t version_idx = context.versions.size() - 2; version_idx >= 1; --version_idx)
 		{
-			const auto inter_part = partition_armor(versions[version_idx]);
+			const auto inter_part = partition_armor(context.versions[version_idx], context.rec_type);
 			const auto inter_map = build_armor_part_map(inter_part.groups);
 			auto it_inter = inter_map.find(armor_index);
 
 			if (it_inter == inter_map.end())
 				continue;
 
-			apply_intermediate(merged_subs, it_first->second.sub_records, it_inter->second.sub_records,
-			    winner_group.sub_records, "ARMO");
+			apply_intermediate(
+			    merged_subs,
+			    it_first->second.sub_records,
+			    it_inter->second.sub_records,
+			    winner_group.sub_records,
+			    context.rec_type);
 		}
 
-		merged_groups.push_back({ armor_index, std::move(merged_subs) });
+		context.merged_groups.push_back({ armor_index, std::move(merged_subs) });
 	}
 }
 
-void sub_record_merge_t::collect_intermediate_armor_additions(
-    std::vector<armor_part_group_t> & merged_groups,
-    const std::vector<std::string> & versions,
-    const armor_part_map_t & first_map,
-    const armor_part_map_t & winner_map)
+void sub_record_merge_t::collect_intermediate_armor_additions(const armor_merge_context_t & context)
 {
-	for (size_t version_idx = versions.size() - 2; version_idx >= 1; --version_idx)
+	for (size_t version_idx = context.versions.size() - 2; version_idx >= 1; --version_idx)
 	{
-		const auto inter_part = partition_armor(versions[version_idx]);
+		const auto inter_part = partition_armor(context.versions[version_idx], context.rec_type);
 
 		for (const auto & group : inter_part.groups)
 		{
-			if (first_map.count(group.armor_index) > 0)
+			if (context.first_map.count(group.armor_index) > 0)
 				continue;
 
-			if (winner_map.count(group.armor_index) > 0)
+			if (context.winner_map.count(group.armor_index) > 0)
 				continue;
 
 			const bool already_added = std::any_of(
-			    merged_groups.begin(),
-			    merged_groups.end(),
+			    context.merged_groups.begin(),
+			    context.merged_groups.end(),
 			    [&](const armor_part_group_t & existing) { return existing.armor_index == group.armor_index; });
 
 			if (!already_added)
-				merged_groups.push_back(group);
+				context.merged_groups.push_back(group);
 		}
 	}
 }
@@ -811,14 +860,14 @@ merge_result_t sub_record_merge_t::merge_armor_parts(const merge_input_t & input
 	const auto & first_content = versions.front();
 	const auto & winner_content = versions.back();
 
-	const auto first_part = partition_armor(first_content);
-	const auto winner_part = partition_armor(winner_content);
+	const auto first_part = partition_armor(first_content, input.rec_type);
+	const auto winner_part = partition_armor(winner_content, input.rec_type);
 
 	auto merged_header = winner_part.header;
 
 	for (size_t version_idx = versions.size() - 2; version_idx >= 1; --version_idx)
 	{
-		const auto inter_part = partition_armor(versions[version_idx]);
+		const auto inter_part = partition_armor(versions[version_idx], input.rec_type);
 		apply_intermediate(merged_header, first_part.header, inter_part.header, winner_part.header, input.rec_type);
 	}
 
@@ -826,8 +875,9 @@ merge_result_t sub_record_merge_t::merge_armor_parts(const merge_input_t & input
 	const auto winner_map = build_armor_part_map(winner_part.groups);
 
 	std::vector<armor_part_group_t> merged_groups;
-	merge_winner_armor_groups(merged_groups, versions, first_map, winner_map);
-	collect_intermediate_armor_additions(merged_groups, versions, first_map, winner_map);
+	const armor_merge_context_t armor_context { merged_groups, versions, first_map, winner_map, input.rec_type };
+	merge_winner_armor_groups(armor_context);
+	collect_intermediate_armor_additions(armor_context);
 
 	std::sort(
 	    merged_groups.begin(),
@@ -843,92 +893,145 @@ merge_result_t sub_record_merge_t::merge_armor_parts(const merge_input_t & input
 	return { true, result };
 }
 
-static constexpr size_t npco_item_id_offset = 4;
-static constexpr size_t npco_item_id_length = 32;
-static constexpr size_t npco_sub_record_size = 36;
-
-static std::string extract_npco_item_id(const sub_record_entry_t & entry)
+static std::string extract_keyed_list_key(const sub_record_entry_t & entry, const keyed_list_spec_t & spec)
 {
-	if (entry.data.size() < npco_sub_record_size)
+	if (entry.data.size() < spec.minimum_record_size)
 		return {};
 
-	auto item_id = entry.data.substr(npco_item_id_offset, npco_item_id_length);
-	auto null_pos = item_id.find('\0');
+	auto key = spec.key_length == 0 ? entry.data : entry.data.substr(spec.key_offset, spec.key_length);
+
+	auto null_pos = key.find('\0');
 	if (null_pos != std::string::npos)
-		item_id.resize(null_pos);
+		key.resize(null_pos);
 
-	return item_id;
+	return key;
 }
 
-static std::vector<sub_record_entry_t> collect_npco_entries(const sub_record_sequence_t & sequence)
+static bool is_keyed_list_spec_sub_type(const std::string & rec_type, const std::string & sub_type)
 {
-	std::vector<sub_record_entry_t> result;
+	size_t spec_count = 0;
+	const auto * specs = keyed_list_specs_for(rec_type, spec_count);
 
-	for (const auto & entry : sequence)
+	for (size_t spec_idx = 0; spec_idx < spec_count; ++spec_idx)
 	{
-		if (entry.type == "NPCO")
-			result.push_back(entry);
-	}
-
-	return result;
-}
-
-static bool has_npco_entries(const sub_record_sequence_t & sequence)
-{
-	for (const auto & entry : sequence)
-	{
-		if (entry.type == "NPCO")
+		if (sub_type == specs[spec_idx].sub_type)
 			return true;
 	}
 
 	return false;
 }
 
-static std::vector<sub_record_entry_t> merge_npco_items(
-    const std::vector<sub_record_entry_t> & first_items,
-    const std::vector<sub_record_entry_t> & inter_items,
-    const std::vector<sub_record_entry_t> & winner_items,
-    bool is_patch_intermediate)
+static std::string strip_trailing_null(const std::string & value)
 {
-	(void)is_patch_intermediate;
-	std::set<std::string> winner_ids;
-	for (const auto & item : winner_items)
-		winner_ids.insert(extract_npco_item_id(item));
-
-	std::set<std::string> first_ids;
-	for (const auto & item : first_items)
-		first_ids.insert(extract_npco_item_id(item));
-
-	auto result = winner_items;
-
-	for (const auto & item : inter_items)
-	{
-		const auto item_id = extract_npco_item_id(item);
-		if (item_id.empty())
-			continue;
-
-		if (winner_ids.count(item_id))
-			continue;
-
-		if (!first_ids.count(item_id))
-		{
-			result.push_back(item);
-			winner_ids.insert(item_id);
-		}
-	}
+	auto result = value;
+	auto null_pos = result.find('\0');
+	if (null_pos != std::string::npos)
+		result.resize(null_pos);
 
 	return result;
 }
 
-static sub_record_sequence_t replace_npco_entries(
+static std::vector<sub_record_merge_t::keyed_item_t> collect_faction_reactions(
+    const sub_record_sequence_t & sequence,
+    const reaction_pair_t & pair)
+{
+	std::map<std::string, std::string> lowest_by_faction;
+	std::vector<std::string> order;
+
+	for (size_t i = 0; i + 1 < sequence.size(); ++i)
+	{
+		if (sequence[i].type != pair.key_sub_type || sequence[i + 1].type != pair.value_sub_type)
+			continue;
+
+		const auto faction = strip_trailing_null(sequence[i].data);
+		const auto & value = sequence[i + 1].data;
+
+		auto it_existing = lowest_by_faction.find(faction);
+		if (it_existing == lowest_by_faction.end())
+		{
+			lowest_by_faction.emplace(faction, value);
+			order.push_back(faction);
+			continue;
+		}
+
+		int32_t existing_value = 0;
+		int32_t new_value = 0;
+		std::memcpy(
+		    &existing_value,
+		    it_existing->second.data(),
+		    std::min<size_t>(fact_layout::reaction_value_size, it_existing->second.size()));
+		std::memcpy(
+		    &new_value, value.data(), std::min<size_t>(fact_layout::reaction_value_size, value.size()));
+
+		if (new_value < existing_value)
+			it_existing->second = value;
+	}
+
+	std::vector<sub_record_merge_t::keyed_item_t> result;
+	for (const auto & faction : order)
+		result.push_back({ faction, lowest_by_faction.at(faction) });
+
+	return result;
+}
+
+static sub_record_sequence_t replace_faction_reactions(
     const sub_record_sequence_t & output,
-    const std::vector<sub_record_entry_t> & merged_items)
+    const std::vector<sub_record_merge_t::keyed_item_t> & merged_reactions,
+    const reaction_pair_t & pair)
 {
 	sub_record_sequence_t result;
 
 	for (const auto & entry : output)
 	{
-		if (entry.type != "NPCO")
+		if (entry.type != pair.key_sub_type && entry.type != pair.value_sub_type)
+			result.push_back(entry);
+	}
+
+	for (const auto & reaction : merged_reactions)
+	{
+		result.push_back({ pair.key_sub_type, reaction.key + '\0' });
+		result.push_back({ pair.value_sub_type, reaction.data });
+	}
+
+	return result;
+}
+
+static std::vector<sub_record_entry_t> collect_entries_of_type(
+    const sub_record_sequence_t & sequence,
+    const std::string & sub_type)
+{
+	std::vector<sub_record_entry_t> result;
+
+	for (const auto & entry : sequence)
+	{
+		if (entry.type == sub_type)
+			result.push_back(entry);
+	}
+
+	return result;
+}
+
+static bool has_entries_of_type(const sub_record_sequence_t & sequence, const std::string & sub_type)
+{
+	for (const auto & entry : sequence)
+	{
+		if (entry.type == sub_type)
+			return true;
+	}
+
+	return false;
+}
+
+static sub_record_sequence_t replace_entries_of_type(
+    const sub_record_sequence_t & output,
+    const std::vector<sub_record_entry_t> & merged_items,
+    const std::string & sub_type)
+{
+	sub_record_sequence_t result;
+
+	for (const auto & entry : output)
+	{
+		if (entry.type != sub_type)
 			result.push_back(entry);
 	}
 
@@ -938,26 +1041,147 @@ static sub_record_sequence_t replace_npco_entries(
 	return result;
 }
 
-static size_t find_npdt_size(const sub_record_sequence_t & subs)
+static sub_record_sequence_t filter_for_merge(
+    const sub_record_sequence_t & sequence,
+    const record_behavior_t * behavior)
 {
-	for (const auto & entry : subs)
+	sub_record_sequence_t result;
+
+	for (const auto & entry : sequence)
 	{
-		if (entry.type == "NPDT")
-			return entry.data.size();
+		const auto * rule = find_sub_record_rule(behavior, entry.type, entry.data.size());
+
+		if (rule && has_flag(rule->flags, sub_rule_flag_t::merge_boundary))
+			break;
+
+		if (rule && has_flag(rule->flags, sub_rule_flag_t::skip_emit))
+			continue;
+
+		result.push_back(entry);
 	}
 
-	return 0;
+	return result;
 }
 
-static bool has_mismatched_npdt(const sub_record_sequence_t & first, const sub_record_sequence_t & inter)
+static std::vector<std::string> collect_sub_type_occurrence(
+    const std::vector<std::string> & versions,
+    const std::string & sub_type,
+    size_t occurrence)
 {
-	const auto first_size = find_npdt_size(first);
-	const auto inter_size = find_npdt_size(inter);
+	std::vector<std::string> values;
 
-	if (first_size == 0 || inter_size == 0)
-		return false;
+	for (const auto & content : versions)
+	{
+		const auto subs = sub_record_merge_t::parse_sub_records(content);
+		const auto index = sub_record_merge_t::find_by_type_and_occurrence(subs, sub_type, occurrence);
+		values.push_back(index < 0 ? std::string() : subs[static_cast<size_t>(index)].data);
+	}
 
-	return first_size != inter_size;
+	return values;
+}
+
+static size_t resolve_winning_index(const std::vector<std::string> & values)
+{
+	const auto & master = values.front();
+	size_t winning_index = 0;
+
+	for (size_t version_idx = 1; version_idx < values.size(); ++version_idx)
+	{
+		if (!values[version_idx].empty() && values[version_idx] != master)
+			winning_index = version_idx;
+	}
+
+	return winning_index;
+}
+
+static std::string field_merge_same_size(
+    const std::string & rec_type,
+    const std::string & sub_type,
+    const std::vector<std::string> & values,
+    size_t winning_index)
+{
+	const std::string & winner_value = values[winning_index];
+	const size_t winning_size = winner_value.size();
+
+	std::string master = values.front();
+	if (master.size() != winning_size)
+		master.assign(winning_size, '\0');
+
+	if (!sub_record_merge_t::has_schema(rec_type, sub_type))
+		return winner_value;
+
+	std::string result = winner_value;
+
+	for (size_t version_idx = winning_index; version_idx-- > 1;)
+	{
+		const std::string & inter = values[version_idx];
+		if (inter.size() != winning_size || inter == master)
+			continue;
+
+		const sub_record_merge_t::field_merge_input_t field_input {
+			rec_type, sub_type, master.data(), inter.data(), winner_value.data(), result.data(), winning_size
+		};
+
+		result = sub_record_merge_t::merge_fields_three_way(field_input);
+	}
+
+	return result;
+}
+
+static std::string resolve_variable_size_value(
+    const std::string & rec_type,
+    const std::string & sub_type,
+    const std::vector<std::string> & values)
+{
+	const size_t winning_index = resolve_winning_index(values);
+	return field_merge_same_size(rec_type, sub_type, values, winning_index);
+}
+
+variable_size_merge_result_t sub_record_merge_t::merge_variable_size_phase(
+    const merge_input_t & input,
+    const sub_record_sequence_t & winner_subs,
+    const sub_record_sequence_t & output)
+{
+	const auto * behavior = find_record_behavior(input.rec_type);
+	if (!behavior)
+		return { output, false };
+
+	variable_size_merge_result_t phase_result { output, false };
+	std::set<std::string> processed_sub_types;
+
+	for (size_t rule_idx = 0; rule_idx < behavior->sub_rule_count; ++rule_idx)
+	{
+		const auto & rule = behavior->sub_rules[rule_idx];
+		if (!has_flag(rule.flags, sub_rule_flag_t::skip_if_size_differs))
+			continue;
+
+		const std::string sub_type = rule.sub_type;
+		if (!processed_sub_types.insert(sub_type).second)
+			continue;
+
+		size_t occurrence = 0;
+
+		while (true)
+		{
+			const auto winner_index = find_by_type_and_occurrence(winner_subs, sub_type, occurrence);
+			if (winner_index < 0)
+				break;
+
+			const auto values = collect_sub_type_occurrence(input.version_contents, sub_type, occurrence);
+			const auto merged = resolve_variable_size_value(input.rec_type, sub_type, values);
+
+			if (merged.size() != values.front().size())
+				phase_result.merged_size_differing = true;
+
+			const auto output_index = find_by_type_and_occurrence(phase_result.output, sub_type, occurrence);
+			if (output_index >= 0)
+				phase_result.output[static_cast<size_t>(output_index)].data = merged;
+
+			++occurrence;
+		}
+	}
+
+	return phase_result;
 }
 
 merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
@@ -970,31 +1194,53 @@ merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
 	const auto & first_content = versions.front();
 	const auto & winner_content = versions.back();
 
-	const auto first_subs = parse_sub_records(first_content);
-	const auto winner_subs = parse_sub_records(winner_content);
+	const auto * behavior = find_record_behavior(input.rec_type);
+
+	const auto first_subs = filter_for_merge(parse_sub_records(first_content), behavior);
+	const auto winner_subs = filter_for_merge(parse_sub_records(winner_content), behavior);
 	auto output = winner_subs;
 
 	for (size_t version_idx = versions.size() - 2; version_idx >= 1; --version_idx)
 	{
-		const auto inter_subs = parse_sub_records(versions[version_idx]);
-
-		if (input.rec_type == "NPC_" && has_mismatched_npdt(first_subs, inter_subs))
-			continue;
-
+		const auto inter_subs = filter_for_merge(parse_sub_records(versions[version_idx]), behavior);
 		apply_intermediate(output, first_subs, inter_subs, winner_subs, input.rec_type);
 	}
+
+	const auto variable_size_result = merge_variable_size_phase(input, winner_subs, output);
+	output = variable_size_result.output;
+	const bool variable_size_merged = variable_size_result.merged_size_differing;
 
 	if (is_enam_record_type(input.rec_type))
 		output = merge_enam_phase(versions, first_subs, winner_subs, output);
 
-	if (has_npco_entries(first_subs))
-		output = merge_npco_phase(input, first_subs, winner_subs, output);
+	size_t keyed_list_spec_count = 0;
+	const auto * keyed_list_specs = keyed_list_specs_for(input.rec_type, keyed_list_spec_count);
+	for (size_t spec_idx = 0; spec_idx < keyed_list_spec_count; ++spec_idx)
+	{
+		const auto & spec = keyed_list_specs[spec_idx];
+		if (!has_entries_of_type(first_subs, spec.sub_type))
+			continue;
 
-	const auto result = reconstruct_record(winner_content, output);
+		auto key_of = [&spec](const sub_record_entry_t & entry) { return extract_keyed_list_key(entry, spec); };
+		output = merge_keyed_list_phase(input, first_subs, winner_subs, output, spec.sub_type, key_of);
+	}
 
-	if (result == winner_content)
+	if (const auto * reaction_pair = reaction_pair_for(input.rec_type))
+	{
+		std::vector<std::vector<keyed_item_t>> reaction_versions;
+		reaction_versions.push_back(collect_faction_reactions(first_subs, *reaction_pair));
+		for (size_t version_idx = 1; version_idx < versions.size(); ++version_idx)
+			reaction_versions.push_back(
+			    collect_faction_reactions(parse_sub_records(versions[version_idx]), *reaction_pair));
+
+		const auto merged_reactions = keyed_list_merge(reaction_versions);
+		output = replace_faction_reactions(output, merged_reactions, *reaction_pair);
+	}
+
+	if (output == winner_subs && !variable_size_merged)
 		return { false, winner_content };
 
+	const auto result = reconstruct_record(winner_content, output);
 	return { true, result };
 }
 
@@ -1025,61 +1271,53 @@ sub_record_sequence_t sub_record_merge_t::merge_enam_phase(
 	return replace_enam_entries(output, merged_enam_data);
 }
 
-sub_record_sequence_t sub_record_merge_t::merge_npco_phase(
+sub_record_sequence_t sub_record_merge_t::merge_keyed_list_phase(
     const merge_input_t & input,
     const sub_record_sequence_t & first_subs,
     const sub_record_sequence_t & winner_subs,
-    const sub_record_sequence_t & output)
+    const sub_record_sequence_t & output,
+    const std::string & sub_type,
+    const std::function<std::string(const sub_record_entry_t &)> & key_of)
 {
 	const auto & versions = input.version_contents;
-	const auto first_items = collect_npco_entries(first_subs);
-	const auto winner_items = collect_npco_entries(winner_subs);
+	const auto winner_items = collect_entries_of_type(winner_subs, sub_type);
 
-	int patch_version_idx = -1;
-	for (size_t version_idx = versions.size() - 2; version_idx >= 1; --version_idx)
+	size_t first_contributing = 1;
+	for (size_t version_idx = versions.size() - 1; version_idx >= 1; --version_idx)
 	{
 		if (input.patch_version_indices.count(version_idx))
 		{
-			patch_version_idx = static_cast<int>(version_idx);
+			first_contributing = version_idx;
 			break;
 		}
 	}
 
-	std::vector<sub_record_entry_t> base_items;
-	if (patch_version_idx >= 0)
+	auto to_keyed = [&key_of](const std::vector<sub_record_entry_t> & items)
 	{
-		const auto patch_subs = parse_sub_records(versions[patch_version_idx]);
-		base_items = collect_npco_entries(patch_subs);
-	}
-	else
+		std::vector<keyed_item_t> result;
+		for (const auto & item : items)
+			result.push_back({ key_of(item), item.data });
+
+		return result;
+	};
+
+	std::vector<std::vector<keyed_item_t>> keyed_versions;
+	keyed_versions.push_back(to_keyed(collect_entries_of_type(first_subs, sub_type)));
+
+	for (size_t version_idx = first_contributing; version_idx < versions.size(); ++version_idx)
 	{
-		base_items = winner_items;
+		const auto version_subs = parse_sub_records(versions[version_idx]);
+		keyed_versions.push_back(to_keyed(collect_entries_of_type(version_subs, sub_type)));
 	}
 
-	auto merged_items = base_items;
+	const auto merged_keyed = keyed_list_merge(keyed_versions);
 
-	for (size_t version_idx = versions.size() - 2; version_idx >= 1; --version_idx)
-	{
-		if (static_cast<int>(version_idx) == patch_version_idx)
-			continue;
-
-		const auto inter_subs = parse_sub_records(versions[version_idx]);
-		const auto inter_items = collect_npco_entries(inter_subs);
-		merged_items = merge_npco_items(first_items, inter_items, merged_items, false);
-	}
-
-	if (patch_version_idx < 0)
-	{
-		merged_items = merge_npco_items(first_items, winner_items, merged_items, false);
-	}
-	else
-	{
-		const auto winner_additions = collect_npco_entries(winner_subs);
-		merged_items = merge_npco_items(first_items, winner_additions, merged_items, false);
-	}
+	std::vector<sub_record_entry_t> merged_items;
+	for (const auto & item : merged_keyed)
+		merged_items.push_back({ sub_type, item.data });
 
 	if (merged_items != winner_items)
-		return replace_npco_entries(output, merged_items);
+		return replace_entries_of_type(output, merged_items, sub_type);
 
 	return output;
 }
@@ -1090,27 +1328,30 @@ struct list_item_t
 	uint16_t level;
 };
 
-static std::vector<list_item_t> extract_list_items(const std::string & content)
+static std::vector<list_item_t> extract_list_items(const std::string & content, const std::string & rec_type)
 {
 	std::vector<list_item_t> items;
 	sub_record_iter_t iter(content);
 	sub_record_view_t sub;
 	std::string current_id;
 
+	const std::string item_sub_type = leveled_item_sub_type_for(rec_type);
+	const std::string level_sub_type = leveled_level_sub_type_for(rec_type);
+
 	while (iter.next(sub))
 	{
-		if (sub.type == "INAM" || sub.type == "CNAM")
+		if (sub.type == item_sub_type)
 		{
 			current_id = std::string(sub.data, sub.size);
 			current_id = string_utils::erase_null_chars(current_id);
 			continue;
 		}
 
-		if (sub.type == "INTV" && !current_id.empty())
+		if (sub.type == level_sub_type && !current_id.empty())
 		{
 			uint16_t level = 0;
-			if (sub.size >= 2)
-				std::memcpy(&level, sub.data, 2);
+			if (sub.size >= leveled_level_size)
+				std::memcpy(&level, sub.data, leveled_level_size);
 
 			items.push_back({ current_id, level });
 			current_id.clear();
@@ -1120,24 +1361,44 @@ static std::vector<list_item_t> extract_list_items(const std::string & content)
 	return items;
 }
 
-static std::string extract_list_header(const std::string & content)
+static sub_record_sequence_t extract_header_subs(const std::string & content, const std::string & rec_type)
 {
-	std::string header_part;
+	sub_record_sequence_t header;
 	sub_record_iter_t iter(content);
 	sub_record_view_t sub;
 
+	const std::string item_sub_type = leveled_item_sub_type_for(rec_type);
+	const std::string level_sub_type = leveled_level_sub_type_for(rec_type);
+
 	while (iter.next(sub))
 	{
-		if (sub.type == "INAM" || sub.type == "CNAM" || sub.type == "INTV")
+		if (sub.type == item_sub_type || sub.type == level_sub_type)
 			break;
 
 		if (sub.type == "INDX")
 			continue;
 
-		header_part += sub.type;
-		header_part += domain_types::convert_uint_to_string_byte_array(sub.size);
-		header_part += std::string(sub.data, sub.size);
+		header.push_back({ sub.type, std::string(sub.data, sub.size) });
 	}
+
+	return header;
+}
+
+static std::string merge_header_part(const std::vector<std::string> & versions, const std::string & rec_type)
+{
+	const auto first_header = extract_header_subs(versions.front(), rec_type);
+	const auto winner_header = extract_header_subs(versions.back(), rec_type);
+	auto output = winner_header;
+
+	for (size_t version_idx = versions.size() - 2; version_idx >= 1; --version_idx)
+	{
+		const auto inter_header = extract_header_subs(versions[version_idx], rec_type);
+		sub_record_merge_t::apply_intermediate(output, first_header, inter_header, winner_header, rec_type);
+	}
+
+	std::string header_part;
+	for (const auto & entry : output)
+		header_part += sub_record_merge_t::serialize_sub_record(entry);
 
 	return header_part;
 }
@@ -1152,7 +1413,16 @@ static std::string build_merged_list_record(
 	indx_sub += domain_types::convert_uint_to_string_byte_array(4);
 	indx_sub += std::string(reinterpret_cast<const char *>(&item_count), 4);
 
-	const std::string & item_sub_type = (rec_type == "LEVI") ? "INAM" : "CNAM";
+	const char * const item_sub_type_name = leveled_item_sub_type_for(rec_type);
+	const char * const level_sub_type_name = leveled_level_sub_type_for(rec_type);
+	if (item_sub_type_name == nullptr || level_sub_type_name == nullptr)
+	{
+		app_logger_t::add_log("[error] no leveled item sub-type for " + rec_type + "\r\n", true);
+		return {};
+	}
+
+	const std::string item_sub_type = item_sub_type_name;
+	const std::string level_sub_type = level_sub_type_name;
 	std::string items_part;
 	for (const auto & item : merged_items)
 	{
@@ -1163,9 +1433,9 @@ static std::string build_merged_list_record(
 		items_part += domain_types::convert_uint_to_string_byte_array(id_data.size());
 		items_part += id_data;
 
-		items_part += "INTV";
-		items_part += domain_types::convert_uint_to_string_byte_array(2);
-		items_part += std::string(reinterpret_cast<const char *>(&item.level), 2);
+		items_part += level_sub_type;
+		items_part += domain_types::convert_uint_to_string_byte_array(leveled_level_size);
+		items_part += std::string(reinterpret_cast<const char *>(&item.level), leveled_level_size);
 	}
 
 	std::string body = header_part + indx_sub + items_part;
@@ -1179,74 +1449,130 @@ static std::string build_merged_list_record(
 	return record;
 }
 
-using item_count_map_t = std::map<std::pair<std::string, uint16_t>, size_t>;
+using item_levels_map_t = std::map<std::string, std::vector<uint16_t>>;
 
-static item_count_map_t build_item_count_map(const std::vector<list_item_t> & items)
+static item_levels_map_t build_item_levels_map(const std::vector<list_item_t> & items)
 {
-	item_count_map_t counts;
+	item_levels_map_t levels;
 	for (const auto & item : items)
-		++counts[{ item.ident, item.level }];
+		levels[item.ident].push_back(item.level);
 
-	return counts;
+	return levels;
 }
 
 static bool is_item_deleted(
-    const std::pair<std::string, uint16_t> & item_key,
-    const item_count_map_t & first_map,
-    const std::vector<item_count_map_t> & non_first_maps)
+    const std::string & ident,
+    const item_levels_map_t & first_map,
+    const std::vector<item_levels_map_t> & plugin_maps)
 {
-	const auto it_first = first_map.find(item_key);
-	if (it_first == first_map.end() || it_first->second == 0)
+	const auto it_first = first_map.find(ident);
+	if (it_first == first_map.end() || it_first->second.empty())
 		return false;
 
-	for (const auto & version_map : non_first_maps)
+	for (const auto & version_map : plugin_maps)
 	{
-		const auto it_ver = version_map.find(item_key);
-		if (it_ver == version_map.end())
+		if (version_map.find(ident) == version_map.end())
 			return true;
 	}
 
 	return false;
 }
 
-static size_t compute_merged_count(
-    const std::pair<std::string, uint16_t> & item_key,
-    const std::vector<item_count_map_t> & non_first_maps)
+static size_t version_count(const item_levels_map_t & map, const std::string & ident)
 {
-	size_t max_count = 0;
-	for (const auto & version_map : non_first_maps)
+	const auto it_map = map.find(ident);
+	return it_map == map.end() ? 0 : it_map->second.size();
+}
+
+struct count_context_t
+{
+	const std::string & ident;
+	const item_levels_map_t & first_map;
+	const std::vector<item_levels_map_t> & plugin_maps;
+};
+
+static size_t merged_occurrence_count(const count_context_t & context)
+{
+	const size_t master_count = version_count(context.first_map, context.ident);
+
+	size_t resolved = master_count;
+	for (const auto & version_map : context.plugin_maps)
 	{
-		const auto it_ver = version_map.find(item_key);
-		if (it_ver != version_map.end() && it_ver->second > max_count)
-			max_count = it_ver->second;
+		const size_t plugin_count = version_count(version_map, context.ident);
+		if (plugin_count != master_count)
+			resolved = plugin_count;
 	}
 
-	return max_count;
+	return resolved;
+}
+
+struct occurrence_context_t
+{
+	const std::string & ident;
+	size_t occurrence;
+	const item_levels_map_t & first_map;
+	const std::vector<item_levels_map_t> & plugin_maps;
+};
+
+static std::optional<uint16_t> level_at(const item_levels_map_t & map, const std::string & ident, size_t occurrence)
+{
+	const auto it_map = map.find(ident);
+	if (it_map == map.end() || occurrence >= it_map->second.size())
+		return std::nullopt;
+
+	return it_map->second[occurrence];
+}
+
+static uint16_t resolve_occurrence_level(const occurrence_context_t & context)
+{
+	const auto master_level = level_at(context.first_map, context.ident, context.occurrence);
+
+	uint16_t resolved = master_level.value_or(0);
+	bool has_resolved = master_level.has_value();
+
+	for (const auto & version_map : context.plugin_maps)
+	{
+		const auto plugin_level = level_at(version_map, context.ident, context.occurrence);
+		if (!plugin_level.has_value())
+			continue;
+
+		if (!master_level.has_value() || *plugin_level != *master_level)
+		{
+			resolved = *plugin_level;
+			has_resolved = true;
+		}
+	}
+
+	return has_resolved ? resolved : master_level.value_or(0);
 }
 
 static std::vector<list_item_t> build_merged_items(
-    const item_count_map_t & first_map,
-    const std::vector<item_count_map_t> & non_first_maps)
+    const item_levels_map_t & first_map,
+    const std::vector<item_levels_map_t> & plugin_maps)
 {
-	std::set<std::pair<std::string, uint16_t>> all_keys;
-	for (const auto & [key, count] : first_map)
-		all_keys.insert(key);
+	std::set<std::string> all_idents;
+	for (const auto & [ident, levels] : first_map)
+		all_idents.insert(ident);
 
-	for (const auto & version_map : non_first_maps)
+	for (const auto & version_map : plugin_maps)
 	{
-		for (const auto & [key, count] : version_map)
-			all_keys.insert(key);
+		for (const auto & [ident, levels] : version_map)
+			all_idents.insert(ident);
 	}
 
 	std::vector<list_item_t> merged;
-	for (const auto & item_key : all_keys)
+	for (const auto & ident : all_idents)
 	{
-		if (is_item_deleted(item_key, first_map, non_first_maps))
+		if (is_item_deleted(ident, first_map, plugin_maps))
 			continue;
 
-		const auto merged_count = compute_merged_count(item_key, non_first_maps);
-		for (size_t i = 0; i < merged_count; ++i)
-			merged.push_back({ item_key.first, item_key.second });
+		const count_context_t count_context { ident, first_map, plugin_maps };
+		const auto count = merged_occurrence_count(count_context);
+		for (size_t occurrence = 0; occurrence < count; ++occurrence)
+		{
+			const occurrence_context_t context { ident, occurrence, first_map, plugin_maps };
+			merged.push_back({ ident, resolve_occurrence_level(context) });
+		}
 	}
 
 	return merged;
@@ -1273,28 +1599,29 @@ merge_result_t leveled_list_merge_t::merge(const merge_input_t & input)
 		return { false, {} };
 
 	const auto & first_content = versions.front();
-	const auto first_map = build_item_count_map(extract_list_items(first_content));
+	auto master_items = extract_list_items(first_content, input.rec_type);
+	const auto first_map = build_item_levels_map(master_items);
 
-	std::vector<item_count_map_t> non_first_maps;
-	std::string winning_content;
+	std::vector<item_levels_map_t> plugin_maps;
 
 	for (size_t vi = 1; vi < versions.size(); ++vi)
-	{
-		non_first_maps.push_back(build_item_count_map(extract_list_items(versions[vi])));
-		winning_content = versions[vi];
-	}
+		plugin_maps.push_back(build_item_levels_map(extract_list_items(versions[vi], input.rec_type)));
 
-	if (non_first_maps.empty())
+	if (plugin_maps.empty())
 		return { false, {} };
 
-	auto merged = build_merged_items(first_map, non_first_maps);
+	auto merged = build_merged_items(first_map, plugin_maps);
 	sort_merged_items(merged);
 
-	const auto header_part = extract_list_header(winning_content);
+	const auto header_part = merge_header_part(versions, input.rec_type);
 	const auto record = build_merged_list_record(input.rec_type, header_part, merged);
 
-	if (record == winning_content)
-		return { false, winning_content };
+	sort_merged_items(master_items);
+	const auto master_header_part = merge_header_part({ first_content, first_content }, input.rec_type);
+	const auto master_record = build_merged_list_record(input.rec_type, master_header_part, master_items);
+
+	if (record == master_record)
+		return { false, first_content };
 
 	return { true, record };
 }

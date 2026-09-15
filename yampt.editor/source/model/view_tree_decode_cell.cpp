@@ -14,6 +14,18 @@ static bool check_all_identical(const std::vector<std::string> & values)
 	return true;
 }
 
+static void apply_cell_composition_label(view_tree_model_t::view_node_t & row, const std::string & section_key)
+{
+	for (const auto & entry : record_composition(section_key))
+	{
+		if (row.type != entry.sub_type || entry.label == nullptr)
+			continue;
+
+		row.label = row.type + " - " + entry.label;
+		return;
+	}
+}
+
 static void propagate_conflict_upward(
     view_tree_model_t::view_node_t & parent,
     const view_tree_model_t::view_node_t & child,
@@ -27,19 +39,6 @@ static void propagate_conflict_upward(
 		if (child.cell_conflict_this[col] > parent.cell_conflict_this[col])
 			parent.cell_conflict_this[col] = child.cell_conflict_this[col];
 	}
-}
-
-static std::string read_flag_value(const sub_record_view_t & sv, const field_def_t & fdef, int bit_index)
-{
-	if (fdef.offset >= sv.size)
-		return "";
-
-	uint32_t value = 0;
-	const size_t byte_count = (fdef.type == field_type_t::flags_u8)    ? 1
-	                          : (fdef.type == field_type_t::flags_u16) ? 2
-	                                                                   : 4;
-	std::memcpy(&value, sv.data + fdef.offset, std::min(byte_count, sv.size - fdef.offset));
-	return (value & (1u << bit_index)) ? "1" : "0";
 }
 
 static std::string format_hex_chunk(const char * data_ptr, size_t data_size, size_t offset)
@@ -251,7 +250,8 @@ void view_tree_model_t::decode_schema_children_ref(
 					const auto & refs = col < col_refs.size() ? col_refs[col] : empty_refs;
 					const auto result = find_ref_sub_record(subs, refs, object_index, slot.type, slot.occurrence);
 
-					frow.values[col] = result.view.data ? read_flag_value(result.view, fdef, bit) : non_existent_value;
+					frow.values[col] =
+					    result.view.data ? flag_bit_value(result.view.data, result.view.size, fdef, bit) : non_existent_value;
 				}
 
 				frow.all_identical = check_all_identical(frow.values);
@@ -363,15 +363,14 @@ view_tree_model_t::view_node_t view_tree_model_t::build_ref_child(
 	}
 
 	const auto * schema = first_data ? find_schema(m_record_type, slot.type, first_size) : nullptr;
-	if (!schema && first_data)
-		schema = find_schema("*", slot.type, first_size);
 
 	if (schema && schema->field_count > 1)
 	{
 		view_node_t sub_group;
 		sub_group.type = slot.type;
 		sub_group.size = 0;
-		sub_group.label = slot.type;
+		sub_group.label = make_sub_label(slot.type, m_record_type, first_size);
+		apply_cell_composition_label(sub_group, "CELL@ref");
 		sub_group.values.resize(col_count);
 		sub_group.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
 		sub_group.row_conflict_all = conflict_all_t::only_one;
@@ -440,6 +439,7 @@ view_tree_model_t::view_node_t view_tree_model_t::build_ref_child(
 	}
 
 	child_field.label = make_sub_label(slot.type, m_record_type, first_size);
+	apply_cell_composition_label(child_field, "CELL@ref");
 	child_field.all_identical = check_all_identical(child_field.values);
 	child_field.row_conflict_all = record_conflict::compute_conflict_all_skip_empty(child_field.values);
 	child_field.cell_conflict_this = record_conflict::compute_conflict_this_skip_empty(child_field.values);
@@ -485,6 +485,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 			continue;
 
 		auto row = build_slot_row(col_count, all_subs, col_header_indices, slot);
+		apply_cell_composition_label(row, "CELL");
 		m_rows.push_back(std::move(row));
 	}
 
@@ -540,7 +541,6 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 		group_row.type = "FRMR";
 		group_row.size = 0;
 		group_row.label = ref_label;
-		group_row.start_collapsed = true;
 		group_row.values.resize(col_count, non_existent_value);
 		group_row.binary_ranges.resize(col_count);
 		group_row.cell_conflict_this.resize(col_count, conflict_this_t::unknown);

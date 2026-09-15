@@ -1,4 +1,3 @@
-#include <resource_paths.hpp>
 #include "sidebar_controller.hpp"
 #include "../model/dict_document.hpp"
 #include "../model/eet_document.hpp"
@@ -13,6 +12,7 @@
 #include <utility/language_config.hpp>
 #include <utility/string_utils.hpp>
 #include <algorithm>
+#include <resource_paths.hpp>
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
@@ -409,4 +409,3 @@ void sidebar_controller_t::reload_open_loc_documents(const loc_generator::genera
 	if (active_reloaded)
 		m_deps.callbacks.switch_document(m_deps.active_doc);
 }
-

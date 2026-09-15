@@ -333,18 +333,92 @@ validate_result_t validate_field(
 		return validate_hex_bytes(input, existing_sub_size);
 
 	case field_type_t::scvr_type:
-		return scvr_type_char(std::string(input)) != '\0' ? make_valid()
-		                                                   : make_invalid("unknown condition type");
+		return scvr_type_char(std::string(input)) != '\0' ? make_valid() : make_invalid("unknown condition type");
 
 	case field_type_t::scvr_operator:
-		return scvr_operator_char(std::string(input)) != '\0' ? make_valid()
-		                                                       : make_invalid("unknown operator");
+		return scvr_operator_char(std::string(input)) != '\0' ? make_valid() : make_invalid("unknown operator");
 
 	case field_type_t::scvr_subject:
 		return validate_string_fixed(input, codepage, field.size);
+
+	case field_type_t::global_type:
+		return (input == "Short" || input == "Long" || input == "Float")
+		           ? make_valid()
+		           : make_invalid("expected Short, Long or Float");
 	}
 
 	return make_invalid("unknown field type");
+}
+
+static std::string unsigned_range(unsigned long max_value)
+{
+	return "0 to " + std::to_string(max_value);
+}
+
+static std::string signed_range(long min_value, long max_value)
+{
+	return std::to_string(min_value) + " to " + std::to_string(max_value);
+}
+
+static std::string byte_limit(size_t max_bytes)
+{
+	return "up to " + std::to_string(max_bytes) + " bytes";
+}
+
+std::string range_hint(const field_def_t & field, size_t existing_sub_size)
+{
+	switch (field.type)
+	{
+	case field_type_t::u8:
+		return unsigned_range(max_u8);
+
+	case field_type_t::u16:
+		return unsigned_range(max_u16);
+
+	case field_type_t::u32:
+		return unsigned_range(max_u32);
+
+	case field_type_t::i8:
+		return signed_range(min_i8, max_i8);
+
+	case field_type_t::i16:
+		return signed_range(min_i16, max_i16);
+
+	case field_type_t::i32:
+		return signed_range(min_i32, max_i32);
+
+	case field_type_t::f32:
+		return "decimal number";
+
+	case field_type_t::string_fixed:
+	case field_type_t::scvr_subject:
+		return byte_limit(field.size);
+
+	case field_type_t::string_var:
+		return byte_limit(max_string_var_bytes);
+
+	case field_type_t::bool_bit:
+		return "Yes or No";
+
+	case field_type_t::binary:
+		return byte_limit(field.size) + " (hex)";
+
+	case field_type_t::raw:
+		return byte_limit(existing_sub_size) + " (hex)";
+
+	case field_type_t::enum_u8:
+	case field_type_t::enum_u16:
+	case field_type_t::enum_u32:
+	case field_type_t::flags_u8:
+	case field_type_t::flags_u16:
+	case field_type_t::flags_u32:
+	case field_type_t::scvr_type:
+	case field_type_t::scvr_operator:
+	case field_type_t::global_type:
+		return {};
+	}
+
+	return {};
 }
 
 } // namespace field_validator

@@ -1,4 +1,5 @@
 #include "filter_dialog.hpp"
+#include "../view/record_type_name.hpp"
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QVBoxLayout>
@@ -54,9 +55,13 @@ filter_dialog_t::filter_dialog_t(const std::vector<std::string> & available_type
 	auto * grp_type = new QGroupBox(tr("Record Type"), this);
 	auto * type_layout = new QVBoxLayout(grp_type);
 	m_lst_types = new QListWidget(grp_type);
-	for (const auto & t : available_types)
+	for (const auto & type_code : available_types)
 	{
-		auto * item = new QListWidgetItem(QString::fromStdString(t));
+		const char * display = record_type_name::display(type_code);
+		const auto label = display ? QString::fromLatin1(display) : QString::fromStdString(type_code);
+
+		auto * item = new QListWidgetItem(label);
+		item->setData(Qt::UserRole, QString::fromStdString(type_code));
 		item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
 		item->setCheckState(Qt::Unchecked);
 		m_lst_types->addItem(item);
@@ -135,7 +140,7 @@ filter_dialog_t::filter_state_t filter_dialog_t::state() const
 	{
 		const auto * item = m_lst_types->item(i);
 		if (item->checkState() == Qt::Checked)
-			s.type_set.insert(item->text().toStdString());
+			s.type_set.insert(item->data(Qt::UserRole).toString().toStdString());
 	}
 	s.filter_by_type = !s.type_set.empty() && static_cast<int>(s.type_set.size()) < m_lst_types->count();
 
@@ -167,7 +172,7 @@ void filter_dialog_t::set_state(const filter_state_t & state)
 	for (int i = 0; i < m_lst_types->count(); ++i)
 	{
 		auto * item = m_lst_types->item(i);
-		const auto type_str = item->text().toStdString();
+		const auto type_str = item->data(Qt::UserRole).toString().toStdString();
 		item->setCheckState(state.type_set.count(type_str) > 0 ? Qt::Checked : Qt::Unchecked);
 	}
 

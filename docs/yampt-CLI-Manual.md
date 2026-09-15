@@ -26,12 +26,12 @@ When a base dictionary is provided with `-d`, entries that match by key or origi
 
 ### --make-base
 
-Compares two language versions of the same plugin to produce matched translation pairs. Requires exactly two files with `-f`: the first is the native-language version (its text becomes `new_text`), the second is the foreign-language version (its text becomes `old_text`).
+Compares two language versions of the same plugin to produce matched translation pairs. The direction is always foreign to native. Requires exactly two files with `-f`, in this order: the first is the foreign-language version (its text becomes `old_text`), the second is the native-language version (its text becomes `new_text`).
 
 ```
-yampt.exe --make-base -f "Morrowind_PL.esm" "Morrowind_EN.esm"
-yampt.exe --make-base -f "Native.esm" "Foreign.esm" --partial
-yampt.exe --make-base -f "Native.esm" "Foreign.esm" --translate "models/nllb-600M"
+yampt.exe --make-base -f "Morrowind_EN.esm" "Morrowind_PL.esm"
+yampt.exe --make-base -f "Foreign.esm" "Native.esm" --partial
+yampt.exe --make-base -f "Foreign.esm" "Native.esm" --translate "models/nllb-600M"
 ```
 
 The output file is named automatically with a `.BASE.json` suffix.
@@ -110,16 +110,16 @@ The operation is a refresh: any tags already present in the translated text are 
 
 ## Examples
 
-Make a base dictionary from English and Polish Morrowind:
+Make a base dictionary from English and Polish Morrowind (foreign first, native second):
 
 ```
-yampt.exe --make-base -f "Morrowind_PL.esm" "Morrowind_EN.esm"
+yampt.exe --make-base -f "Morrowind_EN.esm" "Morrowind_PL.esm"
 ```
 
 Make base with translation engine for better cell matching:
 
 ```
-yampt.exe --make-base -f "Morrowind_PL.esm" "Morrowind_EN.esm" --translate "models/nllb-600M"
+yampt.exe --make-base -f "Morrowind_EN.esm" "Morrowind_PL.esm" --translate "models/nllb-600M"
 ```
 
 Merge three dictionaries (Bloodmoon wins over Tribunal wins over Morrowind):

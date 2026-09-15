@@ -40,8 +40,8 @@ bool contains(const std::vector<std::string> & forms, const std::string & value)
 TEST_CASE("phrase_form_builder::build_phrase_forms, agreeing combination is produced", "[u]")
 {
 	const std::vector<std::vector<std::string>> per_word = {
-	    { "silver_nom", "silver_gen" },
-	    { "sword_nom", "sword_gen" },
+		{ "silver_nom", "silver_gen" },
+		{ "sword_nom", "sword_gen" },
 	};
 
 	const auto forms = phrase_form_builder::build_phrase_forms(per_word, all_words_agree, 50);
@@ -53,8 +53,8 @@ TEST_CASE("phrase_form_builder::build_phrase_forms, agreeing combination is prod
 TEST_CASE("phrase_form_builder::build_phrase_forms, one-word-only invalid mixes are absent", "[u]")
 {
 	const std::vector<std::vector<std::string>> per_word = {
-	    { "silver_nom", "silver_gen" },
-	    { "sword_nom", "sword_gen" },
+		{ "silver_nom", "silver_gen" },
+		{ "sword_nom", "sword_gen" },
 	};
 
 	const auto forms = phrase_form_builder::build_phrase_forms(per_word, all_words_agree, 50);
@@ -85,8 +85,8 @@ TEST_CASE("phrase_form_builder::build_phrase_forms, per-phrase cap is respected"
 TEST_CASE("phrase_form_builder::build_phrase_forms, invalid combinations do not consume the cap", "[u]")
 {
 	const std::vector<std::vector<std::string>> per_word = {
-	    { "silver_nom", "silver_gen" },
-	    { "sword_nom", "sword_gen" },
+		{ "silver_nom", "silver_gen" },
+		{ "sword_nom", "sword_gen" },
 	};
 
 	const auto forms = phrase_form_builder::build_phrase_forms(per_word, all_words_agree, 50);

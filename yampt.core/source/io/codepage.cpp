@@ -79,16 +79,19 @@ encode_result_t encode_from_utf8_checked(const std::string & utf8_text, codepage
 }
 
 #else
-#include <iconv.h>
 #include <cerrno>
+#include <iconv.h>
 
 static const char * codepage_iconv_name(codepage_t codepage)
 {
 	switch (codepage)
 	{
-	case codepage_t::windows_1250: return "CP1250";
-	case codepage_t::windows_1251: return "CP1251";
-	case codepage_t::windows_1252: return "CP1252";
+	case codepage_t::windows_1250:
+		return "CP1250";
+	case codepage_t::windows_1251:
+		return "CP1251";
+	case codepage_t::windows_1252:
+		return "CP1252";
 	}
 	return "CP1252";
 }

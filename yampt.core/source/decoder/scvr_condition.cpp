@@ -1,125 +1,123 @@
 #include "scvr_condition.hpp"
-
 #include <array>
 #include <cstdlib>
 
-namespace
+namespace {
+constexpr size_t scvr_prefix_size = 5;
+
+constexpr std::array<const char *, 74> function_names = {
+	"Faction Reaction Lowest",
+	"Faction Reaction Highest",
+	"Rank Requirement",
+	"Reputation",
+	"Health Percent",
+	"PC Reputation",
+	"PC Level",
+	"PC Health Percent",
+	"PC Magicka",
+	"PC Fatigue",
+	"PC Strength",
+	"PC Block",
+	"PC Armorer",
+	"PC Medium Armor",
+	"PC Heavy Armor",
+	"PC Blunt Weapon",
+	"PC Long Blade",
+	"PC Axe",
+	"PC Spear",
+	"PC Athletics",
+	"PC Enchant",
+	"PC Destruction",
+	"PC Alteration",
+	"PC Illusion",
+	"PC Conjuration",
+	"PC Mysticism",
+	"PC Restoration",
+	"PC Alchemy",
+	"PC Unarmored",
+	"PC Security",
+	"PC Sneak",
+	"PC Acrobatics",
+	"PC Light Armor",
+	"PC Short Blade",
+	"PC Marksman",
+	"PC Mercantile",
+	"PC Speechcraft",
+	"PC Hand To Hand",
+	"PC Gender",
+	"PC Expelled",
+	"PC Common Disease",
+	"PC Blight Disease",
+	"PC Clothing Modifier",
+	"PC Crime Level",
+	"Same Sex",
+	"Same Race",
+	"Same Faction",
+	"Faction Rank Difference",
+	"Detected",
+	"Alarmed",
+	"Choice",
+	"PC Intelligence",
+	"PC Willpower",
+	"PC Agility",
+	"PC Speed",
+	"PC Endurance",
+	"PC Personality",
+	"PC Luck",
+	"PC Corprus",
+	"Weather",
+	"PC Vampire",
+	"Level",
+	"Attacked",
+	"Talked To PC",
+	"PC Health",
+	"Creature Target",
+	"Friend Hit",
+	"Fight",
+	"Hello",
+	"Alarm",
+	"Flee",
+	"Should Attack",
+	"Werewolf",
+	"PC Werewolf Kills",
+};
+
+struct type_entry_t
 {
-	constexpr size_t scvr_prefix_size = 5;
+	char type_char;
+	const char * name;
+};
 
-	constexpr std::array<const char *, 74> function_names = {
-		"Faction Reaction Lowest",
-		"Faction Reaction Highest",
-		"Rank Requirement",
-		"Reputation",
-		"Health Percent",
-		"PC Reputation",
-		"PC Level",
-		"PC Health Percent",
-		"PC Magicka",
-		"PC Fatigue",
-		"PC Strength",
-		"PC Block",
-		"PC Armorer",
-		"PC Medium Armor",
-		"PC Heavy Armor",
-		"PC Blunt Weapon",
-		"PC Long Blade",
-		"PC Axe",
-		"PC Spear",
-		"PC Athletics",
-		"PC Enchant",
-		"PC Destruction",
-		"PC Alteration",
-		"PC Illusion",
-		"PC Conjuration",
-		"PC Mysticism",
-		"PC Restoration",
-		"PC Alchemy",
-		"PC Unarmored",
-		"PC Security",
-		"PC Sneak",
-		"PC Acrobatics",
-		"PC Light Armor",
-		"PC Short Blade",
-		"PC Marksman",
-		"PC Mercantile",
-		"PC Speechcraft",
-		"PC Hand To Hand",
-		"PC Gender",
-		"PC Expelled",
-		"PC Common Disease",
-		"PC Blight Disease",
-		"PC Clothing Modifier",
-		"PC Crime Level",
-		"Same Sex",
-		"Same Race",
-		"Same Faction",
-		"Faction Rank Difference",
-		"Detected",
-		"Alarmed",
-		"Choice",
-		"PC Intelligence",
-		"PC Willpower",
-		"PC Agility",
-		"PC Speed",
-		"PC Endurance",
-		"PC Personality",
-		"PC Luck",
-		"PC Corprus",
-		"Weather",
-		"PC Vampire",
-		"Level",
-		"Attacked",
-		"Talked To PC",
-		"PC Health",
-		"Creature Target",
-		"Friend Hit",
-		"Fight",
-		"Hello",
-		"Alarm",
-		"Flee",
-		"Should Attack",
-		"Werewolf",
-		"PC Werewolf Kills",
-	};
+constexpr std::array<type_entry_t, 12> type_entries = { {
+	{ '1', "Function" },
+	{ '2', "Global" },
+	{ '3', "Local" },
+	{ '4', "Journal" },
+	{ '5', "Item" },
+	{ '6', "Dead" },
+	{ '7', "Not ID" },
+	{ '8', "Not Faction" },
+	{ '9', "Not Class" },
+	{ 'A', "Not Race" },
+	{ 'B', "Not Cell" },
+	{ 'C', "Not Local" },
+} };
 
-	struct type_entry_t
-	{
-		char type_char;
-		const char * name;
-	};
+struct operator_entry_t
+{
+	char operator_char;
+	const char * symbol;
+};
 
-	constexpr std::array<type_entry_t, 12> type_entries = {{
-	    { '1', "Function" },
-	    { '2', "Global" },
-	    { '3', "Local" },
-	    { '4', "Journal" },
-	    { '5', "Item" },
-	    { '6', "Dead" },
-	    { '7', "Not ID" },
-	    { '8', "Not Faction" },
-	    { '9', "Not Class" },
-	    { 'A', "Not Race" },
-	    { 'B', "Not Cell" },
-	    { 'C', "Not Local" },
-	}};
-
-	struct operator_entry_t
-	{
-		char operator_char;
-		const char * symbol;
-	};
-
-	constexpr std::array<operator_entry_t, 6> operator_entries = {{
-	    { '0', "==" },
-	    { '1', "!=" },
-	    { '2', ">" },
-	    { '3', ">=" },
-	    { '4', "<" },
-	    { '5', "<=" },
-	}};
-}
+constexpr std::array<operator_entry_t, 6> operator_entries = { {
+	{ '0', "==" },
+	{ '1', "!=" },
+	{ '2', ">" },
+	{ '3', ">=" },
+	{ '4', "<" },
+	{ '5', "<=" },
+} };
+} // namespace
 
 std::string scvr_type_name(char type_char)
 {
@@ -318,5 +316,3 @@ scvr_condition_t parse_scvr_condition(const char * data, size_t size)
 
 	return condition;
 }
-
-

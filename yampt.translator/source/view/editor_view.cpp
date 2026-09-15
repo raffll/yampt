@@ -114,8 +114,7 @@ QWidget * editor_view_t::setup_right_panel(QSplitter * parent_splitter)
 		button->setCheckable(true);
 		button->setChecked(true);
 		button->setFixedWidth(toggle_width);
-		button->setStyleSheet(
-		    QString("QPushButton:checked { background-color: %1; }").arg(color.name()));
+		button->setStyleSheet(QString("QPushButton:checked { background-color: %1; }").arg(color.name()));
 
 		return button;
 	};

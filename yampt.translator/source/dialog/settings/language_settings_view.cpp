@@ -1,10 +1,10 @@
-#include <resource_paths.hpp>
 #include "language_settings_view.hpp"
 #include "editor/spell_checker.hpp"
 #include <io/codepage.hpp>
 #include <utility/language_config.hpp>
 #include <algorithm>
 #include <filesystem>
+#include <resource_paths.hpp>
 #include <settings_store.hpp>
 #include <QComboBox>
 #include <QCoreApplication>
@@ -18,8 +18,7 @@ namespace {
 
 const std::vector<language_entry_t> & get_languages()
 {
-	static const auto languages =
-	    language_config::load(resource_paths::languages_file());
+	static const auto languages = language_config::load(resource_paths::languages_file());
 	return languages;
 }
 
@@ -101,11 +100,7 @@ language_settings_view_t::language_settings_view_t(const std::string & dictionar
 	    this,
 	    &language_settings_view_t::on_native_language_changed);
 
-	connect(
-	    m_native_spell_combo,
-	    &QComboBox::currentIndexChanged,
-	    this,
-	    [this](int) { update_spell_status(); });
+	connect(m_native_spell_combo, &QComboBox::currentIndexChanged, this, [this](int) { update_spell_status(); });
 }
 
 void language_settings_view_t::load(const settings_store_t & settings)

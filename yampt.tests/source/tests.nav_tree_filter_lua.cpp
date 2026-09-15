@@ -36,12 +36,10 @@ handler_conflict_t make_conflict(const std::string & interface_name, conflict_se
 
 } // namespace
 
-TEST_CASE(
-    "nav_tree_filter_t::passes_lua_conflict, interface name filter correctness",
-    "[Feature: lua-view-integration][Property 7: Interface name filter correctness]")
+TEST_CASE("nav_tree_filter_t::passes_lua_conflict, interface name filter correctness", "[u][pbt]")
 {
 	rc::prop(
-	    "Validates: Requirements 3.3",
+	    "conflict passes only when its interface is in the allowed set",
 	    []()
 	{
 		const auto interface_name = *gen_interface_name();

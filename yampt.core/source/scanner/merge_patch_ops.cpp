@@ -142,6 +142,17 @@ patch_result_t merge_patch_ops_t::patch_field(
 			merge_data[field.offset] =
 			    static_cast<char>(static_cast<unsigned char>(merge_data[field.offset]) & ~bit_mask);
 	}
+	else if (field.size == 0)
+	{
+		const auto & source_data = source_subs[binary_idx].data;
+		auto & merge_data = merge_subs[merge_idx].data;
+
+		if (field.offset > source_data.size() || field.offset > merge_data.size())
+			return { false, {}, "data too small for field" };
+
+		merge_data.resize(field.offset);
+		merge_data.append(source_data, field.offset, std::string::npos);
+	}
 	else
 	{
 		const auto & source_data = source_subs[binary_idx].data;

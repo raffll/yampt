@@ -9,8 +9,8 @@ public:
 	dict_creator_t(const std::string & plugin_path, const dict_t * base_dict = nullptr);
 
 	dict_creator_t(
-	    const std::string & path,
-	    const std::string & path_ext,
+	    const std::string & foreign_path,
+	    const std::string & native_path,
 	    translation_engine_t * translation_engine = nullptr,
 	    base_mode_t base_mode = base_mode_t::full,
 	    const std::string & dictionary_aff_path = {});

@@ -2,11 +2,11 @@
 
 #include "../controller/merge_controller.hpp"
 #include "../controller/view_context_menu.hpp"
+#include "../model/edit_log.hpp"
 #include "../model/editable_column_set.hpp"
 #include "../model/lua_tree_model.hpp"
 #include "../model/nav_tree_model.hpp"
 #include "../session/plugin_session.hpp"
-#include "../model/edit_log.hpp"
 #include "history_view.hpp"
 #include "lua_tree_view.hpp"
 #include "messages_view.hpp"
@@ -37,6 +37,7 @@ public:
 
 	void set_conflicts_only(bool value);
 	void set_show_deleted_strikeout(bool value);
+	void set_show_optional_placeholders(bool value);
 
 	bool is_conflicts_only() const
 	{
@@ -49,6 +50,7 @@ public:
 	}
 
 	bool is_show_deleted_strikeout() const;
+	bool is_show_optional_placeholders() const;
 
 	QLabel * count_label() const
 	{
@@ -60,20 +62,24 @@ public:
 		return m_status_label;
 	}
 
-	QLabel * validation_label() const
-	{
-		return m_validation_label;
-	}
-
 	void refresh_views();
 	void reset_all_filters();
 
 	bool confirm_discard_or_save_unsaved();
 
-	QWidget * sidebar_widget() const { return m_nav_tabs; }
-	QWidget * bottom_panel_widget() const { return m_bottom_tabs; }
+	QWidget * sidebar_widget() const
+	{
+		return m_nav_tabs;
+	}
+
+	QWidget * bottom_panel_widget() const
+	{
+		return m_bottom_tabs;
+	}
 
 	void set_preview_scroll_sync(bool enabled);
+
+	QString active_plugin_filename() const;
 
 public slots:
 	void on_load_data_files();
@@ -83,6 +89,7 @@ public slots:
 	void on_save();
 	void on_save_all();
 	void on_create_merged_patch();
+	void on_create_new_plugin();
 	void on_clean_all();
 	void on_advanced_filter();
 	void on_settings_changed();
@@ -106,19 +113,21 @@ private slots:
 signals:
 	void filters_active_changed(bool active);
 	void unsaved_changes_changed(bool dirty);
+	void active_plugin_changed(const QString & filename);
 
 private:
 	void setup_views();
 	void setup_connections();
 	void rebuild_after_load();
-	void apply_user_conflict_rules();
 	void update_status();
 	void log_message(const std::string & msg);
 	void rebuild_nav_preserving_state();
 	void refresh_all_views();
+	void on_merge_lock_changed(const std::string & rec_type, const std::string & record_id);
 	void clear_views_if_record_filtered_out();
 	void load_plugins_from_paths(const std::vector<std::string> & paths, const std::string & base_path);
 	void display_record_in_view(const conflict_entry_t & entry);
+	std::string first_existing_previous_value(const QModelIndex & current) const;
 	QString build_mode_prefix() const;
 	void start_lua_scan();
 	void on_lua_scan_complete(const lua_scan_result_t & result);
@@ -158,7 +167,6 @@ private:
 	lua_scan_result_t m_lua_scan_result;
 
 	QLabel * m_status_label = nullptr;
-	QLabel * m_validation_label = nullptr;
 	QProgressDialog * m_progress_dialog = nullptr;
 	QString m_progress_label;
 

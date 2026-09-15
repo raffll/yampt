@@ -137,6 +137,7 @@ private:
 	void register_shortcuts();
 	void shortcut_copy_original();
 	void shortcut_commit_status(status_t new_status);
+	void reset_rows_to_original(const QList<int> & rows);
 	void advance_to_next_row();
 
 	void on_toggle_example_requested(const QList<int> & rows);
@@ -161,6 +162,7 @@ private:
 	QAction * m_copy_original_action = nullptr;
 	QAction * m_set_in_progress_action = nullptr;
 	QAction * m_set_translated_action = nullptr;
+	QAction * m_set_untranslated_action = nullptr;
 
 	QToolBar * m_toolbar = nullptr;
 

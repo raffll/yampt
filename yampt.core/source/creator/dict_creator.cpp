@@ -19,12 +19,12 @@ dict_creator_t::dict_creator_t(const std::string & plugin_path, const dict_t * b
 }
 
 dict_creator_t::dict_creator_t(
-    const std::string & path,
-    const std::string & path_ext,
+    const std::string & foreign_path,
+    const std::string & native_path,
     translation_engine_t * translation_engine,
     base_mode_t base_mode,
     const std::string & dictionary_aff_path)
-    : m_ctx(path, path_ext)
+    : m_ctx(foreign_path, native_path)
 {
 	m_ctx.translation_engine = translation_engine;
 	m_ctx.base_mode = base_mode;

@@ -2,16 +2,20 @@
 #include <decoder/scvr_condition.hpp>
 #include <decoder/view_tree_format.hpp>
 #include <scanner/record_conflict.hpp>
+#include <utility/app_logger.hpp>
+#include <utility/record_behavior.hpp>
 #include <cstdio>
 #include <cstring>
+#include <string>
 
-static void mark_children_ignored(view_tree_model_t::view_node_t & parent)
+static const std::string autocalc_absent_value { "Auto" };
+
+static std::string apply_pair_prefix(const std::string & label, field_pair_role_t role)
 {
-	for (auto & child : parent.children)
-	{
-		child.is_ignored = true;
-		mark_children_ignored(child);
-	}
+	if (role == field_pair_role_t::min_bound || role == field_pair_role_t::max_bound)
+		return "> " + label;
+
+	return label;
 }
 
 static bool check_all_identical(const std::vector<std::string> & values)
@@ -22,19 +26,6 @@ static bool check_all_identical(const std::vector<std::string> & values)
 			return false;
 	}
 	return true;
-}
-
-static std::string read_flag_value(const sub_record_view_t & sv, const field_def_t & fdef, int bit_index)
-{
-	if (fdef.offset >= sv.size)
-		return "";
-
-	uint32_t value = 0;
-	const size_t byte_count = (fdef.type == field_type_t::flags_u8)    ? 1
-	                          : (fdef.type == field_type_t::flags_u16) ? 2
-	                                                                   : 4;
-	std::memcpy(&value, sv.data + fdef.offset, std::min(byte_count, sv.size - fdef.offset));
-	return (value & (1u << bit_index)) ? "Yes" : "No";
 }
 
 static std::string format_hex_chunk(const char * data_ptr, size_t data_size, size_t offset)
@@ -127,18 +118,7 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 	}
 	row.all_identical = all_same;
 
-	const auto specific_key = m_record_type + ":" + slot.type;
-	const auto wildcard_key = m_record_type + ":*";
-	const bool user_ignore =
-	    m_user_ignore_conflict.count(specific_key) > 0 || m_user_ignore_conflict.count(wildcard_key) > 0;
-
-	if (user_ignore)
-	{
-		row.is_ignored = true;
-		row.row_conflict_all = conflict_all_t::no_conflict;
-		row.cell_conflict_this.assign(col_count, conflict_this_t::ignored);
-	}
-	else if (policy.skip_non_existent)
+	if (policy.skip_non_existent)
 	{
 		row.row_conflict_all = record_conflict::compute_conflict_all_skip_empty(row.values);
 		row.cell_conflict_this = record_conflict::compute_conflict_this_skip_empty(row.values);
@@ -149,19 +129,19 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 		row.cell_conflict_this = record_conflict::compute_conflict_this(row.values);
 	}
 
-	const auto * schema = find_schema(m_record_type, slot.type, first_size);
+	const sub_record_schema_t * schema = nullptr;
+	if (first_data && has_content_dependent_schema(m_record_type, slot.type))
+		schema = content_dependent_schema(m_record_type, slot.type, first_data, first_size);
+	else if (first_data)
+		schema = find_largest_schema(m_record_type, slot.type);
 	if (schema && first_data)
 		decode_schema_children(row, schema, first_data, first_size, col_count, all_subs, col_indices, slot);
 	else if (first_data && first_size > 0 && !row.values.empty() && !row.values[0].empty() && row.values[0][0] == '<')
 	{
 		decode_hex_children(row, first_size, col_count, all_subs, col_indices, slot);
-		row.start_collapsed = true;
 	}
 
-	if (!row.children.empty() && row.is_ignored)
-		mark_children_ignored(row);
-
-	if (!row.children.empty() && !policy.ignore_conflict)
+	if (!row.children.empty())
 	{
 		row.row_conflict_all = conflict_all_t::unknown;
 		for (const auto & child : row.children)
@@ -250,7 +230,8 @@ void view_tree_model_t::decode_schema_children(
 						continue;
 					}
 
-					frow.values[col] = read_flag_value(subs[it_type->second[slot.occurrence]], fdef, bit);
+					const auto & flag_sv = subs[it_type->second[slot.occurrence]];
+					frow.values[col] = flag_bit_value(flag_sv.data, flag_sv.size, fdef, bit);
 				}
 
 				frow.all_identical = check_all_identical(frow.values);
@@ -282,7 +263,8 @@ void view_tree_model_t::decode_schema_children(
 		}
 
 		view_node_t frow;
-		frow.label = fdef.name;
+		const auto pair_role = find_field_pair_role(m_record_type, slot.type, fdef.offset);
+		frow.label = apply_pair_prefix(fdef.name, pair_role);
 		frow.schema_field_index = static_cast<int>(field_idx);
 		frow.values.resize(col_count);
 
@@ -309,9 +291,31 @@ void view_tree_model_t::decode_schema_children(
 			}
 
 			const auto & sv = all_subs[col][idx];
-			frow.values[col] = decode_field(fdef, sv.data, sv.size, m_display_codepage);
 
-			if (fdef.type == field_type_t::scvr_subject && frow.label == fdef.name)
+			const sub_record_schema_t * column_schema =
+			    has_content_dependent_schema(m_record_type, slot.type)
+			        ? content_dependent_schema(m_record_type, slot.type, sv.data, sv.size)
+			        : find_schema(m_record_type, slot.type, sv.size);
+			if (column_schema == nullptr)
+			{
+				app_logger_t::add_log(
+				    "[error] no schema for " + m_record_type + " " + slot.type + " size " +
+				        std::to_string(sv.size) + "\r\n",
+				    true);
+				frow.values[col] = non_existent_value;
+				continue;
+			}
+
+			const field_def_t * column_field = find_field_by_name(*column_schema, fdef.name);
+			if (column_field == nullptr)
+			{
+				frow.values[col] = autocalc_absent_value;
+				continue;
+			}
+
+			frow.values[col] = decode_field(*column_field, sv.data, sv.size, m_display_codepage);
+
+			if (column_field->type == field_type_t::scvr_subject && frow.label == fdef.name)
 				frow.label = scvr_subject_label(sv.data, sv.size);
 		}
 
@@ -410,4 +414,3 @@ void view_tree_model_t::decode_hex_children(
 		parent_row.children.push_back(std::move(frow));
 	}
 }
-

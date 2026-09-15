@@ -1,5 +1,4 @@
 #include "inflection_store.hpp"
-
 #include <io/loc_file_reader.hpp>
 #include <utility/string_utils.hpp>
 #include <set>

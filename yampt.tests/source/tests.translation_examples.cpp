@@ -12,7 +12,7 @@ TEST_CASE("translation_example_ops::format_examples_lines, empty list yields emp
 
 TEST_CASE("translation_example_ops::format_examples_lines, one example yields a line", "[u]")
 {
-	const std::vector<translation_example_t> examples{{"Nerevarine", "Nerevaryn"}};
+	const std::vector<translation_example_t> examples { { "Nerevarine", "Nerevaryn" } };
 
 	const auto lines = translation_example_ops::format_examples_lines(examples);
 
@@ -21,10 +21,9 @@ TEST_CASE("translation_example_ops::format_examples_lines, one example yields a 
 
 TEST_CASE("translation_example_ops::format_examples_lines, three examples preserve order", "[u]")
 {
-	const std::vector<translation_example_t> examples{
-	    {"Balmora", "Balmora"},
-	    {"Vivec", "Vivek"},
-	    {"Ald-ruhn", "Ald-ruhn"}};
+	const std::vector<translation_example_t> examples { { "Balmora", "Balmora" },
+		                                                { "Vivec", "Vivek" },
+		                                                { "Ald-ruhn", "Ald-ruhn" } };
 
 	const auto lines = translation_example_ops::format_examples_lines(examples);
 
@@ -45,7 +44,7 @@ TEST_CASE("translation_example_ops::add_capped, adding to a full list is rejecte
 	for (int index = 0; index < max_examples; ++index)
 		examples.push_back({ "original_" + std::to_string(index), std::to_string(index) });
 
-	const std::vector<translation_example_t> pairs{{"overflow", "x"}};
+	const std::vector<translation_example_t> pairs { { "overflow", "x" } };
 
 	const auto result = translation_example_ops::add_capped(examples, pairs);
 
@@ -55,8 +54,8 @@ TEST_CASE("translation_example_ops::add_capped, adding to a full list is rejecte
 
 TEST_CASE("translation_example_ops::add_capped, duplicate original is rejected", "[u]")
 {
-	const std::vector<translation_example_t> examples{{"one", "1"}};
-	const std::vector<translation_example_t> pairs{{"one", "different"}};
+	const std::vector<translation_example_t> examples { { "one", "1" } };
+	const std::vector<translation_example_t> pairs { { "one", "different" } };
 
 	const auto result = translation_example_ops::add_capped(examples, pairs);
 
@@ -70,11 +69,9 @@ TEST_CASE("translation_example_ops::add_capped, multi-add stops at cap", "[u]")
 	for (int index = 0; index < max_examples - 2; ++index)
 		examples.push_back({ "seed_" + std::to_string(index), std::to_string(index) });
 
-	const std::vector<translation_example_t> pairs{
-	    {"fits_one", "a"},
-	    {"fits_two", "b"},
-	    {"overflow_one", "c"},
-	    {"overflow_two", "d"}};
+	const std::vector<translation_example_t> pairs {
+		{ "fits_one", "a" }, { "fits_two", "b" }, { "overflow_one", "c" }, { "overflow_two", "d" }
+	};
 
 	const auto result = translation_example_ops::add_capped(examples, pairs);
 
@@ -87,10 +84,7 @@ TEST_CASE("translation_example_ops::add_capped, multi-add stops at cap", "[u]")
 
 TEST_CASE("translation_example_ops::remove_by_original, removes existing original", "[u]")
 {
-	const std::vector<translation_example_t> examples{
-	    {"one", "1"},
-	    {"two", "2"},
-	    {"three", "3"}};
+	const std::vector<translation_example_t> examples { { "one", "1" }, { "two", "2" }, { "three", "3" } };
 
 	const auto result = translation_example_ops::remove_by_original(examples, "two");
 
@@ -102,9 +96,7 @@ TEST_CASE("translation_example_ops::remove_by_original, removes existing origina
 
 TEST_CASE("translation_example_ops::remove_by_original, absent original is a no-op", "[u]")
 {
-	const std::vector<translation_example_t> examples{
-	    {"one", "1"},
-	    {"two", "2"}};
+	const std::vector<translation_example_t> examples { { "one", "1" }, { "two", "2" } };
 
 	const auto result = translation_example_ops::remove_by_original(examples, "missing");
 
@@ -115,16 +107,14 @@ TEST_CASE("translation_example_ops::remove_by_original, absent original is a no-
 
 TEST_CASE("translation_example_ops::contains_original, true when present", "[u]")
 {
-	const std::vector<translation_example_t> examples{
-	    {"one", "1"},
-	    {"two", "2"}};
+	const std::vector<translation_example_t> examples { { "one", "1" }, { "two", "2" } };
 
 	REQUIRE(translation_example_ops::contains_original(examples, "two"));
 }
 
 TEST_CASE("translation_example_ops::contains_original, false when absent", "[u]")
 {
-	const std::vector<translation_example_t> examples{{"one", "1"}};
+	const std::vector<translation_example_t> examples { { "one", "1" } };
 
 	REQUIRE_FALSE(translation_example_ops::contains_original(examples, "absent"));
 }

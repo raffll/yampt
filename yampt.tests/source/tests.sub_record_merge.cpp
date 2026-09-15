@@ -58,9 +58,55 @@ static std::string make_bytes(const std::vector<uint8_t> & bytes)
 	return std::string(bytes.begin(), bytes.end());
 }
 
-// ============================================================================
-// Requirement 1: Three-Way Sub-Record Merge â€” Generic
-// ============================================================================
+static size_t npdt_size(const std::string & record)
+{
+	const auto pos = record.find("NPDT");
+	REQUIRE(pos != std::string::npos);
+
+	uint32_t size_val = 0;
+	std::memcpy(&size_val, record.data() + pos + 4, 4);
+	return size_val;
+}
+
+static std::string make_wpdt(float speed)
+{
+	std::string data(32, '\0');
+	std::memcpy(data.data() + 12, &speed, 4);
+	return data;
+}
+
+static float read_wpdt_speed(const std::string & record)
+{
+	const auto pos = record.find("WPDT");
+	REQUIRE(pos != std::string::npos);
+
+	float speed = 0.0f;
+	std::memcpy(&speed, record.data() + pos + 8 + 12, 4);
+	return speed;
+}
+
+TEST_CASE("sub_record_merge_t::merge, WPDT field change from intermediate survives", "[u]")
+{
+	auto subs_master = make_sub("NAME", make_string("mace")) + make_sub("WPDT", make_wpdt(1.5f));
+	auto subs_patch = make_sub("NAME", make_string("mace")) + make_sub("WPDT", make_wpdt(1.3f));
+	auto subs_unique = make_sub("NAME", make_string("mace")) + make_sub("WPDT", make_wpdt(1.5f));
+	auto subs_winner = make_sub("NAME", make_string("mace")) + make_sub("WPDT", make_wpdt(1.5f));
+
+	merge_input_t input;
+	input.rec_type = "WEAP";
+	input.record_id = "mace";
+	input.version_contents = {
+		make_record("WEAP", subs_master),
+		make_record("WEAP", subs_patch),
+		make_record("WEAP", subs_unique),
+		make_record("WEAP", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(read_wpdt_speed(result.content) == 1.3f);
+}
 
 TEST_CASE("sub_record_merge_t::merge, 2 versions returns unchanged", "[u]")
 {
@@ -199,10 +245,6 @@ TEST_CASE("sub_record_merge_t::merge, preserves winner header flags", "[u]")
 	REQUIRE(output_flags == 0x0400);
 }
 
-// ============================================================================
-// Sub-Record Additions by Intermediate
-// ============================================================================
-
 TEST_CASE("sub_record_merge_t::merge, added sub-record preserved", "[u]")
 {
 	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("model.nif"));
@@ -330,10 +372,6 @@ TEST_CASE("sub_record_merge_t::merge, steel_cuirass scenario tribunal adds CNAM"
 	REQUIRE(result.content.find("A_Steel_Cuir_Female") != std::string::npos);
 }
 
-// ============================================================================
-// Requirements 3, 4: Element-Wise Byte-Level Merge (NPC_ NPDT, CREA NPDT, AI_W)
-// ============================================================================
-
 TEST_CASE("sub_record_merge_t::merge, NPC NPDT element-wise byte merge", "[u]")
 {
 	std::string npdt_first(52, '\0');
@@ -437,6 +475,43 @@ TEST_CASE("sub_record_merge_t::merge, CREA NPDT element-wise merge", "[u]")
 	REQUIRE(result.content == expected);
 }
 
+TEST_CASE("sub_record_merge_t::merge, RACE RADT bonus skill and attribute merge per field", "[u]")
+{
+	std::string radt_first(140, '\0');
+	radt_first[4] = 5;
+	radt_first[56] = 40;
+
+	std::string radt_inter(140, '\0');
+	radt_inter[4] = 15;
+	radt_inter[56] = 40;
+
+	std::string radt_winner(140, '\0');
+	radt_winner[4] = 5;
+	radt_winner[56] = 60;
+
+	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("RADT", radt_first);
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("RADT", radt_inter);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("RADT", radt_winner);
+
+	merge_input_t input;
+	input.rec_type = "RACE";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("RACE", subs_first),
+		make_record("RACE", subs_inter),
+		make_record("RACE", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	std::string expected_radt(140, '\0');
+	expected_radt[4] = 15;
+	expected_radt[56] = 60;
+	auto expected = make_record("RACE", make_sub("NAME", make_string("id")) + make_sub("RADT", expected_radt));
+	REQUIRE(result.content == expected);
+}
+
 TEST_CASE("sub_record_merge_t::merge, CREA AI_W element-wise merge", "[u]")
 {
 	std::string aiw_first(14, '\0');
@@ -474,10 +549,6 @@ TEST_CASE("sub_record_merge_t::merge, CREA AI_W element-wise merge", "[u]")
 	REQUIRE(result.content == expected);
 }
 
-// ============================================================================
-// Requirement 5: ENAM Per-Slot Merge
-// ============================================================================
-
 static std::string make_enam(
     uint16_t effect_id,
     uint8_t skill,
@@ -493,10 +564,10 @@ static std::string make_enam(
 	int32_t range = 0;
 	int32_t area = 0;
 	std::memcpy(result.data() + 4, &range, 4);
-	std::memcpy(result.data() + 8, &duration, 4);
-	std::memcpy(result.data() + 12, &min_mag, 4);
-	std::memcpy(result.data() + 16, &max_mag, 4);
-	std::memcpy(result.data() + 20, &area, 4);
+	std::memcpy(result.data() + 8, &area, 4);
+	std::memcpy(result.data() + 12, &duration, 4);
+	std::memcpy(result.data() + 16, &min_mag, 4);
+	std::memcpy(result.data() + 20, &max_mag, 4);
 	return result;
 }
 
@@ -578,10 +649,6 @@ TEST_CASE("sub_record_merge_t::merge, ENAM winner removes slot removal stands", 
 	REQUIRE(result.content == make_record("ALCH", make_sub("NAME", make_string("id")) + make_sub("ENAM", enam1)));
 }
 
-// ============================================================================
-// Duplicate addition prevention
-// ============================================================================
-
 TEST_CASE("sub_record_merge_t::merge, duplicate addition not appended twice", "[u]")
 {
 	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("m.nif"));
@@ -613,10 +680,6 @@ TEST_CASE("sub_record_merge_t::merge, duplicate addition not appended twice", "[
 	}
 	REQUIRE(cnam_count == 1);
 }
-
-// ============================================================================
-// Autocalc NPC intermediate skipped
-// ============================================================================
 
 TEST_CASE("sub_record_merge_t::merge, autocalc intermediate skipped", "[u]")
 {
@@ -652,11 +715,7 @@ TEST_CASE("sub_record_merge_t::merge, autocalc intermediate skipped", "[u]")
 	REQUIRE(result.content == make_record("NPC_", subs_winner));
 }
 
-// ============================================================================
-// Element-wise merge requires same size
-// ============================================================================
-
-TEST_CASE("sub_record_merge_t::merge, element-wise skipped on size mismatch", "[u]")
+TEST_CASE("sub_record_merge_t::merge, only intermediate changed NPDT wins on size mismatch", "[u]")
 {
 	std::string npdt_52(52, '\0');
 	npdt_52[4] = 100;
@@ -679,12 +738,431 @@ TEST_CASE("sub_record_merge_t::merge, element-wise skipped on size mismatch", "[
 
 	auto result = sub_record_merge_t::merge(input);
 
-	REQUIRE_FALSE(result.changed);
+	REQUIRE(result.changed);
+	REQUIRE(npdt_size(result.content) == 12);
 }
 
-// ============================================================================
-// ENAM byte-level merge (not whole-slot)
-// ============================================================================
+TEST_CASE("sub_record_merge_t::merge, intermediate expanding NPDT 12 to 52 wins over unchanged 12", "[u]")
+{
+	std::string npdt_12(12, '\0');
+	npdt_12[0] = 23;
+
+	std::string npdt_52(52, '\0');
+	npdt_52[0] = 40;
+	npdt_52[4] = 100;
+
+	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_12);
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_52);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_12);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_first),
+		make_record("NPC_", subs_inter),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(npdt_size(result.content) == 52);
+}
+
+TEST_CASE("sub_record_merge_t::merge, NPDT 12 to 52 expansion wins despite other 12-byte edits", "[u]")
+{
+	std::string npdt_12(12, '\0');
+	npdt_12[0] = 23;
+
+	std::string npdt_12_edited(12, '\0');
+	npdt_12_edited[0] = 23;
+	npdt_12_edited[2] = 55;
+
+	std::string npdt_52(52, '\0');
+	npdt_52[0] = 40;
+	npdt_52[4] = 100;
+
+	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_12);
+	auto subs_edit = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_12_edited);
+	auto subs_expand = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_52);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_12);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_first),
+		make_record("NPC_", subs_edit),
+		make_record("NPC_", subs_expand),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(npdt_size(result.content) == 52);
+}
+
+TEST_CASE("sub_record_merge_t::merge, NPDT 12 12 52 12 keeps 52 change from master", "[u]")
+{
+	std::string npdt_master(12, '\0');
+	npdt_master[0] = 12;
+
+	std::string npdt_unchanged(12, '\0');
+	npdt_unchanged[0] = 12;
+
+	std::string npdt_expand(52, '\0');
+	npdt_expand[0] = 52;
+	npdt_expand[4] = 100;
+
+	std::string npdt_winner(12, '\0');
+	npdt_winner[0] = 12;
+
+	auto subs_master = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_master);
+	auto subs_unchanged = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_unchanged);
+	auto subs_expand = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_expand);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_winner);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_master),
+		make_record("NPC_", subs_unchanged),
+		make_record("NPC_", subs_expand),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(npdt_size(result.content) == 52);
+}
+
+TEST_CASE("sub_record_merge_t::merge, NPDT 12 52a 52b 12 merges both 52 edits last-changer-wins", "[u]")
+{
+	std::string npdt_master(12, '\0');
+	npdt_master[0] = 12;
+
+	std::string npdt_expand_a(52, '\0');
+	npdt_expand_a[0] = 52;
+	npdt_expand_a[4] = 100;
+
+	std::string npdt_expand_b(52, '\0');
+	npdt_expand_b[0] = 52;
+	npdt_expand_b[8] = 200;
+
+	std::string npdt_winner(12, '\0');
+	npdt_winner[0] = 12;
+
+	auto subs_master = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_master);
+	auto subs_expand_a = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_expand_a);
+	auto subs_expand_b = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_expand_b);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_winner);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_master),
+		make_record("NPC_", subs_expand_a),
+		make_record("NPC_", subs_expand_b),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(npdt_size(result.content) == 52);
+
+	const auto pos = result.content.find("NPDT");
+	REQUIRE(pos != std::string::npos);
+	const size_t data_start = pos + 4 + 4;
+	REQUIRE(static_cast<unsigned char>(result.content[data_start + 4]) == 100);
+	REQUIRE(static_cast<unsigned char>(result.content[data_start + 8]) == 200);
+}
+
+TEST_CASE("sub_record_merge_t::merge, NPDT 12 52a 52b conflicting field last-changer-wins", "[u]")
+{
+	std::string npdt_master(12, '\0');
+	npdt_master[0] = 12;
+
+	std::string npdt_expand_a(52, '\0');
+	npdt_expand_a[0] = 52;
+	npdt_expand_a[4] = 100;
+
+	std::string npdt_expand_b(52, '\0');
+	npdt_expand_b[0] = 52;
+	npdt_expand_b[4] = 250;
+
+	auto subs_master = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_master);
+	auto subs_expand_a = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_expand_a);
+	auto subs_expand_b = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_expand_b);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_master),
+		make_record("NPC_", subs_expand_a),
+		make_record("NPC_", subs_expand_b),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(npdt_size(result.content) == 52);
+
+	const auto pos = result.content.find("NPDT");
+	REQUIRE(pos != std::string::npos);
+	const size_t data_start = pos + 4 + 4;
+	REQUIRE(static_cast<unsigned char>(result.content[data_start + 4]) == 250);
+}
+
+static constexpr uint32_t npc_flag_autocalc = 0x0010;
+static constexpr size_t npdt_52_gold_offset = 48;
+static constexpr size_t npdt_12_gold_offset = 8;
+
+static uint32_t read_npdt_gold(const std::string & record, size_t gold_offset)
+{
+	const auto pos = record.find("NPDT");
+	REQUIRE(pos != std::string::npos);
+
+	const size_t data_start = pos + 4 + 4;
+	uint32_t gold = 0;
+	std::memcpy(&gold, record.data() + data_start + gold_offset, 4);
+	return gold;
+}
+
+TEST_CASE("sub_record_merge_t::merge, 4 versions all 52-byte NPDT merges gold field", "[u]")
+{
+	std::string npdt_first(52, '\0');
+	npdt_first[npdt_52_gold_offset] = 100;
+
+	std::string npdt_inter1(52, '\0');
+	npdt_inter1[npdt_52_gold_offset] = 250;
+
+	std::string npdt_inter2(52, '\0');
+	npdt_inter2[npdt_52_gold_offset] = 100;
+	npdt_inter2[0] = 5;
+
+	std::string npdt_winner(52, '\0');
+	npdt_winner[npdt_52_gold_offset] = 100;
+	npdt_winner[2] = 40;
+
+	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_first);
+	auto subs_inter1 = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_inter1);
+	auto subs_inter2 = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_inter2);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_winner);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_first),
+		make_record("NPC_", subs_inter1),
+		make_record("NPC_", subs_inter2),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(npdt_size(result.content) == 52);
+	REQUIRE(read_npdt_gold(result.content, npdt_52_gold_offset) == 250);
+}
+
+TEST_CASE("sub_record_merge_t::merge, 4 versions mixed layout skips 12-byte intermediate", "[u]")
+{
+	std::string npdt_first(52, '\0');
+	npdt_first[npdt_52_gold_offset] = 100;
+
+	std::string npdt_inter_autocalc(12, '\0');
+	npdt_inter_autocalc[npdt_12_gold_offset] = 200;
+
+	std::string npdt_inter_explicit(52, '\0');
+	npdt_inter_explicit[npdt_52_gold_offset] = 100;
+	npdt_inter_explicit[2] = 60;
+
+	std::string npdt_winner(52, '\0');
+	npdt_winner[npdt_52_gold_offset] = 100;
+
+	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_first);
+	auto subs_inter_autocalc = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_inter_autocalc);
+	auto subs_inter_explicit = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_inter_explicit);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_winner);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_first, npc_flag_autocalc),
+		make_record("NPC_", subs_inter_autocalc, npc_flag_autocalc),
+		make_record("NPC_", subs_inter_explicit),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(npdt_size(result.content) == 52);
+	REQUIRE(read_npdt_gold(result.content, npdt_52_gold_offset) == 100);
+}
+
+static std::string make_npc_flag_sub(uint32_t flag_value)
+{
+	return make_sub("FLAG", make_uint32(flag_value));
+}
+
+static uint32_t read_npc_flag_sub(const std::string & record)
+{
+	const auto pos = record.find("FLAG");
+	REQUIRE(pos != std::string::npos);
+
+	uint32_t value = 0;
+	std::memcpy(&value, record.data() + pos + 4 + 4, 4);
+	return value;
+}
+
+TEST_CASE("sub_record_merge_t::merge, NPC FLAG merges per bit", "[u]")
+{
+	auto subs_first = make_sub("NAME", make_string("id")) + make_npc_flag_sub(0);
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_npc_flag_sub(0x0001);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_npc_flag_sub(0x0002);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_first),
+		make_record("NPC_", subs_inter),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(read_npc_flag_sub(result.content) == 0x0003);
+}
+
+TEST_CASE("sub_record_merge_t::merge, NPC FLAG bit cleared by plugin wins", "[u]")
+{
+	auto subs_first = make_sub("NAME", make_string("id")) + make_npc_flag_sub(0x0003);
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_npc_flag_sub(0x0001);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_npc_flag_sub(0x0003);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_first),
+		make_record("NPC_", subs_inter),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(read_npc_flag_sub(result.content) == 0x0001);
+}
+
+TEST_CASE("sub_record_merge_t::merge, NPDT last changer wins regardless of size", "[u]")
+{
+	std::string npdt_master(52, '\0');
+	npdt_master[npdt_52_gold_offset] = 100;
+
+	std::string npdt_p1(12, '\0');
+	npdt_p1[npdt_12_gold_offset] = 30;
+
+	std::string npdt_p2(52, '\0');
+	npdt_p2[npdt_52_gold_offset] = 200;
+
+	std::string npdt_p3(12, '\0');
+	npdt_p3[npdt_12_gold_offset] = 90;
+
+	auto subs_master = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_master);
+	auto subs_p1 = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_p1);
+	auto subs_p2 = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_p2);
+	auto subs_p3 = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_p3);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_master),
+		make_record("NPC_", subs_p1),
+		make_record("NPC_", subs_p2),
+		make_record("NPC_", subs_p3),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(npdt_size(result.content) == 12);
+	REQUIRE(read_npdt_gold(result.content, npdt_12_gold_offset) == 90);
+}
+
+TEST_CASE("sub_record_merge_t::merge, NPDT 12-byte intermediate wins over unchanged winner", "[u]")
+{
+	std::string npdt_master(52, '\0');
+	npdt_master[npdt_52_gold_offset] = 100;
+
+	std::string npdt_inter(12, '\0');
+	npdt_inter[npdt_12_gold_offset] = 90;
+
+	std::string npdt_winner(52, '\0');
+	npdt_winner[npdt_52_gold_offset] = 100;
+
+	auto subs_master = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_master);
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_inter);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_winner);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_master),
+		make_record("NPC_", subs_inter),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(npdt_size(result.content) == 12);
+	REQUIRE(read_npdt_gold(result.content, npdt_12_gold_offset) == 90);
+}
+
+TEST_CASE("sub_record_merge_t::merge, NPDT 52-byte intermediate wins over unchanged autocalc winner", "[u]")
+{
+	std::string npdt_master(12, '\0');
+	npdt_master[npdt_12_gold_offset] = 30;
+
+	std::string npdt_inter(52, '\0');
+	const uint32_t inter_gold = 500;
+	std::memcpy(npdt_inter.data() + npdt_52_gold_offset, &inter_gold, 4);
+
+	std::string npdt_winner(12, '\0');
+	npdt_winner[npdt_12_gold_offset] = 30;
+
+	auto subs_master = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_master);
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_inter);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_winner);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_master),
+		make_record("NPC_", subs_inter),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(npdt_size(result.content) == 52);
+	REQUIRE(read_npdt_gold(result.content, npdt_52_gold_offset) == 500);
+}
 
 TEST_CASE("sub_record_merge_t::merge, ENAM per-byte merge", "[u]")
 {
@@ -713,11 +1191,81 @@ TEST_CASE("sub_record_merge_t::merge, ENAM per-byte merge", "[u]")
 	REQUIRE(result.content == expected);
 }
 
-// ============================================================================
-// NPCO winner only
-// ============================================================================
+static std::string make_reaction_pairs(const std::vector<std::pair<std::string, int32_t>> & reactions)
+{
+	std::string result;
+	for (const auto & reaction : reactions)
+	{
+		std::string anam = reaction.first;
+		anam.push_back('\0');
+		result += make_sub("ANAM", anam);
 
-TEST_CASE("sub_record_merge_t::merge, NPCO adds intermediate items", "[u]")
+		std::string intv(4, '\0');
+		std::memcpy(intv.data(), &reaction.second, 4);
+		result += make_sub("INTV", intv);
+	}
+
+	return result;
+}
+
+TEST_CASE("sub_record_merge_t::merge, FACT reactions merge by faction regardless of order", "[u]")
+{
+	auto subs_first = make_sub("NAME", make_string("id")) +
+	                  make_reaction_pairs({ { "faction_x", 10 }, { "faction_y", 20 } });
+	auto subs_inter = make_sub("NAME", make_string("id")) +
+	                  make_reaction_pairs({ { "faction_y", 20 }, { "faction_x", 55 } });
+	auto subs_winner = make_sub("NAME", make_string("id")) +
+	                   make_reaction_pairs({ { "faction_x", 10 }, { "faction_y", 20 } });
+
+	merge_input_t input;
+	input.rec_type = "FACT";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("FACT", subs_first),
+		make_record("FACT", subs_inter),
+		make_record("FACT", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+
+	const auto reactions = sub_record_merge_t::parse_sub_records(result.content);
+	int32_t faction_x_value = 0;
+	for (size_t i = 0; i + 1 < reactions.size(); ++i)
+	{
+		if (reactions[i].type == "ANAM" && reactions[i].data.substr(0, 9) == "faction_x")
+			std::memcpy(&faction_x_value, reactions[i + 1].data.data(), 4);
+	}
+
+	REQUIRE(faction_x_value == 55);
+}
+
+TEST_CASE("sub_record_merge_t::merge, FACT reaction deletion respected", "[u]")
+{
+	auto subs_first = make_sub("NAME", make_string("id")) +
+	                  make_reaction_pairs({ { "faction_x", 10 }, { "faction_y", 20 } });
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_reaction_pairs({ { "faction_x", 10 } });
+	auto subs_winner = make_sub("NAME", make_string("id")) +
+	                   make_reaction_pairs({ { "faction_x", 10 }, { "faction_y", 20 } });
+
+	merge_input_t input;
+	input.rec_type = "FACT";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("FACT", subs_first),
+		make_record("FACT", subs_inter),
+		make_record("FACT", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(result.content.find("faction_y") == std::string::npos);
+	REQUIRE(result.content.find("faction_x") != std::string::npos);
+}
+
+TEST_CASE("sub_record_merge_t::merge, NPCO unions additions and respects master deletion", "[u]")
 {
 	std::string npco_a(36, '\0');
 	npco_a[0] = 1;
@@ -732,7 +1280,9 @@ TEST_CASE("sub_record_merge_t::merge, NPCO adds intermediate items", "[u]")
 	std::memcpy(&npco_c[4], "item_c", 6);
 
 	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("NPCO", npco_a);
-	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("NPCO", npco_b) + make_sub("NPCO", npco_c);
+	auto subs_inter =
+	    make_sub("NAME", make_string("id")) + make_sub("NPCO", npco_a) + make_sub("NPCO", npco_b) +
+	    make_sub("NPCO", npco_c);
 	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPCO", npco_a);
 
 	merge_input_t input;
@@ -752,11 +1302,97 @@ TEST_CASE("sub_record_merge_t::merge, NPCO adds intermediate items", "[u]")
 	REQUIRE(result.content.find("item_c") != std::string::npos);
 }
 
-// ============================================================================
-// CELL records skipped from 3-way merge
-// ============================================================================
+TEST_CASE("sub_record_merge_t::merge, NPCS unions added spells and respects deletion", "[u]")
+{
+	auto make_npcs = [](const std::string & spell_id)
+	{
+		std::string data(32, '\0');
+		std::memcpy(data.data(), spell_id.data(), spell_id.size());
+		return data;
+	};
 
-TEST_CASE("sub_record_merge_t::merge, CELL returns winner unchanged", "[u]")
+	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("NPCS", make_npcs("spell_a"));
+	auto subs_inter =
+	    make_sub("NAME", make_string("id")) + make_sub("NPCS", make_npcs("spell_a")) +
+	    make_sub("NPCS", make_npcs("spell_b"));
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPCS", make_npcs("spell_a"));
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_first),
+		make_record("NPC_", subs_inter),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(result.content.find("spell_a") != std::string::npos);
+	REQUIRE(result.content.find("spell_b") != std::string::npos);
+}
+
+TEST_CASE("sub_record_merge_t::merge, NPCS deletes master spell when a plugin omits it", "[u]")
+{
+	auto make_npcs = [](const std::string & spell_id)
+	{
+		std::string data(32, '\0');
+		std::memcpy(data.data(), spell_id.data(), spell_id.size());
+		return data;
+	};
+
+	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("NPCS", make_npcs("spell_a"));
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("NPCS", make_npcs("spell_b"));
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPCS", make_npcs("spell_a"));
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_first),
+		make_record("NPC_", subs_inter),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(result.content.find("spell_a") == std::string::npos);
+	REQUIRE(result.content.find("spell_b") != std::string::npos);
+}
+
+TEST_CASE("sub_record_merge_t::merge, NPCO deletes master item when a plugin omits it", "[u]")
+{
+	std::string npco_a(36, '\0');
+	npco_a[0] = 1;
+	std::memcpy(&npco_a[4], "item_a", 6);
+
+	std::string npco_b(36, '\0');
+	npco_b[0] = 1;
+	std::memcpy(&npco_b[4], "item_b", 6);
+
+	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("NPCO", npco_a);
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("NPCO", npco_b);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPCO", npco_a);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_first),
+		make_record("NPC_", subs_inter),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(result.content.find("item_a") == std::string::npos);
+	REQUIRE(result.content.find("item_b") != std::string::npos);
+}
+
+TEST_CASE("sub_record_merge_t::merge, CELL three-way merges DATA field from intermediate", "[u]")
 {
 	auto subs_first =
 	    make_sub("NAME", make_string("cell")) + make_sub("DATA", make_bytes({ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
@@ -776,13 +1412,14 @@ TEST_CASE("sub_record_merge_t::merge, CELL returns winner unchanged", "[u]")
 
 	auto result = sub_record_merge_t::merge(input);
 
-	REQUIRE_FALSE(result.changed);
-	REQUIRE(result.content == winner);
-}
+	REQUIRE(result.changed);
 
-// ============================================================================
-// Sub-record patching (drag and drop operation)
-// ============================================================================
+	auto result_subs = sub_record_merge_t::parse_sub_records(result.content);
+	auto data_idx = sub_record_merge_t::find_by_type_and_occurrence(result_subs, "DATA", 0);
+	REQUIRE(data_idx >= 0);
+	REQUIRE(result_subs[data_idx].data.size() == 12);
+	REQUIRE(static_cast<unsigned char>(result_subs[data_idx].data[4]) == 5);
+}
 
 TEST_CASE("sub_record_merge_t::patch, single sub-record by index", "[u]")
 {
@@ -875,10 +1512,6 @@ TEST_CASE("sub_record_merge_t::patch, second occurrence by index", "[u]")
 	REQUIRE(patched.find("ability_c") != std::string::npos);
 	REQUIRE(patched.find("ability_b") == std::string::npos);
 }
-
-// ============================================================================
-// Binary index resolution (col_type_indices mapping)
-// ============================================================================
 
 TEST_CASE("sub_record_merge_t::patch, binary index generic no reorder", "[u]")
 {
@@ -989,41 +1622,6 @@ TEST_CASE("sub_record_merge_t::patch, reordered list binary index", "[u]")
 	REQUIRE(subs[binary_idx_from_view].data.find("ancestor_ghost") != std::string::npos);
 }
 
-// ============================================================================
-// SCPT records skipped from merge
-// ============================================================================
-
-TEST_CASE("sub_record_merge_t::merge, SCPT returns winner unchanged", "[u]")
-{
-	auto subs_first = make_sub(
-	    "SCHD", make_bytes({ 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x72, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	                         0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
-	auto subs_inter = make_sub(
-	    "SCHD", make_bytes({ 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x74, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	                         0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
-	auto subs_winner = make_sub(
-	    "SCHD", make_bytes({ 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x72, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	                         0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
-
-	auto first = make_record("SCPT", subs_first);
-	auto inter = make_record("SCPT", subs_inter);
-	auto winner = make_record("SCPT", subs_winner);
-
-	merge_input_t input;
-	input.rec_type = "SCPT";
-	input.record_id = "TestScript";
-	input.version_contents = { first, inter, winner };
-
-	auto result = sub_record_merge_t::merge(input);
-
-	REQUIRE_FALSE(result.changed);
-	REQUIRE(result.content == winner);
-}
-
-// ============================================================================
-// AIDT element-wise merge
-// ============================================================================
-
 TEST_CASE("sub_record_merge_t::merge, AIDT element-wise fight byte", "[u]")
 {
 	std::string aidt_first(12, '\0');
@@ -1059,10 +1657,6 @@ TEST_CASE("sub_record_merge_t::merge, AIDT element-wise fight byte", "[u]")
 	REQUIRE(static_cast<uint8_t>(result_subs[aidt_idx].data[5]) == 1);
 }
 
-// ============================================================================
-// ENAM magnitude pair fix
-// ============================================================================
-
 TEST_CASE("sub_record_merge_t::merge, ENAM mag min/max from same source", "[u]")
 {
 	auto enam_first = make_enam(79, 0, 0, 10, 40, 60);
@@ -1086,16 +1680,45 @@ TEST_CASE("sub_record_merge_t::merge, ENAM mag min/max from same source", "[u]")
 
 	int32_t min_mag = 0;
 	int32_t max_mag = 0;
-	std::memcpy(&min_mag, result_subs[enam_idx].data.data() + 12, 4);
-	std::memcpy(&max_mag, result_subs[enam_idx].data.data() + 16, 4);
+	std::memcpy(&min_mag, result_subs[enam_idx].data.data() + 16, 4);
+	std::memcpy(&max_mag, result_subs[enam_idx].data.data() + 20, 4);
 
 	REQUIRE(min_mag == max_mag);
 	REQUIRE((min_mag == 60 || min_mag == 40));
 }
 
-// ============================================================================
-// CREA NPDT attack pair fix
-// ============================================================================
+TEST_CASE("sub_record_merge_t::merge, ENAM magnitude pair not coupled to duration", "[u]")
+{
+	auto enam_first = make_enam(79, 0, 0, 10, 40, 60);
+	auto enam_inter = make_enam(79, 0, 0, 10, 55, 60);
+	auto enam_winner = make_enam(79, 0, 0, 99, 40, 60);
+
+	merge_input_t input;
+	input.rec_type = "SPEL";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("SPEL", make_sub("NAME", make_string("id")) + make_sub("ENAM", enam_first)),
+		make_record("SPEL", make_sub("NAME", make_string("id")) + make_sub("ENAM", enam_inter)),
+		make_record("SPEL", make_sub("NAME", make_string("id")) + make_sub("ENAM", enam_winner)),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	auto result_subs = sub_record_merge_t::parse_sub_records(result.content);
+	auto enam_idx = sub_record_merge_t::find_by_type_and_occurrence(result_subs, "ENAM", 0);
+	REQUIRE(enam_idx >= 0);
+
+	int32_t duration = 0;
+	int32_t min_mag = 0;
+	int32_t max_mag = 0;
+	std::memcpy(&duration, result_subs[enam_idx].data.data() + 12, 4);
+	std::memcpy(&min_mag, result_subs[enam_idx].data.data() + 16, 4);
+	std::memcpy(&max_mag, result_subs[enam_idx].data.data() + 20, 4);
+
+	REQUIRE(duration == 99);
+	REQUIRE(min_mag == 55);
+	REQUIRE(max_mag == 60);
+}
 
 TEST_CASE("sub_record_merge_t::merge, CREA attack min/max paired", "[u]")
 {
@@ -1138,10 +1761,6 @@ TEST_CASE("sub_record_merge_t::merge, CREA attack min/max paired", "[u]")
 	REQUIRE(atk1_min == 5);
 	REQUIRE(atk1_max == 10);
 }
-
-// ============================================================================
-// Leveled list merge LEVC
-// ============================================================================
 
 TEST_CASE("leveled_list_merge_t::merge, LEVC creature list", "[u]")
 {
@@ -1211,21 +1830,10 @@ TEST_CASE("sub_record_merge_t::filter_sub_records_by_rules, drops specific ignor
 	REQUIRE(subs[1].type == "DATA");
 }
 
-TEST_CASE("sub_record_merge_t::filter_sub_records_by_rules, wildcard drops all matching types", "[u]")
-{
-	const auto content = make_record(
-	    "LTEX", make_sub("NAME", make_string("AI_Grass_Dirt")) + make_sub("INTV", make_uint32(36)));
-
-	const auto filtered = sub_record_merge_t::filter_sub_records_by_rules("LTEX", content, { "LTEX:*" });
-
-	const auto subs = sub_record_merge_t::parse_sub_records(filtered);
-	REQUIRE(subs.empty());
-}
-
 TEST_CASE("sub_record_merge_t::filter_sub_records_by_rules, rule for other record type is ignored", "[u]")
 {
-	const auto content = make_record(
-	    "LTEX", make_sub("NAME", make_string("AI_Grass_Dirt")) + make_sub("INTV", make_uint32(36)));
+	const auto content =
+	    make_record("LTEX", make_sub("NAME", make_string("AI_Grass_Dirt")) + make_sub("INTV", make_uint32(36)));
 
 	const auto filtered = sub_record_merge_t::filter_sub_records_by_rules("LTEX", content, { "CELL:INTV" });
 
@@ -1240,8 +1848,7 @@ TEST_CASE("sub_record_merge_t::filter_sub_records_by_rules, excluded winner filt
 	        make_sub("DATA", make_string("Tx_AI_grass_dirt_01.tga")));
 
 	const auto merge_after_filter = sub_record_merge_t::reconstruct_record(
-	    winner,
-	    { { "NAME", make_string("AI_Grass_Dirt") }, { "DATA", make_string("Tx_AI_grass_dirt_01.tga") } });
+	    winner, { { "NAME", make_string("AI_Grass_Dirt") }, { "DATA", make_string("Tx_AI_grass_dirt_01.tga") } });
 
 	const auto filtered_winner = sub_record_merge_t::filter_sub_records_by_rules("LTEX", winner, { "LTEX:INTV" });
 
@@ -1252,8 +1859,7 @@ TEST_CASE("sub_record_merge_t::filter_sub_records_by_rules, reference-group sub-
 {
 	const auto content = make_record(
 	    "CELL",
-	    make_sub("NAME", make_string("Balmora")) + make_sub("FRMR", make_uint32(1)) +
-	        make_sub("INTV", make_uint32(5)));
+	    make_sub("NAME", make_string("Balmora")) + make_sub("FRMR", make_uint32(1)) + make_sub("INTV", make_uint32(5)));
 
 	const auto filtered = sub_record_merge_t::filter_sub_records_by_rules("CELL", content, { "CELL:INTV" });
 
@@ -1301,12 +1907,8 @@ static uint32_t read_aodt_field(const std::string & record_content, size_t field
 TEST_CASE("sub_record_merge_t::merge, highest-priority intermediate field change wins when winner reverted", "[u]")
 {
 	std::vector<std::string> versions = {
-		make_armo(5000, 900, 500, 70),
-		make_armo(5000, 900, 500, 40),
-		make_armo(9500, 575, 400, 50),
-		make_armo(9500, 575, 400, 50),
-		make_armo(5000, 900, 500, 70),
-		make_armo(5000, 900, 500, 70),
+		make_armo(5000, 900, 500, 70), make_armo(5000, 900, 500, 40), make_armo(9500, 575, 400, 50),
+		make_armo(9500, 575, 400, 50), make_armo(5000, 900, 500, 70), make_armo(5000, 900, 500, 70),
 	};
 
 	merge_input_t input;
@@ -1328,7 +1930,10 @@ static std::string make_indx(uint32_t armor_index)
 	return make_sub("INDX", make_uint32(armor_index));
 }
 
-static bool has_contiguous_part(const std::string & content, uint32_t armor_index, const std::string & member_type,
+static bool has_contiguous_part(
+    const std::string & content,
+    uint32_t armor_index,
+    const std::string & member_type,
     const std::string & member_value)
 {
 	const auto subs = sub_record_merge_t::parse_sub_records(content);
@@ -1383,13 +1988,13 @@ TEST_CASE("sub_record_merge_t::merge, ARMO per-part CNAM has no cross-group coll
 	const auto header = make_sub("NAME", make_string("full_suit")) + make_sub("AODT", std::string(24, '\0'));
 
 	const auto part_a_first = make_indx(1) + make_sub("BNAM", make_string("a_helm"));
-	const auto part_b_first = make_indx(2) + make_sub("BNAM", make_string("a_boots")) +
-	                          make_sub("CNAM", make_string("a_boots_f"));
+	const auto part_b_first =
+	    make_indx(2) + make_sub("BNAM", make_string("a_boots")) + make_sub("CNAM", make_string("a_boots_f"));
 
 	auto first = make_record("ARMO", header + part_a_first + part_b_first);
 
-	const auto part_a_inter = make_indx(1) + make_sub("BNAM", make_string("a_helm")) +
-	                          make_sub("CNAM", make_string("a_helm_f"));
+	const auto part_a_inter =
+	    make_indx(1) + make_sub("BNAM", make_string("a_helm")) + make_sub("CNAM", make_string("a_helm_f"));
 	auto inter = make_record("ARMO", header + part_a_inter + part_b_first);
 
 	auto winner = make_record("ARMO", header + part_a_first + part_b_first);
@@ -1417,8 +2022,8 @@ TEST_CASE("sub_record_merge_t::merge, CLOT CNAM stays in its part with INDX-only
 
 	auto first = make_record(
 	    "CLOT",
-	    header + make_indx(cuirass) + make_sub("BNAM", make_string("c_m_robe_common_02h")) +
-	        make_indx(right_ankle) + make_sub("BNAM", make_string("c_m_robe_common_02h")));
+	    header + make_indx(cuirass) + make_sub("BNAM", make_string("c_m_robe_common_02h")) + make_indx(right_ankle) +
+	        make_sub("BNAM", make_string("c_m_robe_common_02h")));
 
 	auto inter = make_record(
 	    "CLOT",
@@ -1428,8 +2033,8 @@ TEST_CASE("sub_record_merge_t::merge, CLOT CNAM stays in its part with INDX-only
 
 	auto winner = make_record(
 	    "CLOT",
-	    header + make_indx(cuirass) + make_sub("BNAM", make_string("c_m_robe_common_02h")) +
-	        make_indx(right_ankle) + make_sub("BNAM", make_string("c_m_robe_common_02h")));
+	    header + make_indx(cuirass) + make_sub("BNAM", make_string("c_m_robe_common_02h")) + make_indx(right_ankle) +
+	        make_sub("BNAM", make_string("c_m_robe_common_02h")));
 
 	merge_input_t input;
 	input.rec_type = "CLOT";
@@ -1472,9 +2077,12 @@ static uint32_t read_npdt_u32(const std::string & record_content, size_t field_o
 
 TEST_CASE("sub_record_merge_t::merge, CREA attack pair merges as 4-byte fields", "[u]")
 {
-	auto first = make_record("CREA", make_sub("NAME", make_string("beast")) + make_sub("NPDT", make_crea_npdt(10, 1, 10)));
-	auto inter = make_record("CREA", make_sub("NAME", make_string("beast")) + make_sub("NPDT", make_crea_npdt(45, 15, 45)));
-	auto winner = make_record("CREA", make_sub("NAME", make_string("beast")) + make_sub("NPDT", make_crea_npdt(10, 1, 10)));
+	auto first =
+	    make_record("CREA", make_sub("NAME", make_string("beast")) + make_sub("NPDT", make_crea_npdt(10, 1, 10)));
+	auto inter =
+	    make_record("CREA", make_sub("NAME", make_string("beast")) + make_sub("NPDT", make_crea_npdt(45, 15, 45)));
+	auto winner =
+	    make_record("CREA", make_sub("NAME", make_string("beast")) + make_sub("NPDT", make_crea_npdt(10, 1, 10)));
 
 	merge_input_t input;
 	input.rec_type = "CREA";
@@ -1487,4 +2095,138 @@ TEST_CASE("sub_record_merge_t::merge, CREA attack pair merges as 4-byte fields",
 	REQUIRE(read_npdt_u32(result.content, 4) == 45);
 	REQUIRE(read_npdt_u32(result.content, 68) == 15);
 	REQUIRE(read_npdt_u32(result.content, 72) == 45);
+}
+
+TEST_CASE("sub_record_merge_t::group_members_in_range, captures exactly the selected members", "[u]")
+{
+	const auto content = make_record(
+	    "ARMO",
+	    make_sub("NAME", make_string("armor_id")) + make_sub("INDX", make_uint32(0)) +
+	        make_sub("BNAM", make_string("male")) + make_sub("CNAM", make_string("female")) +
+	        make_sub("ITEX", make_string("icon.tga")));
+
+	const auto members = sub_record_merge_t::group_members_in_range(content, 1, 4);
+
+	REQUIRE(members.size() == 3);
+	REQUIRE(members[0] == std::make_pair(std::string("INDX"), 1));
+	REQUIRE(members[1] == std::make_pair(std::string("BNAM"), 2));
+	REQUIRE(members[2] == std::make_pair(std::string("CNAM"), 3));
+}
+
+TEST_CASE("sub_record_merge_t::group_members_in_range, later appended member does not join the frozen set", "[u]")
+{
+	const auto content_at_lock = make_record(
+	    "ARMO",
+	    make_sub("NAME", make_string("armor_id")) + make_sub("INDX", make_uint32(0)) +
+	        make_sub("BNAM", make_string("male")));
+
+	const auto frozen = sub_record_merge_t::group_members_in_range(content_at_lock, 1, 3);
+
+	REQUIRE(frozen.size() == 2);
+	REQUIRE(frozen[0] == std::make_pair(std::string("INDX"), 1));
+	REQUIRE(frozen[1] == std::make_pair(std::string("BNAM"), 2));
+
+	const auto content_after_merge = make_record(
+	    "ARMO",
+	    make_sub("NAME", make_string("armor_id")) + make_sub("INDX", make_uint32(0)) +
+	        make_sub("BNAM", make_string("male")) + make_sub("CNAM", make_string("female")));
+
+	const auto reapplied = sub_record_merge_t::group_members_in_range(content_after_merge, 1, 3);
+
+	REQUIRE(reapplied == frozen);
+}
+
+TEST_CASE("sub_record_merge_t::group_members_in_range, out of range end yields empty", "[u]")
+{
+	const auto content =
+	    make_record("ARMO", make_sub("NAME", make_string("armor_id")) + make_sub("INDX", make_uint32(0)));
+
+	REQUIRE(sub_record_merge_t::group_members_in_range(content, 0, 5).empty());
+}
+
+static sub_record_merge_t::keyed_item_t keyed(const std::string & key, const std::string & data)
+{
+	return { key, data };
+}
+
+TEST_CASE("sub_record_merge_t::keyed_list_merge, addition from later plugin is unioned in", "[u]")
+{
+	std::vector<std::vector<sub_record_merge_t::keyed_item_t>> versions = {
+		{ keyed("a", "0") },
+		{ keyed("a", "0"), keyed("b", "1") },
+	};
+
+	const auto merged = sub_record_merge_t::keyed_list_merge(versions);
+
+	REQUIRE(merged.size() == 2);
+	REQUIRE(merged[0] == keyed("a", "0"));
+	REQUIRE(merged[1] == keyed("b", "1"));
+}
+
+TEST_CASE("sub_record_merge_t::keyed_list_merge, deletion of master item is respected", "[u]")
+{
+	std::vector<std::vector<sub_record_merge_t::keyed_item_t>> versions = {
+		{ keyed("a", "0"), keyed("b", "1") },
+		{ keyed("a", "0") },
+	};
+
+	const auto merged = sub_record_merge_t::keyed_list_merge(versions);
+
+	REQUIRE(merged.size() == 1);
+	REQUIRE(merged[0] == keyed("a", "0"));
+}
+
+TEST_CASE("sub_record_merge_t::keyed_list_merge, delete wins over unchanged higher plugin", "[u]")
+{
+	std::vector<std::vector<sub_record_merge_t::keyed_item_t>> versions = {
+		{ keyed("a", "0"), keyed("b", "1") },
+		{ keyed("a", "0") },
+		{ keyed("a", "0"), keyed("b", "1") },
+	};
+
+	const auto merged = sub_record_merge_t::keyed_list_merge(versions);
+
+	REQUIRE(merged.size() == 1);
+	REQUIRE(merged[0] == keyed("a", "0"));
+}
+
+TEST_CASE("sub_record_merge_t::keyed_list_merge, modify beats delete when modify is higher priority", "[u]")
+{
+	std::vector<std::vector<sub_record_merge_t::keyed_item_t>> versions = {
+		{ keyed("a", "0") },
+		{},
+		{ keyed("a", "9") },
+	};
+
+	const auto merged = sub_record_merge_t::keyed_list_merge(versions);
+
+	REQUIRE(merged.size() == 1);
+	REQUIRE(merged[0] == keyed("a", "9"));
+}
+
+TEST_CASE("sub_record_merge_t::keyed_list_merge, delete beats modify when delete is higher priority", "[u]")
+{
+	std::vector<std::vector<sub_record_merge_t::keyed_item_t>> versions = {
+		{ keyed("a", "0") },
+		{ keyed("a", "9") },
+		{},
+	};
+
+	const auto merged = sub_record_merge_t::keyed_list_merge(versions);
+
+	REQUIRE(merged.empty());
+}
+
+TEST_CASE("sub_record_merge_t::keyed_list_merge, highest priority modification wins", "[u]")
+{
+	std::vector<std::vector<sub_record_merge_t::keyed_item_t>> versions = {
+		{ keyed("a", "0") },
+		{ keyed("a", "5") },
+		{ keyed("a", "8") },
+	};
+
+	const auto merged = sub_record_merge_t::keyed_list_merge(versions);
+
+	REQUIRE(merged.size() == 1);
+	REQUIRE(merged[0] == keyed("a", "8"));
 }

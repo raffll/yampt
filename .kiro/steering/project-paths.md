@@ -50,7 +50,7 @@ yampt/
 ├── external/               # Third-party submodules (CTranslate2, dictionaries) + local-only build artifacts/models
 ├── models/                 # CTranslate2 translation models
 ├── scripts/                # PowerShell/Python automation scripts
-├── dictionaries/           # Holds only LICENSE; .aff/.dic generated at build from external/dictionaries submodule
+├── docs/dictionaries/      # Holds only LICENSE; .aff/.dic generated at build from external/dictionaries submodule
 ├── x64/Debug/              # Build output
 ├── yampt.sln               # VS 2026 solution
 └── vcpkg.json              # vcpkg manifest
@@ -222,8 +222,9 @@ The `scripts/` folder contains `.bat` templates showing how end-users invoke yam
 
 ### Make base dictionary (two language ESMs → translation pairs)
 ```
-yampt.exe --make-base -f "native\Morrowind.esm" "foreign\Morrowind.esm"
+yampt.exe --make-base -f "foreign\Morrowind.esm" "native\Morrowind.esm"
 ```
+The `-f` order is always foreign first, native second. This yields `old_text = foreign text`, `new_text = native text` (e.g. for EN→PL, `-f en\Morrowind.esm pl\Morrowind.esm` produces `old="Blades"` → `new="Ostrza"`).
 
 ### Merge dictionaries (first-wins precedence)
 ```

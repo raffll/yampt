@@ -10,11 +10,16 @@
 #include <filesystem>
 #include <memory>
 #include <set>
+#include <thread>
 
-void plugin_scan_t::load_plugin(const std::string & path)
+bool plugin_scan_t::load_plugin(const std::string & path)
 {
 	auto p = std::make_unique<loaded_plugin_t>(path);
+	if (!p->esm.is_loaded())
+		return false;
+
 	m_plugins.push_back(std::move(p));
+	return true;
 }
 
 void plugin_scan_t::loaded_plugin_t::parse_master_list()
@@ -96,24 +101,15 @@ void plugin_scan_t::insert_or_update_version(version_descriptor_t desc)
 		entry.display_name = std::move(desc.display_name);
 }
 
-void plugin_scan_t::set_user_ignore_conflict(const std::set<std::string> & rules)
-{
-	m_user_ignore_conflict = rules;
-}
-
-const std::set<std::string> & plugin_scan_t::user_ignore_conflict() const
-{
-	return m_user_ignore_conflict;
-}
-
 void plugin_scan_t::rebuild_conflicts(const conflict_progress_fn_t & progress_fn)
 {
 	m_entries.clear();
 	m_entry_lookup.clear();
+	m_conflict_policy_cache.clear();
 
 	for (int pi = 0; pi < static_cast<int>(m_plugins.size()); ++pi)
 	{
-		if (pi == m_merge_plugin_idx)
+		if (pi == m_active_plugin_idx)
 			continue;
 
 		const auto & idx = m_plugins[pi]->index;
@@ -139,30 +135,66 @@ void plugin_scan_t::rebuild_conflicts(const conflict_progress_fn_t & progress_fn
 		}
 	}
 
-	if (m_merge_plugin_idx >= 0)
+	if (m_active_plugin_idx >= 0)
 	{
-		const auto & store_records = m_merge_store.records();
+		const auto & store_records = m_active_store.records();
 		for (size_t mi = 0; mi < store_records.size(); ++mi)
 		{
-			const auto & merge_rec = store_records[mi];
+			const auto & active_rec = store_records[mi];
 			record_version_t ver;
-			ver.plugin_idx = m_merge_plugin_idx;
+			ver.plugin_idx = m_active_plugin_idx;
 			ver.record_index = mi;
-			insert_or_update_version({ merge_rec.rec_type, merge_rec.record_id, "", "", ver });
+			insert_or_update_version({ active_rec.rec_type, active_rec.record_id, "", "", ver });
 		}
 	}
 
-	const size_t total_entries = m_entries.size();
-	constexpr size_t progress_stride = 256;
+	compute_all_conflicts(progress_fn);
+}
 
-	for (size_t entry_index = 0; entry_index < total_entries; ++entry_index)
+void plugin_scan_t::process_entry_range(size_t begin_index, size_t end_index)
+{
+	for (size_t entry_index = begin_index; entry_index < end_index; ++entry_index)
 	{
 		auto & entry = m_entries[entry_index];
+
+		std::sort(
+		    entry.versions.begin(),
+		    entry.versions.end(),
+		    [](const record_version_t & lhs, const record_version_t & rhs) { return lhs.plugin_idx < rhs.plugin_idx; });
+
 		if (entry.versions.size() >= 2)
 			compute_conflict(entry);
+	}
+}
 
-		if (progress_fn && entry_index % progress_stride == 0)
-			progress_fn(entry_index, total_entries);
+void plugin_scan_t::compute_all_conflicts(const conflict_progress_fn_t & progress_fn)
+{
+	const size_t total_entries = m_entries.size();
+
+	const unsigned int hardware_threads = std::thread::hardware_concurrency();
+	const size_t worker_count = hardware_threads == 0 ? 1 : static_cast<size_t>(hardware_threads);
+
+	constexpr size_t min_entries_per_batch = 512;
+	const size_t batch_size = std::max(min_entries_per_batch, worker_count * min_entries_per_batch);
+
+	for (size_t batch_start = 0; batch_start < total_entries; batch_start += batch_size)
+	{
+		const size_t batch_end = std::min(batch_start + batch_size, total_entries);
+		const size_t batch_count = batch_end - batch_start;
+		const size_t chunk = (batch_count + worker_count - 1) / worker_count;
+
+		std::vector<std::thread> workers;
+		for (size_t chunk_start = batch_start; chunk_start < batch_end; chunk_start += chunk)
+		{
+			const size_t chunk_end = std::min(chunk_start + chunk, batch_end);
+			workers.emplace_back([this, chunk_start, chunk_end] { process_entry_range(chunk_start, chunk_end); });
+		}
+
+		for (auto & worker : workers)
+			worker.join();
+
+		if (progress_fn)
+			progress_fn(batch_end, total_entries);
 	}
 
 	if (progress_fn)
@@ -279,30 +311,16 @@ static void evaluate_schema_fields(const sub_record_schema_t * schema, const slo
 	}
 }
 
-static void apply_worst_this(
-    conflict_entry_t & entry,
-    const conflict_accumulator_t & accum,
-    const std::vector<bool> & is_deleted)
+static void apply_worst_this(conflict_entry_t & entry, const conflict_accumulator_t & accum)
 {
-	(void)is_deleted;
 	const size_t ver_count = entry.versions.size();
-	std::vector<conflict_this_t> worst_this(ver_count, conflict_this_t::unknown);
-	worst_this[0] = conflict_this_t::master;
-
-	for (const auto & slot_ct : accum.per_slot_this)
-	{
-		for (size_t i = 1; i < ver_count; ++i)
-		{
-			if (slot_ct[i] > worst_this[i])
-				worst_this[i] = slot_ct[i];
-		}
-	}
+	const auto worst_this = record_conflict::combine_worst_this(ver_count, accum.per_slot_this);
 
 	for (size_t i = 1; i < ver_count; ++i)
 		entry.versions[i].status = worst_this[i];
 }
 
-void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
+slot_result_t plugin_scan_t::build_slot_result(const conflict_entry_t & entry)
 {
 	const size_t ver_count = entry.versions.size();
 
@@ -313,36 +331,58 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 	{
 		const auto & ver = entry.versions[i];
 
-		if (ver.plugin_idx == m_merge_plugin_idx)
-			contents[i] = m_merge_store.record_content(ver.record_index);
-		else
+		if (ver.plugin_idx == m_active_plugin_idx)
 		{
-			m_plugins[ver.plugin_idx]->esm.select_record(ver.record_index);
-			contents[i] = m_plugins[ver.plugin_idx]->esm.get_record().content;
-
-			const auto & plugin_entries = m_plugins[ver.plugin_idx]->index.entries();
-			if (ver.record_index < plugin_entries.size() && plugin_entries[ver.record_index].has_dele)
-				is_deleted[i] = true;
+			contents[i] = m_active_store.record_content(ver.record_index);
+			continue;
 		}
+
+		contents[i] = m_plugins[ver.plugin_idx]->esm.record_content_at(ver.record_index);
+
+		const auto & plugin_entries = m_plugins[ver.plugin_idx]->index.entries();
+		if (ver.record_index < plugin_entries.size() && plugin_entries[ver.record_index].has_dele)
+			is_deleted[i] = true;
 	}
 
-	entry.slot_result =
-	    std::make_unique<slot_result_t>(conflict_slots::build(entry.rec_type, std::move(contents), is_deleted));
+	return conflict_slots::build(entry.rec_type, std::move(contents), is_deleted);
+}
+
+std::unique_ptr<slot_result_t> plugin_scan_t::build_slot_result_for(const conflict_entry_t & entry)
+{
+	return std::make_unique<slot_result_t>(build_slot_result(entry));
+}
+
+const conflict_policy_t & plugin_scan_t::cached_conflict_policy(
+    const std::string & rec_type,
+    const std::string & sub_type)
+{
+	const std::string cache_key = rec_type + std::string(1, '\0') + sub_type;
+
+	{
+		std::shared_lock<std::shared_mutex> read_lock(*m_conflict_policy_mutex);
+		auto it = m_conflict_policy_cache.find(cache_key);
+		if (it != m_conflict_policy_cache.end())
+			return it->second;
+	}
+
+	const auto policy = record_conflict::find_conflict_policy(rec_type, sub_type);
+
+	std::unique_lock<std::shared_mutex> write_lock(*m_conflict_policy_mutex);
+	return m_conflict_policy_cache.emplace(cache_key, policy).first->second;
+}
+
+void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
+{
+	const size_t ver_count = entry.versions.size();
+
+	const slot_result_t sr = build_slot_result(entry);
+	const auto & is_deleted = sr.is_deleted;
 
 	conflict_accumulator_t accum;
-	const auto & sr = *entry.slot_result;
 
 	for (const auto & slot : sr.aligned)
 	{
-		const auto policy = record_conflict::find_conflict_policy(entry.rec_type, slot.key.type);
-
-		const auto specific_key = entry.rec_type + ":" + slot.key.type;
-		const auto wildcard_key = entry.rec_type + ":*";
-		const bool user_ignore =
-		    m_user_ignore_conflict.count(specific_key) > 0 || m_user_ignore_conflict.count(wildcard_key) > 0;
-
-		if (user_ignore)
-			continue;
+		const auto & policy = cached_conflict_policy(entry.rec_type, slot.key.type);
 
 		std::vector<std::string> slot_values(ver_count);
 		const char * first_data = nullptr;
@@ -377,10 +417,7 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 
 	entry.conflict_all = accum.worst_all;
 
-	if (accum.worst_all <= conflict_all_t::only_one)
-		return;
-
-	apply_worst_this(entry, accum, is_deleted);
+	apply_worst_this(entry, accum);
 }
 
 size_t plugin_scan_t::plugin_count() const
@@ -413,9 +450,14 @@ const plugin_index_t & plugin_scan_t::index(int idx) const
 	return m_plugins[idx]->index;
 }
 
-bool plugin_scan_t::is_merge_plugin(int idx) const
+bool plugin_scan_t::is_active_plugin(int idx) const
 {
-	return idx == m_merge_plugin_idx;
+	return idx == m_active_plugin_idx;
+}
+
+int plugin_scan_t::active_plugin_index() const
+{
+	return m_active_plugin_idx;
 }
 
 const std::vector<conflict_entry_t> & plugin_scan_t::entries() const
@@ -442,24 +484,24 @@ std::vector<std::string> plugin_scan_t::all_types() const
 	return std::vector<std::string>(unique.begin(), unique.end());
 }
 
-void plugin_scan_t::set_merge_plugin(const std::string & filename)
+void plugin_scan_t::set_active_plugin(const std::string & filename)
 {
-	m_merge_plugin_idx = static_cast<int>(m_plugins.size());
+	m_active_plugin_idx = static_cast<int>(m_plugins.size());
 
 	auto plugin = std::make_unique<loaded_plugin_t>();
 	plugin->path = filename;
 	m_plugins.push_back(std::move(plugin));
 
-	m_merge_store.clear();
+	m_active_store.clear();
 }
 
-void plugin_scan_t::set_merge_plugin_from_loaded(int plugin_idx)
+void plugin_scan_t::set_active_from_loaded(int plugin_idx)
 {
 	if (plugin_idx < 0 || plugin_idx >= static_cast<int>(m_plugins.size()))
 		return;
 
-	m_merge_plugin_idx = plugin_idx;
-	m_merge_store.clear();
+	m_active_plugin_idx = plugin_idx;
+	m_active_store.clear();
 
 	auto & plugin = *m_plugins[plugin_idx];
 	const auto & entries = plugin.index.entries();
@@ -468,28 +510,27 @@ void plugin_scan_t::set_merge_plugin_from_loaded(int plugin_idx)
 	{
 		plugin.esm.select_record(entries[i].record_index);
 		const auto & rec = plugin.esm.get_record();
-		m_merge_store.add(entries[i].rec_type, entries[i].record_id, rec.content);
+		m_active_store.add(entries[i].rec_type, entries[i].record_id, rec.content);
 	}
 }
 
-void plugin_scan_t::clear_merge_records()
+void plugin_scan_t::clear_active_records()
 {
-	m_merge_store.clear();
+	m_active_store.clear();
 }
 
-std::vector<merge_record_t> plugin_scan_t::collect_pinned_records() const
+void plugin_scan_t::reload_active_plugin(const std::string & path)
 {
-	return m_merge_store.collect_pinned();
+	if (m_active_plugin_idx < 0 || m_active_plugin_idx >= static_cast<int>(m_plugins.size()))
+		return;
+
+	m_plugins[m_active_plugin_idx] = std::make_unique<loaded_plugin_t>(path);
+	set_active_from_loaded(m_active_plugin_idx);
 }
 
-void plugin_scan_t::restore_pinned_records(const std::vector<merge_record_t> & pinned)
+void plugin_scan_t::copy_record_to_active(int source_plugin, size_t record_index)
 {
-	m_merge_store.restore_pinned(pinned);
-}
-
-void plugin_scan_t::copy_record_to_merge(int source_plugin, size_t record_index)
-{
-	if (m_merge_plugin_idx < 0)
+	if (m_active_plugin_idx < 0)
 		return;
 
 	m_plugins[source_plugin]->esm.select_record(record_index);
@@ -500,75 +541,86 @@ void plugin_scan_t::copy_record_to_merge(int source_plugin, size_t record_index)
 		return;
 
 	const auto & indexed = plugin_entries[record_index];
-	copy_record_to_merge_raw(indexed.rec_type, indexed.record_id, rec.content);
+	copy_record_to_active_raw(indexed.rec_type, indexed.record_id, rec.content);
 }
 
-void plugin_scan_t::copy_record_to_merge_raw(
+void plugin_scan_t::copy_record_to_active_raw(
     const std::string & rec_type,
     const std::string & record_id,
     const std::string & content)
 {
-	if (m_merge_plugin_idx < 0)
+	if (m_active_plugin_idx < 0)
 		return;
 
-	m_merge_store.update_or_add(rec_type, record_id, content);
+	m_active_store.update_or_add(rec_type, record_id, content);
 }
 
-void plugin_scan_t::pin_record_to_merge(
-    const std::string & rec_type,
-    const std::string & record_id,
-    const std::string & content)
+void plugin_scan_t::add_active_lock(const merge_lock_t & lock)
 {
-	if (m_merge_plugin_idx < 0)
-		return;
+	for (auto & existing : m_merge_locks)
+	{
+		if (existing.same_target(lock))
+		{
+			existing = lock;
+			return;
+		}
+	}
 
-	m_merge_store.update_or_add_pinned(rec_type, record_id, content);
+	m_merge_locks.push_back(lock);
 }
 
-bool plugin_scan_t::is_merge_pinned(const std::string & rec_type, const std::string & record_id) const
+void plugin_scan_t::remove_active_lock(const merge_lock_t & lock)
 {
-	return m_merge_store.is_pinned(rec_type, record_id);
+	auto it = std::remove_if(
+	    m_merge_locks.begin(),
+	    m_merge_locks.end(),
+	    [&](const merge_lock_t & existing) { return existing.same_target(lock); });
+	m_merge_locks.erase(it, m_merge_locks.end());
 }
 
-void plugin_scan_t::add_merge_lock(const merge_lock_t & lock)
+bool plugin_scan_t::has_active_lock(const merge_lock_t & lock) const
 {
-	m_merge_store.add_lock(lock);
+	for (const auto & existing : m_merge_locks)
+	{
+		if (existing.same_target(lock))
+			return true;
+	}
+
+	return false;
 }
 
-void plugin_scan_t::remove_merge_lock(const merge_lock_t & lock)
-{
-	m_merge_store.remove_lock(lock);
-}
-
-bool plugin_scan_t::has_merge_lock(const merge_lock_t & lock) const
-{
-	return m_merge_store.has_lock(lock);
-}
-
-std::vector<merge_lock_t> plugin_scan_t::merge_locks_for(const std::string & rec_type, const std::string & record_id)
+std::vector<merge_lock_t> plugin_scan_t::active_locks_for(const std::string & rec_type, const std::string & record_id)
     const
 {
-	return m_merge_store.locks_for(rec_type, record_id);
+	std::vector<merge_lock_t> result;
+	for (const auto & lock : m_merge_locks)
+	{
+		if (lock.rec_type == rec_type && lock.record_id == record_id)
+			result.push_back(lock);
+	}
+
+	return result;
 }
 
-const std::vector<merge_lock_t> & plugin_scan_t::merge_locks() const
+const std::vector<merge_lock_t> & plugin_scan_t::active_locks() const
 {
-	return m_merge_store.locks();
+	return m_merge_locks;
 }
 
-void plugin_scan_t::set_merge_locks(const std::vector<merge_lock_t> & locks)
+void plugin_scan_t::set_active_locks(const std::vector<merge_lock_t> & locks)
 {
-	m_merge_store.set_locks(locks);
+	m_merge_locks = locks;
 }
 
-const std::string * plugin_scan_t::find_merge_content(const std::string & rec_type, const std::string & record_id) const
+const std::string * plugin_scan_t::find_active_content(const std::string & rec_type, const std::string & record_id)
+    const
 {
-	return m_merge_store.find_content(rec_type, record_id);
+	return m_active_store.find_content(rec_type, record_id);
 }
 
-void plugin_scan_t::remove_from_merge(const std::string & type, const std::string & id)
+void plugin_scan_t::remove_from_active(const std::string & type, const std::string & id)
 {
-	m_merge_store.remove(type, id);
+	m_active_store.remove(type, id);
 }
 
 void plugin_scan_t::recompute_single_conflict(const std::string & rec_type, const std::string & record_id)
@@ -577,15 +629,15 @@ void plugin_scan_t::recompute_single_conflict(const std::string & rec_type, cons
 	auto it_entry = m_entry_lookup.find(lookup_key);
 	if (it_entry == m_entry_lookup.end())
 	{
-		const auto & store_records = m_merge_store.records();
+		const auto & store_records = m_active_store.records();
 		for (size_t mi = 0; mi < store_records.size(); ++mi)
 		{
-			const auto & merge_rec = store_records[mi];
-			if (merge_rec.rec_type != rec_type || merge_rec.record_id != record_id)
+			const auto & active_rec = store_records[mi];
+			if (active_rec.rec_type != rec_type || active_rec.record_id != record_id)
 				continue;
 
 			record_version_t ver;
-			ver.plugin_idx = m_merge_plugin_idx;
+			ver.plugin_idx = m_active_plugin_idx;
 			ver.record_index = mi;
 			insert_or_update_version({ rec_type, record_id, "", "", ver });
 			break;
@@ -600,25 +652,29 @@ void plugin_scan_t::recompute_single_conflict(const std::string & rec_type, cons
 	    std::remove_if(
 	        entry.versions.begin(),
 	        entry.versions.end(),
-	        [this](const record_version_t & ver) { return ver.plugin_idx == m_merge_plugin_idx; }),
+	        [this](const record_version_t & ver) { return ver.plugin_idx == m_active_plugin_idx; }),
 	    entry.versions.end());
 
-	const auto & store_records = m_merge_store.records();
+	const auto & store_records = m_active_store.records();
 	for (size_t mi = 0; mi < store_records.size(); ++mi)
 	{
-		const auto & merge_rec = store_records[mi];
-		if (merge_rec.rec_type != rec_type || merge_rec.record_id != record_id)
+		const auto & active_rec = store_records[mi];
+		if (active_rec.rec_type != rec_type || active_rec.record_id != record_id)
 			continue;
 
 		record_version_t ver;
-		ver.plugin_idx = m_merge_plugin_idx;
+		ver.plugin_idx = m_active_plugin_idx;
 		ver.record_index = mi;
 		entry.versions.push_back(ver);
 		break;
 	}
 
+	std::sort(
+	    entry.versions.begin(),
+	    entry.versions.end(),
+	    [](const record_version_t & lhs, const record_version_t & rhs) { return lhs.plugin_idx < rhs.plugin_idx; });
+
 	entry.conflict_all = conflict_all_t::only_one;
-	entry.slot_result.reset();
 
 	if (entry.versions.size() >= 2)
 		compute_conflict(entry);
@@ -626,10 +682,10 @@ void plugin_scan_t::recompute_single_conflict(const std::string & rec_type, cons
 
 std::string plugin_scan_t::read_record_content(int plugin_idx, size_t record_index)
 {
-	if (plugin_idx == m_merge_plugin_idx)
+	if (plugin_idx == m_active_plugin_idx)
 	{
-		if (record_index < m_merge_store.count())
-			return m_merge_store.record_content(record_index);
+		if (record_index < m_active_store.count())
+			return m_active_store.record_content(record_index);
 
 		return {};
 	}
@@ -641,29 +697,29 @@ std::string plugin_scan_t::read_record_content(int plugin_idx, size_t record_ind
 	return m_plugins[plugin_idx]->esm.get_record().content;
 }
 
-bool plugin_scan_t::has_merge() const
+bool plugin_scan_t::has_active() const
 {
-	return m_merge_plugin_idx >= 0;
+	return m_active_plugin_idx >= 0;
 }
 
-size_t plugin_scan_t::merge_record_count() const
+size_t plugin_scan_t::active_record_count() const
 {
-	return m_merge_store.count();
+	return m_active_store.count();
 }
 
-const std::string & plugin_scan_t::merge_record_content(size_t index) const
+const std::string & plugin_scan_t::active_record_content(size_t index) const
 {
-	return m_merge_store.record_content(index);
+	return m_active_store.record_content(index);
 }
 
-const std::string & plugin_scan_t::merge_record_type(size_t index) const
+const std::string & plugin_scan_t::active_record_type(size_t index) const
 {
-	return m_merge_store.record_type(index);
+	return m_active_store.record_type(index);
 }
 
-const std::string & plugin_scan_t::merge_record_id(size_t index) const
+const std::string & plugin_scan_t::active_record_id(size_t index) const
 {
-	return m_merge_store.record_id(index);
+	return m_active_store.record_id(index);
 }
 
 size_t plugin_scan_t::itm_count(int plugin_idx) const

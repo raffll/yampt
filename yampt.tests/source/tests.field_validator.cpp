@@ -244,3 +244,83 @@ TEST_CASE("field_validator::validate_field, signed integer with enum_names", "[u
 		REQUIRE_FALSE(result.valid);
 	}
 }
+
+TEST_CASE("field_validator::range_hint, unsigned integer ranges", "[u]")
+{
+	SECTION("u8")
+	{
+		field_def_t field = { "val", field_type_t::u8, 0, 1, nullptr, nullptr, 0, nullptr };
+		REQUIRE(field_validator::range_hint(field, 0) == "0 to 255");
+	}
+	SECTION("u16")
+	{
+		field_def_t field = { "val", field_type_t::u16, 0, 2, nullptr, nullptr, 0, nullptr };
+		REQUIRE(field_validator::range_hint(field, 0) == "0 to 65535");
+	}
+	SECTION("u32")
+	{
+		field_def_t field = { "val", field_type_t::u32, 0, 4, nullptr, nullptr, 0, nullptr };
+		REQUIRE(field_validator::range_hint(field, 0) == "0 to 4294967295");
+	}
+}
+
+TEST_CASE("field_validator::range_hint, signed integer ranges", "[u]")
+{
+	SECTION("i8")
+	{
+		field_def_t field = { "val", field_type_t::i8, 0, 1, nullptr, nullptr, 0, nullptr };
+		REQUIRE(field_validator::range_hint(field, 0) == "-128 to 127");
+	}
+	SECTION("i32")
+	{
+		field_def_t field = { "val", field_type_t::i32, 0, 4, nullptr, nullptr, 0, nullptr };
+		REQUIRE(field_validator::range_hint(field, 0) == "-2147483648 to 2147483647");
+	}
+}
+
+TEST_CASE("field_validator::range_hint, float and text and bool", "[u]")
+{
+	SECTION("float")
+	{
+		field_def_t field = { "val", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr };
+		REQUIRE(field_validator::range_hint(field, 0) == "decimal number");
+	}
+	SECTION("fixed string uses field size")
+	{
+		field_def_t field = { "val", field_type_t::string_fixed, 0, 32, nullptr, nullptr, 0, nullptr };
+		REQUIRE(field_validator::range_hint(field, 0) == "up to 32 bytes");
+	}
+	SECTION("bool_bit")
+	{
+		field_def_t field = { "val", field_type_t::bool_bit, 0, 1, nullptr, nullptr, 0, nullptr };
+		REQUIRE(field_validator::range_hint(field, 0) == "Yes or No");
+	}
+}
+
+TEST_CASE("field_validator::range_hint, hex fields report byte count", "[u]")
+{
+	SECTION("binary uses field size")
+	{
+		field_def_t field = { "val", field_type_t::binary, 0, 3, nullptr, nullptr, 0, nullptr };
+		REQUIRE(field_validator::range_hint(field, 0) == "up to 3 bytes (hex)");
+	}
+	SECTION("raw uses existing_sub_size")
+	{
+		field_def_t field = { "val", field_type_t::raw, 0, 0, nullptr, nullptr, 0, nullptr };
+		REQUIRE(field_validator::range_hint(field, 5) == "up to 5 bytes (hex)");
+	}
+}
+
+TEST_CASE("field_validator::range_hint, combo-driven fields have no hint", "[u]")
+{
+	SECTION("enum")
+	{
+		field_def_t field = { "val", field_type_t::enum_u8, 0, 1, enum_names, nullptr, 0, nullptr };
+		REQUIRE(field_validator::range_hint(field, 0).empty());
+	}
+	SECTION("flags")
+	{
+		field_def_t field = { "val", field_type_t::flags_u32, 0, 4, nullptr, flag_names, 3, nullptr };
+		REQUIRE(field_validator::range_hint(field, 0).empty());
+	}
+}

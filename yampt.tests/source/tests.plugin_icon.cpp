@@ -1,0 +1,156 @@
+#include <catch2/catch_all.hpp>
+#include <view/plugin_icon.hpp>
+
+namespace {
+
+using namespace plugin_icon::glyph;
+
+QString build(const plugin_icon::tier_flags_t & flags)
+{
+	return plugin_icon::prefix(flags);
+}
+
+QString active_label()
+{
+	return QCoreApplication::translate("yEditor", "[Active]");
+}
+
+} // namespace
+
+TEST_CASE("plugin_icon::has_esm_extension, true only for .esm suffix", "[u]")
+{
+	REQUIRE(plugin_icon::has_esm_extension("Morrowind.esm"));
+	REQUIRE(plugin_icon::has_esm_extension("Morrowind.ESM"));
+	REQUIRE_FALSE(plugin_icon::has_esm_extension("Morrowind.esp"));
+	REQUIRE_FALSE(plugin_icon::has_esm_extension(".esm"));
+	REQUIRE_FALSE(plugin_icon::has_esm_extension("esm"));
+}
+
+TEST_CASE("plugin_icon::path_is_overwrite, detects overwrite folder in either separator", "[u]")
+{
+	REQUIRE(plugin_icon::path_is_overwrite("C:/mods/overwrite/plugin.esp"));
+	REQUIRE(plugin_icon::path_is_overwrite("C:\\mods\\overwrite\\plugin.esp"));
+	REQUIRE_FALSE(plugin_icon::path_is_overwrite("C:/mods/normal/plugin.esp"));
+	REQUIRE_FALSE(plugin_icon::path_is_overwrite("C:/overwrite.esp"));
+}
+
+TEST_CASE("plugin_icon::prefix, merged patch shows gear base tier", "[u]")
+{
+	plugin_icon::tier_flags_t flags;
+	flags.filename = merged_patch::filename;
+
+	const auto result = build(flags);
+	REQUIRE(result.startsWith(QString::fromUtf8(gear)));
+	REQUIRE_FALSE(result.contains(QString::fromUtf8(scroll)));
+	REQUIRE_FALSE(result.contains(QString::fromUtf8(page)));
+}
+
+TEST_CASE("plugin_icon::prefix, master shows scroll base tier", "[u]")
+{
+	plugin_icon::tier_flags_t flags;
+	flags.filename = "Tribunal.esm";
+
+	REQUIRE(build(flags).startsWith(QString::fromUtf8(scroll)));
+}
+
+TEST_CASE("plugin_icon::prefix, regular plugin shows page base tier", "[u]")
+{
+	plugin_icon::tier_flags_t flags;
+	flags.filename = "MyMod.esp";
+
+	REQUIRE(build(flags).startsWith(QString::fromUtf8(page)));
+}
+
+TEST_CASE("plugin_icon::prefix, no excluded glyph and guard still shows", "[u]")
+{
+	plugin_icon::tier_flags_t flags;
+	flags.filename = "MyMod.esp";
+	flags.is_guard = true;
+
+	const auto result = build(flags);
+	REQUIRE_FALSE(result.contains(QString::fromUtf8(no_entry)));
+	REQUIRE(result.contains(QString::fromUtf8(shield)));
+}
+
+TEST_CASE("plugin_icon::prefix, guard shield shows when not excluded", "[u]")
+{
+	plugin_icon::tier_flags_t flags;
+	flags.filename = "MyMod.esp";
+	flags.is_guard = true;
+
+	REQUIRE(build(flags).contains(QString::fromUtf8(shield)));
+}
+
+TEST_CASE("plugin_icon::prefix, shows a single role icon then active label", "[u]")
+{
+	plugin_icon::tier_flags_t flags;
+	flags.filename = "MyMod.esp";
+	flags.is_overridden = true;
+	flags.is_guard = true;
+	flags.is_active = true;
+
+	const auto result = build(flags);
+	const int shield_pos = result.indexOf(QString::fromUtf8(shield));
+	const int active_pos = result.indexOf(active_label());
+
+	REQUIRE(shield_pos >= 0);
+	REQUIRE(shield_pos < active_pos);
+	REQUIRE_FALSE(result.contains(QString::fromUtf8(page)));
+	REQUIRE_FALSE(result.contains(QString::fromUtf8(bolt)));
+}
+
+TEST_CASE("plugin_icon::role_icon, guard wins over overwrite and base type", "[u]")
+{
+	plugin_icon::tier_flags_t flags;
+	flags.filename = "Tribunal.esm";
+	flags.is_overridden = true;
+	flags.is_guard = true;
+
+	REQUIRE(plugin_icon::role_icon(flags) == QString::fromUtf8(shield));
+}
+
+TEST_CASE("plugin_icon::role_icon, merged patch wins over overwrite", "[u]")
+{
+	plugin_icon::tier_flags_t flags;
+	flags.filename = merged_patch::filename;
+	flags.is_overridden = true;
+
+	REQUIRE(plugin_icon::role_icon(flags) == QString::fromUtf8(gear));
+}
+
+TEST_CASE("plugin_icon::role_icon, overwrite wins over base type", "[u]")
+{
+	plugin_icon::tier_flags_t flags;
+	flags.filename = "Tribunal.esm";
+	flags.is_overridden = true;
+
+	REQUIRE(plugin_icon::role_icon(flags) == QString::fromUtf8(bolt));
+}
+
+TEST_CASE("plugin_icon::prefix, merged patch omits overwrite bolt", "[u]")
+{
+	plugin_icon::tier_flags_t flags;
+	flags.filename = merged_patch::filename;
+	flags.is_overridden = true;
+
+	const auto result = build(flags);
+	REQUIRE(result.contains(QString::fromUtf8(gear)));
+	REQUIRE_FALSE(result.contains(QString::fromUtf8(bolt)));
+}
+
+TEST_CASE("plugin_icon::prefix, active label omitted when inactive", "[u]")
+{
+	plugin_icon::tier_flags_t flags;
+	flags.filename = "MyMod.esp";
+	flags.is_active = false;
+
+	REQUIRE_FALSE(build(flags).contains(active_label()));
+}
+
+TEST_CASE("plugin_icon::prefix, plain plugin emits only base tier and trailing space", "[u]")
+{
+	plugin_icon::tier_flags_t flags;
+	flags.filename = "MyMod.esp";
+
+	REQUIRE(build(flags) == QString::fromUtf8(page) + " ");
+}

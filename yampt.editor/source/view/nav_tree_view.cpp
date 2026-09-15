@@ -3,6 +3,7 @@
 #include <QDragEnterEvent>
 #include <QDragMoveEvent>
 #include <QDropEvent>
+#include <QHeaderView>
 #include <QMimeData>
 #include <QSignalBlocker>
 #include <QTreeView>
@@ -18,6 +19,8 @@ nav_tree_view_t::nav_tree_view_t(plugin_scan_t & scan, QWidget * parent)
 	m_tree->setDragEnabled(false);
 	m_tree->setAcceptDrops(false);
 	m_tree->setSortingEnabled(true);
+	m_tree->setSelectionBehavior(QAbstractItemView::SelectRows);
+	m_tree->setAllColumnsShowFocus(true);
 	m_tree->setContextMenuPolicy(Qt::CustomContextMenu);
 	layout->addWidget(m_tree);
 
@@ -26,6 +29,10 @@ nav_tree_view_t::nav_tree_view_t(plugin_scan_t & scan, QWidget * parent)
 
 	const int id_column_width = m_tree->fontMetrics().horizontalAdvance(QString(30, '0')) + m_tree->indentation();
 	m_tree->setColumnWidth(0, id_column_width);
+
+	m_tree->header()->setStretchLastSection(true);
+	m_tree->header()->setSectionResizeMode(0, QHeaderView::Interactive);
+	m_tree->header()->setSectionResizeMode(1, QHeaderView::Stretch);
 
 	connect(
 	    m_tree->selectionModel(),
@@ -67,14 +74,41 @@ void nav_tree_view_t::rebuild()
 
 void nav_tree_view_t::rebuild_preserving_state()
 {
+	const auto selected = current_selection();
+
 	save_expansion_state();
 	m_model->rebuild();
 	restore_expansion_state();
+
+	restore_selection(selected);
+}
+
+void nav_tree_view_t::restore_selection(const nav_tree_model_t::node_info_t & info)
+{
+	if (info.plugin_idx < 0)
+		return;
+
+	const auto index = m_model->index_for_node(info);
+	if (!index.isValid())
+		return;
+
+	const QSignalBlocker blocker(m_tree->selectionModel());
+	m_tree->setCurrentIndex(index);
 }
 
 void nav_tree_view_t::refresh_colors()
 {
 	m_model->refresh_colors();
+}
+
+void nav_tree_view_t::notify_record_changed(const std::string & rec_type, const std::string & record_id)
+{
+	m_model->notify_record_changed(rec_type, record_id);
+}
+
+void nav_tree_view_t::notify_plugin_changed(int plugin_idx)
+{
+	m_model->notify_plugin_changed(plugin_idx);
 }
 
 void nav_tree_view_t::set_filter(const nav_tree_model_t::filter_state_t & state)
@@ -95,11 +129,6 @@ void nav_tree_view_t::set_hide_duplicates(bool hide)
 void nav_tree_view_t::set_show_deleted_strikeout(bool value)
 {
 	m_model->set_show_deleted_strikeout(value);
-}
-
-void nav_tree_view_t::set_excluded_plugins(const std::set<std::string> * excluded)
-{
-	m_model->set_excluded_plugins(excluded);
 }
 
 void nav_tree_view_t::set_patch_plugins(const std::set<std::string> * patch)
@@ -147,7 +176,6 @@ void nav_tree_view_t::select_record(const std::string & rec_type, const std::str
 
 	const QSignalBlocker blocker(m_tree->selectionModel());
 	m_tree->setCurrentIndex(index);
-	m_tree->scrollTo(index);
 }
 
 QModelIndex nav_tree_view_t::find_index(const std::string & rec_type, const std::string & record_id) const
@@ -165,12 +193,17 @@ QTreeView * nav_tree_view_t::tree_widget() const
 	return m_tree;
 }
 
+std::string nav_tree_view_t::node_path_key(const QModelIndex & index) const
+{
+	const auto & info = m_model->node_at(index);
+	return std::to_string(info.plugin_idx) + "/" + info.rec_type + "/" + info.record_id;
+}
+
 void nav_tree_view_t::save_expansion_state()
 {
 	m_expanded_items.clear();
 
-	std::function<void(const QModelIndex &, const std::string &)> collect =
-	    [&](const QModelIndex & parent, const std::string & path)
+	std::function<void(const QModelIndex &)> collect = [&](const QModelIndex & parent)
 	{
 		const auto rows = m_model->rowCount(parent);
 		for (int i = 0; i < rows; ++i)
@@ -178,25 +211,21 @@ void nav_tree_view_t::save_expansion_state()
 			const auto & idx = m_model->index(i, 0, parent);
 			if (!idx.isValid())
 				continue;
-
-			const auto & text = m_model->data(idx, Qt::DisplayRole).toString().toStdString();
-			const auto & full_path = path + "/" + text;
 
 			if (!m_tree->isExpanded(idx))
 				continue;
 
-			m_expanded_items.insert(full_path);
-			collect(idx, full_path);
+			m_expanded_items.insert(node_path_key(idx));
+			collect(idx);
 		}
 	};
 
-	collect(QModelIndex(), "");
+	collect(QModelIndex());
 }
 
 void nav_tree_view_t::restore_expansion_state()
 {
-	std::function<void(const QModelIndex &, const std::string &)> restore =
-	    [&](const QModelIndex & parent, const std::string & path)
+	std::function<void(const QModelIndex &)> restore = [&](const QModelIndex & parent)
 	{
 		const auto rows = m_model->rowCount(parent);
 		for (int i = 0; i < rows; ++i)
@@ -205,18 +234,15 @@ void nav_tree_view_t::restore_expansion_state()
 			if (!idx.isValid())
 				continue;
 
-			const auto & text = m_model->data(idx, Qt::DisplayRole).toString().toStdString();
-			const auto & full_path = path + "/" + text;
-
-			if (!m_expanded_items.count(full_path))
+			if (!m_expanded_items.count(node_path_key(idx)))
 				continue;
 
 			m_tree->expand(idx);
-			restore(idx, full_path);
+			restore(idx);
 		}
 	};
 
-	restore(QModelIndex(), "");
+	restore(QModelIndex());
 }
 
 bool nav_tree_view_t::eventFilter(QObject * obj, QEvent * event)

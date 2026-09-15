@@ -12,17 +12,12 @@ public:
 		std::string rec_type;
 		std::string record_id;
 		std::string content;
-		bool pinned = false;
 	};
 
 	void clear();
-	std::vector<merge_record_t> collect_pinned_records() const;
-	void restore_pinned_records(const std::vector<merge_record_t> & pinned);
 
 	void add_record(const std::string & rec_type, const std::string & record_id, const std::string & content);
 	void add_record_raw(const std::string & rec_type, const std::string & record_id, const std::string & content);
-	void pin_record(const std::string & rec_type, const std::string & record_id, const std::string & content);
-	bool is_pinned(const std::string & rec_type, const std::string & record_id) const;
 	const std::string * find_content(const std::string & rec_type, const std::string & record_id) const;
 	void remove_record(const std::string & type, const std::string & id);
 

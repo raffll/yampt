@@ -1,6 +1,6 @@
 #include <catch2/catch_all.hpp>
-#include <editor/find_replace.hpp>
 #include <editor/edit_history.hpp>
+#include <editor/find_replace.hpp>
 #include <io/dict_writer.hpp>
 #include <model/dict_document.hpp>
 #include <utility/app_logger.hpp>

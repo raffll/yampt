@@ -38,7 +38,7 @@ foreach ($name in @("Morrowind", "Tribunal", "Bloodmoon")) {
 Write-Host "=== make-base EN to PL ===" -ForegroundColor Cyan
 foreach ($name in @("Morrowind", "Tribunal", "Bloodmoon")) {
     Write-Host "  $name..."
-    & $yampt --make-base -f "$master\pl\$name.esm" "$master\en\$name.esm"
+    & $yampt --make-base -f "$master\en\$name.esm" "$master\pl\$name.esm"
     if ($LASTEXITCODE -ne 0) { Write-Host "  FAILED" -ForegroundColor Red; Pop-Location; exit 1 }
     Move-Item -Force "$name.BASE.json" "$testDir\pl\${name}_en_pl.json"
 }
@@ -46,7 +46,7 @@ foreach ($name in @("Morrowind", "Tribunal", "Bloodmoon")) {
 Write-Host "=== make-base EN to DE ===" -ForegroundColor Cyan
 foreach ($name in @("Morrowind", "Tribunal", "Bloodmoon")) {
     Write-Host "  $name..."
-    & $yampt --make-base -f "$master\de\$name.esm" "$master\en\$name.esm"
+    & $yampt --make-base -f "$master\en\$name.esm" "$master\de\$name.esm"
     if ($LASTEXITCODE -ne 0) { Write-Host "  FAILED" -ForegroundColor Red; Pop-Location; exit 1 }
     Move-Item -Force "$name.BASE.json" "$testDir\de\${name}_en_de.json"
 }
@@ -54,7 +54,7 @@ foreach ($name in @("Morrowind", "Tribunal", "Bloodmoon")) {
 Write-Host "=== make-base EN to FR ===" -ForegroundColor Cyan
 foreach ($name in @("Morrowind", "Tribunal", "Bloodmoon")) {
     Write-Host "  $name..."
-    & $yampt --make-base -f "$master\fr\$name.esm" "$master\en\$name.esm"
+    & $yampt --make-base -f "$master\en\$name.esm" "$master\fr\$name.esm"
     if ($LASTEXITCODE -ne 0) { Write-Host "  FAILED" -ForegroundColor Red; Pop-Location; exit 1 }
     Move-Item -Force "$name.BASE.json" "$testDir\fr\${name}_en_fr.json"
 }

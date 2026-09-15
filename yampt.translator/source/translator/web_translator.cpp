@@ -155,8 +155,7 @@ void web_translator_t::fetch_models()
 
 	if (!is_available())
 	{
-		emit models_fetch_failed(
-		    QCoreApplication::translate("yTranslator", "provider not configured").toStdString());
+		emit models_fetch_failed(QCoreApplication::translate("yTranslator", "provider not configured").toStdString());
 		return;
 	}
 

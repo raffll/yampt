@@ -10,11 +10,10 @@ static bool needs_quoting(const std::string & value)
 	if (value.empty())
 		return true;
 
-	static const std::unordered_set<std::string> reserved_words = {
-		"true", "false", "yes", "no", "on", "off", "null", "~",
-		"True", "False", "Yes", "No", "On", "Off", "Null",
-		"TRUE", "FALSE", "YES", "NO", "ON", "OFF", "NULL"
-	};
+	static const std::unordered_set<std::string> reserved_words = { "true", "false", "yes",  "no",    "on",    "off",
+		                                                            "null", "~",     "True", "False", "Yes",   "No",
+		                                                            "On",   "Off",   "Null", "TRUE",  "FALSE", "YES",
+		                                                            "NO",   "ON",    "OFF",  "NULL" };
 
 	if (reserved_words.count(value))
 		return true;

@@ -4,13 +4,15 @@
 #include <decoder/field_validator.hpp>
 #include <decoder/scvr_condition.hpp>
 #include <scanner/record_conflict.hpp>
-#include <algorithm>
+#include <utility/char_diff.hpp>
+#include <utility/record_behavior.hpp>
 #include <string>
 #include <vector>
 #include <QAbstractItemView>
 #include <QComboBox>
 #include <QEvent>
 #include <QHBoxLayout>
+#include <QLabel>
 #include <QModelIndex>
 #include <QMouseEvent>
 #include <QPushButton>
@@ -19,6 +21,7 @@
 #include <QTextCharFormat>
 #include <QTextEdit>
 #include <QVBoxLayout>
+#include <theme_system.hpp>
 
 namespace {
 
@@ -32,132 +35,39 @@ void set_plain_text_reset(QTextEdit * edit, const std::string & text)
 	edit->setPlainText(QString::fromStdString(text));
 }
 
-std::vector<std::string> split_lines(const std::string & text)
+QList<QTextEdit::ExtraSelection> build_diff_selections(
+    QTextEdit * edit,
+    const std::vector<diff_segment_t> & segments,
+    diff_op_t pane_operation,
+    color_name_t color)
 {
-	std::vector<std::string> lines;
-	std::string current;
+	QList<QTextEdit::ExtraSelection> selections;
 
-	for (const char character : text)
+	QTextCharFormat diff_format;
+	diff_format.setBackground(theme_system_t::instance().get_color(color));
+
+	int char_position = 0;
+	for (const auto & segment : segments)
 	{
-		if (character != '\n')
-		{
-			current += character;
+		if (segment.operation != diff_op_t::unchanged && segment.operation != pane_operation)
 			continue;
+
+		const int char_length = static_cast<int>(QString::fromStdString(segment.text).size());
+
+		if (segment.operation == pane_operation)
+		{
+			QTextEdit::ExtraSelection selection;
+			selection.format = diff_format;
+			selection.cursor = edit->textCursor();
+			selection.cursor.setPosition(char_position);
+			selection.cursor.setPosition(char_position + char_length, QTextCursor::KeepAnchor);
+			selections.append(selection);
 		}
 
-		if (!current.empty() && current.back() == '\r')
-			current.pop_back();
-
-		lines.push_back(current);
-		current.clear();
+		char_position += char_length;
 	}
 
-	if (!current.empty() && current.back() == '\r')
-		current.pop_back();
-
-	lines.push_back(current);
-
-	return lines;
-}
-
-std::string trim_indentation(const std::string & line)
-{
-	const auto start = line.find_first_not_of(" \t\r");
-	if (start == std::string::npos)
-		return {};
-
-	return line.substr(start);
-}
-
-QString line_to_html(const std::string & line, const char * background)
-{
-	const auto escaped = QString::fromStdString(line).toHtmlEscaped();
-	if (background == nullptr)
-		return escaped;
-
-	return QString("<span style='background-color:%1;'>").arg(background) + escaped + "</span>";
-}
-
-std::vector<std::vector<int>> build_line_lcs(
-    const std::vector<std::string> & left_keys,
-    const std::vector<std::string> & right_keys)
-{
-	const auto rows = left_keys.size();
-	const auto cols = right_keys.size();
-	std::vector<std::vector<int>> matrix(rows + 1, std::vector<int>(cols + 1, 0));
-
-	for (size_t row = 1; row <= rows; ++row)
-	{
-		for (size_t col = 1; col <= cols; ++col)
-		{
-			if (left_keys[row - 1] == right_keys[col - 1])
-				matrix[row][col] = matrix[row - 1][col - 1] + 1;
-			else
-				matrix[row][col] = std::max(matrix[row - 1][col], matrix[row][col - 1]);
-		}
-	}
-
-	return matrix;
-}
-
-void build_line_diff_html(
-    const std::string & left_text,
-    const std::string & right_text,
-    QString & left_html,
-    QString & right_html)
-{
-	const auto left_lines = split_lines(left_text);
-	const auto right_lines = split_lines(right_text);
-
-	std::vector<std::string> left_keys;
-	std::vector<std::string> right_keys;
-	left_keys.reserve(left_lines.size());
-	right_keys.reserve(right_lines.size());
-
-	for (const auto & line : left_lines)
-		left_keys.push_back(trim_indentation(line));
-
-	for (const auto & line : right_lines)
-		right_keys.push_back(trim_indentation(line));
-
-	const auto matrix = build_line_lcs(left_keys, right_keys);
-
-	auto row = left_lines.size();
-	auto col = right_lines.size();
-	QStringList left_ordered;
-	QStringList right_ordered;
-
-	while (row > 0 || col > 0)
-	{
-		if (row > 0 && col > 0 && left_keys[row - 1] == right_keys[col - 1])
-		{
-			left_ordered.push_front(line_to_html(left_lines[row - 1], nullptr));
-			right_ordered.push_front(line_to_html(right_lines[col - 1], nullptr));
-			--row;
-			--col;
-
-			continue;
-		}
-
-		if (col > 0 && (row == 0 || matrix[row][col - 1] >= matrix[row - 1][col]))
-		{
-			right_ordered.push_front(line_to_html(right_lines[col - 1], "#ccffcc"));
-			--col;
-
-			continue;
-		}
-
-		left_ordered.push_front(line_to_html(left_lines[row - 1], "#ffcccc"));
-		--row;
-	}
-
-	const auto wrap = [](const QStringList & lines)
-	{
-		return QString("<div style='white-space:pre-wrap;'>") + lines.join(QString("\n")) + "</div>";
-	};
-
-	left_html = wrap(left_ordered);
-	right_html = wrap(right_ordered);
+	return selections;
 }
 
 } // namespace
@@ -208,6 +118,10 @@ preview_view_t::preview_view_t(QWidget * parent)
 
 	controls_layout->addStretch(1);
 
+	m_message_label = new QLabel(m_controls_widget);
+	m_message_label->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+	controls_layout->addWidget(m_message_label);
+
 	m_value_selector = new QComboBox(m_controls_widget);
 	m_value_selector->setVisible(false);
 	m_value_selector->setToolTip(tr("Select a value from the list"));
@@ -234,10 +148,7 @@ preview_view_t::preview_view_t(QWidget * parent)
 void preview_view_t::setup_scroll_sync()
 {
 	connect(
-	    m_left_edit->verticalScrollBar(),
-	    &QScrollBar::valueChanged,
-	    this,
-	    [this]() { sync_scroll_from(m_left_edit); });
+	    m_left_edit->verticalScrollBar(), &QScrollBar::valueChanged, this, [this]() { sync_scroll_from(m_left_edit); });
 	connect(
 	    m_left_edit->horizontalScrollBar(),
 	    &QScrollBar::valueChanged,
@@ -316,36 +227,29 @@ void preview_view_t::show_comparison(const std::string & left_raw, const std::st
 
 void preview_view_t::render_comparison()
 {
-	const auto & left_text = m_left_cached;
-	const auto & right_text = m_right_cached;
+	set_plain_text_reset(m_left_edit, m_left_cached);
+	set_plain_text_reset(m_right_edit, m_right_cached);
 
-	if (left_text.empty())
-	{
-		m_left_edit->clear();
-		m_right_edit->setPlainText(QString::fromStdString(right_text));
+	apply_diff_highlighting();
+}
+
+void preview_view_t::apply_diff_highlighting()
+{
+	m_left_edit->setExtraSelections({});
+	m_right_edit->setExtraSelections({});
+
+	const auto left_text = QString::fromStdString(m_left_cached).toStdString();
+	const auto right_text = QString::fromStdString(m_right_cached).toStdString();
+
+	if (!m_diff_coloring_enabled || left_text.empty() || right_text.empty() || left_text == right_text)
 		return;
-	}
 
-	if (right_text.empty())
-	{
-		m_left_edit->setPlainText(QString::fromStdString(left_text));
-		m_right_edit->clear();
-		return;
-	}
+	const auto segments = compute_char_diff(left_text, right_text);
 
-	if (!m_diff_coloring_enabled || left_text == right_text)
-	{
-		set_plain_text_reset(m_left_edit, left_text);
-		set_plain_text_reset(m_right_edit, right_text);
-		return;
-	}
-
-	QString left_html;
-	QString right_html;
-	build_line_diff_html(left_text, right_text, left_html, right_html);
-
-	m_left_edit->setHtml(left_html);
-	m_right_edit->setHtml(right_html);
+	m_left_edit->setExtraSelections(
+	    build_diff_selections(m_left_edit, segments, diff_op_t::deleted, color_name_t::diff_removed_background));
+	m_right_edit->setExtraSelections(
+	    build_diff_selections(m_right_edit, segments, diff_op_t::inserted, color_name_t::diff_added_background));
 }
 
 void preview_view_t::on_diff_toggled(bool enabled)
@@ -371,6 +275,8 @@ void preview_view_t::clear()
 	m_right_cached.clear();
 	m_left_edit->clear();
 	m_right_edit->clear();
+	m_left_edit->setExtraSelections({});
+	m_right_edit->setExtraSelections({});
 	set_editing_enabled(false);
 	m_value_selector->setVisible(false);
 }
@@ -380,14 +286,46 @@ void preview_view_t::set_editing_enabled(bool enabled)
 	m_right_edit->setReadOnly(!enabled);
 	m_editing_active = enabled;
 	m_user_has_typed = false;
-	emit validation_message({});
 
 	if (!enabled)
 	{
 		m_right_edit->setStyleSheet("");
 		m_apply_button->setEnabled(false);
 		m_value_selector->setVisible(false);
+		m_message_label->clear();
 	}
+}
+
+void preview_view_t::show_error_message(const QString & message)
+{
+	m_message_label->setStyleSheet("color: rgb(220, 50, 50);");
+	m_message_label->setText(tr("[error] %1").arg(message));
+}
+
+void preview_view_t::show_range_hint()
+{
+	const auto & field = m_pending_request.field;
+	if (field.name == nullptr)
+	{
+		m_message_label->clear();
+		return;
+	}
+
+	const auto hint = field_validator::range_hint(field, m_existing_sub_size);
+	if (hint.empty())
+	{
+		m_message_label->clear();
+		return;
+	}
+
+	m_message_label->setStyleSheet("");
+	m_message_label->setText(tr("[info] range: %1").arg(QString::fromStdString(hint)));
+}
+
+void preview_view_t::show_readonly_message(const QString & message)
+{
+	m_message_label->setStyleSheet("");
+	m_message_label->setText(message);
 }
 
 void preview_view_t::set_edit_controller(field_edit_controller_t * controller)
@@ -438,14 +376,9 @@ void preview_view_t::update_selection(
 		return;
 	}
 
-	const int plugin_idx =
-	    model->is_merge_column(column) ? -1 : model->column_plugin_indices()[static_cast<size_t>(column) - 1];
-
 	m_pending_request.record_type = model->record_type();
 	m_pending_request.record_id = model->record_id();
 	m_pending_request.codepage = model->display_codepage();
-	m_pending_request.plugin_idx = plugin_idx;
-	m_pending_request.record_index = model->record_index_for_column(column);
 	m_pending_request.field = {};
 
 	const auto field_variant = model->data(index, view_tree_model_t::field_def_role);
@@ -481,10 +414,42 @@ void preview_view_t::update_selection(
 		m_pending_request.object_ref_index = occurrence.object_ref_index;
 	}
 
+	const bool is_leveled = decode_mode_for(m_pending_request.record_type) == decode_mode_t::leveled;
+	if (is_leveled && m_pending_request.sub_type == "INDX")
+	{
+		set_editing_enabled(false);
+		m_right_cached = (cell_value == non_existent_value) ? std::string {} : cell_value;
+		render_comparison();
+		show_readonly_message(tr("[info] auto-calculated, not editable"));
+		return;
+	}
+
+	const char * const record_id_sub_type = record_id_sub_type_for(m_pending_request.record_type);
+	if (record_id_sub_type != nullptr && m_pending_request.sub_type == record_id_sub_type)
+	{
+		set_editing_enabled(false);
+		m_right_cached = (cell_value == non_existent_value) ? std::string {} : cell_value;
+		render_comparison();
+		show_readonly_message(tr("[info] record id, not editable"));
+		return;
+	}
+
+	if (read_only_reason_for(m_pending_request.record_type) == read_only_reason_t::landscape_data)
+	{
+		set_editing_enabled(false);
+		m_right_cached = (cell_value == non_existent_value) ? std::string {} : cell_value;
+		render_comparison();
+		show_readonly_message(tr("[info] landscape data, not editable"));
+		return;
+	}
+
 	m_original_value = cell_value;
 	populate_value_selector();
 	set_editing_enabled(true);
-	m_right_edit->setPlainText(QString::fromStdString(cell_value));
+	show_range_hint();
+
+	m_right_cached = (cell_value == non_existent_value) ? std::string {} : cell_value;
+	render_comparison();
 }
 
 void preview_view_t::on_text_changed()
@@ -496,6 +461,9 @@ void preview_view_t::on_text_changed()
 		return;
 
 	const auto current_text = m_right_edit->toPlainText().toStdString();
+
+	m_right_cached = current_text;
+	apply_diff_highlighting();
 
 	bool is_valid = true;
 	std::string error_message;
@@ -511,12 +479,12 @@ void preview_view_t::on_text_changed()
 	if (!is_valid)
 	{
 		m_right_edit->setStyleSheet("background-color: #ffcccc;");
-		emit validation_message(QString::fromStdString(error_message));
+		show_error_message(QString::fromStdString(error_message));
 	}
 	else
 	{
 		m_right_edit->setStyleSheet("");
-		emit validation_message({});
+		show_range_hint();
 	}
 
 	const bool value_changed = (current_text != m_original_value);
@@ -538,7 +506,7 @@ void preview_view_t::on_apply_clicked()
 		return;
 	}
 
-	emit validation_message(QString::fromStdString(result.error_message));
+	show_error_message(QString::fromStdString(result.error_message));
 }
 
 void preview_view_t::on_value_selector_changed()
@@ -574,6 +542,7 @@ void preview_view_t::on_value_selector_changed()
 		new_text = m_value_selector->currentText();
 	}
 
+	m_user_has_typed = true;
 	m_user_has_typed = true;
 	m_right_edit->setPlainText(new_text);
 }
@@ -652,6 +621,16 @@ void preview_view_t::populate_value_selector()
 		for (const auto & operator_symbol : scvr_operator_symbols())
 			m_value_selector->addItem(QString::fromStdString(operator_symbol));
 
+		m_value_selector->setCurrentText(QString::fromStdString(m_original_value));
+		m_value_selector->setVisible(true);
+		break;
+	}
+
+	case field_type_t::global_type:
+	{
+		m_value_selector->addItem(tr("Short"));
+		m_value_selector->addItem(tr("Long"));
+		m_value_selector->addItem(tr("Float"));
 		m_value_selector->setCurrentText(QString::fromStdString(m_original_value));
 		m_value_selector->setVisible(true);
 		break;

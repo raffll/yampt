@@ -1,4 +1,6 @@
 #include "nav_tree_model.hpp"
+#include "../view/plugin_icon.hpp"
+#include "../view/record_type_name.hpp"
 #include "editable_column_set.hpp"
 #include <io/codepage.hpp>
 #include <algorithm>
@@ -11,27 +13,23 @@
 #include <QBrush>
 #include <QFont>
 
-static int conflict_this_priority(conflict_this_t conflict)
+static conflict_this_t accumulate_worst_conflict_this(conflict_this_t worst, conflict_this_t status)
 {
-	switch (conflict)
-	{
-	case conflict_this_t::unknown:
-		return 0;
-	case conflict_this_t::identical_to_master:
-		return 1;
-	case conflict_this_t::master:
-		return 2;
-	case conflict_this_t::override_wins:
-		return 3;
-	case conflict_this_t::conflict_wins:
-		return 4;
-	case conflict_this_t::conflict_loses:
-		return 5;
-	case conflict_this_t::deleted:
-		return 0;
-	default:
-		return 0;
-	}
+	if (status == conflict_this_t::identical_to_master)
+		return worst;
+
+	if (status > worst)
+		return status;
+
+	return worst;
+}
+
+static conflict_this_t resolve_record_foreground(conflict_this_t worst)
+{
+	if (worst == conflict_this_t::unknown || worst == conflict_this_t::master)
+		return conflict_this_t::identical_to_master;
+
+	return worst;
 }
 
 static size_t unique_plugin_count(const conflict_entry_t & entry)
@@ -116,57 +114,7 @@ static int natural_compare(const std::string & a, const std::string & b)
 
 static const char * type_to_display_name(const std::string & type)
 {
-	static const std::map<std::string, const char *> names = {
-		{ "ACTI", "Activator" },
-		{ "ALCH", "Potion" },
-		{ "APPA", "Apparatus" },
-		{ "ARMO", "Armor" },
-		{ "BODY", "Body Part" },
-		{ "BOOK", "Book" },
-		{ "BSGN", "Birthsign" },
-		{ "CELL", "Cell" },
-		{ "CLAS", "Class" },
-		{ "CLOT", "Clothing" },
-		{ "CONT", "Container" },
-		{ "CREA", "Creature" },
-		{ "DIAL", "Dialogue" },
-		{ "DOOR", "Door" },
-		{ "ENCH", "Enchantment" },
-		{ "FACT", "Faction" },
-		{ "GLOB", "Global" },
-		{ "GMST", "Game Setting" },
-		{ "INFO", "Dialogue Response" },
-		{ "INGR", "Ingredient" },
-		{ "LAND", "Landscape" },
-		{ "LEVC", "Leveled Creature" },
-		{ "LEVI", "Leveled Item" },
-		{ "LIGH", "Light" },
-		{ "LOCK", "Lockpick" },
-		{ "LTEX", "Land Texture" },
-		{ "MGEF", "Magic Effect" },
-		{ "MISC", "Misc. Item" },
-		{ "NPC_", "NPC" },
-		{ "PGRD", "Path Grid" },
-		{ "PROB", "Probe" },
-		{ "RACE", "Race" },
-		{ "REGN", "Region" },
-		{ "REPA", "Repair Item" },
-		{ "SCPT", "Script" },
-		{ "SKIL", "Skill" },
-		{ "SNDG", "Sound Generator" },
-		{ "SOUN", "Sound" },
-		{ "SPEL", "Spell" },
-		{ "SSCR", "Start Script" },
-		{ "STAT", "Static" },
-		{ "TES3", "File Header" },
-		{ "WEAP", "Weapon" },
-	};
-
-	auto it = names.find(type);
-	if (it != names.end())
-		return it->second;
-
-	return nullptr;
+	return record_type_name::display(type);
 }
 
 nav_tree_model_t::nav_tree_model_t(plugin_scan_t & scan, QObject * parent)
@@ -216,11 +164,6 @@ void nav_tree_model_t::set_display_codepage(codepage_t codepage)
 	m_display_codepage = codepage;
 }
 
-void nav_tree_model_t::set_excluded_plugins(const std::set<std::string> * excluded)
-{
-	m_filter.set_excluded_plugins(excluded);
-}
-
 void nav_tree_model_t::set_patch_plugins(const std::set<std::string> * patch)
 {
 	m_filter.set_patch_plugins(patch);
@@ -234,6 +177,18 @@ void nav_tree_model_t::set_dirty_plugins(const std::set<std::string> * dirty)
 void nav_tree_model_t::set_editable_columns(const editable_column_set_t * editable)
 {
 	m_editable_columns = editable;
+}
+
+bool nav_tree_model_t::has_whole_record_lock(const std::string & rec_type, const std::string & record_id) const
+{
+	const auto locks = m_scan.active_locks_for(rec_type, record_id);
+	for (const auto & lock : locks)
+	{
+		if (lock.scope == lock_scope_t::whole_record)
+			return true;
+	}
+
+	return false;
 }
 
 void nav_tree_model_t::build_tree()
@@ -275,9 +230,6 @@ void nav_tree_model_t::build_tree()
 			file_node.groups.push_back(std::move(group));
 		}
 
-		if (file_node.groups.empty())
-			continue;
-
 		std::sort(
 		    file_node.groups.begin(),
 		    file_node.groups.end(),
@@ -296,6 +248,9 @@ void nav_tree_model_t::build_tree()
 			return std::strcmp(sort_a, sort_b) < 0;
 		});
 
+		if (file_node.groups.empty() && m_filter.has_active_filter())
+			continue;
+
 		m_tree.push_back(std::move(file_node));
 	}
 
@@ -304,7 +259,7 @@ void nav_tree_model_t::build_tree()
 
 QModelIndex nav_tree_model_t::index(int row, int column, const QModelIndex & parent) const
 {
-	if (column < 0 || column >= 3)
+	if (column < 0 || column >= 2)
 		return {};
 
 	if (!parent.isValid())
@@ -501,6 +456,82 @@ QModelIndex nav_tree_model_t::find_index(const std::string & rec_type, const std
 	return {};
 }
 
+void nav_tree_model_t::notify_record_changed(const std::string & rec_type, const std::string & record_id)
+{
+	if (rec_type.empty() || record_id.empty())
+		return;
+
+	const auto & entries = m_scan.entries();
+	const int last_column = columnCount({}) - 1;
+
+	for (auto & file_node : m_tree)
+	{
+		for (auto & group : file_node.groups)
+		{
+			if (group.type != rec_type)
+				continue;
+
+			for (size_t record_idx = 0; record_idx < group.records.size(); ++record_idx)
+			{
+				const auto & entry = entries[group.records[record_idx].entry_idx];
+				if (entry.record_id != record_id)
+					continue;
+
+				const auto row = static_cast<int>(record_idx);
+				const auto top_left = createIndex(row, 0, &group);
+				const auto bottom_right = createIndex(row, last_column, &group);
+				emit dataChanged(top_left, bottom_right, { Qt::DisplayRole });
+			}
+		}
+	}
+}
+
+void nav_tree_model_t::notify_plugin_changed(int plugin_idx)
+{
+	if (plugin_idx < 0)
+		return;
+
+	for (size_t file_idx = 0; file_idx < m_tree.size(); ++file_idx)
+	{
+		if (m_tree[file_idx].plugin_idx != plugin_idx)
+			continue;
+
+		const auto file_index = createIndex(static_cast<int>(file_idx), 0, nullptr);
+		emit dataChanged(file_index, file_index, { Qt::DisplayRole });
+		return;
+	}
+}
+
+QModelIndex nav_tree_model_t::index_for_node(const node_info_t & info) const
+{
+	if (info.plugin_idx < 0)
+		return {};
+
+	if (!info.record_id.empty())
+		return find_index(info.rec_type, info.record_id);
+
+	for (size_t file_idx = 0; file_idx < m_tree.size(); ++file_idx)
+	{
+		if (m_tree[file_idx].plugin_idx != info.plugin_idx)
+			continue;
+
+		if (info.rec_type.empty())
+			return createIndex(static_cast<int>(file_idx), 0, nullptr);
+
+		for (size_t group_idx = 0; group_idx < m_tree[file_idx].groups.size(); ++group_idx)
+		{
+			if (m_tree[file_idx].groups[group_idx].type != info.rec_type)
+				continue;
+
+			return createIndex(static_cast<int>(group_idx), 0, const_cast<file_node_t *>(&m_tree[file_idx]));
+		}
+
+		return createIndex(static_cast<int>(file_idx), 0, nullptr);
+	}
+
+	return {};
+}
+
 nav_tree_model_t::node_info_t nav_tree_model_t::node_at(const QModelIndex & index) const
 {
 	if (!index.isValid())
@@ -658,32 +689,23 @@ QVariant nav_tree_model_t::file_node_display_text(const file_node_t & file_node)
 
 	const auto & filename = m_scan.plugin_filename(file_node.plugin_idx);
 
+	plugin_icon::tier_flags_t flags;
+	flags.filename = filename;
+	flags.is_overridden = plugin_icon::path_is_overwrite(m_scan.plugin_path(file_node.plugin_idx));
+	flags.is_guard = m_filter.patch_plugins() && m_filter.patch_plugins()->count(filename);
+	flags.is_active = m_scan.is_active_plugin(file_node.plugin_idx);
+
+	const auto icons = plugin_icon::prefix(flags).trimmed();
+
 	std::string label = display_buffer;
 	if (m_filter.dirty_plugins() && m_filter.dirty_plugins()->count(filename))
 		label = "* " + label;
 
-	if (m_filter.excluded_plugins() && m_filter.excluded_plugins()->count(filename))
-		return QString::fromUtf8("\xF0\x9F\x94\x92 ") + QString::fromUtf8(label.c_str());
+	QString text = QString::fromUtf8(label.c_str());
+	if (!icons.isEmpty())
+		text = icons + " " + text;
 
-	if (m_filter.patch_plugins() && m_filter.patch_plugins()->count(filename))
-		return QString::fromUtf8("\xF0\x9F\x9B\xA1 ") + QString::fromUtf8(label.c_str());
-
-	if (m_scan.is_merge_plugin(file_node.plugin_idx))
-		return QString::fromUtf8("\xE2\x9A\x99 ") + QString::fromUtf8(label.c_str());
-
-	const auto & full_path = m_scan.plugin_path(file_node.plugin_idx);
-	const bool is_overridden =
-	    full_path.find("/overwrite/") != std::string::npos || full_path.find("\\overwrite\\") != std::string::npos;
-
-	const bool is_master = filename.size() > 4 && (filename.compare(filename.size() - 4, 4, ".esm") == 0 ||
-	                                               filename.compare(filename.size() - 4, 4, ".ESM") == 0);
-	if (is_master)
-		return QString::fromUtf8("\xF0\x9F\x93\x9C ") + QString::fromUtf8(label.c_str());
-
-	if (is_overridden)
-		return QString::fromUtf8("\xE2\x9A\xA1 ") + QString::fromUtf8(label.c_str());
-
-	return QString::fromUtf8("\xF0\x9F\x93\x84 ") + QString::fromUtf8(label.c_str());
+	return text;
 }
 
 QVariant nav_tree_model_t::file_node_appearance(const file_node_t & file_node, int role) const
@@ -699,8 +721,7 @@ QVariant nav_tree_model_t::file_node_appearance(const file_node_t & file_node, i
 			const auto & entry = entries[rec.entry_idx];
 			const auto this_color = record_foreground_for_plugin(entry, file_node.plugin_idx);
 
-			if (conflict_this_priority(this_color) > conflict_this_priority(worst_this))
-				worst_this = this_color;
+			worst_this = accumulate_worst_conflict_this(worst_this, this_color);
 
 			if (entry.conflict_all > worst_all)
 				worst_all = entry.conflict_all;
@@ -716,12 +737,7 @@ QVariant nav_tree_model_t::file_node_appearance(const file_node_t & file_node, i
 	}
 
 	if (role == Qt::ForegroundRole)
-	{
-		if (worst_this == conflict_this_t::unknown)
-			return {};
-
-		return QBrush(theme_system_t::instance().conflict_this_foreground(worst_this));
-	}
+		return QBrush(theme_system_t::instance().conflict_this_foreground(resolve_record_foreground(worst_this)));
 
 	return {};
 }
@@ -778,8 +794,7 @@ QVariant nav_tree_model_t::data_for_type_group(size_t file_idx, int row, int col
 		const auto & entry = entries[rec.entry_idx];
 		const auto this_color = record_foreground_for_plugin(entry, m_tree[file_idx].plugin_idx);
 
-		if (conflict_this_priority(this_color) > conflict_this_priority(worst_this))
-			worst_this = this_color;
+		worst_this = accumulate_worst_conflict_this(worst_this, this_color);
 
 		if (entry.conflict_all > worst_all)
 			worst_all = entry.conflict_all;
@@ -794,12 +809,7 @@ QVariant nav_tree_model_t::data_for_type_group(size_t file_idx, int row, int col
 	}
 
 	if (role == Qt::ForegroundRole)
-	{
-		if (worst_this == conflict_this_t::unknown)
-			return {};
-
-		return QBrush(theme_system_t::instance().conflict_this_foreground(worst_this));
-	}
+		return QBrush(theme_system_t::instance().conflict_this_foreground(resolve_record_foreground(worst_this)));
 
 	if (role == Qt::FontRole && m_show_deleted_strikeout)
 	{
@@ -835,6 +845,7 @@ QVariant nav_tree_model_t::data_for_record(size_t file_idx, size_t group_idx, in
 		{
 			auto display_id = QString::fromUtf8(decode_to_utf8(entry.record_id, m_display_codepage));
 			display_id.replace('|', " #");
+
 			return display_id;
 		}
 
@@ -850,8 +861,16 @@ QVariant nav_tree_model_t::data_for_record(size_t file_idx, size_t group_idx, in
 		}
 	}
 
+	const int plugin_idx = m_tree[file_idx].plugin_idx;
+	const bool is_merged_patch_active =
+	    m_scan.is_active_plugin(plugin_idx) && m_scan.plugin_filename(plugin_idx) == merged_patch::filename;
+	const bool is_locked = is_merged_patch_active && has_whole_record_lock(entry.rec_type, entry.record_id);
+
 	if (role == Qt::BackgroundRole)
 	{
+		if (is_locked)
+			return QBrush(theme_system_t::instance().get_color(color_name_t::locked_background));
+
 		if (entry.conflict_all < conflict_all_t::no_conflict)
 			return {};
 
@@ -863,10 +882,10 @@ QVariant nav_tree_model_t::data_for_record(size_t file_idx, size_t group_idx, in
 
 	if (role == Qt::ForegroundRole)
 	{
-		if (record_color == conflict_this_t::unknown)
-			return {};
+		if (is_locked)
+			return QBrush(theme_system_t::instance().get_color(color_name_t::locked_text));
 
-		return QBrush(theme_system_t::instance().conflict_this_foreground(record_color));
+		return QBrush(theme_system_t::instance().conflict_this_foreground(resolve_record_foreground(record_color)));
 	}
 
 	if (role == Qt::FontRole && m_show_deleted_strikeout && entry.has_dele)

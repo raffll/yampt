@@ -42,8 +42,7 @@ void history_view_t::update_history(const std::vector<history_entry_t> & entries
 		if (value_str.length() > max_value_display_length)
 			value_str = value_str.left(max_value_display_length) + "...";
 
-		auto * item = new QListWidgetItem(
-		    QString("[%1] [%2] %3").arg(timestamp_str, status_str, value_str), m_list);
+		auto * item = new QListWidgetItem(QString("[%1] [%2] %3").arg(timestamp_str, status_str, value_str), m_list);
 		item->setData(history_index_role, static_cast<qulonglong>(history_index));
 	}
 

@@ -1,12 +1,12 @@
 #pragma once
 
-#include <string>
 #include <QWidget>
 
 class QCheckBox;
+class QComboBox;
 class QLineEdit;
-class QListWidget;
 class QPushButton;
+class QTableWidget;
 class QTabWidget;
 class settings_store_t;
 
@@ -21,24 +21,18 @@ public:
 	void save(settings_store_t & settings) const;
 
 private:
-	void setup_ignore_fields_tab();
-	void setup_exclude_by_id_tab();
+	void setup_excludes_tab();
 	void setup_fixes_tab();
 
-	void on_ignore_add();
-	void on_ignore_remove();
 	void on_exclude_add();
 	void on_exclude_remove();
+	bool row_exists(int kind_index, const QString & target) const;
 
 	QTabWidget * m_tabs = nullptr;
 
-	QListWidget * m_ignore_list = nullptr;
-	QLineEdit * m_ignore_input = nullptr;
-	QPushButton * m_ignore_add_button = nullptr;
-	QPushButton * m_ignore_remove_button = nullptr;
-
-	QListWidget * m_exclude_list = nullptr;
-	QLineEdit * m_exclude_input = nullptr;
+	QTableWidget * m_exclude_table = nullptr;
+	QComboBox * m_kind_combo = nullptr;
+	QLineEdit * m_target_input = nullptr;
 	QPushButton * m_exclude_add_button = nullptr;
 	QPushButton * m_exclude_remove_button = nullptr;
 

@@ -34,7 +34,6 @@ public:
 	void set_filter(const filter_state_t & state);
 	void clear();
 	void set_hide_duplicates(bool hide);
-	void set_excluded_plugins(const std::set<std::string> * excluded);
 	void set_patch_plugins(const std::set<std::string> * patch);
 	void set_dirty_plugins(const std::set<std::string> * dirty);
 
@@ -42,7 +41,6 @@ public:
 	bool passes_lua_conflict(const handler_conflict_t & conflict) const;
 	bool has_active_filter() const;
 	bool hide_duplicates() const;
-	const std::set<std::string> * excluded_plugins() const;
 	const std::set<std::string> * patch_plugins() const;
 	const std::set<std::string> * dirty_plugins() const;
 
@@ -50,7 +48,6 @@ private:
 	filter_state_t m_filter;
 	bool m_has_filter = false;
 	bool m_hide_duplicates = false;
-	const std::set<std::string> * m_excluded_plugins = nullptr;
 	const std::set<std::string> * m_patch_plugins = nullptr;
 	const std::set<std::string> * m_dirty_plugins = nullptr;
 

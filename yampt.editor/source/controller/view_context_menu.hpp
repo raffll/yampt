@@ -3,6 +3,7 @@
 #include "../model/field_binary_resolver.hpp"
 #include "../model/nav_tree_model.hpp"
 #include "../model/view_tree_model.hpp"
+#include <scanner/merge_exclusions.hpp>
 #include <scanner/merge_patch_store.hpp>
 #include <functional>
 #include <QModelIndex>
@@ -44,6 +45,15 @@ private:
 		other
 	};
 
+	struct row_kind_caps_t
+	{
+		bool can_copy = false;
+		bool can_remove = false;
+		bool can_lock = false;
+	};
+
+	static row_kind_caps_t caps_for(row_kind_t kind);
+
 	struct view_menu_context_t
 	{
 		const QModelIndex & index;
@@ -58,7 +68,9 @@ private:
 	};
 
 	void build_source_file_menu(QMenu & menu, const nav_tree_model_t::node_info_t & info);
-	void confirm_remove_record_from_plugin(const nav_tree_model_t::node_info_t & info);
+	void add_exclude_record_action(QMenu & menu, const nav_tree_model_t::node_info_t & info);
+	void add_exclude_type_action(QMenu & menu, const nav_tree_model_t::node_info_t & info);
+	void apply_record_exclusion(const exclude_rule_t & rule, bool add_rule);
 	void build_copy_to_merge_menu(QMenu & menu, const view_menu_context_t & context);
 	void build_source_copy_menu(QMenu & menu, const view_menu_context_t & context);
 	void build_merge_remove_menu(QMenu & menu, const view_menu_context_t & context);

@@ -1,0 +1,62 @@
+#pragma once
+
+#include "../session/merged_patch_name.hpp"
+#include "plugin_icon_glyphs.hpp"
+#include <string>
+#include <string_view>
+#include <QCoreApplication>
+#include <QString>
+
+namespace plugin_icon {
+
+struct tier_flags_t
+{
+	std::string_view filename;
+	bool is_overridden = false;
+	bool is_guard = false;
+	bool is_active = false;
+};
+
+inline bool has_esm_extension(std::string_view filename)
+{
+	if (filename.size() <= 4)
+		return false;
+
+	const auto suffix = filename.substr(filename.size() - 4);
+	return suffix == ".esm" || suffix == ".ESM";
+}
+
+inline bool path_is_overwrite(std::string_view full_path)
+{
+	return full_path.find("/overwrite/") != std::string_view::npos ||
+	       full_path.find("\\overwrite\\") != std::string_view::npos;
+}
+
+inline QString role_icon(const tier_flags_t & flags)
+{
+	if (flags.is_guard)
+		return QString::fromUtf8(glyph::shield);
+
+	if (flags.filename == merged_patch::filename)
+		return QString::fromUtf8(glyph::gear);
+
+	if (flags.is_overridden)
+		return QString::fromUtf8(glyph::bolt);
+
+	if (has_esm_extension(flags.filename))
+		return QString::fromUtf8(glyph::scroll);
+
+	return QString::fromUtf8(glyph::page);
+}
+
+inline QString prefix(const tier_flags_t & flags)
+{
+	QString icons = role_icon(flags) + " ";
+
+	if (flags.is_active)
+		icons += QCoreApplication::translate("yEditor", "[Active]") + " ";
+
+	return icons;
+}
+
+} // namespace plugin_icon

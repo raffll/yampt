@@ -1,12 +1,10 @@
 #include "auto_merge.hpp"
+#include "../utility/record_behavior.hpp"
 #include "cell_name_fixer.hpp"
 #include "fog_fixer.hpp"
 #include "plugin_scan.hpp"
 #include "summon_fixer.hpp"
-#include "../utility/app_logger.hpp"
-#include <cstring>
-#include <map>
-#include <regex>
+#include <algorithm>
 #include <unordered_map>
 
 auto_merge_t::auto_merge_t(plugin_scan_t & scan)
@@ -26,7 +24,7 @@ void auto_merge_t::set_progress_callback(progress_fn_t progress_fn)
 merge_counters_t auto_merge_t::execute()
 {
 	m_log.clear();
-	m_scan.clear_merge_records();
+	m_scan.clear_active_records();
 
 	merge_counters_t counters {};
 	build_record_groups();
@@ -36,7 +34,7 @@ merge_counters_t auto_merge_t::execute()
 
 	add_log(
 	    "[info] merge: " + std::to_string(counters.three_way) + " merged, " + std::to_string(counters.lists) +
-	    " lists, " + std::to_string(counters.dialogues) + " dialogues, " + std::to_string(counters.fixes) + " fixes");
+	    " lists, " + std::to_string(counters.fixes) + " fixes");
 
 	return counters;
 }
@@ -104,22 +102,6 @@ void auto_merge_t::build_record_groups()
 
 void auto_merge_t::process_groups(merge_counters_t & counters)
 {
-	std::regex exclusion_regex;
-	bool has_exclusion = false;
-
-	if (!m_config.exclusion_pattern.empty())
-	{
-		try
-		{
-			exclusion_regex = std::regex(m_config.exclusion_pattern, std::regex::icase);
-			has_exclusion = true;
-		}
-		catch (...)
-		{
-			add_log("[error] invalid exclusion regex: " + m_config.exclusion_pattern);
-		}
-	}
-
 	const int total_groups = static_cast<int>(m_groups.size());
 	int processed_groups = 0;
 
@@ -129,7 +111,7 @@ void auto_merge_t::process_groups(merge_counters_t & counters)
 		if (m_progress_fn)
 			m_progress_fn(processed_groups, total_groups);
 
-		if (should_skip_group(group, exclusion_regex, has_exclusion))
+		if (should_skip_group(group))
 			continue;
 
 		try
@@ -147,10 +129,7 @@ void auto_merge_t::process_groups(merge_counters_t & counters)
 	}
 }
 
-bool auto_merge_t::should_skip_group(
-    const record_group_t & group,
-    const std::regex & exclusion_regex,
-    bool has_exclusion) const
+bool auto_merge_t::should_skip_group(const record_group_t & group) const
 {
 	if (group.versions.size() < 2)
 		return true;
@@ -158,26 +137,28 @@ bool auto_merge_t::should_skip_group(
 	if (!is_type_enabled(group.rec_type))
 		return true;
 
-	if (group.rec_type == "INFO")
+	const auto decode_mode = decode_mode_for(group.rec_type);
+
+	if (m_config.exclusions.is_record_excluded(group.rec_type, group.record_id))
 		return true;
 
-	if (has_exclusion && std::regex_search(group.record_id, exclusion_regex))
+	const bool is_leveled = decode_mode == decode_mode_t::leveled;
+
+	if (!is_leveled && group.versions.size() < 3)
 		return true;
 
-	const bool is_leveled = (group.rec_type == "LEVI" || group.rec_type == "LEVC");
-	const bool is_dialogue = (group.rec_type == "DIAL");
-
-	if (!is_leveled && !is_dialogue && group.versions.size() < 3)
-		return true;
-
-	if (is_leveled || is_dialogue)
+	if (is_leveled)
 	{
 		const auto & first_ver = group.versions.front();
-		const auto & last_ver = group.versions.back();
 		const auto first_content = m_scan.read_record_content(first_ver.plugin_idx, first_ver.record_index);
-		const auto last_content = m_scan.read_record_content(last_ver.plugin_idx, last_ver.record_index);
 
-		if (first_content == last_content)
+		const bool any_version_differs = std::any_of(
+		    group.versions.begin() + 1,
+		    group.versions.end(),
+		    [&](const version_ref_t & ver)
+		{ return m_scan.read_record_content(ver.plugin_idx, ver.record_index) != first_content; });
+
+		if (!any_version_differs)
 			return true;
 	}
 
@@ -186,13 +167,10 @@ bool auto_merge_t::should_skip_group(
 
 void auto_merge_t::dispatch_group(const record_group_t & group, merge_counters_t & counters)
 {
-	const bool is_leveled = (group.rec_type == "LEVI" || group.rec_type == "LEVC");
-	const bool is_dialogue = (group.rec_type == "DIAL");
+	const auto decode_mode = decode_mode_for(group.rec_type);
 
-	if (is_leveled)
+	if (decode_mode == decode_mode_t::leveled)
 		process_leveled_list(group, counters);
-	else if (is_dialogue)
-		process_dialogue(group, counters);
 	else
 		process_three_way(group, counters);
 }
@@ -210,52 +188,8 @@ void auto_merge_t::process_leveled_list(const record_group_t & group, merge_coun
 	if (!result.changed)
 		return;
 
-	m_scan.copy_record_to_merge_raw(group.rec_type, group.record_id, result.content);
+	m_scan.copy_record_to_active_raw(group.rec_type, group.record_id, result.content);
 	++counters.lists;
-}
-
-void auto_merge_t::process_dialogue(const record_group_t & group, merge_counters_t & counters)
-{
-	const auto * scan_entry = m_scan.find(group.rec_type, group.record_id);
-	if (!scan_entry)
-		return;
-
-	const auto & entry = *scan_entry;
-	const auto & winning_ver = entry.versions.back();
-	std::string winning_dial = m_scan.read_record_content(winning_ver.plugin_idx, winning_ver.record_index);
-	m_scan.copy_record_to_merge_raw("DIAL", entry.record_id, winning_dial);
-
-	std::vector<std::string> merged_info_ids;
-	std::map<std::string, std::string> info_contents;
-
-	for (const auto & ver : entry.versions)
-	{
-		if (m_scan.is_merge_plugin(ver.plugin_idx))
-			continue;
-
-		const auto & plugin_entries = m_scan.index(ver.plugin_idx).entries();
-		for (size_t ei = ver.record_index + 1; ei < plugin_entries.size(); ++ei)
-		{
-			if (plugin_entries[ei].rec_type != "INFO")
-				break;
-
-			if (plugin_entries[ei].dial_name != entry.record_id)
-				break;
-
-			const auto & info_id = plugin_entries[ei].record_id;
-			std::string content = m_scan.read_record_content(ver.plugin_idx, plugin_entries[ei].record_index);
-
-			if (info_contents.find(info_id) == info_contents.end())
-				merged_info_ids.push_back(info_id);
-
-			info_contents[info_id] = content;
-		}
-	}
-
-	for (const auto & info_id : merged_info_ids)
-		m_scan.copy_record_to_merge_raw("INFO", info_id, info_contents[info_id]);
-
-	++counters.dialogues;
 }
 
 void auto_merge_t::apply_patch_priority(const record_group_t & group, std::vector<std::string> & contents)
@@ -306,43 +240,11 @@ void auto_merge_t::process_three_way(const record_group_t & group, merge_counter
 
 	const auto result = sub_record_merge_t::merge(input);
 
-	if (app_logger_t::is_debug() && group.rec_type == "CREA")
-	{
-		std::string note = "[debug] merge CREA \"" + group.record_id +
-		    "\": versions=" + std::to_string(input.version_contents.size()) +
-		    " changed=" + (result.changed ? "yes" : "no");
-
-		const auto read_npdt_level = [](const std::string & content) -> int
-		{
-			const auto subs = sub_record_merge_t::parse_sub_records(content);
-			for (const auto & entry : subs)
-			{
-				if (entry.type != "NPDT" || entry.data.size() < 8)
-					continue;
-
-				uint32_t level = 0;
-				std::memcpy(&level, entry.data.data() + 4, 4);
-				return static_cast<int>(level);
-			}
-
-			return -1;
-		};
-
-		for (size_t v = 0; v < input.version_contents.size(); ++v)
-			note += " | v" + std::to_string(v) + "(" + m_scan.plugin_filename(group.versions[v].plugin_idx) +
-			    ") level=" + std::to_string(read_npdt_level(input.version_contents[v]));
-
-		if (result.changed)
-			note += " | merged level=" + std::to_string(read_npdt_level(result.content));
-
-		add_log(note);
-	}
-
 	if (!result.changed)
 		return;
 
 	const auto filtered = filter_ignored_sub_records(group.rec_type, result.content);
-	m_scan.copy_record_to_merge_raw(group.rec_type, group.record_id, filtered);
+	m_scan.copy_record_to_active_raw(group.rec_type, group.record_id, filtered);
 	++counters.three_way;
 
 	std::string plugins;
@@ -376,10 +278,7 @@ void auto_merge_t::apply_fog_fixes(merge_counters_t & counters)
 		if (group.rec_type != "CELL")
 			continue;
 
-		if (m_scan.is_merge_pinned("CELL", group.record_id))
-			continue;
-
-		const auto * merge_content = m_scan.find_merge_content("CELL", group.record_id);
+		const auto * merge_content = m_scan.find_active_content("CELL", group.record_id);
 		const auto & last_ver = group.versions.back();
 		const auto content =
 		    merge_content ? *merge_content : m_scan.read_record_content(last_ver.plugin_idx, last_ver.record_index);
@@ -391,7 +290,7 @@ void auto_merge_t::apply_fog_fixes(merge_counters_t & counters)
 		if (fixed.empty())
 			continue;
 
-		m_scan.copy_record_to_merge_raw("CELL", group.record_id, fixed);
+		m_scan.copy_record_to_active_raw("CELL", group.record_id, fixed);
 		add_log("[info] fog fix: \"" + group.record_id + "\"");
 		++counters.fixes;
 	}
@@ -404,10 +303,7 @@ void auto_merge_t::apply_summon_fixes(merge_counters_t & counters)
 		if (group.rec_type != "CREA")
 			continue;
 
-		if (m_scan.is_merge_pinned("CREA", group.record_id))
-			continue;
-
-		const auto * merge_content = m_scan.find_merge_content("CREA", group.record_id);
+		const auto * merge_content = m_scan.find_active_content("CREA", group.record_id);
 		const auto & last_ver = group.versions.back();
 		const auto content =
 		    merge_content ? *merge_content : m_scan.read_record_content(last_ver.plugin_idx, last_ver.record_index);
@@ -419,7 +315,7 @@ void auto_merge_t::apply_summon_fixes(merge_counters_t & counters)
 		if (fixed.empty())
 			continue;
 
-		m_scan.copy_record_to_merge_raw("CREA", group.record_id, fixed);
+		m_scan.copy_record_to_active_raw("CREA", group.record_id, fixed);
 		add_log("[info] summon fix: \"" + group.record_id + "\"");
 		++counters.fixes;
 	}
@@ -435,12 +331,9 @@ void auto_merge_t::apply_cell_name_fixes(merge_counters_t & counters)
 		if (group.versions.size() < 3)
 			continue;
 
-		if (m_scan.is_merge_pinned("CELL", group.record_id))
-			continue;
-
 		auto version_contents = read_version_contents(group);
 
-		const auto * merge_content = m_scan.find_merge_content("CELL", group.record_id);
+		const auto * merge_content = m_scan.find_active_content("CELL", group.record_id);
 		if (merge_content)
 			version_contents.back() = *merge_content;
 
@@ -448,7 +341,7 @@ void auto_merge_t::apply_cell_name_fixes(merge_counters_t & counters)
 		if (fixed.empty())
 			continue;
 
-		m_scan.copy_record_to_merge_raw("CELL", group.record_id, fixed);
+		m_scan.copy_record_to_active_raw("CELL", group.record_id, fixed);
 		add_log("[info] cell name fix: \"" + group.record_id + "\"");
 		++counters.fixes;
 	}
@@ -462,11 +355,11 @@ void auto_merge_t::prune_unchanged()
 
 	std::vector<std::pair<std::string, std::string>> to_remove;
 
-	for (size_t i = 0; i < m_scan.merge_record_count(); ++i)
+	for (size_t i = 0; i < m_scan.active_record_count(); ++i)
 	{
-		const auto & rec_type = m_scan.merge_record_type(i);
-		const auto & record_id = m_scan.merge_record_id(i);
-		const auto & merge_content = m_scan.merge_record_content(i);
+		const auto & rec_type = m_scan.active_record_type(i);
+		const auto & record_id = m_scan.active_record_id(i);
+		const auto & merge_content = m_scan.active_record_content(i);
 
 		const auto key = rec_type + "\x00" + record_id;
 		auto it_found = group_lookup.find(key);
@@ -482,7 +375,7 @@ void auto_merge_t::prune_unchanged()
 	}
 
 	for (const auto & [rec_type, record_id] : to_remove)
-		m_scan.remove_from_merge(rec_type, record_id);
+		m_scan.remove_from_active(rec_type, record_id);
 }
 
 std::vector<std::string> auto_merge_t::read_version_contents(const record_group_t & group)
@@ -498,16 +391,19 @@ std::vector<std::string> auto_merge_t::read_version_contents(const record_group_
 
 bool auto_merge_t::is_plugin_included(int plugin_idx) const
 {
-	if (m_scan.is_merge_plugin(plugin_idx))
+	if (m_scan.is_active_plugin(plugin_idx))
 		return false;
 
 	const auto & filename = m_scan.plugin_filename(plugin_idx);
-	return m_config.excluded_plugins.count(filename) == 0;
+	return !m_config.exclusions.is_file_excluded(filename);
 }
 
 bool auto_merge_t::is_type_enabled(const std::string & rec_type) const
 {
-	return m_config.disabled_types.count(rec_type) == 0;
+	if (is_merge_excluded(rec_type))
+		return false;
+
+	return !m_config.exclusions.is_type_excluded(rec_type);
 }
 
 void auto_merge_t::add_log(const std::string & message)
@@ -517,5 +413,5 @@ void auto_merge_t::add_log(const std::string & message)
 
 std::string auto_merge_t::filter_ignored_sub_records(const std::string & rec_type, const std::string & content) const
 {
-	return sub_record_merge_t::filter_sub_records_by_rules(rec_type, content, m_config.ignored_sub_records);
+	return sub_record_merge_t::filter_sub_records_by_rules(rec_type, content, m_config.exclusions.ignored_sub_records());
 }

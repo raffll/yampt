@@ -1,7 +1,7 @@
 #include "inflection.hpp"
 #include "phrase_form_builder.hpp"
-#include <algorithm>
 #include <hunspell/hunspell.hxx>
+#include <algorithm>
 #include <set>
 #include <sstream>
 
@@ -86,7 +86,7 @@ static std::vector<std::string> split_by_space(const std::string & phrase)
 
 static std::vector<std::string> build_word_candidates(Hunspell & hunspell, const std::string & word)
 {
-	std::vector<std::string> candidates{ word };
+	std::vector<std::string> candidates { word };
 
 	const auto forms = generate_forms_for_word(hunspell, word);
 	for (const auto & form : forms)

@@ -6,8 +6,8 @@
 #include "../view/history_view.hpp"
 #include "../view/translation_suggestion_view.hpp"
 #include "../view/validation_view.hpp"
-#include <theme_system.hpp>
 #include <utility/string_utils.hpp>
+#include <theme_system.hpp>
 #include <QString>
 #include <QTextCursor>
 
@@ -157,7 +157,9 @@ void record_display_controller_t::apply_initial_highlights(
 	m_deps.extra_sel_original.adapted_diff.clear();
 	highlight_applier_t::apply(m_deps.editor_view.original_view(), m_deps.extra_sel_original);
 
-	const highlight_request_t trans_request { &annotations, false, highlight_sort_policy_t::length_first, enabled_kinds };
+	const highlight_request_t trans_request {
+		&annotations, false, highlight_sort_policy_t::length_first, enabled_kinds
+	};
 	auto trans_highlights = highlight_coordinator_t::find_annotation_highlights(translation_lower, trans_request);
 
 	m_deps.extra_sel_translation.annotations =

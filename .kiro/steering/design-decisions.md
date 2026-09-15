@@ -177,16 +177,18 @@ When the Translate button is clicked with invalid state (no document, no row, no
 
 ## Plugin Icons Must Be Consistent Across Panels
 
-The navigation tree (left panel) and the record view column headers (right panel) must show the same icon for each plugin. The icon logic lives in two places — `nav_tree_model.cpp::display_text_for_file` and `view_tree_model.cpp::headerData` — and must produce identical results for the same plugin index. When adding or changing an icon, update both locations.
+The navigation tree (left panel) and the record view column headers (right panel) must show the same icons for each plugin. The icon logic lives in two places — `nav_tree_model.cpp::file_node_display_text` and `view_tree_model.cpp::headerData` — and must produce identical results for the same plugin index. When adding or changing an icon, update both locations.
 
-Icon priority (first match wins):
-1. 🔒 — excluded from merged patch
-2. 🛡 — guard patch
-3. ⚙ — merged patch
-4. ✍ — editing enabled
-5. 📜 — master file (.esm)
-6. ⚡ — loaded from MO2 overwrite folder
-7. 📄 — regular plugin (default)
+Icons are built from independent tiers, appended in this fixed order. Each tier shows at most one marker; tiers do NOT suppress each other, so a plugin can carry several markers at once (e.g. `📄⚡🚫 [Active]`).
+
+1. Base type (exactly one): ⚙ merged patch (filename `Merged Patch.esp`) / 📜 master file (`.esm`) / 📄 regular plugin.
+2. MO2 overwrite (its own tier): ⚡ when the plugin path is under an `overwrite` folder, meaning a second version of the file exists.
+3. Merge participation (mutually exclusive, session-enforced): 🚫 excluded from merged patch, or 🛡 guard patch.
+4. Active target: an `[Active]` label when this is the active plugin (the one that receives copied records).
+
+The per-record merge-lock indicator (🔒) is separate from the plugin-level tiers above: it is prepended to a record row in the navigation tree (`nav_tree_model.cpp::data_for_record`) and drawn on a locked cell in the record view (`view_tree_model.cpp` lock_cell_icon). 🔒 always means "merged-patch lock" and is shown only when the active plugin is the merged patch (filename `Merged Patch.esp`); excluded-from-merge is 🚫, never 🔒. Locks live in a dedicated in-memory store (`plugin_scan_t::m_merge_locks`) separate from the active-record store, so they are never cleared or leaked when the active plugin is switched.
+
+Locks are persisted in a sidecar file `Merged Patch.esp.locks` (INI format) written next to the merged patch in its output directory, NOT in the shared `yEditor.ini`. This binds the lock set to that specific merged patch: `merge_controller_t::save_merged_patch_locks` writes it on every lock toggle, and `load_merged_patch_locks`/`sync_active_locks` load it whenever the merged patch becomes the active plugin (create, load-existing, set-active, session restore, and each profile load). Switching to a non-merged-patch active plugin clears the in-memory locks. Loading a different profile therefore picks up that profile's own merged-patch locks and never inherits another profile's.
 
 
 ## Record View Header: Use CE_HeaderSection, Draw Text Manually
@@ -216,3 +218,73 @@ This is intentional, NOT a bug. When a translation propagates, the user wants th
 Do NOT "fix" this by preserving the source entry's `intent` status when propagation occurs. Do NOT report it as "propagation overwrites user intent on the source entry." The overwrite is the desired behavior.
 
 Note: when `propagated_count == 0` (no siblings shared the `old_text`), the source keeps `intent` — the overwrite only happens when propagation actually occurred.
+
+## Leveled List Merge: Per-Occurrence Level Merge (Diverges From TES3Merge)
+
+`leveled_list_merge_t::merge` keys each leveled-list entry by **(item ID, occurrence index within the list)**, and resolves each occurrence's PC level (INTV) by normal three-way precedence (last-listed plugin that changed it wins). This means:
+
+- A plugin that **changes** an existing entry's PC level (e.g. master lists `T_Dwe_Regular_Long @ 13`, a plugin sets it to `@ 14`) merges as a change: the merged patch shows one entry at level 14, not two entries at 13 and 14.
+- **Duplicate entries are preserved, not collapsed.** OpenMW stores a leveled list as a flat `std::vector<LevelItem>` (`components/esm3/loadlevlist.cpp`); listing the same item ID multiple times is legitimate and increases its spawn weight. So an item that appears N times stays N times in the merged patch. The **occurrence count of an item ID is itself resolved as a three-way conflict** (last-listed plugin that changed the count from the master wins), NOT summed and NOT max — two plugins that both list an item 3× yield 3, not 6; a plugin that reduces the count wins if it is the last to change it. Each occurrence's level merges independently by position, also by last-changer-wins precedence.
+- Item union and deletion are keyed on item ID: an item present in the master but absent from a plugin is removed; items added by any plugin are kept.
+
+**This diverges from TES3Merge on purpose.** TES3Merge (`sources/TES3Merge/TES3Merge/Merger/LEVI.cs`) keys entries on `(ItemEditorId, PCLevelOfPrevious)` — item ID **and** level together — so a level change is treated as two distinct entries and both are kept (the merged list would show the item at both 13 and 14). yampt intentionally treats the PC level as a mergeable property of an occurrence instead, so a level edit resolves like any other field conflict. Do NOT "align" this back to TES3Merge's item+level key.
+
+## Flag Fields Merge Per Bit
+
+In the three-way sub-record merge, a schema field of type `flags_u8`/`flags_u16`/`flags_u32` merges **bit by bit**, not as a whole value. `merge_fields_three_way` (sub_record_merge.cpp) detects a flags field via `is_flags_field` and calls `merge_field_bits`: for each bit, if a plugin flipped it relative to the master and the winner did not, the plugin's bit is taken; the winner wins per bit on conflict; the last-listed plugin wins per bit among changers. Non-flag fields still merge whole-field.
+
+Consequence: two plugins that each toggle a *different* flag on the same field both take effect, instead of the last plugin's entire flags value overwriting the other's.
+
+This only fires for sub-records that go through the element-wise merge path (`needs_element_wise` true — i.e. they have an `element_wise_merge` rule in `record_behavior.cpp`). Sub-records that are a single flags field and previously merged whole-value were given explicit `element_wise_merge` rules so they get per-bit treatment: NPC_ `FLAG`, CREA `FLAG`, CONT `FLAG`, and LEVI/LEVC `DATA` (the leveled-list calculation flags, merged via the leveled header path `merge_header_part`). Do NOT remove these rules or revert flags to whole-value merge. CELL `DATA` flags are a separate concern (cell merge path) and are not covered here.
+
+## CELL Merge: Generic Three-Way of the Header, FRMR Region Dropped
+
+CELL uses the **generic merge** (`merge_strategy_t::generic`) — there is no CELL-specific merge strategy, no `merge_cell_refs`, and no `cell_refs` enum value. What makes CELL behave correctly is two table rows on its `record_behavior_t` entry plus a boundary-truncation step in `merge_generic`, not bespoke code.
+
+`merge_generic` fetches the record's behavior once and runs each parsed version sequence through `truncate_at_merge_boundary` before merging: the sequence is cut at the first sub-record whose rule carries `sub_rule_flag_t::merge_boundary`. CELL's behavior row lists `sub_record_rule_t { "FRMR", 0, merge_boundary }`, so every version is truncated at its first `FRMR`. Only the pre-FRMR header (NAME, DATA cell-flags/coords, RGNN, WHGT, AMBI, NAM5, NAM0, etc.) reaches the three-way overlay; the entire placed-object region — every `FRMR` group and everything after it — is dropped before merging and never re-emitted.
+
+Consequences:
+- The FRMR object list is **not merged and not carried** into the merged patch. A merged CELL record contains only the merged header. Placed-object edits (add, remove, move, re-own, re-lock) are not represented in the merged patch at all. This is deliberate: a CELL's reference list is a positional whole that does not survive field-wise or per-object three-way merging cleanly (the same sub-type — `NAME`, `DATA`, `INTV` — means different things in the header vs inside a reference, and only the FRMR boundary disambiguates them), so the region is excluded from the merge entirely.
+- A CELL whose only differences are in the FRMR region is a **no-op**: after truncation every version's header is identical, so `merge_generic` returns `changed = false` and emits nothing.
+- The changed/emit gate compares the merged sub-record **sequence** against the truncated winner sequence (`output == winner_subs`), not the reconstructed record string against the raw winner content. This is what lets a truncated (header-only) result be recognized as unchanged; it also cleanly serves every non-CELL record type, where no boundary exists and the full sequence is compared.
+
+`NAM0` (the reference count that precedes the FRMR list, and part of the header) is additionally excluded from the header merge via a second table row — `sub_record_rule_t { "NAM0", 0, skip_merge }`. `apply_intermediate` looks up each header sub-record's rule and skips any flagged `sub_rule_flag_t::skip_merge`, keeping the winner's copy so `NAM0` stays consistent with the winner. Header disambiguation between the 12-byte header `DATA` (cell flags/coords) and the 24-byte reference `DATA` needs no size-keyed rule: reference `DATA` sits after the FRMR boundary and is truncated away, so only header `DATA` is ever merged.
+
+The CELL row keeps its `decode_mode = cell`, `copy_strategy = header_and_selected_group`, and `wildcard_rule = &cell_wildcard` (`{ "*", 0, skip_non_existent }`). Decode, display, and the copy-to-merged-patch path (`merge_controller_t::copy_cell_record`) still use `partition_cell` / `cell_partition_t` / `frmr_group_t` / `read_frmr_index` / `build_frmr_map`; those are retained. Only the CELL-specific *merge* code was removed. Do NOT reintroduce a CELL merge strategy, per-object FRMR merging, an `atomic_groups` flag, or FRMR re-emission — CELL is a generic merge with a `merge_boundary` row by design.
+
+## Merge/Decode Invariants and Binary Layout Constants (comprehension-critical)
+
+These are the non-obvious invariants behind the hardest merge/decode code. They are NOT evident from names alone; do not "simplify" past them.
+
+### Binary layout constants live in one place
+
+ESM sub-record byte layouts that the merger and the conflict-slot builder both depend on are declared ONCE as named `constexpr` namespaces in `yampt.core/source/decoder/sub_record_schema.hpp`, and both `sub_record_merge.cpp` and `conflict_slots.cpp` read them. Never re-hardcode these offsets/sizes as literals in algorithm code:
+
+- `enam_layout` — ENAM effect slot (24 bytes). Authoritative UESP layout: Effect@0 (u16), Skill@2 (i8), Attribute@3 (i8), Range@4 (u32), Area@8 (u32), Duration@12 (u32), Magnitude Min@16 (u32), Magnitude Max@20 (u32). `magnitude_min_offset = 16`, `magnitude_max_offset = 20`. (A prior bug hardcoded the pair as {12,16} — Duration+MagMin — silently coupling the wrong fields. Kept correct only because the schema `enam_fields` was right; the merger literal was not.)
+- `npco_layout` — NPCO inventory item (36 bytes; item ID at offset 4, length 32).
+- `npcs_layout` — NPCS spell/ability ID (32-byte fixed record).
+- `fact_layout` — FACT reaction value is a 4-byte int32 (paired with the ANAM faction name).
+
+The ENAM magnitude pair is ALSO registered as a `paired_merge_rule_t` in `record_behavior.cpp` (offsets 16/20) so min and max merge together from one plugin (see the ┌/└→🔗 pair-marker feature). The two must agree; both now derive from the same UESP-confirmed offsets.
+
+### The three-way "intermediate claims a piece" predicate
+
+The core sub-record merge rule is: a piece (bit / byte span) is taken from an intermediate plugin only when the intermediate CHANGED it relative to the master (first), the winner did NOT change it, and the output still holds the master value (unclaimed). This "claim-once, last-changer-wins" predicate is named once as `intermediate_claims_bit` (masked bit form) and `intermediate_claims_span` (memcmp form) in `sub_record_merge.cpp`; `merge_field_bits`, `merge_bool_bit`, and `merge_value_field` all call it. Do not re-inline the `inter_changed && winner_unchanged && current_unclaimed` triple — edit the shared helper. (`merge_enam_slot_bytes` uses a deliberately distinct 2-way byte form because it builds its result fresh from the winner; it is not the same predicate.)
+
+`merge_bool_bit` reuses `field_def_t::size` as a BIT INDEX (not a byte length) for `bool_bit` fields — a type pun that is intentional and load-bearing.
+
+### Intermediate reverse-scan
+
+`merge_generic` iterates intermediates high-priority→low with `for (size_t version_idx = versions.size() - 2; version_idx >= 1; --version_idx)`, deliberately excluding master (index 0) and winner (back). This only terminates because the `versions.size() < 3` early return guarantees `versions.size() >= 3` by the time the loop runs. For CELL each version is first passed through `truncate_at_merge_boundary`, so only the pre-FRMR header participates; the FRMR region is dropped, as documented under "CELL Merge: Generic Three-Way of the Header, FRMR Region Dropped".
+
+### dial_info OpenMW ordering
+
+`dial_info_align_t::resolve_openmw_order` reconstructs INFO topic order from PNAM (previous-INFO) back-links using a linked list + position map, splicing each INFO after its predecessor (front if PNAM empty, end if PNAM unknown), and re-splicing when a plugin redefines an existing INFO with a different PNAM. This mirrors OpenMW's dialogue linking; it is reverse-engineered game behavior with no external citation.
+
+### content_alignment sentinels
+
+`content_alignment.cpp` and `conflict_slots.cpp` align N plugin versions into unified slots. `SIZE_MAX` means "this sub-record is absent in this column"; `merge_column = -1` means "no merge column". These sentinels are load-bearing throughout the slot/cursor index arithmetic.
+
+### scdt_patcher null-terminator tolerance
+
+`scdt_patcher_t::validate_text_size` accepts a declared size of either `old_text.size()` OR `old_text.size() + 1` — the `+1` covers compiled MWScript strings that include a trailing null in the length field. Message segments use a 2-byte size field for the first segment and 1-byte for later segments. The getpccell `'X'`-marker/back-2-bytes trick is documented in project-paths.md.

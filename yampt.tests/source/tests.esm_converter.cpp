@@ -354,7 +354,8 @@ TEST_CASE("esm_converter_t::convert_mast, master with extension gets suffix", "[
 {
 	auto merger = make_merger_with_entry(rec_type_t::cell, "Balmora", "Balmora", "Balmora PL");
 
-	auto tes3_body = make_sub_record("HEDR", std::string(300, '\0')) + make_sub_record("MAST", std::string("Morrowind.esm\0", 14));
+	auto tes3_body =
+	    make_sub_record("HEDR", std::string(300, '\0')) + make_sub_record("MAST", std::string("Morrowind.esm\0", 14));
 	auto esm_content = make_record("TES3", tes3_body);
 
 	const auto esm_path = get_temp_path("yampt_test_conv_mast_ext.esm");
@@ -375,7 +376,8 @@ TEST_CASE("esm_converter_t::convert_mast, extensionless master does not crash", 
 {
 	auto merger = make_merger_with_entry(rec_type_t::cell, "Balmora", "Balmora", "Balmora PL");
 
-	auto tes3_body = make_sub_record("HEDR", std::string(300, '\0')) + make_sub_record("MAST", std::string("Morrowind\0", 10));
+	auto tes3_body =
+	    make_sub_record("HEDR", std::string(300, '\0')) + make_sub_record("MAST", std::string("Morrowind\0", 10));
 	auto esm_content = make_record("TES3", tes3_body);
 
 	const auto esm_path = get_temp_path("yampt_test_conv_mast_noext.esm");
@@ -420,7 +422,8 @@ TEST_CASE("esm_converter_t::convert_bnam, script converted after dial", "[i]")
 {
 	const std::string script_line = "choice \"Yes\"";
 	const std::string translated_line = "choice \"Tak\"";
-	auto merger = make_merger_with_entry(rec_type_t::bnam, "T^topic^resp_1^" + script_line, script_line, translated_line);
+	auto merger =
+	    make_merger_with_entry(rec_type_t::bnam, "T^topic^resp_1^" + script_line, script_line, translated_line);
 
 	std::string topic_type(1, '\0');
 	auto dial_body = make_sub_record("NAME", std::string("topic\0", 6)) + make_sub_record("DATA", topic_type);

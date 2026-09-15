@@ -42,13 +42,9 @@ struct alignment_context_t
 class content_alignment_t
 {
 public:
-	static void align(
-	    alignment_context_t & context,
-	    const std::vector<alignment_rule_t> & rules);
+	static void align(alignment_context_t & context, const std::vector<alignment_rule_t> & rules);
 
-	static void build_from_slot_result(
-	    const slot_result_t & slot_result,
-	    alignment_context_t & context);
+	static void build_from_slot_result(const slot_result_t & slot_result, alignment_context_t & context);
 
 	static void build_occurrence_based(alignment_context_t & context);
 

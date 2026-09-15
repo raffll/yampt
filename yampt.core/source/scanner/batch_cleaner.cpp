@@ -187,7 +187,7 @@ std::vector<clean_result_t> batch_cleaner_t::clean_all(const std::string & outpu
 
 	for (int plugin_idx = 0; plugin_idx < plugin_count; ++plugin_idx)
 	{
-		if (m_scan.is_merge_plugin(plugin_idx))
+		if (m_scan.is_active_plugin(plugin_idx))
 			continue;
 
 		if (is_master_plugin(plugin_idx))

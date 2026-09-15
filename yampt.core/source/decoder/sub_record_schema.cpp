@@ -1,5 +1,6 @@
 #include "sub_record_schema.hpp"
 #include <cstring>
+#include <map>
 
 #define ARRAY_COUNT(x) (sizeof(x) / sizeof(x[0]))
 
@@ -7,10 +8,14 @@ static const char * const cell_flags[] = {
 	"Interior", "Has Water", "Illegal to Sleep", "_", "_", "_", "_", "Behave like Exterior",
 };
 
-static const field_def_t cell_data_fields[] = {
+static const field_def_t cell_data_exterior_fields[] = {
 	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, cell_flags, ARRAY_COUNT(cell_flags), nullptr },
 	{ "Grid X", field_type_t::i32, 4, 4, nullptr, nullptr, 0, nullptr },
 	{ "Grid Y", field_type_t::i32, 8, 4, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t cell_data_interior_fields[] = {
+	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, cell_flags, ARRAY_COUNT(cell_flags), nullptr },
 };
 
 static const char * const npc_flags[] = { "Female", "Essential", "Respawn", "Base", "Autocalc" };
@@ -321,7 +326,7 @@ static const field_def_t book_bkdt_fields[] = {
 	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
 	{ "Value", field_type_t::u32, 4, 4, nullptr, nullptr, 0, nullptr },
 	{ "Scroll", field_type_t::enum_u32, 8, 4, book_scroll, nullptr, 0, nullptr },
-	{ "Skill", field_type_t::i8, 12, 1, skill_names, nullptr, 0, nullptr },
+	{ "Skill", field_type_t::i32, 12, 4, skill_names, nullptr, 0, nullptr },
 	{ "Enchant Points", field_type_t::u32, 16, 4, nullptr, nullptr, 0, nullptr },
 };
 
@@ -361,53 +366,53 @@ static const field_def_t cont_cndt_fields[] = {
 static const field_def_t fact_fadt_fields[] = {
 	{ "Attribute 1", field_type_t::enum_u32, 0, 4, attribute_names, nullptr, 0, nullptr },
 	{ "Attribute 2", field_type_t::enum_u32, 4, 4, attribute_names, nullptr, 0, nullptr },
-	{ "Attribute 1", field_type_t::u32, 8, 4, nullptr, nullptr, 0, "Rank 1 Req" },
-	{ "Attribute 2", field_type_t::u32, 12, 4, nullptr, nullptr, 0, "Rank 1 Req" },
+	{ "Attribute 1 Req", field_type_t::u32, 8, 4, nullptr, nullptr, 0, "Rank 1 Req" },
+	{ "Attribute 2 Req", field_type_t::u32, 12, 4, nullptr, nullptr, 0, "Rank 1 Req" },
 	{ "Primary", field_type_t::u32, 16, 4, nullptr, nullptr, 0, "Rank 1 Req" },
 	{ "Favoured", field_type_t::u32, 20, 4, nullptr, nullptr, 0, "Rank 1 Req" },
 	{ "Reputation", field_type_t::u32, 24, 4, nullptr, nullptr, 0, "Rank 1 Req" },
-	{ "Attribute 1", field_type_t::u32, 28, 4, nullptr, nullptr, 0, "Rank 2 Req" },
-	{ "Attribute 2", field_type_t::u32, 32, 4, nullptr, nullptr, 0, "Rank 2 Req" },
+	{ "Attribute 1 Req", field_type_t::u32, 28, 4, nullptr, nullptr, 0, "Rank 2 Req" },
+	{ "Attribute 2 Req", field_type_t::u32, 32, 4, nullptr, nullptr, 0, "Rank 2 Req" },
 	{ "Primary", field_type_t::u32, 36, 4, nullptr, nullptr, 0, "Rank 2 Req" },
 	{ "Favoured", field_type_t::u32, 40, 4, nullptr, nullptr, 0, "Rank 2 Req" },
 	{ "Reputation", field_type_t::u32, 44, 4, nullptr, nullptr, 0, "Rank 2 Req" },
-	{ "Attribute 1", field_type_t::u32, 48, 4, nullptr, nullptr, 0, "Rank 3 Req" },
-	{ "Attribute 2", field_type_t::u32, 52, 4, nullptr, nullptr, 0, "Rank 3 Req" },
+	{ "Attribute 1 Req", field_type_t::u32, 48, 4, nullptr, nullptr, 0, "Rank 3 Req" },
+	{ "Attribute 2 Req", field_type_t::u32, 52, 4, nullptr, nullptr, 0, "Rank 3 Req" },
 	{ "Primary", field_type_t::u32, 56, 4, nullptr, nullptr, 0, "Rank 3 Req" },
 	{ "Favoured", field_type_t::u32, 60, 4, nullptr, nullptr, 0, "Rank 3 Req" },
 	{ "Reputation", field_type_t::u32, 64, 4, nullptr, nullptr, 0, "Rank 3 Req" },
-	{ "Attribute 1", field_type_t::u32, 68, 4, nullptr, nullptr, 0, "Rank 4 Req" },
-	{ "Attribute 2", field_type_t::u32, 72, 4, nullptr, nullptr, 0, "Rank 4 Req" },
+	{ "Attribute 1 Req", field_type_t::u32, 68, 4, nullptr, nullptr, 0, "Rank 4 Req" },
+	{ "Attribute 2 Req", field_type_t::u32, 72, 4, nullptr, nullptr, 0, "Rank 4 Req" },
 	{ "Primary", field_type_t::u32, 76, 4, nullptr, nullptr, 0, "Rank 4 Req" },
 	{ "Favoured", field_type_t::u32, 80, 4, nullptr, nullptr, 0, "Rank 4 Req" },
 	{ "Reputation", field_type_t::u32, 84, 4, nullptr, nullptr, 0, "Rank 4 Req" },
-	{ "Attribute 1", field_type_t::u32, 88, 4, nullptr, nullptr, 0, "Rank 5 Req" },
-	{ "Attribute 2", field_type_t::u32, 92, 4, nullptr, nullptr, 0, "Rank 5 Req" },
+	{ "Attribute 1 Req", field_type_t::u32, 88, 4, nullptr, nullptr, 0, "Rank 5 Req" },
+	{ "Attribute 2 Req", field_type_t::u32, 92, 4, nullptr, nullptr, 0, "Rank 5 Req" },
 	{ "Primary", field_type_t::u32, 96, 4, nullptr, nullptr, 0, "Rank 5 Req" },
 	{ "Favoured", field_type_t::u32, 100, 4, nullptr, nullptr, 0, "Rank 5 Req" },
 	{ "Reputation", field_type_t::u32, 104, 4, nullptr, nullptr, 0, "Rank 5 Req" },
-	{ "Attribute 1", field_type_t::u32, 108, 4, nullptr, nullptr, 0, "Rank 6 Req" },
-	{ "Attribute 2", field_type_t::u32, 112, 4, nullptr, nullptr, 0, "Rank 6 Req" },
+	{ "Attribute 1 Req", field_type_t::u32, 108, 4, nullptr, nullptr, 0, "Rank 6 Req" },
+	{ "Attribute 2 Req", field_type_t::u32, 112, 4, nullptr, nullptr, 0, "Rank 6 Req" },
 	{ "Primary", field_type_t::u32, 116, 4, nullptr, nullptr, 0, "Rank 6 Req" },
 	{ "Favoured", field_type_t::u32, 120, 4, nullptr, nullptr, 0, "Rank 6 Req" },
 	{ "Reputation", field_type_t::u32, 124, 4, nullptr, nullptr, 0, "Rank 6 Req" },
-	{ "Attribute 1", field_type_t::u32, 128, 4, nullptr, nullptr, 0, "Rank 7 Req" },
-	{ "Attribute 2", field_type_t::u32, 132, 4, nullptr, nullptr, 0, "Rank 7 Req" },
+	{ "Attribute 1 Req", field_type_t::u32, 128, 4, nullptr, nullptr, 0, "Rank 7 Req" },
+	{ "Attribute 2 Req", field_type_t::u32, 132, 4, nullptr, nullptr, 0, "Rank 7 Req" },
 	{ "Primary", field_type_t::u32, 136, 4, nullptr, nullptr, 0, "Rank 7 Req" },
 	{ "Favoured", field_type_t::u32, 140, 4, nullptr, nullptr, 0, "Rank 7 Req" },
 	{ "Reputation", field_type_t::u32, 144, 4, nullptr, nullptr, 0, "Rank 7 Req" },
-	{ "Attribute 1", field_type_t::u32, 148, 4, nullptr, nullptr, 0, "Rank 8 Req" },
-	{ "Attribute 2", field_type_t::u32, 152, 4, nullptr, nullptr, 0, "Rank 8 Req" },
+	{ "Attribute 1 Req", field_type_t::u32, 148, 4, nullptr, nullptr, 0, "Rank 8 Req" },
+	{ "Attribute 2 Req", field_type_t::u32, 152, 4, nullptr, nullptr, 0, "Rank 8 Req" },
 	{ "Primary", field_type_t::u32, 156, 4, nullptr, nullptr, 0, "Rank 8 Req" },
 	{ "Favoured", field_type_t::u32, 160, 4, nullptr, nullptr, 0, "Rank 8 Req" },
 	{ "Reputation", field_type_t::u32, 164, 4, nullptr, nullptr, 0, "Rank 8 Req" },
-	{ "Attribute 1", field_type_t::u32, 168, 4, nullptr, nullptr, 0, "Rank 9 Req" },
-	{ "Attribute 2", field_type_t::u32, 172, 4, nullptr, nullptr, 0, "Rank 9 Req" },
+	{ "Attribute 1 Req", field_type_t::u32, 168, 4, nullptr, nullptr, 0, "Rank 9 Req" },
+	{ "Attribute 2 Req", field_type_t::u32, 172, 4, nullptr, nullptr, 0, "Rank 9 Req" },
 	{ "Primary", field_type_t::u32, 176, 4, nullptr, nullptr, 0, "Rank 9 Req" },
 	{ "Favoured", field_type_t::u32, 180, 4, nullptr, nullptr, 0, "Rank 9 Req" },
 	{ "Reputation", field_type_t::u32, 184, 4, nullptr, nullptr, 0, "Rank 9 Req" },
-	{ "Attribute 1", field_type_t::u32, 188, 4, nullptr, nullptr, 0, "Rank 10 Req" },
-	{ "Attribute 2", field_type_t::u32, 192, 4, nullptr, nullptr, 0, "Rank 10 Req" },
+	{ "Attribute 1 Req", field_type_t::u32, 188, 4, nullptr, nullptr, 0, "Rank 10 Req" },
+	{ "Attribute 2 Req", field_type_t::u32, 192, 4, nullptr, nullptr, 0, "Rank 10 Req" },
 	{ "Primary", field_type_t::u32, 196, 4, nullptr, nullptr, 0, "Rank 10 Req" },
 	{ "Favoured", field_type_t::u32, 200, 4, nullptr, nullptr, 0, "Rank 10 Req" },
 	{ "Reputation", field_type_t::u32, 204, 4, nullptr, nullptr, 0, "Rank 10 Req" },
@@ -521,7 +526,7 @@ static const field_def_t gmst_fltv_fields[] = {
 };
 
 static const field_def_t glob_fnam_fields[] = {
-	{ "Type", field_type_t::string_fixed, 0, 1, nullptr, nullptr, 0, nullptr },
+	{ "Type", field_type_t::global_type, 0, 1, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t glob_fltv_fields[] = {
@@ -552,8 +557,8 @@ static const field_def_t land_binary_fields[] = {
 
 static const char * const info_gender[] = { "Male", "Female", nullptr };
 
-static const char * const info_rank_names[] = { "Rank 0", "Rank 1", "Rank 2", "Rank 3", "Rank 4",
-	                                            "Rank 5", "Rank 6", "Rank 7", "Rank 8", "Rank 9", nullptr };
+static const char * const info_rank_names[] = { "Rank 0", "Rank 1", "Rank 2", "Rank 3", "Rank 4", "Rank 5",
+	                                            "Rank 6", "Rank 7", "Rank 8", "Rank 9", nullptr };
 
 static const char * const info_types[] = { "Topic", "Voice", "Greeting", "Persuasion", "Journal", nullptr };
 
@@ -570,18 +575,27 @@ static const field_def_t info_scvr_fields[] = {
 };
 
 static const field_def_t regn_weat_fields[] = {
-	{ "Clear", field_type_t::u8, 0, 1, nullptr, nullptr, 0, nullptr }, { "Cloudy", field_type_t::u8, 1, 1, nullptr, nullptr, 0, nullptr },
-	{ "Foggy", field_type_t::u8, 2, 1, nullptr, nullptr, 0, nullptr }, { "Overcast", field_type_t::u8, 3, 1, nullptr, nullptr, 0, nullptr },
-	{ "Rain", field_type_t::u8, 4, 1, nullptr, nullptr, 0, nullptr },  { "Thunder", field_type_t::u8, 5, 1, nullptr, nullptr, 0, nullptr },
-	{ "Ash", field_type_t::u8, 6, 1, nullptr, nullptr, 0, nullptr },   { "Blight", field_type_t::u8, 7, 1, nullptr, nullptr, 0, nullptr },
+	{ "Clear", field_type_t::u8, 0, 1, nullptr, nullptr, 0, nullptr },
+	{ "Cloudy", field_type_t::u8, 1, 1, nullptr, nullptr, 0, nullptr },
+	{ "Foggy", field_type_t::u8, 2, 1, nullptr, nullptr, 0, nullptr },
+	{ "Overcast", field_type_t::u8, 3, 1, nullptr, nullptr, 0, nullptr },
+	{ "Rain", field_type_t::u8, 4, 1, nullptr, nullptr, 0, nullptr },
+	{ "Thunder", field_type_t::u8, 5, 1, nullptr, nullptr, 0, nullptr },
+	{ "Ash", field_type_t::u8, 6, 1, nullptr, nullptr, 0, nullptr },
+	{ "Blight", field_type_t::u8, 7, 1, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t regn_weat_10_fields[] = {
-	{ "Clear", field_type_t::u8, 0, 1, nullptr, nullptr, 0, nullptr }, { "Cloudy", field_type_t::u8, 1, 1, nullptr, nullptr, 0, nullptr },
-	{ "Foggy", field_type_t::u8, 2, 1, nullptr, nullptr, 0, nullptr }, { "Overcast", field_type_t::u8, 3, 1, nullptr, nullptr, 0, nullptr },
-	{ "Rain", field_type_t::u8, 4, 1, nullptr, nullptr, 0, nullptr },  { "Thunder", field_type_t::u8, 5, 1, nullptr, nullptr, 0, nullptr },
-	{ "Ash", field_type_t::u8, 6, 1, nullptr, nullptr, 0, nullptr },   { "Blight", field_type_t::u8, 7, 1, nullptr, nullptr, 0, nullptr },
-	{ "Snow", field_type_t::u8, 8, 1, nullptr, nullptr, 0, nullptr },  { "Blizzard", field_type_t::u8, 9, 1, nullptr, nullptr, 0, nullptr },
+	{ "Clear", field_type_t::u8, 0, 1, nullptr, nullptr, 0, nullptr },
+	{ "Cloudy", field_type_t::u8, 1, 1, nullptr, nullptr, 0, nullptr },
+	{ "Foggy", field_type_t::u8, 2, 1, nullptr, nullptr, 0, nullptr },
+	{ "Overcast", field_type_t::u8, 3, 1, nullptr, nullptr, 0, nullptr },
+	{ "Rain", field_type_t::u8, 4, 1, nullptr, nullptr, 0, nullptr },
+	{ "Thunder", field_type_t::u8, 5, 1, nullptr, nullptr, 0, nullptr },
+	{ "Ash", field_type_t::u8, 6, 1, nullptr, nullptr, 0, nullptr },
+	{ "Blight", field_type_t::u8, 7, 1, nullptr, nullptr, 0, nullptr },
+	{ "Snow", field_type_t::u8, 8, 1, nullptr, nullptr, 0, nullptr },
+	{ "Blizzard", field_type_t::u8, 9, 1, nullptr, nullptr, 0, nullptr },
 };
 
 static const char * const spell_types[] = { "Spell", "Ability", "Blight", "Disease", "Curse", "Power", nullptr };
@@ -653,6 +667,18 @@ static const field_def_t cell_nam9_fields[] = {
 	{ "Stack Count", field_type_t::i32, 0, 4, nullptr, nullptr, 0, nullptr },
 };
 
+static const field_def_t cell_unam_fields[] = {
+	{ "Blocked", field_type_t::u8, 0, 1, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t cell_xsol_fields[] = {
+	{ "Soul", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t cell_xchg_fields[] = {
+	{ "Enchant Charge", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
+};
+
 static const field_def_t cell_dodt_fields[] = {
 	{ "X Position", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
 	{ "Y Position", field_type_t::f32, 4, 4, nullptr, nullptr, 0, nullptr },
@@ -709,18 +735,18 @@ static const field_def_t ligh_lhdt_fields[] = {
 static const field_def_t ingr_irdt_fields[] = {
 	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
 	{ "Value", field_type_t::u32, 4, 4, nullptr, nullptr, 0, nullptr },
-	{ "Effect 1", field_type_t::i32, 8, 4, effect_names, nullptr, 0, nullptr },
-	{ "Effect 2", field_type_t::i32, 12, 4, effect_names, nullptr, 0, nullptr },
-	{ "Effect 3", field_type_t::i32, 16, 4, effect_names, nullptr, 0, nullptr },
-	{ "Effect 4", field_type_t::i32, 20, 4, effect_names, nullptr, 0, nullptr },
-	{ "Skill 1", field_type_t::i32, 24, 4, skill_names, nullptr, 0, nullptr },
-	{ "Skill 2", field_type_t::i32, 28, 4, skill_names, nullptr, 0, nullptr },
-	{ "Skill 3", field_type_t::i32, 32, 4, skill_names, nullptr, 0, nullptr },
-	{ "Skill 4", field_type_t::i32, 36, 4, skill_names, nullptr, 0, nullptr },
-	{ "Attribute 1", field_type_t::i32, 40, 4, attribute_names, nullptr, 0, nullptr },
-	{ "Attribute 2", field_type_t::i32, 44, 4, attribute_names, nullptr, 0, nullptr },
-	{ "Attribute 3", field_type_t::i32, 48, 4, attribute_names, nullptr, 0, nullptr },
-	{ "Attribute 4", field_type_t::i32, 52, 4, attribute_names, nullptr, 0, nullptr },
+	{ "Effect", field_type_t::i32, 8, 4, effect_names, nullptr, 0, "Effect #0" },
+	{ "Skill", field_type_t::i32, 24, 4, skill_names, nullptr, 0, "Effect #0" },
+	{ "Attribute", field_type_t::i32, 40, 4, attribute_names, nullptr, 0, "Effect #0" },
+	{ "Effect", field_type_t::i32, 12, 4, effect_names, nullptr, 0, "Effect #1" },
+	{ "Skill", field_type_t::i32, 28, 4, skill_names, nullptr, 0, "Effect #1" },
+	{ "Attribute", field_type_t::i32, 44, 4, attribute_names, nullptr, 0, "Effect #1" },
+	{ "Effect", field_type_t::i32, 16, 4, effect_names, nullptr, 0, "Effect #2" },
+	{ "Skill", field_type_t::i32, 32, 4, skill_names, nullptr, 0, "Effect #2" },
+	{ "Attribute", field_type_t::i32, 48, 4, attribute_names, nullptr, 0, "Effect #2" },
+	{ "Effect", field_type_t::i32, 20, 4, effect_names, nullptr, 0, "Effect #3" },
+	{ "Skill", field_type_t::i32, 36, 4, skill_names, nullptr, 0, "Effect #3" },
+	{ "Attribute", field_type_t::i32, 52, 4, attribute_names, nullptr, 0, "Effect #3" },
 };
 
 static const field_def_t scpt_schd_fields[] = {
@@ -791,35 +817,35 @@ static const field_def_t ai_w_fields[] = {
 	{ "Distance", field_type_t::u16, 0, 2, nullptr, nullptr, 0, nullptr },
 	{ "Duration", field_type_t::u16, 2, 2, nullptr, nullptr, 0, nullptr },
 	{ "Time of Day", field_type_t::u8, 4, 1, nullptr, nullptr, 0, nullptr },
-	{ "Idle 1", field_type_t::u8, 5, 1, nullptr, nullptr, 0, "Idle" },
-	{ "Idle 2", field_type_t::u8, 6, 1, nullptr, nullptr, 0, "Idle" },
-	{ "Idle 3", field_type_t::u8, 7, 1, nullptr, nullptr, 0, "Idle" },
-	{ "Idle 4", field_type_t::u8, 8, 1, nullptr, nullptr, 0, "Idle" },
-	{ "Idle 5", field_type_t::u8, 9, 1, nullptr, nullptr, 0, "Idle" },
-	{ "Idle 6", field_type_t::u8, 10, 1, nullptr, nullptr, 0, "Idle" },
-	{ "Idle 7", field_type_t::u8, 11, 1, nullptr, nullptr, 0, "Idle" },
-	{ "Idle 8", field_type_t::u8, 12, 1, nullptr, nullptr, 0, "Idle" },
+	{ "Idle 1", field_type_t::u8, 5, 1, nullptr, nullptr, 0, nullptr },
+	{ "Idle 2", field_type_t::u8, 6, 1, nullptr, nullptr, 0, nullptr },
+	{ "Idle 3", field_type_t::u8, 7, 1, nullptr, nullptr, 0, nullptr },
+	{ "Idle 4", field_type_t::u8, 8, 1, nullptr, nullptr, 0, nullptr },
+	{ "Idle 5", field_type_t::u8, 9, 1, nullptr, nullptr, 0, nullptr },
+	{ "Idle 6", field_type_t::u8, 10, 1, nullptr, nullptr, 0, nullptr },
+	{ "Idle 7", field_type_t::u8, 11, 1, nullptr, nullptr, 0, nullptr },
+	{ "Idle 8", field_type_t::u8, 12, 1, nullptr, nullptr, 0, nullptr },
 	{ "Should Repeat", field_type_t::u8, 13, 1, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t ai_t_fields[] = {
-	{ "X", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
-	{ "Y", field_type_t::f32, 4, 4, nullptr, nullptr, 0, nullptr },
-	{ "Z", field_type_t::f32, 8, 4, nullptr, nullptr, 0, nullptr },
+	{ "X Position", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
+	{ "Y Position", field_type_t::f32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Z Position", field_type_t::f32, 8, 4, nullptr, nullptr, 0, nullptr },
 	{ "Should Repeat", field_type_t::u8, 12, 1, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t ai_f_fields[] = {
-	{ "X", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
-	{ "Y", field_type_t::f32, 4, 4, nullptr, nullptr, 0, nullptr },
-	{ "Z", field_type_t::f32, 8, 4, nullptr, nullptr, 0, nullptr },
+	{ "X Position", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
+	{ "Y Position", field_type_t::f32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Z Position", field_type_t::f32, 8, 4, nullptr, nullptr, 0, nullptr },
 	{ "Duration", field_type_t::u16, 12, 2, nullptr, nullptr, 0, nullptr },
-	{ "ID", field_type_t::string_fixed, 14, 32, nullptr, nullptr, 0, nullptr },
+	{ "Target ID", field_type_t::string_fixed, 14, 32, nullptr, nullptr, 0, nullptr },
 	{ "Should Repeat", field_type_t::u8, 46, 1, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t ai_a_fields[] = {
-	{ "ID", field_type_t::string_fixed, 0, 32, nullptr, nullptr, 0, nullptr },
+	{ "Target ID", field_type_t::string_fixed, 0, 32, nullptr, nullptr, 0, nullptr },
 	{ "Should Repeat", field_type_t::u8, 32, 1, nullptr, nullptr, 0, nullptr },
 };
 
@@ -850,10 +876,6 @@ static const field_def_t cell_cndt_grid_fields[] = {
 	{ "Grid Y", field_type_t::i32, 4, 4, nullptr, nullptr, 0, nullptr },
 };
 
-static const field_def_t dele_fields[] = {
-	{ "Deleted", field_type_t::u32, 0, 4, nullptr, nullptr, 0, nullptr },
-};
-
 static const field_def_t whgt_fields[] = {
 	{ "Water Height", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
 };
@@ -866,10 +888,26 @@ static const field_def_t intv_4_fields[] = {
 	{ "Value", field_type_t::i32, 0, 4, nullptr, nullptr, 0, nullptr },
 };
 
+static const field_def_t fltv_4_fields[] = {
+	{ "Value", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
+};
+
 static const field_def_t soun_data_fields[] = {
 	{ "Volume", field_type_t::u8, 0, 1, nullptr, nullptr, 0, nullptr },
 	{ "Min Range", field_type_t::u8, 1, 1, nullptr, nullptr, 0, nullptr },
 	{ "Max Range", field_type_t::u8, 2, 1, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t sscr_data_fields[] = {
+	{ "Data", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t ltex_intv_fields[] = {
+	{ "Index", field_type_t::u32, 0, 4, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t ltex_data_fields[] = {
+	{ "Texture", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t pgrd_data_fields[] = {
@@ -1008,12 +1046,56 @@ static const field_def_t info_nnam_fields[] = {
 	{ "Next Info", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
 };
 
+static const field_def_t enam_name_string_fields[] = {
+	{ "Enchantment", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t rgnn_string_fields[] = {
+	{ "Region", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t ptex_string_fields[] = {
+	{ "Particle Texture", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t cvfx_string_fields[] = {
+	{ "Casting Visual", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t bvfx_string_fields[] = {
+	{ "Bolt Visual", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t hvfx_string_fields[] = {
+	{ "Hit Visual", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t avfx_string_fields[] = {
+	{ "Area Visual", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t csnd_string_fields[] = {
+	{ "Casting Sound", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t bsnd_string_fields[] = {
+	{ "Bolt Sound", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t hsnd_string_fields[] = {
+	{ "Hit Sound", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t asnd_string_fields[] = {
+	{ "Area Sound", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
 static const std::vector<sub_record_schema_t> & build_schemas()
 {
 	static const std::vector<sub_record_schema_t> schemas = {
 		{ "TES3", "HEDR", 300, tes3_hedr_fields, ARRAY_COUNT(tes3_hedr_fields) },
 		{ "TES3", "DATA", 8, tes3_data_fields, ARRAY_COUNT(tes3_data_fields) },
-		{ "CELL", "DATA", 12, cell_data_fields, ARRAY_COUNT(cell_data_fields) },
+		{ "CELL", "DATA", 12, cell_data_exterior_fields, ARRAY_COUNT(cell_data_exterior_fields) },
 		{ "CELL", "AMBI", 16, cell_ambi_fields, ARRAY_COUNT(cell_ambi_fields) },
 		{ "*", "DODT", 24, cell_dodt_fields, ARRAY_COUNT(cell_dodt_fields) },
 		{ "CELL", "DATA", 24, cell_ref_data_fields, ARRAY_COUNT(cell_ref_data_fields) },
@@ -1074,7 +1156,6 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 		{ "CELL", "MVRF", 4, mvrf_fields, ARRAY_COUNT(mvrf_fields) },
 		{ "CELL", "CNDT", 8, cell_cndt_grid_fields, ARRAY_COUNT(cell_cndt_grid_fields) },
 		{ "CELL", "CNDT", 0, cell_cndt_fields, ARRAY_COUNT(cell_cndt_fields) },
-		{ "*", "DELE", 4, dele_fields, ARRAY_COUNT(dele_fields) },
 		{ "CELL", "WHGT", 4, whgt_fields, ARRAY_COUNT(whgt_fields) },
 		{ "CELL", "NAM0", 4, nam0_fields, ARRAY_COUNT(nam0_fields) },
 		{ "*", "INTV", 4, intv_4_fields, ARRAY_COUNT(intv_4_fields) },
@@ -1088,7 +1169,25 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 		{ "REGN", "CNAM", 4, regn_cnam_fields, ARRAY_COUNT(regn_cnam_fields) },
 		{ "*", "INDX", 4, indx_fields, ARRAY_COUNT(indx_fields) },
 		{ "*", "INDX", 1, armo_indx_fields, ARRAY_COUNT(armo_indx_fields) },
+		{ "ARMO", "INDX", 1, armo_indx_fields, ARRAY_COUNT(armo_indx_fields) },
+		{ "CLOT", "INDX", 1, armo_indx_fields, ARRAY_COUNT(armo_indx_fields) },
 		{ "BOOK", "TEXT", 0, text_fields, ARRAY_COUNT(text_fields) },
+		{ "ALCH", "TEXT", 0, text_fields, ARRAY_COUNT(text_fields) },
+		{ "ARMO", "ENAM", 0, enam_name_string_fields, ARRAY_COUNT(enam_name_string_fields) },
+		{ "BOOK", "ENAM", 0, enam_name_string_fields, ARRAY_COUNT(enam_name_string_fields) },
+		{ "CLOT", "ENAM", 0, enam_name_string_fields, ARRAY_COUNT(enam_name_string_fields) },
+		{ "MISC", "ENAM", 0, enam_name_string_fields, ARRAY_COUNT(enam_name_string_fields) },
+		{ "WEAP", "ENAM", 0, enam_name_string_fields, ARRAY_COUNT(enam_name_string_fields) },
+		{ "CELL", "RGNN", 0, rgnn_string_fields, ARRAY_COUNT(rgnn_string_fields) },
+		{ "MGEF", "PTEX", 0, ptex_string_fields, ARRAY_COUNT(ptex_string_fields) },
+		{ "MGEF", "CVFX", 0, cvfx_string_fields, ARRAY_COUNT(cvfx_string_fields) },
+		{ "MGEF", "BVFX", 0, bvfx_string_fields, ARRAY_COUNT(bvfx_string_fields) },
+		{ "MGEF", "HVFX", 0, hvfx_string_fields, ARRAY_COUNT(hvfx_string_fields) },
+		{ "MGEF", "AVFX", 0, avfx_string_fields, ARRAY_COUNT(avfx_string_fields) },
+		{ "MGEF", "CSND", 0, csnd_string_fields, ARRAY_COUNT(csnd_string_fields) },
+		{ "MGEF", "BSND", 0, bsnd_string_fields, ARRAY_COUNT(bsnd_string_fields) },
+		{ "MGEF", "HSND", 0, hsnd_string_fields, ARRAY_COUNT(hsnd_string_fields) },
+		{ "MGEF", "ASND", 0, asnd_string_fields, ARRAY_COUNT(asnd_string_fields) },
 		{ "*", "NAME", 0, name_string_fields, ARRAY_COUNT(name_string_fields) },
 		{ "*", "FNAM", 0, fnam_string_fields, ARRAY_COUNT(fnam_string_fields) },
 		{ "*", "MODL", 0, modl_string_fields, ARRAY_COUNT(modl_string_fields) },
@@ -1117,9 +1216,15 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 		{ "CELL", "NAM5", 4, cell_nam5_fields, ARRAY_COUNT(cell_nam5_fields) },
 		{ "CELL", "FLTV", 4, cell_fltv_fields, ARRAY_COUNT(cell_fltv_fields) },
 		{ "CELL", "NAM9", 4, cell_nam9_fields, ARRAY_COUNT(cell_nam9_fields) },
-		{ "GLOB", "FNAM", 1, glob_fnam_fields, ARRAY_COUNT(glob_fnam_fields) },
+		{ "CELL", "UNAM", 1, cell_unam_fields, ARRAY_COUNT(cell_unam_fields) },
+		{ "CELL", "XSOL", 0, cell_xsol_fields, ARRAY_COUNT(cell_xsol_fields) },
+		{ "CELL", "XCHG", 4, cell_xchg_fields, ARRAY_COUNT(cell_xchg_fields) },
+		{ "GLOB", "FNAM", 0, glob_fnam_fields, ARRAY_COUNT(glob_fnam_fields) },
 		{ "GLOB", "FLTV", 4, glob_fltv_fields, ARRAY_COUNT(glob_fltv_fields) },
 		{ "SNDG", "DATA", 4, sndg_data_fields, ARRAY_COUNT(sndg_data_fields) },
+		{ "SSCR", "DATA", 0, sscr_data_fields, ARRAY_COUNT(sscr_data_fields) },
+		{ "LTEX", "INTV", 4, ltex_intv_fields, ARRAY_COUNT(ltex_intv_fields) },
+		{ "LTEX", "DATA", 0, ltex_data_fields, ARRAY_COUNT(ltex_data_fields) },
 		{ "LAND", "DATA", 4, land_data_fields, ARRAY_COUNT(land_data_fields) },
 		{ "LAND", "INTV", 8, land_intv_fields, ARRAY_COUNT(land_intv_fields) },
 		{ "LAND", "VNML", 0, land_binary_fields, ARRAY_COUNT(land_binary_fields) },
@@ -1127,11 +1232,16 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 		{ "LAND", "WNAM", 0, land_binary_fields, ARRAY_COUNT(land_binary_fields) },
 		{ "LAND", "VCLR", 0, land_binary_fields, ARRAY_COUNT(land_binary_fields) },
 		{ "LAND", "VTEX", 0, land_binary_fields, ARRAY_COUNT(land_binary_fields) },
+		{ "*", "FLTV", 4, fltv_4_fields, ARRAY_COUNT(fltv_4_fields) },
 	};
 	return schemas;
 }
 
-const sub_record_schema_t * find_schema(const std::string & record_type, const std::string & sub_type, size_t data_size)
+static const sub_record_schema_t * match_schema(
+    const std::string & record_type,
+    const std::string & sub_type,
+    size_t data_size,
+    bool require_specific_parent)
 {
 	const auto & schemas = build_schemas();
 	for (const auto & s : schemas)
@@ -1139,7 +1249,12 @@ const sub_record_schema_t * find_schema(const std::string & record_type, const s
 		if (s.sub_type != sub_type)
 			continue;
 
-		if (std::strcmp(s.parent_type, "*") != 0 && s.parent_type != record_type)
+		const bool is_wildcard = std::strcmp(s.parent_type, "*") == 0;
+
+		if (require_specific_parent && is_wildcard)
+			continue;
+
+		if (!is_wildcard && s.parent_type != record_type)
 			continue;
 
 		if (s.expected_size != 0 && s.expected_size != data_size)
@@ -1150,9 +1265,462 @@ const sub_record_schema_t * find_schema(const std::string & record_type, const s
 	return nullptr;
 }
 
+const sub_record_schema_t * find_schema(const std::string & record_type, const std::string & sub_type, size_t data_size)
+{
+	if (const auto * specific = match_schema(record_type, sub_type, data_size, true))
+		return specific;
+
+	return match_schema(record_type, sub_type, data_size, false);
+}
+
+const sub_record_schema_t * find_largest_schema(const std::string & record_type, const std::string & sub_type)
+{
+	const auto & schemas = build_schemas();
+	const sub_record_schema_t * largest = nullptr;
+
+	for (const auto & candidate : schemas)
+	{
+		if (candidate.sub_type != sub_type)
+			continue;
+
+		if (std::strcmp(candidate.parent_type, "*") != 0 && candidate.parent_type != record_type)
+			continue;
+
+		if (largest == nullptr)
+		{
+			largest = &candidate;
+			continue;
+		}
+
+		const bool candidate_specific = std::strcmp(candidate.parent_type, "*") != 0;
+		const bool largest_specific = std::strcmp(largest->parent_type, "*") != 0;
+
+		if (candidate_specific != largest_specific)
+		{
+			if (candidate_specific)
+				largest = &candidate;
+
+			continue;
+		}
+
+		if (candidate.expected_size > largest->expected_size)
+			largest = &candidate;
+	}
+
+	return largest;
+}
+
+const sub_record_schema_t * find_cell_data_schema(const char * data, size_t data_size)
+{
+	constexpr size_t cell_data_size = 12;
+	constexpr size_t cell_flags_size = 4;
+	constexpr uint32_t cell_flag_interior = 0x01;
+
+	if (data == nullptr || data_size != cell_data_size)
+		return nullptr;
+
+	static const sub_record_schema_t exterior_schema {
+		"CELL", "DATA", cell_data_size, cell_data_exterior_fields, ARRAY_COUNT(cell_data_exterior_fields)
+	};
+	static const sub_record_schema_t interior_schema {
+		"CELL", "DATA", cell_data_size, cell_data_interior_fields, ARRAY_COUNT(cell_data_interior_fields)
+	};
+
+	uint32_t flags = 0;
+	std::memcpy(&flags, data, cell_flags_size);
+
+	return (flags & cell_flag_interior) ? &interior_schema : &exterior_schema;
+}
+
+bool has_content_dependent_schema(const std::string & record_type, const std::string & sub_type)
+{
+	return record_type == "CELL" && sub_type == "DATA";
+}
+
+const sub_record_schema_t * content_dependent_schema(
+    const std::string & record_type,
+    const std::string & sub_type,
+    const char * data,
+    size_t data_size)
+{
+	if (!has_content_dependent_schema(record_type, sub_type))
+		return nullptr;
+
+	return find_cell_data_schema(data, data_size);
+}
+
+const field_def_t * find_field_by_name(const sub_record_schema_t & schema, const char * field_name)
+{
+	for (size_t field_index = 0; field_index < schema.field_count; ++field_index)
+	{
+		if (std::strcmp(schema.fields[field_index].name, field_name) == 0)
+			return &schema.fields[field_index];
+	}
+
+	return nullptr;
+}
+
 const std::vector<sub_record_schema_t> & all_schemas()
 {
 	return build_schemas();
+}
+
+static const std::map<std::string, std::vector<record_sub_record_t>> & build_compositions()
+{
+	constexpr auto single = sub_record_kind_t::single_value;
+	constexpr auto multi = sub_record_kind_t::multi_value;
+	constexpr auto list = sub_record_kind_t::repeatable;
+
+	static const std::map<std::string, std::vector<record_sub_record_t>> compositions = {
+		{ "DOOR",
+		  { { "NAME", "ID", single },
+		    { "FNAM", "Name", single },
+		    { "MODL", "Model", single },
+		    { "SCRI", "Script", single },
+		    { "SNAM", "Open Sound", single },
+		    { "ANAM", "Close Sound", single } } },
+		{ "ACTI",
+		  { { "NAME", "ID", single },
+		    { "MODL", "Model", single },
+		    { "FNAM", "Name", single },
+		    { "SCRI", "Script", single } } },
+		{ "ALCH",
+		  { { "NAME", "ID", single },
+		    { "MODL", "Model", single },
+		    { "TEXT", "Icon", single },
+		    { "SCRI", "Script", single },
+		    { "FNAM", "Name", single },
+		    { "ALDT", "Data", multi },
+		    { "ENAM", "Effect", list } } },
+		{ "APPA",
+		  { { "NAME", "ID", single },
+		    { "MODL", "Model", single },
+		    { "FNAM", "Name", single },
+		    { "AADT", "Data", multi },
+		    { "SCRI", "Script", single },
+		    { "ITEX", "Icon", single } } },
+		{ "ARMO",
+		  { { "NAME", "ID", single },
+		    { "MODL", "Model", single },
+		    { "FNAM", "Name", single },
+		    { "AODT", "Data", multi },
+		    { "SCRI", "Script", single },
+		    { "ITEX", "Icon", single },
+		    { "ENAM", "Enchantment", single },
+		    { "INDX", "Armor Index", list },
+		    { "BNAM", "Male Part", list },
+		    { "CNAM", "Female Part", list } } },
+		{ "BODY",
+		  { { "NAME", "ID", single },
+		    { "MODL", "Model", single },
+		    { "FNAM", "Race", single },
+		    { "BYDT", "Data", multi } } },
+		{ "BOOK",
+		  { { "NAME", "ID", single },
+		    { "MODL", "Model", single },
+		    { "FNAM", "Name", single },
+		    { "BKDT", "Data", multi },
+		    { "SCRI", "Script", single },
+		    { "ITEX", "Icon", single },
+		    { "ENAM", "Enchantment", single },
+		    { "TEXT", "Text", single } } },
+		{ "BSGN",
+		  { { "NAME", "ID", single },
+		    { "FNAM", "Name", single },
+		    { "TNAM", "Texture", single },
+		    { "DESC", "Description", single },
+		    { "NPCS", "Power", list } } },
+		{ "CLAS",
+		  { { "NAME", "ID", single },
+		    { "FNAM", "Name", single },
+		    { "CLDT", "Data", multi },
+		    { "DESC", "Description", single } } },
+		{ "CLOT",
+		  { { "NAME", "ID", single },
+		    { "MODL", "Model", single },
+		    { "FNAM", "Name", single },
+		    { "CTDT", "Data", multi },
+		    { "SCRI", "Script", single },
+		    { "ITEX", "Icon", single },
+		    { "ENAM", "Enchantment", single },
+		    { "INDX", "Clothing Index", list },
+		    { "BNAM", "Male Part", list },
+		    { "CNAM", "Female Part", list } } },
+		{ "CONT",
+		  { { "NAME", "ID", single },
+		    { "MODL", "Model", single },
+		    { "FNAM", "Name", single },
+		    { "CNDT", "Weight", single },
+		    { "FLAG", "Flags", multi },
+		    { "SCRI", "Script", single },
+		    { "NPCO", "Item", list } } },
+		{ "CREA",
+		  { { "NAME", "ID", single },
+		    { "MODL", "Model", single },
+		    { "CNAM", "Original", single },
+		    { "FNAM", "Name", single },
+		    { "SCRI", "Script", single },
+		    { "NPDT", "Data", multi },
+		    { "FLAG", "Flags", multi },
+		    { "XSCL", "Scale", single },
+		    { "NPCO", "Item", list },
+		    { "NPCS", "Spell", list },
+		    { "AIDT", "AI Data", multi },
+		    { "DODT", "Travel Destination", list },
+		    { "DNAM", "Destination Cell", list },
+		    { "AI_W", "AI Wander", list },
+		    { "AI_T", "AI Travel", list },
+		    { "AI_F", "AI Follow", list },
+		    { "AI_E", "AI Escort", list },
+		    { "AI_A", "AI Activate", list } } },
+		{ "ENCH",
+		  { { "NAME", "ID", single },
+		    { "ENDT", "Data", multi },
+		    { "ENAM", "Effect", list } } },
+		{ "GLOB",
+		  { { "NAME", "ID", single },
+		    { "FNAM", "Type", single },
+		    { "FLTV", "Value", single } } },
+		{ "GMST",
+		  { { "NAME", "ID", single },
+		    { "STRV", "Value", single },
+		    { "INTV", "Value", single },
+		    { "FLTV", "Value", single } } },
+		{ "INGR",
+		  { { "NAME", "ID", single },
+		    { "MODL", "Model", single },
+		    { "FNAM", "Name", single },
+		    { "IRDT", "Data", multi },
+		    { "SCRI", "Script", single },
+		    { "ITEX", "Icon", single } } },
+		{ "LIGH",
+		  { { "NAME", "ID", single },
+		    { "MODL", "Model", single },
+		    { "FNAM", "Name", single },
+		    { "ITEX", "Icon", single },
+		    { "LHDT", "Data", multi },
+		    { "SCRI", "Script", single },
+		    { "SNAM", "Sound", single } } },
+		{ "LOCK",
+		  { { "NAME", "ID", single },
+		    { "MODL", "Model", single },
+		    { "FNAM", "Name", single },
+		    { "LKDT", "Data", multi },
+		    { "SCRI", "Script", single },
+		    { "ITEX", "Icon", single } } },
+		{ "MISC",
+		  { { "NAME", "ID", single },
+		    { "MODL", "Model", single },
+		    { "FNAM", "Name", single },
+		    { "MCDT", "Data", multi },
+		    { "SCRI", "Script", single },
+		    { "ITEX", "Icon", single } } },
+		{ "MGEF",
+		  { { "INDX", "Effect Index", single },
+		    { "MEDT", "Data", multi },
+		    { "ITEX", "Icon", single },
+		    { "PTEX", "Particle Texture", single },
+		    { "BSND", "Bolt Sound", single },
+		    { "CSND", "Cast Sound", single },
+		    { "HSND", "Hit Sound", single },
+		    { "ASND", "Area Sound", single },
+		    { "CVFX", "Cast VFX", single },
+		    { "BVFX", "Bolt VFX", single },
+		    { "HVFX", "Hit VFX", single },
+		    { "AVFX", "Area VFX", single },
+		    { "DESC", "Description", single } } },
+		{ "NPC_",
+		  { { "NAME", "ID", single },
+		    { "MODL", "Model", single },
+		    { "FNAM", "Name", single },
+		    { "RNAM", "Race", single },
+		    { "CNAM", "Class", single },
+		    { "ANAM", "Faction", single },
+		    { "BNAM", "Head", single },
+		    { "KNAM", "Hair", single },
+		    { "SCRI", "Script", single },
+		    { "NPDT", "Data", multi },
+		    { "FLAG", "Flags", multi },
+		    { "NPCS", "Spell", list },
+		    { "NPCO", "Item", list },
+		    { "AIDT", "AI Data", multi },
+		    { "DODT", "Travel Destination", list },
+		    { "DNAM", "Destination Cell", list },
+		    { "AI_W", "AI Wander", list },
+		    { "AI_T", "AI Travel", list },
+		    { "AI_F", "AI Follow", list },
+		    { "AI_E", "AI Escort", list },
+		    { "AI_A", "AI Activate", list } } },
+		{ "PROB",
+		  { { "NAME", "ID", single },
+		    { "MODL", "Model", single },
+		    { "FNAM", "Name", single },
+		    { "PBDT", "Data", multi },
+		    { "SCRI", "Script", single },
+		    { "ITEX", "Icon", single } } },
+		{ "RACE",
+		  { { "NAME", "ID", single },
+		    { "FNAM", "Name", single },
+		    { "RADT", "Data", multi },
+		    { "DESC", "Description", single },
+		    { "NPCS", "Power", list } } },
+		{ "REPA",
+		  { { "NAME", "ID", single },
+		    { "MODL", "Model", single },
+		    { "FNAM", "Name", single },
+		    { "RIDT", "Data", multi },
+		    { "SCRI", "Script", single },
+		    { "ITEX", "Icon", single } } },
+		{ "SKIL",
+		  { { "INDX", "Skill Index", single },
+		    { "SKDT", "Data", multi },
+		    { "DESC", "Description", single } } },
+		{ "SPEL",
+		  { { "NAME", "ID", single },
+		    { "FNAM", "Name", single },
+		    { "SPDT", "Data", multi },
+		    { "ENAM", "Effect", list } } },
+		{ "SSCR",
+		  { { "NAME", "ID", single },
+		    { "DATA", "Data", single } } },
+		{ "STAT",
+		  { { "NAME", "ID", single },
+		    { "MODL", "Model", single } } },
+		{ "WEAP",
+		  { { "NAME", "ID", single },
+		    { "MODL", "Model", single },
+		    { "FNAM", "Name", single },
+		    { "WPDT", "Data", multi },
+		    { "SCRI", "Script", single },
+		    { "ITEX", "Icon", single },
+		    { "ENAM", "Enchantment", single } } },
+		{ "SNDG",
+		  { { "NAME", "ID", single },
+		    { "DATA", "Sound Type", single },
+		    { "CNAM", "Creature", single },
+		    { "SNAM", "Sound", single } } },
+		{ "SOUN",
+		  { { "NAME", "ID", single },
+		    { "FNAM", "Sound File", single },
+		    { "DATA", "Data", multi } } },
+		{ "DIAL",
+		  { { "NAME", "ID", single },
+		    { "DATA", "Type", single } } },
+		{ "INFO",
+		  { { "INAM", "Info ID", single },
+		    { "PNAM", "Previous", single },
+		    { "NNAM", "Next", single },
+		    { "DATA", "Data", multi },
+		    { "ONAM", "Actor", single },
+		    { "RNAM", "Race", single },
+		    { "CNAM", "Class", single },
+		    { "FNAM", "Faction", single },
+		    { "ANAM", "Cell", single },
+		    { "DNAM", "PC Faction", single },
+		    { "SNAM", "Sound", single },
+		    { "NAME", "Response", single },
+		    { "SCVR", "Condition", list },
+		    { "INTV", "Comparison Value", single },
+		    { "FLTV", "Comparison Value", single },
+		    { "BNAM", "Result Script", single },
+		    { "QSTN", "Quest Name", single },
+		    { "QSTF", "Quest Finished", single },
+		    { "QSTR", "Quest Restart", single } } },
+		{ "FACT",
+		  { { "NAME", "ID", single },
+		    { "FNAM", "Name", single },
+		    { "RNAM", "Rank Name", list },
+		    { "FADT", "Data", multi },
+		    { "ANAM", "Reaction Faction", list },
+		    { "INTV", "Reaction Value", list } } },
+		{ "LEVI",
+		  { { "NAME", "ID", single },
+		    { "DATA", "Flags", multi },
+		    { "NNAM", "Chance None", single },
+		    { "INDX", "Count", single },
+		    { "INAM", "Item", list },
+		    { "INTV", "PC Level", list } } },
+		{ "LEVC",
+		  { { "NAME", "ID", single },
+		    { "DATA", "Flags", multi },
+		    { "NNAM", "Chance None", single },
+		    { "INDX", "Count", single },
+		    { "CNAM", "Creature", list },
+		    { "INTV", "PC Level", list } } },
+		{ "REGN",
+		  { { "NAME", "ID", single },
+		    { "FNAM", "Name", single },
+		    { "WEAT", "Weather", multi },
+		    { "BNAM", "Sleep Creature", single },
+		    { "CNAM", "Map Color", single },
+		    { "SNAM", "Sound", list } } },
+		{ "SCPT",
+		  { { "SCHD", "Header", multi },
+		    { "SCVR", "Variables", single },
+		    { "SCDT", "Bytecode", single },
+		    { "SCTX", "Script Source", single } } },
+		{ "PGRD",
+		  { { "NAME", "Cell", single },
+		    { "DATA", "Data", multi },
+		    { "PGRP", "Points", single },
+		    { "PGRC", "Connections", single } } },
+		{ "LAND",
+		  { { "INTV", "Grid", multi },
+		    { "DATA", "Flags", multi },
+		    { "VNML", "Normals", single },
+		    { "VHGT", "Heights", single },
+		    { "WNAM", "Map LOD", single },
+		    { "VCLR", "Colors", single },
+		    { "VTEX", "Textures", single } } },
+		{ "CELL",
+		  { { "NAME", "ID", single },
+		    { "DATA", "Data", multi },
+		    { "INTV", "Water Level", single },
+		    { "WHGT", "Water Height", single },
+		    { "AMBI", "Ambient", multi },
+		    { "RGNN", "Region", single },
+		    { "NAM5", "Map Color", multi },
+		    { "NAM0", "Ref Count", single } } },
+		{ "CELL@ref",
+		  { { "FRMR", "Object Reference", list },
+		    { "NAME", "Object ID", single },
+		    { "UNAM", "Blocked", single },
+		    { "XSCL", "Scale", single },
+		    { "ANAM", "Owner", single },
+		    { "BNAM", "Global Variable", single },
+		    { "XSOL", "Soul", single },
+		    { "CNAM", "Faction", single },
+		    { "INDX", "Faction Rank", single },
+		    { "XCHG", "Enchant Charge", single },
+		    { "INTV", "Uses", single },
+		    { "NAM9", "Count", single },
+		    { "DODT", "Door Destination", single },
+		    { "DNAM", "Destination Cell", single },
+		    { "FLTV", "Lock Level", single },
+		    { "KNAM", "Key", single },
+		    { "TNAM", "Trap", single },
+		    { "DATA", "Position", multi },
+		    { "MVRF", "Moved Reference", single },
+		    { "CNDT", "Moved Destination", single } } },
+		{ "LTEX",
+		  { { "NAME", "ID", single },
+		    { "INTV", "Index", single },
+		    { "DATA", "Texture", single } } },
+	};
+
+	return compositions;
+}
+
+const std::vector<record_sub_record_t> & record_composition(const std::string & record_type)
+{
+	static const std::vector<record_sub_record_t> empty;
+
+	const auto & compositions = build_compositions();
+	const auto it_record = compositions.find(record_type);
+	if (it_record == compositions.end())
+		return empty;
+
+	return it_record->second;
 }
 
 const char * effect_name_by_index(int index)

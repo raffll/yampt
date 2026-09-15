@@ -1,4 +1,3 @@
-#include <resource_paths.hpp>
 #include "dialog/dict_selection_dialog.hpp"
 #include "dialog/first_run_dialog.hpp"
 #include "dialog/spell_context_menu.hpp"
@@ -21,6 +20,7 @@
 #include "view/validation_view.hpp"
 #include <utility/string_utils.hpp>
 #include <algorithm>
+#include <resource_paths.hpp>
 #include <QAction>
 #include <QCoreApplication>
 #include <QDir>
@@ -462,8 +462,7 @@ void main_window_t::connect_menu_signals()
 #endif
 
 		const auto archive_name = QFileInfo(archive_path).completeBaseName();
-		const auto target_dir =
-		    QDir(QString::fromStdString(resource_paths::workspace_dir())).filePath(archive_name);
+		const auto target_dir = QDir(QString::fromStdString(resource_paths::workspace_dir())).filePath(archive_name);
 		QDir().mkpath(target_dir);
 
 		QProcess proc;
@@ -552,7 +551,6 @@ void main_window_t::connect_menu_signals()
 		rebuild_table();
 		advance_to_next_row();
 	});
-
 }
 
 void main_window_t::connect_sidebar_signals()
@@ -724,32 +722,6 @@ void main_window_t::connect_editor_signals()
 			    idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
 			on_row_selected(next_row);
 		}
-	});
-
-	connect(
-	    m_table_view,
-	    &record_table_view_t::delete_entry_requested,
-	    this,
-	    [this]()
-	{
-		if (m_editor_controller.current_row() < 0)
-			return;
-
-		if (!m_active_doc)
-			return;
-
-		const auto * row_data = m_table_model->row_at(m_editor_controller.current_row());
-		if (!row_data)
-			return;
-
-		const auto result = m_active_doc->reset_to_original(*row_data);
-		if (!result.success)
-			return;
-
-		m_table_model->update_row(m_editor_controller.current_row(), result.new_text, result.status);
-		set_unsaved_changes(true);
-		update_status_counts();
-		load_record(m_editor_controller.current_row());
 	});
 
 	connect(

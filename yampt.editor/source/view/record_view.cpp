@@ -1,5 +1,6 @@
 #include "record_view.hpp"
 #include <scanner/plugin_scan.hpp>
+#include <functional>
 #include <QHeaderView>
 #include <QPainter>
 #include <QResizeEvent>
@@ -115,14 +116,15 @@ void record_view_t::display_record(plugin_scan_t & scan, const conflict_entry_t 
 {
 	m_model->set_record(scan, entry);
 
-	const auto merge_col = m_model->merge_column();
-	if (merge_col >= 0)
+	const auto active_col = m_model->active_column();
+	if (active_col >= 0)
 	{
-		const bool should_show = scan.has_merge();
-		m_tree->header()->setSectionHidden(merge_col, !should_show);
+		const bool should_show = scan.has_active();
+		m_tree->header()->setSectionHidden(active_col, !should_show);
 	}
 
 	expand_non_numeric_groups();
+
 	QTimer::singleShot(0, this, [this]() { apply_column_sizing(); });
 }
 
@@ -133,6 +135,12 @@ void record_view_t::clear()
 
 void record_view_t::resize_columns()
 {
+	apply_column_sizing();
+}
+
+void record_view_t::refresh_expansion()
+{
+	expand_non_numeric_groups();
 	apply_column_sizing();
 }
 
@@ -148,26 +156,22 @@ QTreeView * record_view_t::tree() const
 
 void record_view_t::expand_non_numeric_groups()
 {
-	m_tree->expandAll();
-
-	for (int i = 0; i < m_model->rowCount({}); ++i)
+	std::function<void(const QModelIndex &)> expand_recursive = [&](const QModelIndex & parent)
 	{
-		const auto & top_idx = m_model->index(i, 0, {});
-		const auto * top_node = m_model->node_from_index(top_idx);
-		if (top_node && top_node->start_collapsed)
+		const auto row_count = m_model->rowCount(parent);
+		for (int row = 0; row < row_count; ++row)
 		{
-			m_tree->collapse(top_idx);
-			continue;
-		}
+			const auto index = m_model->index(row, 0, parent);
+			const auto * node = m_model->node_from_index(index);
+			if (node != nullptr && node->type == "FRMR")
+				continue;
 
-		for (int j = 0; j < m_model->rowCount(top_idx); ++j)
-		{
-			const auto & child_idx = m_model->index(j, 0, top_idx);
-			const auto * child_node = m_model->node_from_index(child_idx);
-			if (child_node && child_node->start_collapsed)
-				m_tree->collapse(child_idx);
+			m_tree->expand(index);
+			expand_recursive(index);
 		}
-	}
+	};
+
+	expand_recursive({});
 }
 
 void record_view_t::apply_column_sizing()

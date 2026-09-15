@@ -50,11 +50,6 @@ public:
 		m_display_codepage = codepage;
 	}
 
-	void set_user_ignore_conflict(const std::set<std::string> & rules)
-	{
-		m_user_ignore_conflict = rules;
-	}
-
 	codepage_t display_codepage() const
 	{
 		return m_display_codepage;
@@ -67,11 +62,17 @@ public:
 		return m_show_deleted_strikeout;
 	}
 
-	void set_excluded_plugins(const std::set<std::string> * excluded);
+	void set_show_optional_placeholders(bool value);
+
+	bool show_optional_placeholders() const
+	{
+		return m_show_optional_placeholders;
+	}
+
 	void set_patch_plugins(const std::set<std::string> * patch);
 	void set_editable_columns(const editable_column_set_t * editable);
-	bool is_merge_column(int section) const;
-	int merge_column() const;
+	bool is_active_column(int section) const;
+	int active_column() const;
 
 	const std::string & record_type() const
 	{
@@ -108,14 +109,13 @@ public:
 		std::string type;
 		size_t size = 0;
 		int schema_field_index = -1;
-		bool start_collapsed = false;
 		bool show_group_value = false;
 		std::vector<std::string> values;
 		std::vector<binary_range_t> binary_ranges;
 		std::vector<conflict_this_t> cell_conflict_this;
 		conflict_all_t row_conflict_all = conflict_all_t::only_one;
 		bool all_identical = true;
-		bool is_ignored = false;
+		bool is_optional_placeholder = false;
 		bool is_deleted = false;
 		bool is_info_chain = false;
 		int occurrence = 0;
@@ -139,7 +139,6 @@ public:
 
 	const view_node_t * node_from_index(const QModelIndex & index) const;
 	std::string full_value_at(const QModelIndex & index) const;
-	bool is_editing_enabled() const;
 
 private:
 	static void compute_group_ranges(view_node_t & group_node, size_t col_count);
@@ -151,6 +150,7 @@ private:
 		std::vector<std::vector<sub_record_view_t>> & all_sub_records;
 		std::vector<std::string> & content_storage;
 		size_t col_count;
+		const slot_result_t * slot_result = nullptr;
 	};
 
 	struct slot_build_context_t
@@ -160,7 +160,6 @@ private:
 	};
 
 	size_t setup_columns(plugin_scan_t & scan, const conflict_entry_t & entry);
-	void setup_merge_column(plugin_scan_t & scan, const conflict_entry_t & entry, size_t & col_count);
 	void build_header_row(plugin_scan_t & scan, const conflict_entry_t & entry);
 	void load_sub_records(plugin_scan_t & scan, const conflict_entry_t & entry, record_context_t & context);
 
@@ -172,6 +171,8 @@ private:
 	void set_record_info(record_context_t & context, const conflict_entry_t & entry);
 	void set_record_dial(plugin_scan_t & scan, record_context_t & context, const conflict_entry_t & entry);
 	void set_record_generic(record_context_t & context, const conflict_entry_t & entry);
+	void sort_rows_by_canonical_order();
+	void append_optional_placeholders(size_t col_count);
 
 	void collect_leveled_entries(record_context_t & context, slot_build_context_t & build_ctx);
 	void collect_faction_entries(record_context_t & context, slot_build_context_t & build_ctx);
@@ -194,7 +195,6 @@ private:
 	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
 	    const std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_indices,
 	    const sub_slot_t & slot);
-
 
 	void decode_schema_children_ref(
 	    view_node_t & parent_row,
@@ -239,10 +239,8 @@ private:
 	std::vector<std::string> m_column_names;
 	std::vector<conflict_this_t> m_plugin_conflict_this;
 	bool m_hide_no_conflict = false;
-	bool m_has_merge_column = false;
-	std::set<std::string> m_user_ignore_conflict;
-	int m_merge_col_index = -1;
-	bool m_is_merge_pinned = false;
+	bool m_has_active_column = false;
+	int m_active_col_index = -1;
 	std::vector<merge_lock_t> m_record_locks;
 	std::string m_record_type;
 	std::string m_record_id;
@@ -255,12 +253,12 @@ private:
 	const std::vector<view_node_t> & visible_rows() const;
 	mutable std::vector<view_node_t> m_filtered_rows;
 	mutable bool m_filter_dirty = true;
-	const std::set<std::string> * m_excluded_plugins = nullptr;
 	const std::set<std::string> * m_patch_plugins = nullptr;
 	const editable_column_set_t * m_editable_columns = nullptr;
 	plugin_scan_t * m_scan_for_header = nullptr;
 	codepage_t m_display_codepage = codepage_t::windows_1252;
 	bool m_show_deleted_strikeout = false;
+	bool m_show_optional_placeholders = false;
 	mutable std::map<std::string, field_def_t> m_synthetic_fields;
 	mutable field_def_t m_bool_bit_field {};
 };

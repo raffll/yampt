@@ -47,6 +47,11 @@ public:
 		return *ptr_record;
 	}
 
+	const std::string & record_content_at(size_t index) const
+	{
+		return m_records.at(index).content;
+	}
+
 	size_t get_modified_count();
 
 	struct sub_record_t

@@ -56,8 +56,7 @@ std::vector<std::string> extract_model_list(const QJsonDocument & document, cons
 	if (!node.isArray())
 		return {};
 
-	const auto key = path.models_id_key.empty() ? QStringLiteral("id")
-	                                             : QString::fromStdString(path.models_id_key);
+	const auto key = path.models_id_key.empty() ? QStringLiteral("id") : QString::fromStdString(path.models_id_key);
 
 	std::vector<std::string> models;
 	for (const auto & element : node.toArray())

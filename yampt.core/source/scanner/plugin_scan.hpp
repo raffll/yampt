@@ -4,10 +4,14 @@
 #include "conflict_enums.hpp"
 #include "merge_patch_store.hpp"
 #include "plugin_index.hpp"
+#include "record_conflict.hpp"
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <set>
+#include <shared_mutex>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 struct record_version_t
@@ -26,18 +30,16 @@ struct conflict_entry_t
 	conflict_all_t conflict_all = conflict_all_t::unknown;
 	bool has_dele = false;
 	std::vector<record_version_t> versions;
-	std::unique_ptr<slot_result_t> slot_result;
 };
 
 class plugin_scan_t
 {
 public:
-	void load_plugin(const std::string & path);
-	void set_merge_plugin(const std::string & filename);
-	void set_merge_plugin_from_loaded(int plugin_idx);
-	void clear_merge_records();
-	std::vector<merge_record_t> collect_pinned_records() const;
-	void restore_pinned_records(const std::vector<merge_record_t> & pinned);
+	bool load_plugin(const std::string & path);
+	void set_active_plugin(const std::string & filename);
+	void set_active_from_loaded(int plugin_idx);
+	void reload_active_plugin(const std::string & path);
+	void clear_active_records();
 
 	using conflict_progress_fn_t = std::function<void(size_t done, size_t total)>;
 	void rebuild_conflicts(const conflict_progress_fn_t & progress_fn = {});
@@ -48,53 +50,50 @@ public:
 	const esm_reader_t & plugin(int idx) const;
 	esm_reader_t & mutable_plugin(int idx);
 	const plugin_index_t & index(int idx) const;
-	bool is_merge_plugin(int idx) const;
+	bool is_active_plugin(int idx) const;
+	int active_plugin_index() const;
 	const std::vector<std::string> & master_list(int idx) const;
 	uint64_t resolve_frmr(int plugin_idx, uint32_t raw_frmr) const;
 
 	const std::vector<conflict_entry_t> & entries() const;
 	const conflict_entry_t * find(const std::string & type, const std::string & id) const;
+	std::unique_ptr<slot_result_t> build_slot_result_for(const conflict_entry_t & entry);
 	std::vector<std::string> all_types() const;
 
-	void copy_record_to_merge(int source_plugin, size_t record_index);
-	void copy_record_to_merge_raw(
+	void copy_record_to_active(int source_plugin, size_t record_index);
+	void copy_record_to_active_raw(
 	    const std::string & rec_type,
 	    const std::string & record_id,
 	    const std::string & content);
-	void pin_record_to_merge(const std::string & rec_type, const std::string & record_id, const std::string & content);
-	bool is_merge_pinned(const std::string & rec_type, const std::string & record_id) const;
 
-	void add_merge_lock(const merge_lock_t & lock);
-	void remove_merge_lock(const merge_lock_t & lock);
-	bool has_merge_lock(const merge_lock_t & lock) const;
-	std::vector<merge_lock_t> merge_locks_for(const std::string & rec_type, const std::string & record_id) const;
-	const std::vector<merge_lock_t> & merge_locks() const;
-	void set_merge_locks(const std::vector<merge_lock_t> & locks);
-	const std::string * find_merge_content(const std::string & rec_type, const std::string & record_id) const;
+	void add_active_lock(const merge_lock_t & lock);
+	void remove_active_lock(const merge_lock_t & lock);
+	bool has_active_lock(const merge_lock_t & lock) const;
+	std::vector<merge_lock_t> active_locks_for(const std::string & rec_type, const std::string & record_id) const;
+	const std::vector<merge_lock_t> & active_locks() const;
+	void set_active_locks(const std::vector<merge_lock_t> & locks);
+	const std::string * find_active_content(const std::string & rec_type, const std::string & record_id) const;
 	std::string read_record_content(int plugin_idx, size_t record_index);
-	void remove_from_merge(const std::string & type, const std::string & id);
+	void remove_from_active(const std::string & type, const std::string & id);
 	void recompute_single_conflict(const std::string & rec_type, const std::string & record_id);
-	bool has_merge() const;
-	size_t merge_record_count() const;
-	const std::string & merge_record_content(size_t index) const;
-	const std::string & merge_record_type(size_t index) const;
-	const std::string & merge_record_id(size_t index) const;
+	bool has_active() const;
+	size_t active_record_count() const;
+	const std::string & active_record_content(size_t index) const;
+	const std::string & active_record_type(size_t index) const;
+	const std::string & active_record_id(size_t index) const;
 
-	merge_patch_store_t & merge_store()
+	merge_patch_store_t & active_store()
 	{
-		return m_merge_store;
+		return m_active_store;
 	}
 
-	const merge_patch_store_t & merge_store() const
+	const merge_patch_store_t & active_store() const
 	{
-		return m_merge_store;
+		return m_active_store;
 	}
 
 	size_t itm_count(int plugin_idx) const;
 	std::vector<const conflict_entry_t *> itm_entries(int plugin_idx) const;
-
-	void set_user_ignore_conflict(const std::set<std::string> & rules);
-	const std::set<std::string> & user_ignore_conflict() const;
 
 private:
 	struct version_descriptor_t
@@ -107,6 +106,11 @@ private:
 	};
 
 	void compute_conflict(conflict_entry_t & entry);
+	void compute_all_conflicts(const conflict_progress_fn_t & progress_fn);
+	void process_entry_range(size_t begin_index, size_t end_index);
+	const conflict_policy_t & cached_conflict_policy(const std::string & rec_type, const std::string & sub_type);
+
+	slot_result_t build_slot_result(const conflict_entry_t & entry);
 	void insert_or_update_version(version_descriptor_t desc);
 
 	struct loaded_plugin_t
@@ -131,11 +135,13 @@ private:
 	};
 
 	std::vector<std::unique_ptr<loaded_plugin_t>> m_plugins;
-	int m_merge_plugin_idx = -1;
+	int m_active_plugin_idx = -1;
 
-	merge_patch_store_t m_merge_store;
+	merge_patch_store_t m_active_store;
+	std::vector<merge_lock_t> m_merge_locks;
 
 	std::vector<conflict_entry_t> m_entries;
 	std::unordered_map<std::string, size_t> m_entry_lookup;
-	std::set<std::string> m_user_ignore_conflict;
+	std::unordered_map<std::string, conflict_policy_t> m_conflict_policy_cache;
+	std::unique_ptr<std::shared_mutex> m_conflict_policy_mutex = std::make_unique<std::shared_mutex>();
 };

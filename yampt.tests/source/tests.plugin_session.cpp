@@ -32,10 +32,9 @@ rc::Gen<std::set<std::string>> gen_plugin_set()
 TEST_CASE("plugin_session_t::save, persistence round-trip", "[pbt]")
 {
 	rc::prop(
-	    "excluded and patch plugins survive save/restore cycle",
+	    "patch plugins survive save/restore cycle",
 	    []()
 	{
-		const auto excluded = *gen_plugin_set();
 		const auto patch = *gen_plugin_set();
 
 		namespace fs = std::filesystem;
@@ -43,7 +42,6 @@ TEST_CASE("plugin_session_t::save, persistence round-trip", "[pbt]")
 		const auto ini_path = QString::fromStdString(temp_path.string());
 
 		plugin_session_t original;
-		original.set_excluded_plugins(excluded);
 		original.set_patch_plugins(patch);
 		original.save_session_state(ini_path);
 
@@ -53,7 +51,6 @@ TEST_CASE("plugin_session_t::save, persistence round-trip", "[pbt]")
 		std::error_code remove_error;
 		fs::remove(temp_path, remove_error);
 
-		RC_ASSERT(restored.excluded_plugins() == excluded);
 		RC_ASSERT(restored.patch_plugins() == patch);
 	});
 }
@@ -74,21 +71,12 @@ TEST_CASE("plugin_session_t::scan, empty before load", "[u][qt]")
 TEST_CASE("plugin_session_t::unload_all, resets state", "[u][qt]")
 {
 	plugin_session_t session;
-	session.set_excluded_plugins({ "test.esp" });
+	session.set_patch_plugins({ "test.esp" });
 	session.unload_all();
 
 	REQUIRE(session.load_source() == plugin_session_t::load_source_t::none);
 	REQUIRE(session.load_base_path().empty());
 	REQUIRE(session.scan().plugin_count() == 0);
-}
-
-TEST_CASE("plugin_session_t::excluded_plugins, round-trip", "[u][qt]")
-{
-	plugin_session_t session;
-	std::set<std::string> excluded = { "mod_a.esp", "mod_b.esp" };
-	session.set_excluded_plugins(excluded);
-
-	REQUIRE(session.excluded_plugins() == excluded);
 }
 
 TEST_CASE("plugin_session_t::patch_plugins, round-trip", "[u][qt]")

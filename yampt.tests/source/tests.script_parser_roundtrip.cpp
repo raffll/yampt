@@ -61,11 +61,11 @@ std::string build_scdt_entry(const std::string & keyword, const std::string & ce
 	{
 		std::string comparison = " == 1";
 		size_t text_size = cell_name.size();
-		size_t expr_size = 2 + 1 + 1 + text_size + comparison.size();
+		size_t expr_size = 4 + text_size + comparison.size();
 
 		std::string entry;
 		entry += size_byte(expr_size);
-		entry += "X";
+		entry += " X";
 		entry += std::string(1, '\x00');
 		entry += size_byte(text_size);
 		entry += cell_name;
