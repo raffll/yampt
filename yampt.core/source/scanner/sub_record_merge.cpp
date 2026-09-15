@@ -1137,16 +1137,16 @@ static std::string resolve_variable_size_value(
 	return field_merge_same_size(rec_type, sub_type, values, winning_index);
 }
 
-sub_record_sequence_t sub_record_merge_t::merge_variable_size_phase(
+variable_size_merge_result_t sub_record_merge_t::merge_variable_size_phase(
     const merge_input_t & input,
     const sub_record_sequence_t & winner_subs,
     const sub_record_sequence_t & output)
 {
 	const auto * behavior = find_record_behavior(input.rec_type);
 	if (!behavior)
-		return output;
+		return { output, false };
 
-	auto result = output;
+	variable_size_merge_result_t phase_result { output, false };
 	std::set<std::string> processed_sub_types;
 
 	for (size_t rule_idx = 0; rule_idx < behavior->sub_rule_count; ++rule_idx)
@@ -1170,15 +1170,18 @@ sub_record_sequence_t sub_record_merge_t::merge_variable_size_phase(
 			const auto values = collect_sub_type_occurrence(input.version_contents, sub_type, occurrence);
 			const auto merged = resolve_variable_size_value(input.rec_type, sub_type, values);
 
-			const auto output_index = find_by_type_and_occurrence(result, sub_type, occurrence);
+			if (merged.size() != values.front().size())
+				phase_result.merged_size_differing = true;
+
+			const auto output_index = find_by_type_and_occurrence(phase_result.output, sub_type, occurrence);
 			if (output_index >= 0)
-				result[static_cast<size_t>(output_index)].data = merged;
+				phase_result.output[static_cast<size_t>(output_index)].data = merged;
 
 			++occurrence;
 		}
 	}
 
-	return result;
+	return phase_result;
 }
 
 merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
@@ -1203,7 +1206,9 @@ merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
 		apply_intermediate(output, first_subs, inter_subs, winner_subs, input.rec_type);
 	}
 
-	output = merge_variable_size_phase(input, winner_subs, output);
+	const auto variable_size_result = merge_variable_size_phase(input, winner_subs, output);
+	output = variable_size_result.output;
+	const bool variable_size_merged = variable_size_result.merged_size_differing;
 
 	if (is_enam_record_type(input.rec_type))
 		output = merge_enam_phase(versions, first_subs, winner_subs, output);
@@ -1232,7 +1237,7 @@ merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
 		output = replace_faction_reactions(output, merged_reactions, *reaction_pair);
 	}
 
-	if (output == winner_subs)
+	if (output == winner_subs && !variable_size_merged)
 		return { false, winner_content };
 
 	const auto result = reconstruct_record(winner_content, output);

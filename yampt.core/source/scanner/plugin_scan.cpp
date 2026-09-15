@@ -12,10 +12,14 @@
 #include <set>
 #include <thread>
 
-void plugin_scan_t::load_plugin(const std::string & path)
+bool plugin_scan_t::load_plugin(const std::string & path)
 {
 	auto p = std::make_unique<loaded_plugin_t>(path);
+	if (!p->esm.is_loaded())
+		return false;
+
 	m_plugins.push_back(std::move(p));
+	return true;
 }
 
 void plugin_scan_t::loaded_plugin_t::parse_master_list()

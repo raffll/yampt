@@ -181,7 +181,12 @@ void merge_controller_t::load_existing_merged_patch()
 
 	try
 	{
-		m_session.scan().load_plugin(path);
+		if (!m_session.scan().load_plugin(path))
+		{
+			m_log("[error] cannot load merged patch (not a TES3 file): " + path);
+			return;
+		}
+
 		const int loaded_idx = static_cast<int>(m_session.scan().plugin_count()) - 1;
 		m_session.scan().set_active_from_loaded(loaded_idx);
 		load_merged_patch_locks();
@@ -694,6 +699,31 @@ bool merge_controller_t::is_active_locked(const merge_lock_t & lock) const
 	return m_session.scan().has_active_lock(lock);
 }
 
+void merge_controller_t::relock_after_edit(const std::string & rec_type, const std::string & record_id)
+{
+	const auto existing_locks = m_session.scan().active_locks_for(rec_type, record_id);
+	if (existing_locks.empty())
+		return;
+
+	const auto * active_content = m_session.scan().find_active_content(rec_type, record_id);
+	if (active_content == nullptr)
+		return;
+
+	for (auto lock : existing_locks)
+	{
+		lock.frozen_content = *active_content;
+
+		if (lock.scope == lock_scope_t::group)
+			lock.group_members =
+			    sub_record_merge_t::group_members_in_range(lock.frozen_content, lock.group_start, lock.group_end);
+
+		m_session.scan().add_active_lock(lock);
+	}
+
+	save_merged_patch_locks();
+	m_log("[info] re-locked " + rec_type + ":" + record_id + " to edited value");
+}
+
 std::string merge_controller_t::capture_locked_content(const merge_lock_t & lock) const
 {
 	const auto * active_content = m_session.scan().find_active_content(lock.rec_type, lock.record_id);
@@ -1035,6 +1065,8 @@ std::vector<patch_builder_t::master_entry_t> merge_controller_t::build_master_li
 
 void merge_controller_t::refresh_after_active_edit(const std::string & rec_type, const std::string & record_id)
 {
+	relock_after_edit(rec_type, record_id);
+
 	m_session.scan().recompute_single_conflict(rec_type, record_id);
 
 	if (m_refresh)

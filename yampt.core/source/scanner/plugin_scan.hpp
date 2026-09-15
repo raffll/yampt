@@ -35,7 +35,7 @@ struct conflict_entry_t
 class plugin_scan_t
 {
 public:
-	void load_plugin(const std::string & path);
+	bool load_plugin(const std::string & path);
 	void set_active_plugin(const std::string & filename);
 	void set_active_from_loaded(int plugin_idx);
 	void reload_active_plugin(const std::string & path);

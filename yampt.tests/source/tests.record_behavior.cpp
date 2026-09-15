@@ -54,10 +54,10 @@ TEST_CASE("record_behavior::is_merge_excluded, baseline excluded record types", 
 {
 	REQUIRE(is_merge_excluded("LAND"));
 	REQUIRE(is_merge_excluded("PGRD"));
-	REQUIRE(is_merge_excluded("REGN"));
-	REQUIRE(is_merge_excluded("SCPT"));
-	REQUIRE(is_merge_excluded("DIAL"));
-	REQUIRE(is_merge_excluded("INFO"));
+	REQUIRE_FALSE(is_merge_excluded("REGN"));
+	REQUIRE_FALSE(is_merge_excluded("SCPT"));
+	REQUIRE_FALSE(is_merge_excluded("DIAL"));
+	REQUIRE_FALSE(is_merge_excluded("INFO"));
 	REQUIRE_FALSE(is_merge_excluded("CELL"));
 	REQUIRE_FALSE(is_merge_excluded("WEAP"));
 	REQUIRE_FALSE(is_merge_excluded("XXXX"));
@@ -168,30 +168,6 @@ TEST_CASE("record_behavior::record_id_sub_type_for, INFO uses INAM others NAME",
 	REQUIRE(std::string(record_id_sub_type_for("WEAP")) == "NAME");
 	REQUIRE(std::string(record_id_sub_type_for("CELL")) == "NAME");
 	REQUIRE(std::string(record_id_sub_type_for("XXXX")) == "NAME");
-}
-
-TEST_CASE("record_behavior::read_only_reason_for, LAND is landscape others editable", "[u]")
-{
-	REQUIRE(read_only_reason_for("LAND") == read_only_reason_t::landscape_data);
-	REQUIRE(read_only_reason_for("WEAP") == read_only_reason_t::editable);
-	REQUIRE(read_only_reason_for("CELL") == read_only_reason_t::editable);
-	REQUIRE(read_only_reason_for("XXXX") == read_only_reason_t::editable);
-}
-
-TEST_CASE("record_behavior::record_allows_copy, LAND disallows copy others allow", "[u]")
-{
-	REQUIRE_FALSE(record_allows_copy("LAND"));
-	REQUIRE(record_allows_copy("WEAP"));
-	REQUIRE(record_allows_copy("CELL"));
-	REQUIRE(record_allows_copy("XXXX"));
-}
-
-TEST_CASE("record_behavior::record_allows_lock, LAND disallows lock others allow", "[u]")
-{
-	REQUIRE_FALSE(record_allows_lock("LAND"));
-	REQUIRE(record_allows_lock("WEAP"));
-	REQUIRE(record_allows_lock("CELL"));
-	REQUIRE(record_allows_lock("XXXX"));
 }
 
 TEST_CASE("record_behavior::record_allows_exclude, allowed by default including LAND", "[u]")

@@ -32,6 +32,12 @@ struct sub_record_entry_t
 using sub_record_sequence_t = std::vector<sub_record_entry_t>;
 using leveled_list_input_t = merge_input_t;
 
+struct variable_size_merge_result_t
+{
+	sub_record_sequence_t output;
+	bool merged_size_differing = false;
+};
+
 struct frmr_group_t
 {
 	uint32_t frmr_index;
@@ -154,7 +160,7 @@ private:
 	    const std::string & sub_type,
 	    const std::function<std::string(const sub_record_entry_t &)> & key_of);
 
-	static sub_record_sequence_t merge_variable_size_phase(
+	static variable_size_merge_result_t merge_variable_size_phase(
 	    const merge_input_t & input,
 	    const sub_record_sequence_t & winner_subs,
 	    const sub_record_sequence_t & output);

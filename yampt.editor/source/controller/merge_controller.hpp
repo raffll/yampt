@@ -112,6 +112,7 @@ private:
 	    const std::string & author,
 	    const std::string & description);
 	void refresh_after_active_edit(const std::string & rec_type, const std::string & record_id);
+	void relock_after_edit(const std::string & rec_type, const std::string & record_id);
 	bool prompt_save_active_before_switch();
 
 	std::string read_source_content(int plugin_idx, const std::string & rec_type, const std::string & record_id);

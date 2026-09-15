@@ -230,9 +230,6 @@ void nav_tree_model_t::build_tree()
 			file_node.groups.push_back(std::move(group));
 		}
 
-		if (file_node.groups.empty())
-			continue;
-
 		std::sort(
 		    file_node.groups.begin(),
 		    file_node.groups.end(),

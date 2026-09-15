@@ -249,7 +249,12 @@ void plugin_session_t::restore_active_plugin(const std::string & active_path)
 
 	try
 	{
-		m_scan.load_plugin(active_path);
+		if (!m_scan.load_plugin(active_path))
+		{
+			emit log_message("[warning] skipping invalid active plugin (not a TES3 file): " + filename);
+			return;
+		}
+
 		const int loaded_idx = static_cast<int>(m_scan.plugin_count()) - 1;
 		m_scan.set_active_from_loaded(loaded_idx);
 		m_scan.rebuild_conflicts();
@@ -396,7 +401,12 @@ void plugin_session_t::load_plugins_internal(const std::vector<std::string> & pa
 
 		try
 		{
-			m_scan.load_plugin(path);
+			if (!m_scan.load_plugin(path))
+			{
+				emit log_message("[warning] skipping invalid plugin (not a TES3 file): " + filename);
+				continue;
+			}
+
 			const int loaded_idx = static_cast<int>(m_scan.plugin_count()) - 1;
 
 			if (filename == merged_patch::filename)
