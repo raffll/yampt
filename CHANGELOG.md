@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.1232] - 2026-09-15
+## [0.1233] - 2026-09-15
 
 ### yTranslator
 - [CHANGE] Copy Original (F8), Set In Progress (F9), Set Translated (F10), and Set Untranslated (Del) now apply to every selected row instead of only the active one, and all four appear in the Records context menu with their shortcut keys shown; Set Untranslated clears the translation and sets the status to Untranslated, the same as pressing Del

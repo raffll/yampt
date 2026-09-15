@@ -53,7 +53,7 @@ Copy-Item (Join-Path $repoRoot "README.md") $docsDst
 Copy-Item (Join-Path $repoRoot "CHANGELOG.md") $docsDst
 $docsSrc = Join-Path $repoRoot "docs"
 if (Test-Path $docsSrc) {
-    Copy-Item (Join-Path $docsSrc "*.md") $docsDst
+    Copy-Item (Join-Path $docsSrc "*.md") $docsDst -Exclude "AUDIT.md"
 }
 
 Push-Location $buildDir
