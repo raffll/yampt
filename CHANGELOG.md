@@ -4,8 +4,8 @@
 
 ### yTranslator
 - [CHANGE] Copy Original (F8), Set In Progress (F9), Set Translated (F10), and Set Untranslated (Del) now apply to every selected row instead of only the active one, and all four appear in the Records context menu with their shortcut keys shown; Set Untranslated clears the translation and sets the status to Untranslated, the same as pressing Del
-- [FIX] Converting a plugin now rewrites compiled script data correctly, so translated scripts run in the original Morrowind engine and open in the Construction Set without errors. Message boxes, say subtitles, and choice options keep their exact translated text (including multi-line messages that use the vertical bar), message-box buttons are translated, and a topic reference is no longer confused with an identically named creature or object elsewhere in the same script
 - [CHANGE] The Statuses tab counts now reflect the active type filter, showing the tally within that subset (for example the counts for a soloed CELL type) instead of always counting the whole dictionary; the counts are not narrowed by the status selection or the search field
+- [FIX] Converting a plugin now rewrites compiled script data correctly, so translated scripts run in the original Morrowind engine and open in the Construction Set without errors. Message boxes, say subtitles, and choice options keep their exact translated text (including multi-line messages that use the vertical bar), message-box buttons are translated, and a topic reference is no longer confused with an identically named creature or object elsewhere in the same script
 
 ### yEditor
 - [NEW] Build a plugin by hand into any target, not only the merged patch. One loaded plugin is the active plugin, marked with an [Active] label in the navigation tree and record view, and it receives every copied record, sub-record, and field. Create New Plugin in the toolbar makes an empty plugin and sets it active; Set as Active Plugin in a plugin's right-click menu switches the target. The merged patch is active by default, so existing workflows are unchanged. Only one plugin is active at a time, and switching offers to save the current one first
@@ -53,6 +53,7 @@
 - [FIX] Start Script and Land Texture records now show their fields (script data, texture index and path) in the record view instead of raw bytes
 - [FIX] Interior cells no longer show Grid X and Grid Y in the record view, since those coordinates only apply to exterior cells; the interior cell's data previously displayed meaningless numbers in those rows
 - [FIX] Conflicting values are now colored in the record view even when only one plugin and the merged patch define a record; previously a differing merged-patch value showed in the plain no-conflict color instead of the conflict colors
+- [REMOVE] Direct in-place editing of loaded plugins has been removed, along with its Editing settings page. Records are now built up by copying into the active plugin (the merged patch by default), and only the active plugin's column receives changes
 
 ### Both Apps
 - [CHANGE] The log panel no longer wraps long lines; instead it scrolls horizontally, so each log entry stays on one line
