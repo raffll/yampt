@@ -804,6 +804,122 @@ TEST_CASE("sub_record_merge_t::merge, NPDT 12 to 52 expansion wins despite other
 	REQUIRE(npdt_size(result.content) == 52);
 }
 
+TEST_CASE("sub_record_merge_t::merge, NPDT 12 12 52 12 keeps 52 change from master", "[u]")
+{
+	std::string npdt_master(12, '\0');
+	npdt_master[0] = 12;
+
+	std::string npdt_unchanged(12, '\0');
+	npdt_unchanged[0] = 12;
+
+	std::string npdt_expand(52, '\0');
+	npdt_expand[0] = 52;
+	npdt_expand[4] = 100;
+
+	std::string npdt_winner(12, '\0');
+	npdt_winner[0] = 12;
+
+	auto subs_master = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_master);
+	auto subs_unchanged = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_unchanged);
+	auto subs_expand = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_expand);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_winner);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_master),
+		make_record("NPC_", subs_unchanged),
+		make_record("NPC_", subs_expand),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(npdt_size(result.content) == 52);
+}
+
+TEST_CASE("sub_record_merge_t::merge, NPDT 12 52a 52b 12 merges both 52 edits last-changer-wins", "[u]")
+{
+	std::string npdt_master(12, '\0');
+	npdt_master[0] = 12;
+
+	std::string npdt_expand_a(52, '\0');
+	npdt_expand_a[0] = 52;
+	npdt_expand_a[4] = 100;
+
+	std::string npdt_expand_b(52, '\0');
+	npdt_expand_b[0] = 52;
+	npdt_expand_b[8] = 200;
+
+	std::string npdt_winner(12, '\0');
+	npdt_winner[0] = 12;
+
+	auto subs_master = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_master);
+	auto subs_expand_a = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_expand_a);
+	auto subs_expand_b = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_expand_b);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_winner);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_master),
+		make_record("NPC_", subs_expand_a),
+		make_record("NPC_", subs_expand_b),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(npdt_size(result.content) == 52);
+
+	const auto pos = result.content.find("NPDT");
+	REQUIRE(pos != std::string::npos);
+	const size_t data_start = pos + 4 + 4;
+	REQUIRE(static_cast<unsigned char>(result.content[data_start + 4]) == 100);
+	REQUIRE(static_cast<unsigned char>(result.content[data_start + 8]) == 200);
+}
+
+TEST_CASE("sub_record_merge_t::merge, NPDT 12 52a 52b conflicting field last-changer-wins", "[u]")
+{
+	std::string npdt_master(12, '\0');
+	npdt_master[0] = 12;
+
+	std::string npdt_expand_a(52, '\0');
+	npdt_expand_a[0] = 52;
+	npdt_expand_a[4] = 100;
+
+	std::string npdt_expand_b(52, '\0');
+	npdt_expand_b[0] = 52;
+	npdt_expand_b[4] = 250;
+
+	auto subs_master = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_master);
+	auto subs_expand_a = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_expand_a);
+	auto subs_expand_b = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_expand_b);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_master),
+		make_record("NPC_", subs_expand_a),
+		make_record("NPC_", subs_expand_b),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(npdt_size(result.content) == 52);
+
+	const auto pos = result.content.find("NPDT");
+	REQUIRE(pos != std::string::npos);
+	const size_t data_start = pos + 4 + 4;
+	REQUIRE(static_cast<unsigned char>(result.content[data_start + 4]) == 250);
+}
+
 static constexpr uint32_t npc_flag_autocalc = 0x0010;
 static constexpr size_t npdt_52_gold_offset = 48;
 static constexpr size_t npdt_12_gold_offset = 8;

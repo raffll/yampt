@@ -542,6 +542,22 @@ void sub_record_merge_t::apply_paired_rules(
 
 static bool is_keyed_list_spec_sub_type(const std::string & rec_type, const std::string & sub_type);
 
+static bool is_variable_size_sub_type(const std::string & rec_type, const std::string & sub_type)
+{
+	const auto * behavior = find_record_behavior(rec_type);
+	if (!behavior)
+		return false;
+
+	for (size_t rule_idx = 0; rule_idx < behavior->sub_rule_count; ++rule_idx)
+	{
+		const auto & rule = behavior->sub_rules[rule_idx];
+		if (sub_type == rule.sub_type && has_flag(rule.flags, sub_rule_flag_t::skip_if_size_differs))
+			return true;
+	}
+
+	return false;
+}
+
 void sub_record_merge_t::apply_intermediate(
     sub_record_sequence_t & output,
     const sub_record_sequence_t & first,
@@ -552,6 +568,9 @@ void sub_record_merge_t::apply_intermediate(
 	for (size_t i = 0; i < intermediate.size(); ++i)
 	{
 		if (is_enam_record_type(rec_type) && intermediate[i].type == "ENAM")
+			continue;
+
+		if (is_variable_size_sub_type(rec_type, intermediate[i].type))
 			continue;
 
 		if (is_keyed_list_spec_sub_type(rec_type, intermediate[i].type))
@@ -1044,6 +1063,124 @@ static sub_record_sequence_t filter_for_merge(
 	return result;
 }
 
+static std::vector<std::string> collect_sub_type_occurrence(
+    const std::vector<std::string> & versions,
+    const std::string & sub_type,
+    size_t occurrence)
+{
+	std::vector<std::string> values;
+
+	for (const auto & content : versions)
+	{
+		const auto subs = sub_record_merge_t::parse_sub_records(content);
+		const auto index = sub_record_merge_t::find_by_type_and_occurrence(subs, sub_type, occurrence);
+		values.push_back(index < 0 ? std::string() : subs[static_cast<size_t>(index)].data);
+	}
+
+	return values;
+}
+
+static size_t resolve_winning_index(const std::vector<std::string> & values)
+{
+	const auto & master = values.front();
+	size_t winning_index = 0;
+
+	for (size_t version_idx = 1; version_idx < values.size(); ++version_idx)
+	{
+		if (!values[version_idx].empty() && values[version_idx] != master)
+			winning_index = version_idx;
+	}
+
+	return winning_index;
+}
+
+static std::string field_merge_same_size(
+    const std::string & rec_type,
+    const std::string & sub_type,
+    const std::vector<std::string> & values,
+    size_t winning_index)
+{
+	const std::string & winner_value = values[winning_index];
+	const size_t winning_size = winner_value.size();
+
+	std::string master = values.front();
+	if (master.size() != winning_size)
+		master.assign(winning_size, '\0');
+
+	if (!sub_record_merge_t::has_schema(rec_type, sub_type))
+		return winner_value;
+
+	std::string result = winner_value;
+
+	for (size_t version_idx = winning_index; version_idx-- > 1;)
+	{
+		const std::string & inter = values[version_idx];
+		if (inter.size() != winning_size || inter == master)
+			continue;
+
+		const sub_record_merge_t::field_merge_input_t field_input {
+			rec_type, sub_type, master.data(), inter.data(), winner_value.data(), result.data(), winning_size
+		};
+
+		result = sub_record_merge_t::merge_fields_three_way(field_input);
+	}
+
+	return result;
+}
+
+static std::string resolve_variable_size_value(
+    const std::string & rec_type,
+    const std::string & sub_type,
+    const std::vector<std::string> & values)
+{
+	const size_t winning_index = resolve_winning_index(values);
+	return field_merge_same_size(rec_type, sub_type, values, winning_index);
+}
+
+sub_record_sequence_t sub_record_merge_t::merge_variable_size_phase(
+    const merge_input_t & input,
+    const sub_record_sequence_t & winner_subs,
+    const sub_record_sequence_t & output)
+{
+	const auto * behavior = find_record_behavior(input.rec_type);
+	if (!behavior)
+		return output;
+
+	auto result = output;
+	std::set<std::string> processed_sub_types;
+
+	for (size_t rule_idx = 0; rule_idx < behavior->sub_rule_count; ++rule_idx)
+	{
+		const auto & rule = behavior->sub_rules[rule_idx];
+		if (!has_flag(rule.flags, sub_rule_flag_t::skip_if_size_differs))
+			continue;
+
+		const std::string sub_type = rule.sub_type;
+		if (!processed_sub_types.insert(sub_type).second)
+			continue;
+
+		size_t occurrence = 0;
+
+		while (true)
+		{
+			const auto winner_index = find_by_type_and_occurrence(winner_subs, sub_type, occurrence);
+			if (winner_index < 0)
+				break;
+
+			const auto values = collect_sub_type_occurrence(input.version_contents, sub_type, occurrence);
+			const auto merged = resolve_variable_size_value(input.rec_type, sub_type, values);
+
+			const auto output_index = find_by_type_and_occurrence(result, sub_type, occurrence);
+			if (output_index >= 0)
+				result[static_cast<size_t>(output_index)].data = merged;
+
+			++occurrence;
+		}
+	}
+
+	return result;
+}
+
 merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
 {
 	const auto & versions = input.version_contents;
@@ -1065,6 +1202,8 @@ merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
 		const auto inter_subs = filter_for_merge(parse_sub_records(versions[version_idx]), behavior);
 		apply_intermediate(output, first_subs, inter_subs, winner_subs, input.rec_type);
 	}
+
+	output = merge_variable_size_phase(input, winner_subs, output);
 
 	if (is_enam_record_type(input.rec_type))
 		output = merge_enam_phase(versions, first_subs, winner_subs, output);

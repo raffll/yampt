@@ -154,6 +154,11 @@ private:
 	    const std::string & sub_type,
 	    const std::function<std::string(const sub_record_entry_t &)> & key_of);
 
+	static sub_record_sequence_t merge_variable_size_phase(
+	    const merge_input_t & input,
+	    const sub_record_sequence_t & winner_subs,
+	    const sub_record_sequence_t & output);
+
 	struct matched_entry_t
 	{
 		const sub_record_entry_t & first_entry;
