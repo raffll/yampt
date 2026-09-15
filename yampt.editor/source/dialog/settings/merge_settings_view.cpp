@@ -133,7 +133,6 @@ void merge_settings_view_t::setup_excludes_tab()
 {
 	auto * page = new QWidget(m_tabs);
 	auto * page_layout = new QVBoxLayout(page);
-	page_layout->setContentsMargins(2, 2, 2, 2);
 
 	auto * desc = new QLabel(
 	    tr("Content listed here is left out of the merged patch. Choose what each rule targets: an entire plugin "
@@ -196,7 +195,6 @@ void merge_settings_view_t::setup_fixes_tab()
 {
 	auto * page = new QWidget(m_tabs);
 	auto * page_layout = new QVBoxLayout(page);
-	page_layout->setContentsMargins(2, 2, 2, 2);
 
 	auto * group = new QGroupBox(tr("Bug Fixes"), page);
 	auto * fixes_layout = new QVBoxLayout(group);

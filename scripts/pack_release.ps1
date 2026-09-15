@@ -23,6 +23,7 @@ Copy-Item (Join-Path $outDir "yampt.exe") $packDir
 Copy-Item (Join-Path $outDir "yTranslator.exe") $packDir
 Copy-Item (Join-Path $outDir "yEditor.exe") $packDir
 Copy-Item (Join-Path $outDir "*.dll") $packDir
+Copy-Item $sevenZip $packDir
 
 $dictSrc = Join-Path $outDir "dictionaries"
 if (Test-Path $dictSrc) {

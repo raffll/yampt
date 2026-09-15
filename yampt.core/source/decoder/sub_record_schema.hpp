@@ -75,7 +75,6 @@ const std::vector<sub_record_schema_t> & all_schemas();
 namespace enam_layout
 {
 constexpr size_t slot_size = 24;
-constexpr size_t identity_prefix_length = 8;
 constexpr size_t magnitude_min_offset = 16;
 constexpr size_t magnitude_max_offset = 20;
 constexpr size_t magnitude_field_size = 4;

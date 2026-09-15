@@ -31,16 +31,13 @@ TEST_CASE("record_behavior::is_repeatable_sub_record, unknown record type is not
 	REQUIRE_FALSE(is_repeatable_sub_record("INFO", "NAME"));
 }
 
-TEST_CASE("record_behavior::merge_case_for, three_way default and none for excluded", "[u]")
+TEST_CASE("record_behavior::merge_strategy_for, dispatch per record type", "[u]")
 {
-	REQUIRE(merge_case_for("CELL") == merge_case_t::three_way);
-	REQUIRE(merge_case_for("ARMO") == merge_case_t::three_way);
-	REQUIRE(merge_case_for("WEAP") == merge_case_t::three_way);
-	REQUIRE(merge_case_for("XXXX") == merge_case_t::three_way);
-	REQUIRE(merge_case_for("LAND") == merge_case_t::none);
-	REQUIRE(merge_case_for("SCPT") == merge_case_t::none);
-	REQUIRE(merge_case_for("DIAL") == merge_case_t::none);
-	REQUIRE(merge_case_for("INFO") == merge_case_t::none);
+	REQUIRE(merge_strategy_for("CELL") == merge_strategy_t::generic);
+	REQUIRE(merge_strategy_for("ARMO") == merge_strategy_t::armor_parts);
+	REQUIRE(merge_strategy_for("CLOT") == merge_strategy_t::armor_parts);
+	REQUIRE(merge_strategy_for("WEAP") == merge_strategy_t::generic);
+	REQUIRE(merge_strategy_for("XXXX") == merge_strategy_t::generic);
 }
 
 TEST_CASE("record_behavior::is_enam_effect_list, effect-bearing record types", "[u]")
@@ -87,15 +84,13 @@ TEST_CASE("record_behavior::leveled_item_sub_type_for, LEVI and LEVC item sub-ty
 	REQUIRE(leveled_item_sub_type_for("XXXX") == nullptr);
 }
 
-TEST_CASE("record_behavior::keyed_list_specs_for, FACT reaction pairs ANAM with INTV member", "[u]")
+TEST_CASE("record_behavior::is_keyed_list_sub_type, FACT reaction sub-types", "[u]")
 {
-	size_t fact_count = 0;
-	const auto * fact_specs = keyed_list_specs_for("FACT", fact_count);
-	REQUIRE(fact_count == 1);
-	REQUIRE(std::string(fact_specs[0].sub_type) == "ANAM");
-	REQUIRE(fact_specs[0].key_source == key_source_t::paired_name);
-	REQUIRE(fact_specs[0].member_sub_type_count == 1);
-	REQUIRE(std::string(fact_specs[0].member_sub_types[0]) == "INTV");
+	REQUIRE(is_keyed_list_sub_type("FACT", "ANAM"));
+	REQUIRE(is_keyed_list_sub_type("FACT", "INTV"));
+	REQUIRE_FALSE(is_keyed_list_sub_type("FACT", "FADT"));
+	REQUIRE_FALSE(is_keyed_list_sub_type("NPC_", "ANAM"));
+	REQUIRE_FALSE(is_keyed_list_sub_type("XXXX", "ANAM"));
 }
 
 TEST_CASE("record_behavior::leveled_level_sub_type_for, LEVI and LEVC use INTV", "[u]")
@@ -145,27 +140,15 @@ TEST_CASE("record_behavior::keyed_list_specs_for, no specs for unrelated types",
 	REQUIRE(unknown_count == 0);
 }
 
-TEST_CASE("record_behavior::keyed_list_specs_for, ARMO body parts group INDX with BNAM CNAM", "[u]")
+TEST_CASE("record_behavior::reaction_pair_for, FACT pairs ANAM with INTV", "[u]")
 {
-	size_t armo_count = 0;
-	const auto * armo_specs = keyed_list_specs_for("ARMO", armo_count);
-	REQUIRE(armo_count == 1);
-	REQUIRE(std::string(armo_specs[0].sub_type) == "INDX");
-	REQUIRE(armo_specs[0].key_source == key_source_t::index_value);
-	REQUIRE(armo_specs[0].member_sub_type_count == 2);
-	REQUIRE(std::string(armo_specs[0].member_sub_types[0]) == "BNAM");
-	REQUIRE(std::string(armo_specs[0].member_sub_types[1]) == "CNAM");
-}
+	const auto * pair = reaction_pair_for("FACT");
+	REQUIRE(pair != nullptr);
+	REQUIRE(std::string(pair->key_sub_type) == "ANAM");
+	REQUIRE(std::string(pair->value_sub_type) == "INTV");
 
-TEST_CASE("record_behavior::keyed_list_specs_for, ENAM effect list keyed by identity prefix", "[u]")
-{
-	size_t spel_count = 0;
-	const auto * spel_specs = keyed_list_specs_for("SPEL", spel_count);
-	REQUIRE(spel_count == 1);
-	REQUIRE(std::string(spel_specs[0].sub_type) == "ENAM");
-	REQUIRE(spel_specs[0].key_source == key_source_t::identity_prefix);
-	REQUIRE(spel_specs[0].key_length == 8);
-	REQUIRE(spel_specs[0].member_sub_type_count == 0);
+	REQUIRE(reaction_pair_for("NPC_") == nullptr);
+	REQUIRE(reaction_pair_for("XXXX") == nullptr);
 }
 
 TEST_CASE("record_behavior::is_armor_part_sub_type, ARMO and CLOT part members", "[u]")

@@ -33,6 +33,14 @@ static constexpr paired_merge_rule_t weap_paired_rules[] = {
 	{ "WPDT", 32, weap_wpdt_damage_pairs, 3 },
 };
 
+static constexpr field_pair_rule_t enam_magnitude_pairs[] = {
+	{ 16, 20, 4 },
+};
+
+static constexpr paired_merge_rule_t enam_paired_rules[] = {
+	{ "ENAM", 24, enam_magnitude_pairs, 1 },
+};
+
 static constexpr sub_record_rule_t npc_sub_rules[] = {
 	{ "NPDT", 52, skip_if_size_differs | element_wise_merge },
 	{ "NPDT", 12, skip_if_size_differs | element_wise_merge },
@@ -67,66 +75,24 @@ static constexpr sub_record_rule_t fact_sub_rules[] = {
 	{ "FADT", 240, element_wise_merge },
 };
 
-static constexpr const char * fact_reaction_members[] = { "INTV" };
+static constexpr const char * fact_keyed_list_sub_types[] = { "ANAM", "INTV" };
 
-static constexpr const char * armor_part_sub_types[] = { "BNAM", "CNAM" };
+static constexpr reaction_pair_t fact_reaction_pair = { "ANAM", "INTV" };
 
 static constexpr keyed_list_spec_t npco_keyed_list_spec[] = {
-	{ .sub_type = "NPCO",
-	  .key_offset = npco_layout::item_id_offset,
-	  .key_length = npco_layout::item_id_length,
-	  .minimum_record_size = npco_layout::record_size,
-	  .key_source = key_source_t::content_slice },
+	{ "NPCO", npco_layout::item_id_offset, npco_layout::item_id_length, npco_layout::record_size },
 };
 
 static constexpr keyed_list_spec_t npcs_keyed_list_spec[] = {
-	{ .sub_type = "NPCS",
-	  .key_offset = 0,
-	  .key_length = 0,
-	  .minimum_record_size = 0,
-	  .key_source = key_source_t::whole_content },
+	{ "NPCS", 0, 0, 0 },
 };
 
 static constexpr keyed_list_spec_t inventory_and_spell_keyed_list_specs[] = {
-	{ .sub_type = "NPCO",
-	  .key_offset = npco_layout::item_id_offset,
-	  .key_length = npco_layout::item_id_length,
-	  .minimum_record_size = npco_layout::record_size,
-	  .key_source = key_source_t::content_slice },
-	{ .sub_type = "NPCS",
-	  .key_offset = 0,
-	  .key_length = 0,
-	  .minimum_record_size = 0,
-	  .key_source = key_source_t::whole_content },
+	{ "NPCO", npco_layout::item_id_offset, npco_layout::item_id_length, npco_layout::record_size },
+	{ "NPCS", 0, 0, 0 },
 };
 
-static constexpr keyed_list_spec_t enam_keyed_list_spec[] = {
-	{ .sub_type = "ENAM",
-	  .key_offset = 0,
-	  .key_length = enam_layout::identity_prefix_length,
-	  .minimum_record_size = enam_layout::slot_size,
-	  .key_source = key_source_t::identity_prefix },
-};
-
-static constexpr keyed_list_spec_t fact_reaction_keyed_list_spec[] = {
-	{ .sub_type = "ANAM",
-	  .key_offset = 0,
-	  .key_length = 0,
-	  .minimum_record_size = 0,
-	  .key_source = key_source_t::paired_name,
-	  .member_sub_types = fact_reaction_members,
-	  .member_sub_type_count = 1 },
-};
-
-static constexpr keyed_list_spec_t armor_part_keyed_list_spec[] = {
-	{ .sub_type = "INDX",
-	  .key_offset = 0,
-	  .key_length = 0,
-	  .minimum_record_size = 0,
-	  .key_source = key_source_t::index_value,
-	  .member_sub_types = armor_part_sub_types,
-	  .member_sub_type_count = 2 },
-};
+static constexpr const char * armor_part_sub_types[] = { "BNAM", "CNAM" };
 
 static constexpr sub_record_rule_t race_sub_rules[] = {
 	{ "RADT", 140, element_wise_merge },
@@ -159,8 +125,9 @@ static constexpr record_behavior_t behavior_table[] = {
 	  .decode_mode = decode_mode_t::faction,
 	  .sub_rules = fact_sub_rules,
 	  .sub_rule_count = 1,
-	  .keyed_list_specs = fact_reaction_keyed_list_spec,
-	  .keyed_list_spec_count = 1 },
+	  .keyed_list_sub_types = fact_keyed_list_sub_types,
+	  .keyed_list_sub_type_count = 2,
+	  .reaction_pair = &fact_reaction_pair },
 	{ .record_type = "CONT",
 	  .decode_mode = decode_mode_t::container,
 	  .sub_rules = cont_sub_rules,
@@ -197,47 +164,37 @@ static constexpr record_behavior_t behavior_table[] = {
 	  .decode_mode = decode_mode_t::armor,
 	  .sub_rules = armo_sub_rules,
 	  .sub_rule_count = 1,
-	  .keyed_list_specs = armor_part_keyed_list_spec,
-	  .keyed_list_spec_count = 1,
+	  .merge_strategy = merge_strategy_t::armor_parts,
 	  .armor_part_sub_types = armor_part_sub_types,
 	  .armor_part_sub_type_count = 2 },
 	{ .record_type = "CLOT",
 	  .decode_mode = decode_mode_t::armor,
-	  .keyed_list_specs = armor_part_keyed_list_spec,
-	  .keyed_list_spec_count = 1,
+	  .merge_strategy = merge_strategy_t::armor_parts,
 	  .armor_part_sub_types = armor_part_sub_types,
 	  .armor_part_sub_type_count = 2 },
-	{ .record_type = "SCPT", .merge = merge_case_t::none, .merge_excluded = true },
+	{ .record_type = "SCPT", .merge_excluded = true },
 	{ .record_type = "ENCH",
-	  .enam_effect_list = true,
-	  .keyed_list_specs = enam_keyed_list_spec,
-	  .keyed_list_spec_count = 1 },
+	  .paired_rules = enam_paired_rules,
+	  .paired_rule_count = 1,
+	  .enam_effect_list = true },
 	{ .record_type = "SPEL",
-	  .enam_effect_list = true,
-	  .keyed_list_specs = enam_keyed_list_spec,
-	  .keyed_list_spec_count = 1 },
+	  .paired_rules = enam_paired_rules,
+	  .paired_rule_count = 1,
+	  .enam_effect_list = true },
 	{ .record_type = "ALCH",
-	  .enam_effect_list = true,
-	  .keyed_list_specs = enam_keyed_list_spec,
-	  .keyed_list_spec_count = 1 },
-	{ .record_type = "INGR",
-	  .enam_effect_list = true,
-	  .keyed_list_specs = enam_keyed_list_spec,
-	  .keyed_list_spec_count = 1 },
+	  .paired_rules = enam_paired_rules,
+	  .paired_rule_count = 1,
+	  .enam_effect_list = true },
+	{ .record_type = "INGR", .paired_rules = enam_paired_rules, .paired_rule_count = 1 },
 	{ .record_type = "LAND",
-	  .merge = merge_case_t::none,
 	  .merge_excluded = true,
 	  .read_only_reason = read_only_reason_t::landscape_data,
 	  .allows_copy = false,
 	  .allows_lock = false },
-	{ .record_type = "PGRD", .merge = merge_case_t::none, .merge_excluded = true },
-	{ .record_type = "REGN", .merge = merge_case_t::none, .merge_excluded = true },
-	{ .record_type = "DIAL",
-	  .merge = merge_case_t::none,
-	  .decode_mode = decode_mode_t::dial,
-	  .merge_excluded = true },
+	{ .record_type = "PGRD", .merge_excluded = true },
+	{ .record_type = "REGN", .merge_excluded = true },
+	{ .record_type = "DIAL", .decode_mode = decode_mode_t::dial, .merge_excluded = true },
 	{ .record_type = "INFO",
-	  .merge = merge_case_t::none,
 	  .decode_mode = decode_mode_t::info,
 	  .merge_excluded = true,
 	  .record_id_sub_type = "INAM" },
@@ -258,11 +215,28 @@ const record_behavior_t * find_record_behavior(const std::string & record_type)
 	return &generic_behavior;
 }
 
+bool is_keyed_list_sub_type(const std::string & record_type, const std::string & sub_type)
+{
+	const auto * behavior = find_record_behavior(record_type);
+	for (size_t i = 0; i < behavior->keyed_list_sub_type_count; ++i)
+	{
+		if (sub_type == behavior->keyed_list_sub_types[i])
+			return true;
+	}
+
+	return false;
+}
+
 const keyed_list_spec_t * keyed_list_specs_for(const std::string & record_type, size_t & spec_count)
 {
 	const auto * behavior = find_record_behavior(record_type);
 	spec_count = behavior->keyed_list_spec_count;
 	return behavior->keyed_list_specs;
+}
+
+const reaction_pair_t * reaction_pair_for(const std::string & record_type)
+{
+	return find_record_behavior(record_type)->reaction_pair;
 }
 
 bool is_armor_part_sub_type(const std::string & record_type, const std::string & sub_type)
@@ -277,6 +251,11 @@ bool is_armor_part_sub_type(const std::string & record_type, const std::string &
 	return false;
 }
 
+merge_strategy_t merge_strategy_for(const std::string & record_type)
+{
+	return find_record_behavior(record_type)->merge_strategy;
+}
+
 bool is_enam_effect_list(const std::string & record_type)
 {
 	return find_record_behavior(record_type)->enam_effect_list;
@@ -285,11 +264,6 @@ bool is_enam_effect_list(const std::string & record_type)
 bool is_merge_excluded(const std::string & record_type)
 {
 	return find_record_behavior(record_type)->merge_excluded;
-}
-
-merge_case_t merge_case_for(const std::string & record_type)
-{
-	return find_record_behavior(record_type)->merge;
 }
 
 decode_mode_t decode_mode_for(const std::string & record_type)

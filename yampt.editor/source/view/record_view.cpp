@@ -1,6 +1,5 @@
 #include "record_view.hpp"
 #include <scanner/plugin_scan.hpp>
-#include <functional>
 #include <QHeaderView>
 #include <QPainter>
 #include <QResizeEvent>
@@ -114,10 +113,6 @@ void record_view_t::setup_tree()
 
 void record_view_t::display_record(plugin_scan_t & scan, const conflict_entry_t & entry)
 {
-	const bool same_record =
-	    entry.rec_type == m_displayed_record_type && entry.record_id == m_displayed_record_id;
-	const auto preserved_keys = same_record ? capture_expanded_keys() : std::set<std::string>{};
-
 	m_model->set_record(scan, entry);
 
 	const auto active_col = m_model->active_column();
@@ -127,13 +122,7 @@ void record_view_t::display_record(plugin_scan_t & scan, const conflict_entry_t 
 		m_tree->header()->setSectionHidden(active_col, !should_show);
 	}
 
-	if (same_record)
-		restore_expanded_keys(preserved_keys);
-	else
-		expand_non_numeric_groups();
-
-	m_displayed_record_type = m_model->record_type();
-	m_displayed_record_id = m_model->record_id();
+	expand_non_numeric_groups();
 
 	QTimer::singleShot(0, this, [this]() { apply_column_sizing(); });
 }
@@ -150,6 +139,7 @@ void record_view_t::resize_columns()
 
 void record_view_t::refresh_expansion()
 {
+	m_tree->expandAll();
 	apply_column_sizing();
 }
 
@@ -166,59 +156,6 @@ QTreeView * record_view_t::tree() const
 void record_view_t::expand_non_numeric_groups()
 {
 	m_tree->expandAll();
-}
-
-std::string record_view_t::node_expansion_key(const view_tree_model_t::view_node_t & node)
-{
-	return node.type + '|' + std::to_string(node.occurrence) + '|' + node.label;
-}
-
-std::set<std::string> record_view_t::capture_expanded_keys() const
-{
-	std::set<std::string> expanded_keys;
-
-	std::function<void(const QModelIndex &, const std::string &)> walk =
-	    [&](const QModelIndex & parent, const std::string & prefix)
-	{
-		for (int row = 0; row < m_model->rowCount(parent); ++row)
-		{
-			const auto & idx = m_model->index(row, 0, parent);
-			const auto * node = m_model->node_from_index(idx);
-			if (node == nullptr)
-				continue;
-
-			const std::string key = prefix + '/' + node_expansion_key(*node);
-			if (m_tree->isExpanded(idx))
-				expanded_keys.insert(key);
-
-			walk(idx, key);
-		}
-	};
-
-	walk({}, {});
-	return expanded_keys;
-}
-
-void record_view_t::restore_expanded_keys(const std::set<std::string> & expanded_keys)
-{
-	std::function<void(const QModelIndex &, const std::string &)> walk =
-	    [&](const QModelIndex & parent, const std::string & prefix)
-	{
-		for (int row = 0; row < m_model->rowCount(parent); ++row)
-		{
-			const auto & idx = m_model->index(row, 0, parent);
-			const auto * node = m_model->node_from_index(idx);
-			if (node == nullptr)
-				continue;
-
-			const std::string key = prefix + '/' + node_expansion_key(*node);
-			m_tree->setExpanded(idx, expanded_keys.count(key) > 0);
-
-			walk(idx, key);
-		}
-	};
-
-	walk({}, {});
 }
 
 void record_view_t::apply_column_sizing()
