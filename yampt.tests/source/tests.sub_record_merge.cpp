@@ -1392,6 +1392,62 @@ TEST_CASE("sub_record_merge_t::merge, NPCO deletes master item when a plugin omi
 	REQUIRE(result.content.find("item_b") != std::string::npos);
 }
 
+TEST_CASE("sub_record_merge_t::merge, NPCS added by plugin when master has none", "[u]")
+{
+	auto make_npcs = [](const std::string & spell_id)
+	{
+		std::string data(32, '\0');
+		std::memcpy(data.data(), spell_id.data(), spell_id.size());
+		return data;
+	};
+
+	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("name"));
+	auto subs_inter =
+	    make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("name")) +
+	    make_sub("NPCS", make_npcs("ghost_ability"));
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("name"));
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_first),
+		make_record("NPC_", subs_inter),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(result.content.find("ghost_ability") != std::string::npos);
+}
+
+TEST_CASE("sub_record_merge_t::merge, NPCO added by plugin when master has none", "[u]")
+{
+	std::string npco_added(36, '\0');
+	npco_added[0] = 1;
+	std::memcpy(&npco_added[4], "added_item", 10);
+
+	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("name"));
+	auto subs_inter =
+	    make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("name")) + make_sub("NPCO", npco_added);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("name"));
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_first),
+		make_record("NPC_", subs_inter),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(result.content.find("added_item") != std::string::npos);
+}
+
 TEST_CASE("sub_record_merge_t::merge, CELL three-way merges DATA field from intermediate", "[u]")
 {
 	auto subs_first =

@@ -5,6 +5,7 @@ lua in advanced filters
 title should also add [Active]
 remove save, and any code related to saving file on demand, asterix etc
 advanced filters: locked only, excluded only
+PNAM etc should not be taken from last?
 
 ## Hard to Fix
 

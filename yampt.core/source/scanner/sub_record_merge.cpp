@@ -1022,6 +1022,17 @@ static bool has_entries_of_type(const sub_record_sequence_t & sequence, const st
 	return false;
 }
 
+static bool any_version_has_entries_of_type(const merge_input_t & input, const std::string & sub_type)
+{
+	for (const auto & content : input.version_contents)
+	{
+		if (has_entries_of_type(sub_record_merge_t::parse_sub_records(content), sub_type))
+			return true;
+	}
+
+	return false;
+}
+
 static sub_record_sequence_t replace_entries_of_type(
     const sub_record_sequence_t & output,
     const std::vector<sub_record_entry_t> & merged_items,
@@ -1218,7 +1229,7 @@ merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
 	for (size_t spec_idx = 0; spec_idx < keyed_list_spec_count; ++spec_idx)
 	{
 		const auto & spec = keyed_list_specs[spec_idx];
-		if (!has_entries_of_type(first_subs, spec.sub_type))
+		if (!any_version_has_entries_of_type(input, spec.sub_type))
 			continue;
 
 		auto key_of = [&spec](const sub_record_entry_t & entry) { return extract_keyed_list_key(entry, spec); };

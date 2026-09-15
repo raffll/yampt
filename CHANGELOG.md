@@ -1,5 +1,10 @@
 # Changelog
 
+## [XXX]
+
+### yEditor
+- [FIX] Inventory and spell lists now merge correctly when the master record has none: an item or spell added by a plugin is kept in the merged patch even if the base game record had no inventory or spells at all. Previously the addition was dropped unless the master already listed at least one entry of that kind
+
 ## [0.1233] - 2026-09-15
 
 ### yTranslator
