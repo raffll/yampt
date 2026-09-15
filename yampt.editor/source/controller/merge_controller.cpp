@@ -10,7 +10,6 @@
 #include <scanner/sub_record_merge.hpp>
 #include <utility/app_logger.hpp>
 #include <utility/record_behavior.hpp>
-#include <utility/string_utils.hpp>
 #include <filesystem>
 #include <set>
 #include <settings_store.hpp>
@@ -818,13 +817,11 @@ void merge_controller_t::reapply_locks()
 int merge_controller_t::create_merge_records()
 {
 	merge_config_t config;
-	config.excluded_plugins = m_session.excluded_plugins();
 	config.patch_plugins = m_session.patch_plugins();
-	config.exclusion_pattern = m_settings.merge_exclusion_pattern();
+	config.exclusions.set_rules(merge_exclusions_t::parse(m_settings.merge_excludes()));
 	config.fog_fix_enabled = m_settings.merge_fog_fix_enabled();
 	config.summon_fix_enabled = m_settings.merge_summon_fix_enabled();
 	config.cell_name_fix_enabled = m_settings.merge_cell_name_fix_enabled();
-	config.ignored_sub_records = string_utils::split_trimmed_set(m_settings.sub_record_ignore_conflict(), ',');
 
 	auto_merge_t merge(m_session.scan());
 	merge.set_config(config);

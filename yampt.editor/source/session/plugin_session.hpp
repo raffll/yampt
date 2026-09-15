@@ -40,8 +40,6 @@ public:
 	void register_created_plugin(const std::string & filename);
 	const std::set<std::string> & created_plugins() const;
 
-	const std::set<std::string> & excluded_plugins() const;
-	void set_excluded_plugins(const std::set<std::string> & excluded);
 	const std::set<std::string> & patch_plugins() const;
 	void set_patch_plugins(const std::set<std::string> & patch);
 
@@ -97,7 +95,7 @@ private:
 
 	plugin_scan_t m_scan;
 	std::unique_ptr<patch_builder_t> m_patch_builder;
-	std::set<std::string> m_excluded_plugins;
+
 	std::set<std::string> m_patch_plugins;
 	std::set<std::string> m_dirty_plugins;
 	std::set<std::string> m_created_plugins;

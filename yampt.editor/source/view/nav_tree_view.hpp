@@ -25,11 +25,9 @@ public:
 	void clear_filter();
 	void set_hide_duplicates(bool hide);
 	void set_show_deleted_strikeout(bool value);
-	void set_excluded_plugins(const std::set<std::string> * excluded);
 	void set_patch_plugins(const std::set<std::string> * patch);
 	void set_dirty_plugins(const std::set<std::string> * dirty);
 	void set_editable_columns(const editable_column_set_t * editable);
-	void set_exclusion_pattern(const std::string & pattern);
 	void set_display_codepage(codepage_t codepage);
 
 	nav_tree_model_t::node_info_t current_selection() const;

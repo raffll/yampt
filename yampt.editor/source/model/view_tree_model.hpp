@@ -50,11 +50,6 @@ public:
 		m_display_codepage = codepage;
 	}
 
-	void set_user_ignore_conflict(const std::set<std::string> & rules)
-	{
-		m_user_ignore_conflict = rules;
-	}
-
 	codepage_t display_codepage() const
 	{
 		return m_display_codepage;
@@ -74,7 +69,6 @@ public:
 		return m_show_optional_placeholders;
 	}
 
-	void set_excluded_plugins(const std::set<std::string> * excluded);
 	void set_patch_plugins(const std::set<std::string> * patch);
 	void set_editable_columns(const editable_column_set_t * editable);
 	bool is_active_column(int section) const;
@@ -122,8 +116,6 @@ public:
 		std::vector<conflict_this_t> cell_conflict_this;
 		conflict_all_t row_conflict_all = conflict_all_t::only_one;
 		bool all_identical = true;
-		bool is_ignored = false;
-		bool is_excluded_sub_record = false;
 		bool is_optional_placeholder = false;
 		bool is_deleted = false;
 		bool is_info_chain = false;
@@ -249,7 +241,6 @@ private:
 	std::vector<conflict_this_t> m_plugin_conflict_this;
 	bool m_hide_no_conflict = false;
 	bool m_has_active_column = false;
-	std::set<std::string> m_user_ignore_conflict;
 	int m_active_col_index = -1;
 	std::vector<merge_lock_t> m_record_locks;
 	std::string m_record_type;
@@ -263,7 +254,6 @@ private:
 	const std::vector<view_node_t> & visible_rows() const;
 	mutable std::vector<view_node_t> m_filtered_rows;
 	mutable bool m_filter_dirty = true;
-	const std::set<std::string> * m_excluded_plugins = nullptr;
 	const std::set<std::string> * m_patch_plugins = nullptr;
 	const editable_column_set_t * m_editable_columns = nullptr;
 	plugin_scan_t * m_scan_for_header = nullptr;

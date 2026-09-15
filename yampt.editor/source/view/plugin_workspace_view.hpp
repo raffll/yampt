@@ -119,7 +119,6 @@ private:
 	void setup_views();
 	void setup_connections();
 	void rebuild_after_load();
-	bool apply_user_conflict_rules();
 	void update_status();
 	void log_message(const std::string & msg);
 	void rebuild_nav_preserving_state();

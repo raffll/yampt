@@ -5,7 +5,6 @@
 #include "plugin_scan.hpp"
 #include "summon_fixer.hpp"
 #include <algorithm>
-#include <regex>
 #include <unordered_map>
 
 auto_merge_t::auto_merge_t(plugin_scan_t & scan)
@@ -103,22 +102,6 @@ void auto_merge_t::build_record_groups()
 
 void auto_merge_t::process_groups(merge_counters_t & counters)
 {
-	std::regex exclusion_regex;
-	bool has_exclusion = false;
-
-	if (!m_config.exclusion_pattern.empty())
-	{
-		try
-		{
-			exclusion_regex = std::regex(m_config.exclusion_pattern, std::regex::icase);
-			has_exclusion = true;
-		}
-		catch (...)
-		{
-			add_log("[error] invalid exclusion regex: " + m_config.exclusion_pattern);
-		}
-	}
-
 	const int total_groups = static_cast<int>(m_groups.size());
 	int processed_groups = 0;
 
@@ -128,7 +111,7 @@ void auto_merge_t::process_groups(merge_counters_t & counters)
 		if (m_progress_fn)
 			m_progress_fn(processed_groups, total_groups);
 
-		if (should_skip_group(group, exclusion_regex, has_exclusion))
+		if (should_skip_group(group))
 			continue;
 
 		try
@@ -146,10 +129,7 @@ void auto_merge_t::process_groups(merge_counters_t & counters)
 	}
 }
 
-bool auto_merge_t::should_skip_group(
-    const record_group_t & group,
-    const std::regex & exclusion_regex,
-    bool has_exclusion) const
+bool auto_merge_t::should_skip_group(const record_group_t & group) const
 {
 	if (group.versions.size() < 2)
 		return true;
@@ -159,7 +139,7 @@ bool auto_merge_t::should_skip_group(
 
 	const auto decode_mode = decode_mode_for(group.rec_type);
 
-	if (has_exclusion && std::regex_search(group.record_id, exclusion_regex))
+	if (m_config.exclusions.is_record_excluded(group.rec_type, group.record_id))
 		return true;
 
 	const bool is_leveled = decode_mode == decode_mode_t::leveled;
@@ -415,7 +395,7 @@ bool auto_merge_t::is_plugin_included(int plugin_idx) const
 		return false;
 
 	const auto & filename = m_scan.plugin_filename(plugin_idx);
-	return m_config.excluded_plugins.count(filename) == 0;
+	return !m_config.exclusions.is_file_excluded(filename);
 }
 
 bool auto_merge_t::is_type_enabled(const std::string & rec_type) const
@@ -423,7 +403,7 @@ bool auto_merge_t::is_type_enabled(const std::string & rec_type) const
 	if (is_merge_excluded(rec_type))
 		return false;
 
-	return m_config.disabled_types.count(rec_type) == 0;
+	return !m_config.exclusions.is_type_excluded(rec_type);
 }
 
 void auto_merge_t::add_log(const std::string & message)
@@ -433,5 +413,5 @@ void auto_merge_t::add_log(const std::string & message)
 
 std::string auto_merge_t::filter_ignored_sub_records(const std::string & rec_type, const std::string & content) const
 {
-	return sub_record_merge_t::filter_sub_records_by_rules(rec_type, content, m_config.ignored_sub_records);
+	return sub_record_merge_t::filter_sub_records_by_rules(rec_type, content, m_config.exclusions.ignored_sub_records());
 }

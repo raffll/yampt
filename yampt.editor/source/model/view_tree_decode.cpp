@@ -18,15 +18,6 @@ static std::string apply_pair_prefix(const std::string & label, field_pair_role_
 	return label;
 }
 
-static void mark_children_ignored(view_tree_model_t::view_node_t & parent)
-{
-	for (auto & child : parent.children)
-	{
-		child.is_ignored = true;
-		mark_children_ignored(child);
-	}
-}
-
 static bool check_all_identical(const std::vector<std::string> & values)
 {
 	for (size_t col = 1; col < values.size(); ++col)
@@ -127,19 +118,7 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 	}
 	row.all_identical = all_same;
 
-	const auto specific_key = m_record_type + ":" + slot.type;
-	const auto wildcard_key = m_record_type + ":*";
-	const bool user_ignore =
-	    m_user_ignore_conflict.count(specific_key) > 0 || m_user_ignore_conflict.count(wildcard_key) > 0;
-
-	if (user_ignore)
-	{
-		row.is_ignored = true;
-		row.is_excluded_sub_record = true;
-		row.row_conflict_all = conflict_all_t::no_conflict;
-		row.cell_conflict_this.assign(col_count, conflict_this_t::ignored);
-	}
-	else if (policy.skip_non_existent)
+	if (policy.skip_non_existent)
 	{
 		row.row_conflict_all = record_conflict::compute_conflict_all_skip_empty(row.values);
 		row.cell_conflict_this = record_conflict::compute_conflict_this_skip_empty(row.values);
@@ -162,9 +141,6 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 		decode_hex_children(row, first_size, col_count, all_subs, col_indices, slot);
 		row.start_collapsed = true;
 	}
-
-	if (!row.children.empty() && row.is_ignored)
-		mark_children_ignored(row);
 
 	if (!row.children.empty())
 	{

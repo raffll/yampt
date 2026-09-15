@@ -77,11 +77,6 @@ patch_builder_t & plugin_session_t::patch_builder()
 	return *m_patch_builder;
 }
 
-const std::set<std::string> & plugin_session_t::excluded_plugins() const
-{
-	return m_excluded_plugins;
-}
-
 void plugin_session_t::register_created_plugin(const std::string & filename)
 {
 	m_created_plugins.insert(filename);
@@ -90,11 +85,6 @@ void plugin_session_t::register_created_plugin(const std::string & filename)
 const std::set<std::string> & plugin_session_t::created_plugins() const
 {
 	return m_created_plugins;
-}
-
-void plugin_session_t::set_excluded_plugins(const std::set<std::string> & excluded)
-{
-	m_excluded_plugins = excluded;
 }
 
 const std::set<std::string> & plugin_session_t::patch_plugins() const
@@ -165,12 +155,6 @@ void plugin_session_t::save_session_state(const QString & ini_path)
 	else
 		settings.remove("session/active_plugin_path");
 
-	QStringList excluded_list;
-	for (const auto & name : m_excluded_plugins)
-		excluded_list.append(QString::fromStdString(name));
-
-	settings.setValue("merge/excluded_plugins", excluded_list);
-
 	QStringList patch_list;
 	for (const auto & name : m_patch_plugins)
 		patch_list.append(QString::fromStdString(name));
@@ -190,11 +174,6 @@ void plugin_session_t::restore_session_state(const QString & ini_path)
 
 	m_load_source = static_cast<load_source_t>(settings.value("session/load_source", 0).toInt());
 	m_load_base_path = settings.value("session/load_base_path").toString().toStdString();
-
-	const auto excluded_list = settings.value("merge/excluded_plugins").toStringList();
-	m_excluded_plugins.clear();
-	for (const auto & name : excluded_list)
-		m_excluded_plugins.insert(name.toStdString());
 
 	const auto patch_list = settings.value("merge/patch_plugins").toStringList();
 	m_patch_plugins.clear();

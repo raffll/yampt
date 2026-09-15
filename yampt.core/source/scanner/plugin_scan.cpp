@@ -97,16 +97,6 @@ void plugin_scan_t::insert_or_update_version(version_descriptor_t desc)
 		entry.display_name = std::move(desc.display_name);
 }
 
-void plugin_scan_t::set_user_ignore_conflict(const std::set<std::string> & rules)
-{
-	m_user_ignore_conflict = rules;
-}
-
-const std::set<std::string> & plugin_scan_t::user_ignore_conflict() const
-{
-	return m_user_ignore_conflict;
-}
-
 void plugin_scan_t::rebuild_conflicts(const conflict_progress_fn_t & progress_fn)
 {
 	m_entries.clear();
@@ -386,20 +376,9 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 
 	conflict_accumulator_t accum;
 
-	const bool wildcard_ignored = m_user_ignore_conflict.count(entry.rec_type + ":*") > 0;
-	if (wildcard_ignored)
-	{
-		entry.conflict_all = accum.worst_all;
-		apply_worst_this(entry, accum);
-		return;
-	}
-
 	for (const auto & slot : sr.aligned)
 	{
 		const auto & policy = cached_conflict_policy(entry.rec_type, slot.key.type);
-
-		if (m_user_ignore_conflict.count(entry.rec_type + ":" + slot.key.type) > 0)
-			continue;
 
 		std::vector<std::string> slot_values(ver_count);
 		const char * first_data = nullptr;

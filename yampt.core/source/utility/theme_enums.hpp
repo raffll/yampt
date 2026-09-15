@@ -60,8 +60,6 @@ enum class color_name_t
 	conflict_this_conflict_loses,
 	conflict_this_deleted,
 
-	excluded_background,
-	excluded_text,
 	optional_placeholder_background,
 	optional_placeholder_text,
 	locked_background,

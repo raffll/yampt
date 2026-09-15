@@ -39,7 +39,6 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 	m_lbl_count = new QLabel(this);
 
 	m_session = new plugin_session_t(this);
-	apply_user_conflict_rules();
 
 	setup_views();
 
@@ -55,11 +54,9 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 	m_nav_tabs->setTabPosition(QTabWidget::North);
 
 	m_nav_view = new nav_tree_view_t(m_session->scan(), m_nav_tabs);
-	m_nav_view->set_excluded_plugins(&m_session->excluded_plugins());
 	m_nav_view->set_patch_plugins(&m_session->patch_plugins());
 	m_nav_view->set_dirty_plugins(&m_session->dirty_plugins());
 	m_nav_view->set_editable_columns(&m_editable_columns);
-	m_nav_view->set_exclusion_pattern(m_settings.merge_exclusion_pattern());
 
 	m_lua_view = new lua_tree_view_t(m_nav_tabs);
 
@@ -69,11 +66,9 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 	m_content_splitter->insertWidget(0, m_nav_tabs);
 
 	m_record_view = new record_view_t(this);
-	m_record_view->model()->set_excluded_plugins(&m_session->excluded_plugins());
 	m_record_view->model()->set_patch_plugins(&m_session->patch_plugins());
 	m_record_view->model()->set_editable_columns(&m_editable_columns);
 	m_record_view->model()->set_display_codepage(static_cast<codepage_t>(m_settings.display_codepage()));
-	m_record_view->model()->set_user_ignore_conflict(m_session->scan().user_ignore_conflict());
 	m_nav_view->set_display_codepage(static_cast<codepage_t>(m_settings.display_codepage()));
 	m_content_splitter->insertWidget(1, m_record_view);
 	m_content_splitter->setSizes({ 300, 600 });
@@ -437,33 +432,14 @@ void plugin_workspace_view_t::rebuild_after_load()
 	emit active_plugin_changed(active_plugin_filename());
 }
 
-bool plugin_workspace_view_t::apply_user_conflict_rules()
-{
-	const auto rules = string_utils::split_trimmed_set(m_settings.sub_record_ignore_conflict(), ',');
-	if (rules == m_session->scan().user_ignore_conflict())
-		return false;
-
-	m_session->scan().set_user_ignore_conflict(rules);
-	return true;
-}
-
 void plugin_workspace_view_t::on_settings_changed()
 {
-	const bool conflict_rules_changed = apply_user_conflict_rules();
-
 	const auto codepage = static_cast<codepage_t>(m_settings.display_codepage());
 	m_record_view->model()->set_display_codepage(codepage);
 	m_nav_view->set_display_codepage(codepage);
-	m_nav_view->set_exclusion_pattern(m_settings.merge_exclusion_pattern());
-	m_record_view->model()->set_user_ignore_conflict(m_session->scan().user_ignore_conflict());
 
 	if (m_session->scan().plugin_count() > 0)
-	{
-		if (conflict_rules_changed)
-			m_session->scan().rebuild_conflicts();
-
 		refresh_all_views();
-	}
 
 	const auto current = m_record_view->tree()->currentIndex();
 	if (current.isValid())

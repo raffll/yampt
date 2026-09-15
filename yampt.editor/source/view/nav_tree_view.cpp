@@ -131,11 +131,6 @@ void nav_tree_view_t::set_show_deleted_strikeout(bool value)
 	m_model->set_show_deleted_strikeout(value);
 }
 
-void nav_tree_view_t::set_excluded_plugins(const std::set<std::string> * excluded)
-{
-	m_model->set_excluded_plugins(excluded);
-}
-
 void nav_tree_view_t::set_patch_plugins(const std::set<std::string> * patch)
 {
 	m_model->set_patch_plugins(patch);
@@ -149,11 +144,6 @@ void nav_tree_view_t::set_dirty_plugins(const std::set<std::string> * dirty)
 void nav_tree_view_t::set_editable_columns(const editable_column_set_t * editable)
 {
 	m_model->set_editable_columns(editable);
-}
-
-void nav_tree_view_t::set_exclusion_pattern(const std::string & pattern)
-{
-	m_model->set_exclusion_pattern(pattern);
 }
 
 void nav_tree_view_t::set_display_codepage(codepage_t codepage)

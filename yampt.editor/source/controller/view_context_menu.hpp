@@ -3,6 +3,7 @@
 #include "../model/field_binary_resolver.hpp"
 #include "../model/nav_tree_model.hpp"
 #include "../model/view_tree_model.hpp"
+#include <scanner/merge_exclusions.hpp>
 #include <scanner/merge_patch_store.hpp>
 #include <functional>
 #include <QModelIndex>
@@ -68,7 +69,8 @@ private:
 
 	void build_source_file_menu(QMenu & menu, const nav_tree_model_t::node_info_t & info);
 	void add_exclude_record_action(QMenu & menu, const nav_tree_model_t::node_info_t & info);
-	void apply_record_exclusion_pattern(const nav_tree_model_t::node_info_t & info, const std::string & pattern);
+	void add_exclude_type_action(QMenu & menu, const nav_tree_model_t::node_info_t & info);
+	void apply_record_exclusion(const exclude_rule_t & rule, bool add_rule);
 	void build_copy_to_merge_menu(QMenu & menu, const view_menu_context_t & context);
 	void build_source_copy_menu(QMenu & menu, const view_menu_context_t & context);
 	void build_merge_remove_menu(QMenu & menu, const view_menu_context_t & context);

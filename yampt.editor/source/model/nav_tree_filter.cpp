@@ -57,11 +57,6 @@ void nav_tree_filter_t::set_hide_duplicates(bool hide)
 	m_hide_duplicates = hide;
 }
 
-void nav_tree_filter_t::set_excluded_plugins(const std::set<std::string> * excluded)
-{
-	m_excluded_plugins = excluded;
-}
-
 void nav_tree_filter_t::set_patch_plugins(const std::set<std::string> * patch)
 {
 	m_patch_plugins = patch;
@@ -80,11 +75,6 @@ bool nav_tree_filter_t::has_active_filter() const
 bool nav_tree_filter_t::hide_duplicates() const
 {
 	return m_hide_duplicates;
-}
-
-const std::set<std::string> * nav_tree_filter_t::excluded_plugins() const
-{
-	return m_excluded_plugins;
 }
 
 const std::set<std::string> * nav_tree_filter_t::patch_plugins() const

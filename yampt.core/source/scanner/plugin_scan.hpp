@@ -95,9 +95,6 @@ public:
 	size_t itm_count(int plugin_idx) const;
 	std::vector<const conflict_entry_t *> itm_entries(int plugin_idx) const;
 
-	void set_user_ignore_conflict(const std::set<std::string> & rules);
-	const std::set<std::string> & user_ignore_conflict() const;
-
 private:
 	struct version_descriptor_t
 	{
@@ -145,7 +142,6 @@ private:
 
 	std::vector<conflict_entry_t> m_entries;
 	std::unordered_map<std::string, size_t> m_entry_lookup;
-	std::set<std::string> m_user_ignore_conflict;
 	std::unordered_map<std::string, conflict_policy_t> m_conflict_policy_cache;
 	std::unique_ptr<std::shared_mutex> m_conflict_policy_mutex = std::make_unique<std::shared_mutex>();
 };

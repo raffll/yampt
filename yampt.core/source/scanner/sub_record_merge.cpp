@@ -63,7 +63,6 @@ std::string sub_record_merge_t::filter_sub_records_by_rules(
 	bool in_reference_group = false;
 
 	const auto specific_key = rec_type + ":";
-	const auto wildcard_key = rec_type + ":*";
 
 	for (const auto & entry : subs)
 	{
@@ -77,9 +76,6 @@ std::string sub_record_merge_t::filter_sub_records_by_rules(
 		}
 
 		if (ignored_sub_records.count(specific_key + entry.type) > 0)
-			continue;
-
-		if (ignored_sub_records.count(wildcard_key) > 0)
 			continue;
 
 		filtered.push_back(entry);
@@ -543,6 +539,8 @@ void sub_record_merge_t::apply_paired_rules(
 		    merged_data, first_data, intermediate_entry.data, winner_data, paired.pairs, paired.pair_count);
 	}
 }
+
+static bool is_keyed_list_spec_sub_type(const std::string & rec_type, const std::string & sub_type);
 
 void sub_record_merge_t::apply_intermediate(
     sub_record_sequence_t & output,

@@ -4,12 +4,10 @@
 #include "../view/nav_tree_view.hpp"
 #include "../view/record_view.hpp"
 #include "merge_controller.hpp"
-#include <scanner/exclusion_resolver.hpp>
+#include <scanner/merge_exclusions.hpp>
 #include <scanner/record_conflict.hpp>
-#include <utility/app_logger.hpp>
 #include <utility/record_behavior.hpp>
-#include <regex>
-#include <set>
+#include <algorithm>
 #include <settings_store.hpp>
 #include <string>
 #include <QAction>
@@ -17,99 +15,6 @@
 #include <QDir>
 #include <QMenu>
 #include <QMessageBox>
-
-static std::set<std::string> parse_ignore_rules(const std::string & serialized)
-{
-	std::set<std::string> rules;
-	size_t start = 0;
-
-	while (start < serialized.size())
-	{
-		auto comma = serialized.find(',', start);
-		if (comma == std::string::npos)
-			comma = serialized.size();
-
-		auto token = serialized.substr(start, comma - start);
-		auto trim_start = token.find_first_not_of(' ');
-		if (trim_start != std::string::npos)
-			rules.insert(token.substr(trim_start));
-
-		start = comma + 1;
-	}
-
-	return rules;
-}
-
-static std::string serialize_ignore_rules(const std::set<std::string> & rules)
-{
-	std::string result;
-	for (const auto & rule : rules)
-	{
-		if (!result.empty())
-			result += ", ";
-
-		result += rule;
-	}
-
-	return result;
-}
-
-static std::string anchored_exclusion_token(const std::string & record_id)
-{
-	return "^" + exclusion_resolver::regex_escape_literal(record_id) + "$";
-}
-
-static std::string append_exclusion_token(const std::string & pattern, const std::string & token)
-{
-	if (pattern.empty())
-		return token;
-
-	return pattern + "|" + token;
-}
-
-static std::string remove_exclusion_token(const std::string & pattern, const std::string & token)
-{
-	std::string result;
-	size_t start = 0;
-
-	while (start <= pattern.size())
-	{
-		const auto bar = pattern.find('|', start);
-		const auto end = (bar == std::string::npos) ? pattern.size() : bar;
-		const auto piece = pattern.substr(start, end - start);
-
-		if (piece != token)
-		{
-			if (!result.empty())
-				result += "|";
-
-			result += piece;
-		}
-
-		if (bar == std::string::npos)
-			break;
-
-		start = bar + 1;
-	}
-
-	return result;
-}
-
-static bool pattern_compiles(const std::string & pattern)
-{
-	if (pattern.empty())
-		return true;
-
-	try
-	{
-		std::regex compiled(pattern, std::regex::icase);
-		return true;
-	}
-	catch (...)
-	{
-		return false;
-	}
-}
 
 view_context_menu_t::row_kind_caps_t view_context_menu_t::caps_for(row_kind_t kind)
 {
@@ -195,6 +100,10 @@ void view_context_menu_t::show_nav_menu(const QPoint & global_pos, const nav_tre
 
 		add_exclude_record_action(menu, info);
 	}
+	else if (!info.rec_type.empty() && info.record_id.empty())
+	{
+		add_exclude_type_action(menu, info);
+	}
 	else if (info.rec_type.empty() && info.record_id.empty())
 	{
 		build_source_file_menu(menu, info);
@@ -209,9 +118,13 @@ void view_context_menu_t::show_nav_menu(const QPoint & global_pos, const nav_tre
 void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_model_t::node_info_t & info)
 {
 	const auto & filename = m_session.scan().plugin_filename(info.plugin_idx);
-	const bool excluded = m_session.excluded_plugins().count(filename) > 0;
 	const bool is_patch = m_session.patch_plugins().count(filename) > 0;
 	const bool is_active = m_session.scan().is_active_plugin(info.plugin_idx);
+
+	auto rules = merge_exclusions_t::parse(m_settings.merge_excludes());
+	const exclude_rule_t file_rule { exclude_kind_t::file, filename };
+	const bool excluded =
+	    std::any_of(rules.begin(), rules.end(), [&file_rule](const exclude_rule_t & rule) { return rule == file_rule; });
 
 	auto * set_active_action = menu.addAction(
 	    QCoreApplication::translate("yEditor", "Set as Active Plugin"),
@@ -225,26 +138,7 @@ void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_mo
 	menu.addAction(
 	    excluded ? QCoreApplication::translate("yEditor", "Include in Merged Patch")
 	             : QCoreApplication::translate("yEditor", "Exclude from Merged Patch"),
-	    [this, info, filename, excluded]()
-	{
-		auto excluded_copy = m_session.excluded_plugins();
-		if (excluded)
-		{
-			excluded_copy.erase(filename);
-		}
-		else
-		{
-			excluded_copy.insert(filename);
-
-			auto patch_copy = m_session.patch_plugins();
-			if (patch_copy.erase(filename) > 0)
-				m_session.set_patch_plugins(patch_copy);
-		}
-
-		m_session.set_excluded_plugins(excluded_copy);
-		m_session.save_session_state(QDir(settings_store_t::settings_dir()).filePath("yEditor.ini"));
-		m_nav_view.notify_plugin_changed(info.plugin_idx);
-	});
+	    [this, file_rule, excluded]() { apply_record_exclusion(file_rule, !excluded); });
 
 	menu.addAction(
 	    is_patch ? QCoreApplication::translate("yEditor", "Unmark as Guard Patch")
@@ -253,17 +147,9 @@ void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_mo
 	{
 		auto patch_copy = m_session.patch_plugins();
 		if (is_patch)
-		{
 			patch_copy.erase(filename);
-		}
 		else
-		{
 			patch_copy.insert(filename);
-
-			auto excluded_copy = m_session.excluded_plugins();
-			if (excluded_copy.erase(filename) > 0)
-				m_session.set_excluded_plugins(excluded_copy);
-		}
 
 		m_session.set_patch_plugins(patch_copy);
 		m_session.save_session_state(QDir(settings_store_t::settings_dir()).filePath("yEditor.ini"));
@@ -288,60 +174,58 @@ void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_mo
 
 void view_context_menu_t::add_exclude_record_action(QMenu & menu, const nav_tree_model_t::node_info_t & info)
 {
-	if (!record_allows_exclude(info.rec_type))
-		return;
+	const auto token = merge_exclusions::anchored_id_token(info.record_id);
+	auto rules = merge_exclusions_t::parse(m_settings.merge_excludes());
 
-	const auto current_pattern = m_settings.merge_exclusion_pattern();
+	const bool excluded = std::any_of(
+	    rules.begin(),
+	    rules.end(),
+	    [&token](const exclude_rule_t & rule)
+	{ return rule.kind == exclude_kind_t::record_id && rule.target == token; });
 
-	exclusion_resolver_t resolver;
-	resolver.set_pattern(current_pattern);
-	const bool excluded = resolver.is_record_excluded(info.rec_type, info.record_id);
+	const auto label = excluded ? QCoreApplication::translate("yEditor", "Include Record in Merged Patch")
+	                            : QCoreApplication::translate("yEditor", "Exclude Record from Merged Patch");
 
-	const auto token = anchored_exclusion_token(info.record_id);
-	const auto has_token = remove_exclusion_token(current_pattern, token) != current_pattern;
-
-	if (!excluded)
-	{
-		const auto next_pattern = append_exclusion_token(current_pattern, token);
-		menu.addAction(
-		    QCoreApplication::translate("yEditor", "Exclude Record from Merged Patch"),
-		    [this, info, next_pattern]() { apply_record_exclusion_pattern(info, next_pattern); });
-
-		return;
-	}
-
-	if (!has_token)
-	{
-		auto * covered_action =
-		    menu.addAction(QCoreApplication::translate("yEditor", "Include Record in Merged Patch"));
-		covered_action->setEnabled(false);
-		covered_action->setToolTip(
-		    QCoreApplication::translate("yEditor", "This record is covered by a custom exclusion pattern"));
-
-		return;
-	}
-
-	const auto next_pattern = remove_exclusion_token(current_pattern, token);
 	menu.addAction(
-	    QCoreApplication::translate("yEditor", "Include Record in Merged Patch"),
-	    [this, info, next_pattern]() { apply_record_exclusion_pattern(info, next_pattern); });
+	    label,
+	    [this, token, excluded]()
+	{ apply_record_exclusion({ exclude_kind_t::record_id, token }, !excluded); });
 }
 
-void view_context_menu_t::apply_record_exclusion_pattern(
-    const nav_tree_model_t::node_info_t & info,
-    const std::string & pattern)
+void view_context_menu_t::add_exclude_type_action(QMenu & menu, const nav_tree_model_t::node_info_t & info)
 {
-	if (!pattern_compiles(pattern))
-	{
-		app_logger_t::add_log("[warning] invalid exclusion pattern, keeping previous: " + pattern + "\r\n");
+	auto rules = merge_exclusions_t::parse(m_settings.merge_excludes());
+	const exclude_rule_t type_rule { exclude_kind_t::record_type, info.rec_type };
 
-		return;
+	const bool excluded =
+	    std::any_of(rules.begin(), rules.end(), [&type_rule](const exclude_rule_t & rule) { return rule == type_rule; });
+
+	const auto label = excluded ? QCoreApplication::translate("yEditor", "Include Type in Merged Patch")
+	                            : QCoreApplication::translate("yEditor", "Exclude Type from Merged Patch");
+
+	menu.addAction(label, [this, type_rule, excluded]() { apply_record_exclusion(type_rule, !excluded); });
+}
+
+void view_context_menu_t::apply_record_exclusion(const exclude_rule_t & rule, bool add_rule)
+{
+	auto rules = merge_exclusions_t::parse(m_settings.merge_excludes());
+
+	if (add_rule)
+	{
+		const bool present =
+		    std::any_of(rules.begin(), rules.end(), [&rule](const exclude_rule_t & other) { return other == rule; });
+		if (!present)
+			rules.push_back(rule);
+	}
+	else
+	{
+		rules.erase(
+		    std::remove(rules.begin(), rules.end(), rule),
+		    rules.end());
 	}
 
-	m_settings.set_merge_exclusion_pattern(pattern);
-	m_session.save_session_state(QDir(settings_store_t::settings_dir()).filePath("yEditor.ini"));
-	m_nav_view.set_exclusion_pattern(pattern);
-	m_nav_view.notify_record_changed(info.rec_type, info.record_id);
+	m_settings.set_merge_excludes(merge_exclusions_t::serialize(rules));
+	m_settings.sync();
 }
 
 void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModelIndex & index)
@@ -437,38 +321,37 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 
 void view_context_menu_t::build_sub_record_ignore_menu(QMenu & menu, const view_menu_context_t & context)
 {
-	const auto rule = context.rec_type + ":" + context.row.type;
-	const auto wildcard = context.rec_type + ":*";
-	const auto rules = parse_ignore_rules(m_settings.sub_record_ignore_conflict());
+	const auto target = context.rec_type + ":" + context.row.type;
+	auto rules = merge_exclusions_t::parse(m_settings.merge_excludes());
 
-	const bool excluded_by_rule = rules.count(rule) > 0;
-	const bool excluded_by_wildcard = rules.count(wildcard) > 0;
-	const bool already_excluded = excluded_by_rule || excluded_by_wildcard;
+	const bool excluded_by_sub = std::any_of(
+	    rules.begin(),
+	    rules.end(),
+	    [&target](const exclude_rule_t & rule)
+	{ return rule.kind == exclude_kind_t::sub_record && rule.target == target; });
 
 	if (!menu.actions().isEmpty())
 		menu.addSeparator();
 
-	const auto label = already_excluded ? QCoreApplication::translate("yEditor", "Include Sub-Record \"%1\"")
-	                                    : QCoreApplication::translate("yEditor", "Exclude Sub-Record \"%1\"");
+	const auto label = excluded_by_sub ? QCoreApplication::translate("yEditor", "Include Sub-Record \"%1\"")
+	                                   : QCoreApplication::translate("yEditor", "Exclude Sub-Record \"%1\"");
 
-	auto * action = menu.addAction(
-	    label.arg(QString::fromStdString(rule)),
-	    [this, rule, excluded_by_rule]() { toggle_ignore_rule(rule, excluded_by_rule); });
-
-	if (excluded_by_wildcard && !excluded_by_rule)
-		action->setEnabled(false);
+	menu.addAction(
+	    label.arg(QString::fromStdString(target)),
+	    [this, target, excluded_by_sub]() { toggle_ignore_rule(target, excluded_by_sub); });
 }
 
 void view_context_menu_t::toggle_ignore_rule(const std::string & rule, bool remove_rule)
 {
-	auto rules = parse_ignore_rules(m_settings.sub_record_ignore_conflict());
+	auto rules = merge_exclusions_t::parse(m_settings.merge_excludes());
+	const exclude_rule_t sub_rule { exclude_kind_t::sub_record, rule };
 
 	if (remove_rule)
-		rules.erase(rule);
-	else
-		rules.insert(rule);
+		rules.erase(std::remove(rules.begin(), rules.end(), sub_rule), rules.end());
+	else if (std::none_of(rules.begin(), rules.end(), [&sub_rule](const exclude_rule_t & other) { return other == sub_rule; }))
+		rules.push_back(sub_rule);
 
-	m_settings.set_sub_record_ignore_conflict(serialize_ignore_rules(rules));
+	m_settings.set_merge_excludes(merge_exclusions_t::serialize(rules));
 
 	if (m_on_settings_changed)
 		m_on_settings_changed();

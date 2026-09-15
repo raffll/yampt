@@ -28,7 +28,7 @@ Qt6 GUI for viewing, comparing, and patching plugins. Similar to TES5Edit/xEdit.
 - **View a dialogue topic's INFO responses in their merged order, resolved using OpenMW's ordering algorithm**
 - Copy or remove records, groups, or individual fields to/from the active plugin
 - Active plugin: copy into the merged patch (default) or a hand-made plugin created with Create New Plugin; switch the target with Set as Active Plugin
-- Configurable merge: exclude plugins or records by pattern, toggle record types and fixes
+- Configurable merge: one exclude list for plugin files, record IDs, record types, and sub-records, plus fix toggles
 
 **Maintenance**
 - Plugin cleaning: batch-remove evil GMSTs and junk cells

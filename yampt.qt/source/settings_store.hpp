@@ -137,8 +137,9 @@ public:
 	theme_t theme() const;
 	void set_theme(theme_t value);
 
-	std::string merge_exclusion_pattern() const;
-	void set_merge_exclusion_pattern(const std::string & pattern);
+	std::string merge_excludes() const;
+	void set_merge_excludes(const std::string & value);
+
 
 	bool merge_fog_fix_enabled() const;
 	void set_merge_fog_fix_enabled(bool value);
@@ -147,8 +148,6 @@ public:
 	bool merge_cell_name_fix_enabled() const;
 	void set_merge_cell_name_fix_enabled(bool value);
 
-	std::string sub_record_ignore_conflict() const;
-	void set_sub_record_ignore_conflict(const std::string & value);
 
 	int display_codepage() const;
 	void set_display_codepage(int value);

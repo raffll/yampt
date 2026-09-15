@@ -1679,17 +1679,6 @@ TEST_CASE("sub_record_merge_t::filter_sub_records_by_rules, drops specific ignor
 	REQUIRE(subs[1].type == "DATA");
 }
 
-TEST_CASE("sub_record_merge_t::filter_sub_records_by_rules, wildcard drops all matching types", "[u]")
-{
-	const auto content =
-	    make_record("LTEX", make_sub("NAME", make_string("AI_Grass_Dirt")) + make_sub("INTV", make_uint32(36)));
-
-	const auto filtered = sub_record_merge_t::filter_sub_records_by_rules("LTEX", content, { "LTEX:*" });
-
-	const auto subs = sub_record_merge_t::parse_sub_records(filtered);
-	REQUIRE(subs.empty());
-}
-
 TEST_CASE("sub_record_merge_t::filter_sub_records_by_rules, rule for other record type is ignored", "[u]")
 {
 	const auto content =

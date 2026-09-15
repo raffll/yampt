@@ -168,11 +168,6 @@ void nav_tree_model_t::set_display_codepage(codepage_t codepage)
 	m_display_codepage = codepage;
 }
 
-void nav_tree_model_t::set_excluded_plugins(const std::set<std::string> * excluded)
-{
-	m_filter.set_excluded_plugins(excluded);
-}
-
 void nav_tree_model_t::set_patch_plugins(const std::set<std::string> * patch)
 {
 	m_filter.set_patch_plugins(patch);
@@ -186,12 +181,6 @@ void nav_tree_model_t::set_dirty_plugins(const std::set<std::string> * dirty)
 void nav_tree_model_t::set_editable_columns(const editable_column_set_t * editable)
 {
 	m_editable_columns = editable;
-}
-
-void nav_tree_model_t::set_exclusion_pattern(const std::string & pattern)
-{
-	m_exclusion_resolver.set_pattern(pattern);
-	refresh_colors();
 }
 
 bool nav_tree_model_t::has_whole_record_lock(const std::string & rec_type, const std::string & record_id) const
@@ -725,15 +714,6 @@ QVariant nav_tree_model_t::file_node_display_text(const file_node_t & file_node)
 
 QVariant nav_tree_model_t::file_node_appearance(const file_node_t & file_node, int role) const
 {
-	const auto & filename = m_scan.plugin_filename(file_node.plugin_idx);
-	const bool plugin_excluded = m_filter.excluded_plugins() && m_filter.excluded_plugins()->count(filename);
-
-	if (plugin_excluded && role == Qt::BackgroundRole)
-		return QBrush(theme_system_t::instance().get_color(color_name_t::excluded_background));
-
-	if (plugin_excluded && role == Qt::ForegroundRole)
-		return QBrush(theme_system_t::instance().get_color(color_name_t::excluded_text));
-
 	const auto & entries = m_scan.entries();
 	conflict_all_t worst_all = conflict_all_t::only_one;
 	conflict_this_t worst_this = conflict_this_t::unknown;
@@ -901,15 +881,11 @@ QVariant nav_tree_model_t::data_for_record(size_t file_idx, size_t group_idx, in
 	const bool is_merged_patch_active =
 	    m_scan.is_active_plugin(plugin_idx) && m_scan.plugin_filename(plugin_idx) == merged_patch::filename;
 	const bool is_locked = is_merged_patch_active && has_whole_record_lock(entry.rec_type, entry.record_id);
-	const bool is_excluded = m_exclusion_resolver.is_record_excluded(entry.rec_type, entry.record_id);
 
 	if (role == Qt::BackgroundRole)
 	{
 		if (is_locked)
 			return QBrush(theme_system_t::instance().get_color(color_name_t::locked_background));
-
-		if (is_excluded)
-			return QBrush(theme_system_t::instance().get_color(color_name_t::excluded_background));
 
 		if (entry.conflict_all < conflict_all_t::no_conflict)
 			return {};
@@ -924,9 +900,6 @@ QVariant nav_tree_model_t::data_for_record(size_t file_idx, size_t group_idx, in
 	{
 		if (is_locked)
 			return QBrush(theme_system_t::instance().get_color(color_name_t::locked_text));
-
-		if (is_excluded)
-			return QBrush(theme_system_t::instance().get_color(color_name_t::excluded_text));
 
 		if (record_color == conflict_this_t::unknown)
 			return {};

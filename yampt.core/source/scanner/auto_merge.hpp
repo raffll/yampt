@@ -1,8 +1,8 @@
 #pragma once
 
+#include "merge_exclusions.hpp"
 #include "sub_record_merge.hpp"
 #include <functional>
-#include <regex>
 #include <set>
 #include <string>
 #include <vector>
@@ -11,11 +11,8 @@ class plugin_scan_t;
 
 struct merge_config_t
 {
-	std::set<std::string> excluded_plugins;
 	std::set<std::string> patch_plugins;
-	std::string exclusion_pattern;
-	std::set<std::string> disabled_types;
-	std::set<std::string> ignored_sub_records;
+	merge_exclusions_t exclusions;
 	bool fog_fix_enabled = true;
 	bool summon_fix_enabled = true;
 	bool cell_name_fix_enabled = true;
@@ -62,7 +59,7 @@ private:
 
 	void build_record_groups();
 	void process_groups(merge_counters_t & counters);
-	bool should_skip_group(const record_group_t & group, const std::regex & exclusion_regex, bool has_exclusion) const;
+	bool should_skip_group(const record_group_t & group) const;
 	void dispatch_group(const record_group_t & group, merge_counters_t & counters);
 	void process_leveled_list(const record_group_t & group, merge_counters_t & counters);
 	void process_three_way(const record_group_t & group, merge_counters_t & counters);

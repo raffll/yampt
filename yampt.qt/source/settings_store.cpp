@@ -499,14 +499,14 @@ void settings_store_t::set_theme(theme_t value)
 	m_settings.setValue("Appearance/Theme", text);
 }
 
-std::string settings_store_t::merge_exclusion_pattern() const
+std::string settings_store_t::merge_excludes() const
 {
-	return m_settings.value("merge/exclusion_pattern", "").toString().toStdString();
+	return m_settings.value("Merge/Excludes", "").toString().toStdString();
 }
 
-void settings_store_t::set_merge_exclusion_pattern(const std::string & pattern)
+void settings_store_t::set_merge_excludes(const std::string & value)
 {
-	m_settings.setValue("merge/exclusion_pattern", QString::fromStdString(pattern));
+	m_settings.setValue("Merge/Excludes", QString::fromStdString(value));
 }
 
 bool settings_store_t::merge_fog_fix_enabled() const
@@ -537,16 +537,6 @@ bool settings_store_t::merge_cell_name_fix_enabled() const
 void settings_store_t::set_merge_cell_name_fix_enabled(bool value)
 {
 	m_settings.setValue("merge/cell_name_fix", value);
-}
-
-std::string settings_store_t::sub_record_ignore_conflict() const
-{
-	return m_settings.value("SubRecordRules/IgnoreConflict", "CELL:NAM0, LTEX:INTV").toString().toStdString();
-}
-
-void settings_store_t::set_sub_record_ignore_conflict(const std::string & value)
-{
-	m_settings.setValue("SubRecordRules/IgnoreConflict", QString::fromStdString(value));
 }
 
 int settings_store_t::display_codepage() const

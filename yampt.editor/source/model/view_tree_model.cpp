@@ -352,11 +352,6 @@ void view_tree_model_t::compute_group_ranges(view_node_t & group_node, size_t co
 	}
 }
 
-void view_tree_model_t::set_excluded_plugins(const std::set<std::string> * excluded)
-{
-	m_excluded_plugins = excluded;
-}
-
 const std::vector<view_tree_model_t::view_node_t> & view_tree_model_t::rows() const
 {
 	return visible_rows();
@@ -965,9 +960,6 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 		if (is_active_column(index.column()) && row_is_locked(*node, index))
 			return QBrush(theme_system_t::instance().get_color(color_name_t::locked_background));
 
-		if (node->is_excluded_sub_record)
-			return QBrush(theme_system_t::instance().get_color(color_name_t::excluded_background));
-
 		if (node->is_optional_placeholder)
 			return QBrush(theme_system_t::instance().get_color(color_name_t::optional_placeholder_background));
 
@@ -978,9 +970,6 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 	{
 		if (is_active_column(index.column()) && row_is_locked(*node, index))
 			return QBrush(theme_system_t::instance().get_color(color_name_t::locked_text));
-
-		if (node->is_excluded_sub_record)
-			return QBrush(theme_system_t::instance().get_color(color_name_t::excluded_text));
 
 		if (node->is_optional_placeholder)
 			return QBrush(theme_system_t::instance().get_color(color_name_t::optional_placeholder_text));
@@ -1192,10 +1181,6 @@ QVariant view_tree_model_t::headerData(int section, Qt::Orientation orientation,
 			return {};
 
 		const auto & theme = theme_system_t::instance();
-
-		if (col < static_cast<int>(m_column_names.size()) && m_excluded_plugins &&
-		    m_excluded_plugins->count(m_column_names[col]))
-			return QBrush(theme.get_color(color_name_t::excluded_text));
 
 		return QBrush(theme.conflict_this_foreground(m_plugin_conflict_this[col]));
 	}
