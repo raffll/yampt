@@ -109,7 +109,6 @@ public:
 		std::string type;
 		size_t size = 0;
 		int schema_field_index = -1;
-		bool start_collapsed = false;
 		bool show_group_value = false;
 		std::vector<std::string> values;
 		std::vector<binary_range_t> binary_ranges;
@@ -122,11 +121,6 @@ public:
 		int occurrence = 0;
 		int bit_index = -1;
 		std::vector<view_node_t> children;
-
-		void collapse_by_default()
-		{
-			start_collapsed = true;
-		}
 	};
 
 	const std::vector<view_node_t> & rows() const;
