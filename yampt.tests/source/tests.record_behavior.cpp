@@ -54,8 +54,8 @@ TEST_CASE("record_behavior::is_merge_excluded, baseline excluded record types", 
 {
 	REQUIRE(is_merge_excluded("LAND"));
 	REQUIRE(is_merge_excluded("PGRD"));
+	REQUIRE(is_merge_excluded("SCPT"));
 	REQUIRE_FALSE(is_merge_excluded("REGN"));
-	REQUIRE_FALSE(is_merge_excluded("SCPT"));
 	REQUIRE_FALSE(is_merge_excluded("DIAL"));
 	REQUIRE_FALSE(is_merge_excluded("INFO"));
 	REQUIRE_FALSE(is_merge_excluded("CELL"));
