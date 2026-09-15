@@ -13,27 +13,23 @@
 #include <QBrush>
 #include <QFont>
 
-static int conflict_this_priority(conflict_this_t conflict)
+static conflict_this_t accumulate_worst_conflict_this(conflict_this_t worst, conflict_this_t status)
 {
-	switch (conflict)
-	{
-	case conflict_this_t::unknown:
-		return 0;
-	case conflict_this_t::identical_to_master:
-		return 1;
-	case conflict_this_t::master:
-		return 2;
-	case conflict_this_t::override_wins:
-		return 3;
-	case conflict_this_t::conflict_wins:
-		return 4;
-	case conflict_this_t::conflict_loses:
-		return 5;
-	case conflict_this_t::deleted:
-		return 0;
-	default:
-		return 0;
-	}
+	if (status == conflict_this_t::identical_to_master)
+		return worst;
+
+	if (status > worst)
+		return status;
+
+	return worst;
+}
+
+static conflict_this_t resolve_record_foreground(conflict_this_t worst)
+{
+	if (worst == conflict_this_t::unknown || worst == conflict_this_t::master)
+		return conflict_this_t::identical_to_master;
+
+	return worst;
 }
 
 static size_t unique_plugin_count(const conflict_entry_t & entry)
@@ -725,8 +721,7 @@ QVariant nav_tree_model_t::file_node_appearance(const file_node_t & file_node, i
 			const auto & entry = entries[rec.entry_idx];
 			const auto this_color = record_foreground_for_plugin(entry, file_node.plugin_idx);
 
-			if (conflict_this_priority(this_color) > conflict_this_priority(worst_this))
-				worst_this = this_color;
+			worst_this = accumulate_worst_conflict_this(worst_this, this_color);
 
 			if (entry.conflict_all > worst_all)
 				worst_all = entry.conflict_all;
@@ -742,12 +737,7 @@ QVariant nav_tree_model_t::file_node_appearance(const file_node_t & file_node, i
 	}
 
 	if (role == Qt::ForegroundRole)
-	{
-		if (worst_this == conflict_this_t::unknown)
-			return {};
-
-		return QBrush(theme_system_t::instance().conflict_this_foreground(worst_this));
-	}
+		return QBrush(theme_system_t::instance().conflict_this_foreground(resolve_record_foreground(worst_this)));
 
 	return {};
 }
@@ -804,8 +794,7 @@ QVariant nav_tree_model_t::data_for_type_group(size_t file_idx, int row, int col
 		const auto & entry = entries[rec.entry_idx];
 		const auto this_color = record_foreground_for_plugin(entry, m_tree[file_idx].plugin_idx);
 
-		if (conflict_this_priority(this_color) > conflict_this_priority(worst_this))
-			worst_this = this_color;
+		worst_this = accumulate_worst_conflict_this(worst_this, this_color);
 
 		if (entry.conflict_all > worst_all)
 			worst_all = entry.conflict_all;
@@ -820,12 +809,7 @@ QVariant nav_tree_model_t::data_for_type_group(size_t file_idx, int row, int col
 	}
 
 	if (role == Qt::ForegroundRole)
-	{
-		if (worst_this == conflict_this_t::unknown)
-			return {};
-
-		return QBrush(theme_system_t::instance().conflict_this_foreground(worst_this));
-	}
+		return QBrush(theme_system_t::instance().conflict_this_foreground(resolve_record_foreground(worst_this)));
 
 	if (role == Qt::FontRole && m_show_deleted_strikeout)
 	{
@@ -901,10 +885,7 @@ QVariant nav_tree_model_t::data_for_record(size_t file_idx, size_t group_idx, in
 		if (is_locked)
 			return QBrush(theme_system_t::instance().get_color(color_name_t::locked_text));
 
-		if (record_color == conflict_this_t::unknown)
-			return {};
-
-		return QBrush(theme_system_t::instance().conflict_this_foreground(record_color));
+		return QBrush(theme_system_t::instance().conflict_this_foreground(resolve_record_foreground(record_color)));
 	}
 
 	if (role == Qt::FontRole && m_show_deleted_strikeout && entry.has_dele)
