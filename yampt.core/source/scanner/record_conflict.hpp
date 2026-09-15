@@ -8,6 +8,7 @@ inline const std::string non_existent_value { "\x00_NE", 4 };
 struct conflict_policy_t
 {
 	bool skip_non_existent = false;
+	bool skip_conflict = false;
 };
 
 namespace record_conflict {
