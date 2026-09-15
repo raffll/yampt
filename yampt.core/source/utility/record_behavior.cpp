@@ -9,7 +9,7 @@ using enum sub_rule_flag_t;
 static constexpr sub_record_rule_t cell_wildcard = { "*", 0, skip_non_existent };
 
 static constexpr sub_record_rule_t cell_sub_rules[] = {
-	{ "NAM0", 0, skip_merge },
+	{ "NAM0", 0, skip_emit },
 	{ "FRMR", 0, merge_boundary },
 };
 

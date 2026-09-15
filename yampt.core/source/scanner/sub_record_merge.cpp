@@ -549,14 +549,8 @@ void sub_record_merge_t::apply_intermediate(
     const sub_record_sequence_t & winner,
     const std::string & rec_type)
 {
-	const auto * skip_behavior = find_record_behavior(rec_type);
-
 	for (size_t i = 0; i < intermediate.size(); ++i)
 	{
-		const auto * skip_rule = find_sub_record_rule(skip_behavior, intermediate[i].type, intermediate[i].data.size());
-		if (skip_rule && has_flag(skip_rule->flags, sub_rule_flag_t::skip_merge))
-			continue;
-
 		if (is_enam_record_type(rec_type) && intermediate[i].type == "ENAM")
 			continue;
 
@@ -1029,7 +1023,7 @@ static sub_record_sequence_t replace_entries_of_type(
 	return result;
 }
 
-static sub_record_sequence_t truncate_at_merge_boundary(
+static sub_record_sequence_t filter_for_merge(
     const sub_record_sequence_t & sequence,
     const record_behavior_t * behavior)
 {
@@ -1038,8 +1032,12 @@ static sub_record_sequence_t truncate_at_merge_boundary(
 	for (const auto & entry : sequence)
 	{
 		const auto * rule = find_sub_record_rule(behavior, entry.type, entry.data.size());
+
 		if (rule && has_flag(rule->flags, sub_rule_flag_t::merge_boundary))
 			break;
+
+		if (rule && has_flag(rule->flags, sub_rule_flag_t::skip_emit))
+			continue;
 
 		result.push_back(entry);
 	}
@@ -1059,13 +1057,13 @@ merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
 
 	const auto * behavior = find_record_behavior(input.rec_type);
 
-	const auto first_subs = truncate_at_merge_boundary(parse_sub_records(first_content), behavior);
-	const auto winner_subs = truncate_at_merge_boundary(parse_sub_records(winner_content), behavior);
+	const auto first_subs = filter_for_merge(parse_sub_records(first_content), behavior);
+	const auto winner_subs = filter_for_merge(parse_sub_records(winner_content), behavior);
 	auto output = winner_subs;
 
 	for (size_t version_idx = versions.size() - 2; version_idx >= 1; --version_idx)
 	{
-		const auto inter_subs = truncate_at_merge_boundary(parse_sub_records(versions[version_idx]), behavior);
+		const auto inter_subs = filter_for_merge(parse_sub_records(versions[version_idx]), behavior);
 		apply_intermediate(output, first_subs, inter_subs, winner_subs, input.rec_type);
 	}
 

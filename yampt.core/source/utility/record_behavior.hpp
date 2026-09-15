@@ -10,7 +10,7 @@ enum class sub_rule_flag_t : unsigned
 	skip_non_existent = 1 << 1,
 	skip_if_size_differs = 1 << 3,
 	element_wise_merge = 1 << 4,
-	skip_merge = 1 << 5,
+	skip_emit = 1 << 5,
 	merge_boundary = 1 << 6,
 };
 
