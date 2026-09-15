@@ -380,9 +380,6 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 	{
 		const auto & policy = cached_conflict_policy(entry.rec_type, slot.key.type);
 
-		if (policy.skip_conflict)
-			continue;
-
 		std::vector<std::string> slot_values(ver_count);
 		const char * first_data = nullptr;
 		size_t first_size = 0;

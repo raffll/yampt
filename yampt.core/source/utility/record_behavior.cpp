@@ -9,12 +9,8 @@ using enum sub_rule_flag_t;
 static constexpr sub_record_rule_t cell_wildcard = { "*", 0, skip_non_existent };
 
 static constexpr sub_record_rule_t cell_sub_rules[] = {
-	{ "NAM0", 0, skip_emit | skip_conflict },
+	{ "NAM0", 0, skip_emit },
 	{ "FRMR", 0, merge_boundary },
-};
-
-static constexpr sub_record_rule_t ltex_sub_rules[] = {
-	{ "INTV", 0, skip_conflict },
 };
 
 static constexpr field_pair_rule_t crea_npdt_attack_pairs[] = {
@@ -177,7 +173,6 @@ static constexpr record_behavior_t behavior_table[] = {
 	  .armor_part_sub_types = armor_part_sub_types,
 	  .armor_part_sub_type_count = 2 },
 	{ .record_type = "SCPT", .merge_excluded = true },
-	{ .record_type = "LTEX", .sub_rules = ltex_sub_rules, .sub_rule_count = 1 },
 	{ .record_type = "ENCH",
 	  .paired_rules = enam_paired_rules,
 	  .paired_rule_count = 1,

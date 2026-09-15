@@ -115,7 +115,7 @@ void record_view_t::setup_tree()
 void record_view_t::display_record(plugin_scan_t & scan, const conflict_entry_t & entry)
 {
 	const bool same_record =
-	    m_model->record_type() == m_displayed_record_type && m_model->record_id() == m_displayed_record_id;
+	    entry.rec_type == m_displayed_record_type && entry.record_id == m_displayed_record_id;
 	const auto preserved_keys = same_record ? capture_expanded_keys() : std::set<std::string>{};
 
 	m_model->set_record(scan, entry);
