@@ -10,6 +10,8 @@ enum class sub_rule_flag_t : unsigned
 	skip_non_existent = 1 << 1,
 	skip_if_size_differs = 1 << 3,
 	element_wise_merge = 1 << 4,
+	skip_merge = 1 << 5,
+	merge_boundary = 1 << 6,
 };
 
 inline constexpr sub_rule_flag_t operator|(sub_rule_flag_t left, sub_rule_flag_t right)
@@ -79,7 +81,6 @@ enum class copy_strategy_t
 enum class merge_strategy_t
 {
 	generic,
-	cell_refs,
 	armor_parts
 };
 
@@ -99,7 +100,6 @@ struct record_behavior_t
 	const sub_record_rule_t * wildcard_rule = nullptr;
 	const paired_merge_rule_t * paired_rules = nullptr;
 	size_t paired_rule_count = 0;
-	bool atomic_groups = false;
 	merge_strategy_t merge_strategy = merge_strategy_t::generic;
 	bool enam_effect_list = false;
 	bool merge_excluded = false;

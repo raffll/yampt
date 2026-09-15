@@ -33,7 +33,7 @@ TEST_CASE("record_behavior::is_repeatable_sub_record, unknown record type is not
 
 TEST_CASE("record_behavior::merge_strategy_for, dispatch per record type", "[u]")
 {
-	REQUIRE(merge_strategy_for("CELL") == merge_strategy_t::cell_refs);
+	REQUIRE(merge_strategy_for("CELL") == merge_strategy_t::generic);
 	REQUIRE(merge_strategy_for("ARMO") == merge_strategy_t::armor_parts);
 	REQUIRE(merge_strategy_for("CLOT") == merge_strategy_t::armor_parts);
 	REQUIRE(merge_strategy_for("WEAP") == merge_strategy_t::generic);

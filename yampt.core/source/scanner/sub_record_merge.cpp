@@ -549,8 +549,14 @@ void sub_record_merge_t::apply_intermediate(
     const sub_record_sequence_t & winner,
     const std::string & rec_type)
 {
+	const auto * skip_behavior = find_record_behavior(rec_type);
+
 	for (size_t i = 0; i < intermediate.size(); ++i)
 	{
+		const auto * skip_rule = find_sub_record_rule(skip_behavior, intermediate[i].type, intermediate[i].data.size());
+		if (skip_rule && has_flag(skip_rule->flags, sub_rule_flag_t::skip_merge))
+			continue;
+
 		if (is_enam_record_type(rec_type) && intermediate[i].type == "ENAM")
 			continue;
 
@@ -641,9 +647,6 @@ merge_result_t sub_record_merge_t::merge(const merge_input_t & input)
 {
 	switch (merge_strategy_for(input.rec_type))
 	{
-	case merge_strategy_t::cell_refs:
-		return merge_cell_refs(input);
-
 	case merge_strategy_t::armor_parts:
 		return merge_armor_parts(input);
 
@@ -698,221 +701,6 @@ frmr_map_t sub_record_merge_t::build_frmr_map(const std::vector<frmr_group_t> & 
 		result.emplace(group.frmr_index, group);
 
 	return result;
-}
-
-void sub_record_merge_t::apply_intermediate_to_group(
-    sub_record_sequence_t & output,
-    const sub_record_sequence_t & first,
-    const sub_record_sequence_t & intermediate,
-    const sub_record_sequence_t & winner)
-{
-	for (size_t i = 0; i < intermediate.size(); ++i)
-	{
-		const auto occurrence = find_occurrence_index(intermediate, i);
-		const auto first_idx = find_by_type_and_occurrence(first, intermediate[i].type, occurrence);
-
-		if (first_idx < 0)
-			continue;
-
-		if (intermediate[i].data == first[first_idx].data)
-			continue;
-
-		const auto winner_idx = find_by_type_and_occurrence(winner, intermediate[i].type, occurrence);
-
-		if (winner_idx < 0)
-			continue;
-
-		const auto output_idx = find_by_type_and_occurrence(output, intermediate[i].type, occurrence);
-
-		if (output_idx < 0)
-			continue;
-
-		const matched_entry_t entries {
-			first[static_cast<size_t>(first_idx)],
-			intermediate[i],
-			winner[static_cast<size_t>(winner_idx)],
-			output[static_cast<size_t>(output_idx)]
-		};
-
-		merge_matched_entry(entries, "CELL");
-	}
-}
-
-sub_record_sequence_t sub_record_merge_t::merge_frmr_group(
-    const sub_record_sequence_t & first_subs,
-    const sub_record_sequence_t & inter_subs,
-    const sub_record_sequence_t & winner_subs)
-{
-	auto output = winner_subs;
-	apply_intermediate_to_group(output, first_subs, inter_subs, winner_subs);
-	return output;
-}
-
-std::string sub_record_merge_t::reconstruct_cell(
-    const std::string & winner_content,
-    const sub_record_sequence_t & header,
-    const std::vector<frmr_group_t> & groups)
-{
-	std::string body;
-
-	for (const auto & entry : header)
-		body += serialize_sub_record(entry);
-
-	for (const auto & group : groups)
-	{
-		for (const auto & entry : group.sub_records)
-			body += serialize_sub_record(entry);
-	}
-
-	std::string result = winner_content.substr(0, record_header_size);
-	const auto body_size = domain_types::convert_uint_to_string_byte_array(body.size());
-	result.replace(record_size_field_offset, record_size_field_length, body_size);
-	result += body;
-	return result;
-}
-
-void sub_record_merge_t::collect_intermediate_additions(
-    std::vector<frmr_group_t> & merged_groups,
-    const std::vector<std::string> & versions,
-    const frmr_map_t & first_map,
-    const frmr_map_t & winner_map)
-{
-	for (size_t version_idx = versions.size() - 2; version_idx >= 1; --version_idx)
-	{
-		const auto inter_part = partition_cell(versions[version_idx]);
-
-		for (const auto & group : inter_part.groups)
-		{
-			if (first_map.count(group.frmr_index) > 0)
-				continue;
-
-			if (winner_map.count(group.frmr_index) > 0)
-				continue;
-
-			const bool already_added = std::any_of(
-			    merged_groups.begin(),
-			    merged_groups.end(),
-			    [&](const frmr_group_t & existing) { return existing.frmr_index == group.frmr_index; });
-
-			if (!already_added)
-				merged_groups.push_back(group);
-		}
-	}
-}
-
-static bool cell_refs_are_atomic()
-{
-	const auto * behavior = find_record_behavior("CELL");
-	return behavior != nullptr && behavior->atomic_groups;
-}
-
-static sub_record_sequence_t select_atomic_frmr_subs(
-    const std::vector<std::string> & versions,
-    uint32_t index,
-    const sub_record_sequence_t & first_subs,
-    const sub_record_sequence_t & winner_subs)
-{
-	if (winner_subs != first_subs)
-		return winner_subs;
-
-	for (size_t version_idx = versions.size() - 2; version_idx >= 1; --version_idx)
-	{
-		const auto inter_part = sub_record_merge_t::partition_cell(versions[version_idx]);
-		const auto inter_map = sub_record_merge_t::build_frmr_map(inter_part.groups);
-		const auto it_inter = inter_map.find(index);
-
-		if (it_inter == inter_map.end())
-			continue;
-
-		if (it_inter->second.sub_records != first_subs)
-			return it_inter->second.sub_records;
-	}
-
-	return winner_subs;
-}
-
-void sub_record_merge_t::merge_winner_frmr_groups(
-    std::vector<frmr_group_t> & merged_groups,
-    const std::vector<std::string> & versions,
-    const frmr_map_t & first_map,
-    const frmr_map_t & winner_map)
-{
-	const bool atomic = cell_refs_are_atomic();
-
-	for (const auto & [index, winner_group] : winner_map)
-	{
-		auto it_first = first_map.find(index);
-
-		if (it_first == first_map.end())
-		{
-			merged_groups.push_back(winner_group);
-			continue;
-		}
-
-		if (atomic)
-		{
-			auto atomic_subs = select_atomic_frmr_subs(versions, index, it_first->second.sub_records, winner_group.sub_records);
-			merged_groups.push_back({ index, std::move(atomic_subs) });
-			continue;
-		}
-
-		auto merged_subs = winner_group.sub_records;
-
-		for (size_t version_idx = versions.size() - 2; version_idx >= 1; --version_idx)
-		{
-			const auto inter_part = partition_cell(versions[version_idx]);
-			const auto inter_map = build_frmr_map(inter_part.groups);
-			auto it_inter = inter_map.find(index);
-
-			if (it_inter == inter_map.end())
-				continue;
-
-			merged_subs = merge_frmr_group(it_first->second.sub_records, it_inter->second.sub_records, merged_subs);
-		}
-
-		merged_groups.push_back({ index, std::move(merged_subs) });
-	}
-}
-
-merge_result_t sub_record_merge_t::merge_cell_refs(const merge_input_t & input)
-{
-	const auto & versions = input.version_contents;
-
-	if (versions.size() < 3)
-		return { false, versions.back() };
-
-	const auto & first_content = versions.front();
-	const auto & winner_content = versions.back();
-
-	const auto first_part = partition_cell(first_content);
-	const auto winner_part = partition_cell(winner_content);
-
-	auto merged_header = winner_part.header;
-
-	for (size_t version_idx = versions.size() - 2; version_idx >= 1; --version_idx)
-	{
-		const auto inter_part = partition_cell(versions[version_idx]);
-		apply_intermediate(merged_header, first_part.header, inter_part.header, winner_part.header, "CELL");
-	}
-
-	const auto first_map = build_frmr_map(first_part.groups);
-	const auto winner_map = build_frmr_map(winner_part.groups);
-
-	std::vector<frmr_group_t> merged_groups;
-	merge_winner_frmr_groups(merged_groups, versions, first_map, winner_map);
-	collect_intermediate_additions(merged_groups, versions, first_map, winner_map);
-
-	std::sort(
-	    merged_groups.begin(),
-	    merged_groups.end(),
-	    [](const frmr_group_t & lhs, const frmr_group_t & rhs) { return lhs.frmr_index < rhs.frmr_index; });
-
-	const auto result = reconstruct_cell(winner_content, merged_header, merged_groups);
-
-	if (result == winner_content)
-		return { false, winner_content };
-
-	return { true, result };
 }
 
 armor_partition_t sub_record_merge_t::partition_armor(const std::string & content, const std::string & rec_type)
@@ -1241,6 +1029,24 @@ static sub_record_sequence_t replace_entries_of_type(
 	return result;
 }
 
+static sub_record_sequence_t truncate_at_merge_boundary(
+    const sub_record_sequence_t & sequence,
+    const record_behavior_t * behavior)
+{
+	sub_record_sequence_t result;
+
+	for (const auto & entry : sequence)
+	{
+		const auto * rule = find_sub_record_rule(behavior, entry.type, entry.data.size());
+		if (rule && has_flag(rule->flags, sub_rule_flag_t::merge_boundary))
+			break;
+
+		result.push_back(entry);
+	}
+
+	return result;
+}
+
 merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
 {
 	const auto & versions = input.version_contents;
@@ -1251,13 +1057,15 @@ merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
 	const auto & first_content = versions.front();
 	const auto & winner_content = versions.back();
 
-	const auto first_subs = parse_sub_records(first_content);
-	const auto winner_subs = parse_sub_records(winner_content);
+	const auto * behavior = find_record_behavior(input.rec_type);
+
+	const auto first_subs = truncate_at_merge_boundary(parse_sub_records(first_content), behavior);
+	const auto winner_subs = truncate_at_merge_boundary(parse_sub_records(winner_content), behavior);
 	auto output = winner_subs;
 
 	for (size_t version_idx = versions.size() - 2; version_idx >= 1; --version_idx)
 	{
-		const auto inter_subs = parse_sub_records(versions[version_idx]);
+		const auto inter_subs = truncate_at_merge_boundary(parse_sub_records(versions[version_idx]), behavior);
 		apply_intermediate(output, first_subs, inter_subs, winner_subs, input.rec_type);
 	}
 
@@ -1288,11 +1096,10 @@ merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
 		output = replace_faction_reactions(output, merged_reactions, *reaction_pair);
 	}
 
-	const auto result = reconstruct_record(winner_content, output);
-
-	if (result == winner_content)
+	if (output == winner_subs)
 		return { false, winner_content };
 
+	const auto result = reconstruct_record(winner_content, output);
 	return { true, result };
 }
 

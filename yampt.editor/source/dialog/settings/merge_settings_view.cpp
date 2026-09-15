@@ -5,9 +5,12 @@
 #include <QCheckBox>
 #include <QCoreApplication>
 #include <QComboBox>
+#include <QFontMetrics>
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QHeaderView>
+#include <algorithm>
+#include <array>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
@@ -77,6 +80,21 @@ QString kind_label(exclude_kind_t kind)
 	return QCoreApplication::translate("yEditor", "Record ID");
 }
 
+int widest_kind_width()
+{
+	const QFontMetrics metrics(QComboBox().font());
+	const std::array<exclude_kind_t, 4> kinds {
+		exclude_kind_t::file, exclude_kind_t::record_id, exclude_kind_t::record_type, exclude_kind_t::sub_record
+	};
+
+	int widest = 0;
+	for (const auto kind : kinds)
+		widest = std::max(widest, metrics.horizontalAdvance(kind_label(kind)));
+
+	constexpr int cell_padding = 24;
+	return widest + cell_padding;
+}
+
 QString placeholder_for_index(int index)
 {
 	switch (kind_for_index(index))
@@ -126,8 +144,9 @@ void merge_settings_view_t::setup_excludes_tab()
 
 	m_exclude_table = new QTableWidget(0, 2, page);
 	m_exclude_table->setHorizontalHeaderLabels({ tr("Kind"), tr("Target") });
-	m_exclude_table->horizontalHeader()->setSectionResizeMode(kind_column, QHeaderView::ResizeToContents);
+	m_exclude_table->horizontalHeader()->setSectionResizeMode(kind_column, QHeaderView::Fixed);
 	m_exclude_table->horizontalHeader()->setSectionResizeMode(target_column, QHeaderView::Stretch);
+	m_exclude_table->setColumnWidth(kind_column, widest_kind_width());
 	m_exclude_table->verticalHeader()->setVisible(false);
 	m_exclude_table->verticalHeader()->setDefaultSectionSize(24);
 	m_exclude_table->setSelectionBehavior(QAbstractItemView::SelectRows);

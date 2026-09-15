@@ -137,8 +137,6 @@ public:
 	static frmr_map_t build_frmr_map(const std::vector<frmr_group_t> & groups);
 	static uint32_t read_frmr_index(const sub_record_entry_t & frmr_entry);
 
-	static merge_result_t merge_cell_refs(const merge_input_t & input);
-
 private:
 	static merge_result_t merge_generic(const merge_input_t & input);
 
@@ -165,30 +163,6 @@ private:
 	};
 
 	static void merge_matched_entry(const matched_entry_t & entries, const std::string & rec_type);
-
-	static void apply_intermediate_to_group(
-	    sub_record_sequence_t & output,
-	    const sub_record_sequence_t & first,
-	    const sub_record_sequence_t & intermediate,
-	    const sub_record_sequence_t & winner);
-	static sub_record_sequence_t merge_frmr_group(
-	    const sub_record_sequence_t & first_subs,
-	    const sub_record_sequence_t & inter_subs,
-	    const sub_record_sequence_t & winner_subs);
-	static std::string reconstruct_cell(
-	    const std::string & winner_content,
-	    const sub_record_sequence_t & header,
-	    const std::vector<frmr_group_t> & groups);
-	static void collect_intermediate_additions(
-	    std::vector<frmr_group_t> & merged_groups,
-	    const std::vector<std::string> & versions,
-	    const frmr_map_t & first_map,
-	    const frmr_map_t & winner_map);
-	static void merge_winner_frmr_groups(
-	    std::vector<frmr_group_t> & merged_groups,
-	    const std::vector<std::string> & versions,
-	    const frmr_map_t & first_map,
-	    const frmr_map_t & winner_map);
 
 	static merge_result_t merge_armor_parts(const merge_input_t & input);
 	static armor_partition_t partition_armor(const std::string & content, const std::string & rec_type);

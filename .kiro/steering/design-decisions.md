@@ -237,13 +237,20 @@ Consequence: two plugins that each toggle a *different* flag on the same field b
 
 This only fires for sub-records that go through the element-wise merge path (`needs_element_wise` true — i.e. they have an `element_wise_merge` rule in `record_behavior.cpp`). Sub-records that are a single flags field and previously merged whole-value were given explicit `element_wise_merge` rules so they get per-bit treatment: NPC_ `FLAG`, CREA `FLAG`, CONT `FLAG`, and LEVI/LEVC `DATA` (the leveled-list calculation flags, merged via the leveled header path `merge_header_part`). Do NOT remove these rules or revert flags to whole-value merge. CELL `DATA` flags are a separate concern (cell merge path) and are not covered here.
 
-## CELL References (FRMR) Merge Atomically
+## CELL Merge: Generic Three-Way of the Header, FRMR Region Dropped
 
-A cell's placed objects — each an `FRMR` object-index sub-record followed by all of its component sub-records (NAME, DATA position, XSCL, lock/`FLTV`, key/`KNAM`, trap/`TNAM`, owner/`ANAM`, `DODT`/`DNAM` teleport, etc.) — are grouped by their FRMR index in `partition_cell` and merged as **whole units**, never field by field. This is a declared behavior: `record_behavior_t` carries an `atomic_groups` flag, set `true` only for `CELL` in `record_behavior.cpp`.
+CELL uses the **generic merge** (`merge_strategy_t::generic`) — there is no CELL-specific merge strategy, no `merge_cell_refs`, and no `cell_refs` enum value. What makes CELL behave correctly is two table rows on its `record_behavior_t` entry plus a boundary-truncation step in `merge_generic`, not bespoke code.
 
-`merge_winner_frmr_groups` (sub_record_merge.cpp) checks `cell_refs_are_atomic()` and, when true, calls `select_atomic_frmr_subs` for a reference present in both master and the winner: the whole object is taken from the **last-listed plugin that changed it** vs the master (winner checked first, then intermediates high→low). If no plugin changed the reference, the master/winner copy is kept. Only when `atomic_groups` is false does the per-object path fall back to the field-wise `merge_frmr_group` (`apply_intermediate_to_group` → `merge_matched_entry`).
+`merge_generic` fetches the record's behavior once and runs each parsed version sequence through `truncate_at_merge_boundary` before merging: the sequence is cut at the first sub-record whose rule carries `sub_rule_flag_t::merge_boundary`. CELL's behavior row lists `sub_record_rule_t { "FRMR", 0, merge_boundary }`, so every version is truncated at its first `FRMR`. Only the pre-FRMR header (NAME, DATA cell-flags/coords, RGNN, WHGT, AMBI, NAM5, NAM0, etc.) reaches the three-way overlay; the entire placed-object region — every `FRMR` group and everything after it — is dropped before merging and never re-emitted.
 
-Consequence: a placed object never ends up combining, e.g., its position from one plugin with its ownership or lock state from another. Reference **presence** is still a union keyed on FRMR index (an object added by any plugin is kept; an object absent from a plugin follows the existing winner/first logic). This atomic rule applies to CELL references only — ARMO/CLOT part-groups and all other sub-records keep their existing merge behavior. Do NOT extend `atomic_groups` to other record types without a decision, and do NOT revert CELL references to field-wise merge.
+Consequences:
+- The FRMR object list is **not merged and not carried** into the merged patch. A merged CELL record contains only the merged header. Placed-object edits (add, remove, move, re-own, re-lock) are not represented in the merged patch at all. This is deliberate: a CELL's reference list is a positional whole that does not survive field-wise or per-object three-way merging cleanly (the same sub-type — `NAME`, `DATA`, `INTV` — means different things in the header vs inside a reference, and only the FRMR boundary disambiguates them), so the region is excluded from the merge entirely.
+- A CELL whose only differences are in the FRMR region is a **no-op**: after truncation every version's header is identical, so `merge_generic` returns `changed = false` and emits nothing.
+- The changed/emit gate compares the merged sub-record **sequence** against the truncated winner sequence (`output == winner_subs`), not the reconstructed record string against the raw winner content. This is what lets a truncated (header-only) result be recognized as unchanged; it also cleanly serves every non-CELL record type, where no boundary exists and the full sequence is compared.
+
+`NAM0` (the reference count that precedes the FRMR list, and part of the header) is additionally excluded from the header merge via a second table row — `sub_record_rule_t { "NAM0", 0, skip_merge }`. `apply_intermediate` looks up each header sub-record's rule and skips any flagged `sub_rule_flag_t::skip_merge`, keeping the winner's copy so `NAM0` stays consistent with the winner. Header disambiguation between the 12-byte header `DATA` (cell flags/coords) and the 24-byte reference `DATA` needs no size-keyed rule: reference `DATA` sits after the FRMR boundary and is truncated away, so only header `DATA` is ever merged.
+
+The CELL row keeps its `decode_mode = cell`, `copy_strategy = header_and_selected_group`, and `wildcard_rule = &cell_wildcard` (`{ "*", 0, skip_non_existent }`). Decode, display, and the copy-to-merged-patch path (`merge_controller_t::copy_cell_record`) still use `partition_cell` / `cell_partition_t` / `frmr_group_t` / `read_frmr_index` / `build_frmr_map`; those are retained. Only the CELL-specific *merge* code was removed. Do NOT reintroduce a CELL merge strategy, per-object FRMR merging, an `atomic_groups` flag, or FRMR re-emission — CELL is a generic merge with a `merge_boundary` row by design.
 
 ## Merge/Decode Invariants and Binary Layout Constants (comprehension-critical)
 
@@ -266,9 +273,9 @@ The core sub-record merge rule is: a piece (bit / byte span) is taken from an in
 
 `merge_bool_bit` reuses `field_def_t::size` as a BIT INDEX (not a byte length) for `bool_bit` fields — a type pun that is intentional and load-bearing.
 
-### CELL FRMR reverse-scan
+### Intermediate reverse-scan
 
-The cell-ref merge loops iterate intermediates high-priority→low with `for (size_t idx = versions.size() - 2; idx >= 1; --idx)`, deliberately excluding master (index 0) and winner (back). This only terminates because `merge_cell_refs` guarantees `versions.size() >= 3`. The atomic-reference selection (whole object from the last plugin that changed it) is documented under "CELL References (FRMR) Merge Atomically".
+`merge_generic` iterates intermediates high-priority→low with `for (size_t version_idx = versions.size() - 2; version_idx >= 1; --version_idx)`, deliberately excluding master (index 0) and winner (back). This only terminates because the `versions.size() < 3` early return guarantees `versions.size() >= 3` by the time the loop runs. For CELL each version is first passed through `truncate_at_merge_boundary`, so only the pre-FRMR header participates; the FRMR region is dropped, as documented under "CELL Merge: Generic Three-Way of the Header, FRMR Region Dropped".
 
 ### dial_info OpenMW ordering
 

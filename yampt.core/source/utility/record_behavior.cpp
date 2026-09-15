@@ -8,6 +8,11 @@ using enum sub_rule_flag_t;
 
 static constexpr sub_record_rule_t cell_wildcard = { "*", 0, skip_non_existent };
 
+static constexpr sub_record_rule_t cell_sub_rules[] = {
+	{ "NAM0", 0, skip_merge },
+	{ "FRMR", 0, merge_boundary },
+};
+
 static constexpr field_pair_rule_t crea_npdt_attack_pairs[] = {
 	{ 68, 72, 4 },
 	{ 76, 80, 4 },
@@ -101,9 +106,9 @@ static constexpr record_behavior_t behavior_table[] = {
 	{ .record_type = "CELL",
 	  .decode_mode = decode_mode_t::cell,
 	  .copy_strategy = copy_strategy_t::header_and_selected_group,
-	  .wildcard_rule = &cell_wildcard,
-	  .atomic_groups = true,
-	  .merge_strategy = merge_strategy_t::cell_refs },
+	  .sub_rules = cell_sub_rules,
+	  .sub_rule_count = 2,
+	  .wildcard_rule = &cell_wildcard },
 	{ .record_type = "LEVI",
 	  .decode_mode = decode_mode_t::leveled,
 	  .sub_rules = levi_sub_rules,

@@ -299,7 +299,7 @@ void preview_view_t::set_editing_enabled(bool enabled)
 void preview_view_t::show_error_message(const QString & message)
 {
 	m_message_label->setStyleSheet("color: rgb(220, 50, 50);");
-	m_message_label->setText(tr("Error: %1").arg(message));
+	m_message_label->setText(tr("[error] %1").arg(message));
 }
 
 void preview_view_t::show_range_hint()
@@ -319,7 +319,7 @@ void preview_view_t::show_range_hint()
 	}
 
 	m_message_label->setStyleSheet("");
-	m_message_label->setText(tr("Range: %1").arg(QString::fromStdString(hint)));
+	m_message_label->setText(tr("[info] range: %1").arg(QString::fromStdString(hint)));
 }
 
 void preview_view_t::show_readonly_message(const QString & message)
@@ -420,7 +420,7 @@ void preview_view_t::update_selection(
 		set_editing_enabled(false);
 		m_right_cached = (cell_value == non_existent_value) ? std::string {} : cell_value;
 		render_comparison();
-		show_readonly_message(tr("Auto-calculated, not editable"));
+		show_readonly_message(tr("[info] auto-calculated, not editable"));
 		return;
 	}
 
@@ -430,7 +430,7 @@ void preview_view_t::update_selection(
 		set_editing_enabled(false);
 		m_right_cached = (cell_value == non_existent_value) ? std::string {} : cell_value;
 		render_comparison();
-		show_readonly_message(tr("Record ID, not editable"));
+		show_readonly_message(tr("[info] record id, not editable"));
 		return;
 	}
 
@@ -439,7 +439,7 @@ void preview_view_t::update_selection(
 		set_editing_enabled(false);
 		m_right_cached = (cell_value == non_existent_value) ? std::string {} : cell_value;
 		render_comparison();
-		show_readonly_message(tr("Landscape data, not editable"));
+		show_readonly_message(tr("[info] landscape data, not editable"));
 		return;
 	}
 

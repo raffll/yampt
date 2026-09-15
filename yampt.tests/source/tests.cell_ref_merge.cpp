@@ -78,28 +78,6 @@ static bool contains_frmr(const std::string & content, uint32_t frmr_index)
 	return false;
 }
 
-static float read_frmr_x_pos(const std::string & content, uint32_t frmr_index)
-{
-	auto part = sub_record_merge_t::partition_cell(content);
-	for (const auto & group : part.groups)
-	{
-		if (group.frmr_index != frmr_index)
-			continue;
-
-		for (const auto & entry : group.sub_records)
-		{
-			if (entry.type == "DATA" && entry.data.size() >= 4)
-			{
-				float value = 0.0f;
-				std::memcpy(&value, entry.data.data(), 4);
-				return value;
-			}
-		}
-	}
-
-	return 0.0f;
-}
-
 TEST_CASE("sub_record_merge_t::partition_cell, splits header from refs", "[u]")
 {
 	auto hdr = make_cell_header();
@@ -169,25 +147,7 @@ TEST_CASE("sub_record_merge_t::read_frmr_index, reads uint32 from data", "[u]")
 	REQUIRE(sub_record_merge_t::read_frmr_index(entry) == 42);
 }
 
-TEST_CASE("sub_record_merge_t::merge_cell_refs, 2 versions unchanged", "[u]")
-{
-	auto hdr = make_cell_header();
-	auto ref1 = make_frmr_group(1, "barrel_01", 100.0f, 200.0f, 0.0f);
-
-	merge_input_t input;
-	input.rec_type = "CELL";
-	input.record_id = "TestCell";
-	input.version_contents = {
-		make_record("CELL", hdr + ref1),
-		make_record("CELL", hdr + ref1),
-	};
-
-	auto result = sub_record_merge_t::merge_cell_refs(input);
-
-	REQUIRE_FALSE(result.changed);
-}
-
-TEST_CASE("sub_record_merge_t::merge_cell_refs, intermediate adds ref", "[u]")
+TEST_CASE("sub_record_merge_t::merge, CELL intermediate-added ref does not trigger merge", "[u]")
 {
 	auto hdr = make_cell_header();
 	auto ref1 = make_frmr_group(1, "barrel_01", 100.0f, 200.0f, 0.0f);
@@ -202,105 +162,13 @@ TEST_CASE("sub_record_merge_t::merge_cell_refs, intermediate adds ref", "[u]")
 		make_record("CELL", hdr + ref1),
 	};
 
-	auto result = sub_record_merge_t::merge_cell_refs(input);
-
-	REQUIRE(result.changed);
-	REQUIRE(contains_frmr(result.content, 1));
-	REQUIRE(contains_frmr(result.content, 2));
-}
-
-TEST_CASE("sub_record_merge_t::merge_cell_refs, intermediate moves ref", "[u]")
-{
-	auto hdr = make_cell_header();
-	auto ref1_orig = make_frmr_group(1, "barrel_01", 100.0f, 200.0f, 0.0f);
-	auto ref1_moved = make_frmr_group(1, "barrel_01", 500.0f, 600.0f, 0.0f);
-
-	merge_input_t input;
-	input.rec_type = "CELL";
-	input.record_id = "TestCell";
-	input.version_contents = {
-		make_record("CELL", hdr + ref1_orig),
-		make_record("CELL", hdr + ref1_moved),
-		make_record("CELL", hdr + ref1_orig),
-	};
-
-	auto result = sub_record_merge_t::merge_cell_refs(input);
-
-	REQUIRE(result.changed);
-	REQUIRE(read_frmr_x_pos(result.content, 1) == Catch::Approx(500.0f));
-}
-
-TEST_CASE("sub_record_merge_t::merge_cell_refs, winner removes ref", "[u]")
-{
-	auto hdr = make_cell_header();
-	auto ref1 = make_frmr_group(1, "barrel_01", 100.0f, 200.0f, 0.0f);
-	auto ref2 = make_frmr_group(2, "chair_01", 300.0f, 400.0f, 0.0f);
-	auto ref2_moved = make_frmr_group(2, "chair_01", 999.0f, 999.0f, 0.0f);
-
-	merge_input_t input;
-	input.rec_type = "CELL";
-	input.record_id = "TestCell";
-	input.version_contents = {
-		make_record("CELL", hdr + ref1 + ref2),
-		make_record("CELL", hdr + ref1 + ref2_moved),
-		make_record("CELL", hdr + ref1),
-	};
-
-	auto result = sub_record_merge_t::merge_cell_refs(input);
+	auto result = sub_record_merge_t::merge(input);
 
 	REQUIRE_FALSE(result.changed);
-	REQUIRE(contains_frmr(result.content, 1));
-	REQUIRE_FALSE(contains_frmr(result.content, 2));
+	REQUIRE(result.content == make_record("CELL", hdr + ref1));
 }
 
-TEST_CASE("sub_record_merge_t::merge_cell_refs, both modify same ref winner wins", "[u]")
-{
-	auto hdr = make_cell_header();
-	auto ref1_orig = make_frmr_group(1, "barrel_01", 100.0f, 200.0f, 0.0f);
-	auto ref1_inter = make_frmr_group(1, "barrel_01", 500.0f, 500.0f, 0.0f);
-	auto ref1_winner = make_frmr_group(1, "barrel_01", 900.0f, 900.0f, 0.0f);
-
-	merge_input_t input;
-	input.rec_type = "CELL";
-	input.record_id = "TestCell";
-	input.version_contents = {
-		make_record("CELL", hdr + ref1_orig),
-		make_record("CELL", hdr + ref1_inter),
-		make_record("CELL", hdr + ref1_winner),
-	};
-
-	auto result = sub_record_merge_t::merge_cell_refs(input);
-
-	REQUIRE_FALSE(result.changed);
-	REQUIRE(read_frmr_x_pos(result.content, 1) == Catch::Approx(900.0f));
-}
-
-TEST_CASE("sub_record_merge_t::merge_cell_refs, two intermediates add different refs", "[u]")
-{
-	auto hdr = make_cell_header();
-	auto ref1 = make_frmr_group(1, "barrel_01", 100.0f, 200.0f, 0.0f);
-	auto ref2 = make_frmr_group(2, "chair_01", 300.0f, 400.0f, 0.0f);
-	auto ref3 = make_frmr_group(3, "table_01", 500.0f, 600.0f, 0.0f);
-
-	merge_input_t input;
-	input.rec_type = "CELL";
-	input.record_id = "TestCell";
-	input.version_contents = {
-		make_record("CELL", hdr + ref1),
-		make_record("CELL", hdr + ref1 + ref2),
-		make_record("CELL", hdr + ref1 + ref3),
-		make_record("CELL", hdr + ref1),
-	};
-
-	auto result = sub_record_merge_t::merge_cell_refs(input);
-
-	REQUIRE(result.changed);
-	REQUIRE(contains_frmr(result.content, 1));
-	REQUIRE(contains_frmr(result.content, 2));
-	REQUIRE(contains_frmr(result.content, 3));
-}
-
-TEST_CASE("sub_record_merge_t::merge_cell_refs, header merged alongside refs", "[u]")
+TEST_CASE("sub_record_merge_t::merge, CELL header conflict emits header-only record without refs", "[u]")
 {
 	std::string ambi_first(16, '\0');
 	ambi_first[0] = 50;
@@ -324,12 +192,15 @@ TEST_CASE("sub_record_merge_t::merge_cell_refs, header merged alongside refs", "
 		make_record("CELL", hdr_winner + ref1),
 	};
 
-	auto result = sub_record_merge_t::merge_cell_refs(input);
+	auto result = sub_record_merge_t::merge(input);
 
 	REQUIRE(result.changed);
-	REQUIRE(contains_frmr(result.content, 2));
+	REQUIRE_FALSE(contains_frmr(result.content, 1));
+	REQUIRE_FALSE(contains_frmr(result.content, 2));
 
 	auto part = sub_record_merge_t::partition_cell(result.content);
+	REQUIRE(part.groups.empty());
+
 	bool found_ambi = false;
 	for (const auto & entry : part.header)
 	{
@@ -340,30 +211,6 @@ TEST_CASE("sub_record_merge_t::merge_cell_refs, header merged alongside refs", "
 		}
 	}
 	REQUIRE(found_ambi);
-}
-
-TEST_CASE("sub_record_merge_t::merge_cell_refs, refs sorted by index", "[u]")
-{
-	auto hdr = make_cell_header();
-	auto ref5 = make_frmr_group(5, "item_05", 0.0f, 0.0f, 0.0f);
-	auto ref2 = make_frmr_group(2, "item_02", 0.0f, 0.0f, 0.0f);
-
-	merge_input_t input;
-	input.rec_type = "CELL";
-	input.record_id = "TestCell";
-	input.version_contents = {
-		make_record("CELL", hdr + ref5),
-		make_record("CELL", hdr + ref5 + ref2),
-		make_record("CELL", hdr + ref5),
-	};
-
-	auto result = sub_record_merge_t::merge_cell_refs(input);
-
-	REQUIRE(result.changed);
-	auto part = sub_record_merge_t::partition_cell(result.content);
-	REQUIRE(part.groups.size() == 2);
-	REQUIRE(part.groups[0].frmr_index == 2);
-	REQUIRE(part.groups[1].frmr_index == 5);
 }
 
 static uint32_t read_cell_data_flags(const std::string & content)
@@ -382,7 +229,7 @@ static uint32_t read_cell_data_flags(const std::string & content)
 	return 0;
 }
 
-TEST_CASE("sub_record_merge_t::merge, CELL routes through cell ref merge for DATA", "[u]")
+TEST_CASE("sub_record_merge_t::merge, CELL merges header DATA three-way", "[u]")
 {
 	constexpr uint32_t cell_flag_interior = 0x01;
 	constexpr uint32_t cell_flag_has_water = 0x02;
@@ -409,57 +256,3 @@ TEST_CASE("sub_record_merge_t::merge, CELL routes through cell ref merge for DAT
 	REQUIRE((read_cell_data_flags(result.content) & cell_flag_has_water) != 0);
 }
 
-static std::string make_frmr_group_with_owner(
-    uint32_t index,
-    const std::string & object_id,
-    float x_pos,
-    float y_pos,
-    float z_pos,
-    const std::string & owner_id)
-{
-	return make_sub("FRMR", make_uint32(index)) + make_sub("NAME", make_string(object_id)) +
-	       make_sub("DATA", make_position(x_pos, y_pos, z_pos)) + make_sub("ANAM", make_string(owner_id));
-}
-
-static std::string read_frmr_owner(const std::string & content, uint32_t frmr_index)
-{
-	auto part = sub_record_merge_t::partition_cell(content);
-	for (const auto & group : part.groups)
-	{
-		if (group.frmr_index != frmr_index)
-			continue;
-
-		for (const auto & entry : group.sub_records)
-		{
-			if (entry.type == "ANAM")
-				return entry.data;
-		}
-	}
-
-	return "";
-}
-
-TEST_CASE("sub_record_merge_t::merge_cell_refs, atomic reference takes whole object from last changer", "[u]")
-{
-	auto hdr = make_cell_header();
-
-	auto ref_master = make_frmr_group_with_owner(1, "barrel_01", 100.0f, 200.0f, 0.0f, "Master");
-	auto ref_moved = make_frmr_group_with_owner(1, "barrel_01", 500.0f, 600.0f, 0.0f, "Master");
-	auto ref_reowned = make_frmr_group_with_owner(1, "barrel_01", 100.0f, 200.0f, 0.0f, "Fargoth");
-
-	merge_input_t input;
-	input.rec_type = "CELL";
-	input.record_id = "TestCell";
-	input.version_contents = {
-		make_record("CELL", hdr + ref_master),
-		make_record("CELL", hdr + ref_moved),
-		make_record("CELL", hdr + ref_reowned),
-		make_record("CELL", hdr + ref_master),
-	};
-
-	auto result = sub_record_merge_t::merge_cell_refs(input);
-
-	REQUIRE(result.changed);
-	REQUIRE(read_frmr_owner(result.content, 1) == make_string("Fargoth"));
-	REQUIRE(read_frmr_x_pos(result.content, 1) == Catch::Approx(100.0f));
-}
