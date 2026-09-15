@@ -249,7 +249,7 @@ TEST_CASE("sub_record_merge_t::merge, added sub-record preserved", "[u]")
 {
 	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("model.nif"));
 	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("model.nif")) +
-	                  make_sub("CNAM", make_string("female_part"));
+	                  make_sub("INDX", make_bytes({ 0 })) + make_sub("CNAM", make_string("female_part"));
 	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("model.nif"));
 
 	merge_input_t input;
@@ -271,8 +271,10 @@ TEST_CASE("sub_record_merge_t::merge, added sub-record preserved", "[u]")
 TEST_CASE("sub_record_merge_t::merge, added sub-record winner has it", "[u]")
 {
 	auto subs_first = make_sub("NAME", make_string("id"));
-	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("CNAM", make_string("inter_value"));
-	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("CNAM", make_string("winner_value"));
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("INDX", make_bytes({ 0 })) +
+	                  make_sub("CNAM", make_string("inter_value"));
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("INDX", make_bytes({ 0 })) +
+	                   make_sub("CNAM", make_string("winner_value"));
 
 	merge_input_t input;
 	input.rec_type = "ARMO";
@@ -294,7 +296,8 @@ TEST_CASE("sub_record_merge_t::merge, added sub-record with existing data", "[u]
 	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("Name")) +
 	                  make_sub("MODL", make_string("m.nif"));
 	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("Name")) +
-	                  make_sub("MODL", make_string("m.nif")) + make_sub("BNAM", make_string("added_part"));
+	                  make_sub("MODL", make_string("m.nif")) + make_sub("INDX", make_bytes({ 0 })) +
+	                  make_sub("BNAM", make_string("added_part"));
 	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("Name")) +
 	                   make_sub("MODL", make_string("m.nif"));
 
@@ -319,8 +322,10 @@ TEST_CASE("sub_record_merge_t::merge, added sub-record with existing data", "[u]
 TEST_CASE("sub_record_merge_t::merge, two intermediates add different subs", "[u]")
 {
 	auto subs_first = make_sub("NAME", make_string("id"));
-	auto subs_inter1 = make_sub("NAME", make_string("id")) + make_sub("BNAM", make_string("part_a"));
-	auto subs_inter2 = make_sub("NAME", make_string("id")) + make_sub("CNAM", make_string("part_b"));
+	auto subs_inter1 =
+	    make_sub("NAME", make_string("id")) + make_sub("INDX", make_bytes({ 0 })) + make_sub("BNAM", make_string("part_a"));
+	auto subs_inter2 =
+	    make_sub("NAME", make_string("id")) + make_sub("INDX", make_bytes({ 1 })) + make_sub("CNAM", make_string("part_b"));
 	auto subs_winner = make_sub("NAME", make_string("id"));
 
 	merge_input_t input;
@@ -653,9 +658,9 @@ TEST_CASE("sub_record_merge_t::merge, duplicate addition not appended twice", "[
 {
 	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("m.nif"));
 	auto subs_inter1 = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("m.nif")) +
-	                   make_sub("CNAM", make_string("part"));
+	                   make_sub("INDX", make_bytes({ 0 })) + make_sub("CNAM", make_string("part"));
 	auto subs_inter2 = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("m.nif")) +
-	                   make_sub("CNAM", make_string("part"));
+	                   make_sub("INDX", make_bytes({ 0 })) + make_sub("CNAM", make_string("part"));
 	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("m.nif"));
 
 	merge_input_t input;
