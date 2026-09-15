@@ -922,7 +922,6 @@ void plugin_workspace_view_t::save_session_state()
 
 	settings.setValue("session/main_splitter", m_main_splitter->saveState());
 	settings.setValue("session/content_splitter", m_content_splitter->saveState());
-	settings.setValue("view/conflicts_only", m_conflicts_only);
 	settings.setValue("view/hide_duplicates", m_hide_duplicates);
 	settings.setValue("view/show_deleted_strikeout", m_record_view->model()->show_deleted_strikeout());
 	settings.setValue("view/show_optional_placeholders", m_record_view->model()->show_optional_placeholders());
@@ -946,7 +945,7 @@ void plugin_workspace_view_t::restore_session_state()
 	const auto ini_path = QDir(settings_store_t::settings_dir()).filePath("yEditor.ini");
 	QSettings settings(ini_path, QSettings::IniFormat);
 
-	m_conflicts_only = settings.value("view/conflicts_only", false).toBool();
+	m_conflicts_only = false;
 	m_hide_duplicates = settings.value("view/hide_duplicates", false).toBool();
 
 	m_record_view->model()->set_show_deleted_strikeout(settings.value("view/show_deleted_strikeout", false).toBool());

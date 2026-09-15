@@ -248,7 +248,7 @@ void nav_tree_model_t::build_tree()
 			return std::strcmp(sort_a, sort_b) < 0;
 		});
 
-		if (file_node.groups.empty())
+		if (file_node.groups.empty() && m_filter.has_active_filter())
 			continue;
 
 		m_tree.push_back(std::move(file_node));
