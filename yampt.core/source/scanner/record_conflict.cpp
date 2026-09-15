@@ -210,7 +210,11 @@ conflict_policy_t record_conflict::find_conflict_policy(const std::string & reco
 	if (!rule)
 		return {};
 
-	return { has_flag(rule->flags, sub_rule_flag_t::skip_non_existent) };
+	const bool rule_skips = has_flag(rule->flags, sub_rule_flag_t::skip_non_existent);
+	const bool wildcard_skips =
+	    behavior->wildcard_rule && has_flag(behavior->wildcard_rule->flags, sub_rule_flag_t::skip_non_existent);
+
+	return { rule_skips || wildcard_skips };
 }
 
 std::vector<conflict_this_t> record_conflict::combine_worst_this(

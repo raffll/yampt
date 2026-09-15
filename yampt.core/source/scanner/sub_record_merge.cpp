@@ -628,13 +628,12 @@ void sub_record_merge_t::merge_matched_entry(const matched_entry_t & entries, co
 		return;
 	}
 
-	if (winner_data != first_data)
-		return;
+	const bool inter_changed = inter_data != first_data;
+	const bool winner_unchanged = winner_data == first_data;
+	const bool output_unclaimed = entries.output_entry.data == winner_data;
 
-	if (entries.output_entry.data != first_data)
-		return;
-
-	entries.output_entry.data = inter_data;
+	if (inter_changed && winner_unchanged && output_unclaimed)
+		entries.output_entry.data = inter_data;
 }
 
 merge_result_t sub_record_merge_t::merge(const merge_input_t & input)

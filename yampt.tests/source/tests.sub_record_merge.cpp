@@ -742,6 +742,68 @@ TEST_CASE("sub_record_merge_t::merge, only intermediate changed NPDT wins on siz
 	REQUIRE(npdt_size(result.content) == 12);
 }
 
+TEST_CASE("sub_record_merge_t::merge, intermediate expanding NPDT 12 to 52 wins over unchanged 12", "[u]")
+{
+	std::string npdt_12(12, '\0');
+	npdt_12[0] = 23;
+
+	std::string npdt_52(52, '\0');
+	npdt_52[0] = 40;
+	npdt_52[4] = 100;
+
+	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_12);
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_52);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_12);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_first),
+		make_record("NPC_", subs_inter),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(npdt_size(result.content) == 52);
+}
+
+TEST_CASE("sub_record_merge_t::merge, NPDT 12 to 52 expansion wins despite other 12-byte edits", "[u]")
+{
+	std::string npdt_12(12, '\0');
+	npdt_12[0] = 23;
+
+	std::string npdt_12_edited(12, '\0');
+	npdt_12_edited[0] = 23;
+	npdt_12_edited[2] = 55;
+
+	std::string npdt_52(52, '\0');
+	npdt_52[0] = 40;
+	npdt_52[4] = 100;
+
+	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_12);
+	auto subs_edit = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_12_edited);
+	auto subs_expand = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_52);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_12);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_first),
+		make_record("NPC_", subs_edit),
+		make_record("NPC_", subs_expand),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(npdt_size(result.content) == 52);
+}
+
 static constexpr uint32_t npc_flag_autocalc = 0x0010;
 static constexpr size_t npdt_52_gold_offset = 48;
 static constexpr size_t npdt_12_gold_offset = 8;
@@ -1442,33 +1504,6 @@ TEST_CASE("sub_record_merge_t::patch, reordered list binary index", "[u]")
 	size_t binary_idx_from_view = type_indices["CNAM"][aligned_view_occurrence];
 	REQUIRE(binary_idx_from_view == 2);
 	REQUIRE(subs[binary_idx_from_view].data.find("ancestor_ghost") != std::string::npos);
-}
-
-TEST_CASE("sub_record_merge_t::merge, SCPT returns winner unchanged", "[u]")
-{
-	auto subs_first = make_sub(
-	    "SCHD", make_bytes({ 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x72, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	                         0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
-	auto subs_inter = make_sub(
-	    "SCHD", make_bytes({ 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x74, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	                         0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
-	auto subs_winner = make_sub(
-	    "SCHD", make_bytes({ 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x72, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	                         0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
-
-	auto first = make_record("SCPT", subs_first);
-	auto inter = make_record("SCPT", subs_inter);
-	auto winner = make_record("SCPT", subs_winner);
-
-	merge_input_t input;
-	input.rec_type = "SCPT";
-	input.record_id = "TestScript";
-	input.version_contents = { first, inter, winner };
-
-	auto result = sub_record_merge_t::merge(input);
-
-	REQUIRE_FALSE(result.changed);
-	REQUIRE(result.content == winner);
 }
 
 TEST_CASE("sub_record_merge_t::merge, AIDT element-wise fight byte", "[u]")
