@@ -541,7 +541,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 		group_row.type = "FRMR";
 		group_row.size = 0;
 		group_row.label = ref_label;
-		group_row.start_collapsed = true;
+		group_row.collapse_by_default();
 		group_row.values.resize(col_count, non_existent_value);
 		group_row.binary_ranges.resize(col_count);
 		group_row.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
@@ -607,6 +607,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 		section.type = "FRMR";
 		section.size = 0;
 		section.label = section_label;
+		section.collapse_by_default();
 		section.values.resize(col_count);
 		section.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
 		section.row_conflict_all = conflict_all_t::only_one;

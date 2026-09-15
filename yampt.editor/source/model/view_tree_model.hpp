@@ -122,6 +122,11 @@ public:
 		int occurrence = 0;
 		int bit_index = -1;
 		std::vector<view_node_t> children;
+
+		void collapse_by_default()
+		{
+			start_collapsed = true;
+		}
 	};
 
 	const std::vector<view_node_t> & rows() const;

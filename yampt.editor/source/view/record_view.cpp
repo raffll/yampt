@@ -150,7 +150,6 @@ void record_view_t::resize_columns()
 
 void record_view_t::refresh_expansion()
 {
-	expand_non_numeric_groups();
 	apply_column_sizing();
 }
 
