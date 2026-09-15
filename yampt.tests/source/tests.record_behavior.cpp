@@ -36,7 +36,6 @@ TEST_CASE("record_behavior::merge_strategy_for, dispatch per record type", "[u]"
 	REQUIRE(merge_strategy_for("CELL") == merge_strategy_t::cell_refs);
 	REQUIRE(merge_strategy_for("ARMO") == merge_strategy_t::armor_parts);
 	REQUIRE(merge_strategy_for("CLOT") == merge_strategy_t::armor_parts);
-	REQUIRE(merge_strategy_for("SCPT") == merge_strategy_t::no_merge);
 	REQUIRE(merge_strategy_for("WEAP") == merge_strategy_t::generic);
 	REQUIRE(merge_strategy_for("XXXX") == merge_strategy_t::generic);
 }
@@ -51,9 +50,14 @@ TEST_CASE("record_behavior::is_enam_effect_list, effect-bearing record types", "
 	REQUIRE_FALSE(is_enam_effect_list("XXXX"));
 }
 
-TEST_CASE("record_behavior::is_merge_excluded, LAND is excluded from merge", "[u]")
+TEST_CASE("record_behavior::is_merge_excluded, baseline excluded record types", "[u]")
 {
 	REQUIRE(is_merge_excluded("LAND"));
+	REQUIRE(is_merge_excluded("PGRD"));
+	REQUIRE(is_merge_excluded("REGN"));
+	REQUIRE(is_merge_excluded("SCPT"));
+	REQUIRE(is_merge_excluded("DIAL"));
+	REQUIRE(is_merge_excluded("INFO"));
 	REQUIRE_FALSE(is_merge_excluded("CELL"));
 	REQUIRE_FALSE(is_merge_excluded("WEAP"));
 	REQUIRE_FALSE(is_merge_excluded("XXXX"));

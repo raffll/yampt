@@ -837,7 +837,7 @@ int merge_controller_t::create_merge_records()
 	for (const auto & entry : merge.log_entries())
 		m_log(entry.message);
 
-	return counters.three_way + counters.lists + counters.dialogues + counters.fixes;
+	return counters.three_way + counters.lists + counters.fixes;
 }
 
 std::string merge_controller_t::resolve_active_output_path() const

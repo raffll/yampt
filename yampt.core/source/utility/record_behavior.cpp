@@ -167,7 +167,7 @@ static constexpr record_behavior_t behavior_table[] = {
 	  .merge_strategy = merge_strategy_t::armor_parts,
 	  .armor_part_sub_types = armor_part_sub_types,
 	  .armor_part_sub_type_count = 2 },
-	{ .record_type = "SCPT", .merge_strategy = merge_strategy_t::no_merge },
+	{ .record_type = "SCPT", .merge_excluded = true },
 	{ .record_type = "ENCH",
 	  .paired_rules = enam_paired_rules,
 	  .paired_rule_count = 1,
@@ -186,8 +186,13 @@ static constexpr record_behavior_t behavior_table[] = {
 	  .read_only_reason = read_only_reason_t::landscape_data,
 	  .allows_copy = false,
 	  .allows_lock = false },
-	{ .record_type = "DIAL", .decode_mode = decode_mode_t::dial },
-	{ .record_type = "INFO", .decode_mode = decode_mode_t::info, .record_id_sub_type = "INAM" },
+	{ .record_type = "PGRD", .merge_excluded = true },
+	{ .record_type = "REGN", .merge_excluded = true },
+	{ .record_type = "DIAL", .decode_mode = decode_mode_t::dial, .merge_excluded = true },
+	{ .record_type = "INFO",
+	  .decode_mode = decode_mode_t::info,
+	  .merge_excluded = true,
+	  .record_id_sub_type = "INAM" },
 };
 
 static constexpr record_behavior_t generic_behavior = {

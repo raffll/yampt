@@ -25,7 +25,6 @@ struct merge_counters_t
 {
 	int three_way = 0;
 	int lists = 0;
-	int dialogues = 0;
 	int fixes = 0;
 };
 
@@ -66,7 +65,6 @@ private:
 	bool should_skip_group(const record_group_t & group, const std::regex & exclusion_regex, bool has_exclusion) const;
 	void dispatch_group(const record_group_t & group, merge_counters_t & counters);
 	void process_leveled_list(const record_group_t & group, merge_counters_t & counters);
-	void process_dialogue(const record_group_t & group, merge_counters_t & counters);
 	void process_three_way(const record_group_t & group, merge_counters_t & counters);
 	void apply_patch_priority(const record_group_t & group, std::vector<std::string> & contents);
 

@@ -29,6 +29,7 @@
 - [CHANGE] A leveled list's entry Count is no longer editable, since the game recomputes it automatically; selecting it shows "Auto-calculated, not editable" next to the Apply button
 - [CHANGE] A record's ID field is no longer editable, since it identifies the record and renaming it in place would break references; selecting it shows "Record ID, not editable" next to the Apply button
 - [CHANGE] Landscape (LAND) records are never written to the merged patch and their fields cannot be edited, since landscape is bulk terrain data that the merge cannot combine meaningfully; selecting a landscape field shows "Landscape data, not editable". Landscape records still appear in the navigation tree so conflicts remain visible
+- [CHANGE] Pathgrids, regions, scripts, and dialogue topics with their responses are no longer combined by the automatic merge, matching landscape: their content cannot be merged field by field, so they are left to load order. These records still appear in the navigation tree and can be copied into the active plugin by hand
 - [CHANGE] A global variable's Name column in the navigation tree now reads its type as Short, Long, or Float instead of the raw single-letter code
 - [FIX] The merge exclusion list in settings now shows each excluded record as its own row again; previously the whole pattern was loaded into a single row
 - [FIX] The navigation tree no longer jumps or scrolls away from where you were working when you exclude, include, guard, save, lock, or unlock — the scroll position and expanded state stay put

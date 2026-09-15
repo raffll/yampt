@@ -5,7 +5,6 @@
 #include "plugin_scan.hpp"
 #include "summon_fixer.hpp"
 #include <algorithm>
-#include <map>
 #include <regex>
 #include <unordered_map>
 
@@ -36,7 +35,7 @@ merge_counters_t auto_merge_t::execute()
 
 	add_log(
 	    "[info] merge: " + std::to_string(counters.three_way) + " merged, " + std::to_string(counters.lists) +
-	    " lists, " + std::to_string(counters.dialogues) + " dialogues, " + std::to_string(counters.fixes) + " fixes");
+	    " lists, " + std::to_string(counters.fixes) + " fixes");
 
 	return counters;
 }
@@ -160,19 +159,15 @@ bool auto_merge_t::should_skip_group(
 
 	const auto decode_mode = decode_mode_for(group.rec_type);
 
-	if (decode_mode == decode_mode_t::info)
-		return true;
-
 	if (has_exclusion && std::regex_search(group.record_id, exclusion_regex))
 		return true;
 
 	const bool is_leveled = decode_mode == decode_mode_t::leveled;
-	const bool is_dialogue = decode_mode == decode_mode_t::dial;
 
-	if (!is_leveled && !is_dialogue && group.versions.size() < 3)
+	if (!is_leveled && group.versions.size() < 3)
 		return true;
 
-	if (is_leveled || is_dialogue)
+	if (is_leveled)
 	{
 		const auto & first_ver = group.versions.front();
 		const auto first_content = m_scan.read_record_content(first_ver.plugin_idx, first_ver.record_index);
@@ -196,8 +191,6 @@ void auto_merge_t::dispatch_group(const record_group_t & group, merge_counters_t
 
 	if (decode_mode == decode_mode_t::leveled)
 		process_leveled_list(group, counters);
-	else if (decode_mode == decode_mode_t::dial)
-		process_dialogue(group, counters);
 	else
 		process_three_way(group, counters);
 }
@@ -217,50 +210,6 @@ void auto_merge_t::process_leveled_list(const record_group_t & group, merge_coun
 
 	m_scan.copy_record_to_active_raw(group.rec_type, group.record_id, result.content);
 	++counters.lists;
-}
-
-void auto_merge_t::process_dialogue(const record_group_t & group, merge_counters_t & counters)
-{
-	const auto * scan_entry = m_scan.find(group.rec_type, group.record_id);
-	if (!scan_entry)
-		return;
-
-	const auto & entry = *scan_entry;
-	const auto & winning_ver = entry.versions.back();
-	std::string winning_dial = m_scan.read_record_content(winning_ver.plugin_idx, winning_ver.record_index);
-	m_scan.copy_record_to_active_raw("DIAL", entry.record_id, winning_dial);
-
-	std::vector<std::string> merged_info_ids;
-	std::map<std::string, std::string> info_contents;
-
-	for (const auto & ver : entry.versions)
-	{
-		if (m_scan.is_active_plugin(ver.plugin_idx))
-			continue;
-
-		const auto & plugin_entries = m_scan.index(ver.plugin_idx).entries();
-		for (size_t ei = ver.record_index + 1; ei < plugin_entries.size(); ++ei)
-		{
-			if (plugin_entries[ei].rec_type != "INFO")
-				break;
-
-			if (plugin_entries[ei].dial_name != entry.record_id)
-				break;
-
-			const auto & info_id = plugin_entries[ei].record_id;
-			std::string content = m_scan.read_record_content(ver.plugin_idx, plugin_entries[ei].record_index);
-
-			if (info_contents.find(info_id) == info_contents.end())
-				merged_info_ids.push_back(info_id);
-
-			info_contents[info_id] = content;
-		}
-	}
-
-	for (const auto & info_id : merged_info_ids)
-		m_scan.copy_record_to_active_raw("INFO", info_id, info_contents[info_id]);
-
-	++counters.dialogues;
 }
 
 void auto_merge_t::apply_patch_priority(const record_group_t & group, std::vector<std::string> & contents)

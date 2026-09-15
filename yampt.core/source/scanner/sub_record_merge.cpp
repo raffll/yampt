@@ -649,9 +649,6 @@ merge_result_t sub_record_merge_t::merge(const merge_input_t & input)
 	case merge_strategy_t::armor_parts:
 		return merge_armor_parts(input);
 
-	case merge_strategy_t::no_merge:
-		return { false, input.version_contents.back() };
-
 	case merge_strategy_t::generic:
 		return merge_generic(input);
 	}

@@ -164,7 +164,7 @@ The auto-merge performs several operations:
 - **Cell merge** — a cell's settings (water, sleep, lighting, region) merge with the same three-way rules as other records, and the objects placed in the cell are combined so a reference added by any plugin is kept. Each placed object is treated as a whole: when more than one plugin changes the same object, the last plugin's version of that object is taken in full, so a placed object never ends up combining, for example, its position from one plugin and its ownership from another.
 - **Bug fixes** — optionally corrects known engine bugs: fog density values outside valid range, summon persistence flags, and cell name reverts.
 
-Landscape (LAND) records are never written to the merged patch. Landscape is bulk terrain data that cannot be combined meaningfully, so it is left to load-order handling rather than merged.
+Some record types are never written to the merged patch, because their content cannot be combined field by field the way objects can: landscape (bulk terrain data), pathgrids, regions, scripts, and dialogue topics with their responses. These types still appear in the navigation tree so their conflicts remain visible, and you can still copy an individual record from any plugin into the active plugin by hand; they are simply left out of the automatic merge and handled by load order instead.
 
 A progress dialog shows how far the merge has got while records are processed. After auto-merge completes, the merged patch is saved automatically. The output location depends on how you loaded plugins: same folder for Open Folder, MO2 overwrite directory for Open MO2 Profile, or the OpenMW data directory for Open OpenMW Config.
 

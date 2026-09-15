@@ -80,8 +80,7 @@ enum class merge_strategy_t
 {
 	generic,
 	cell_refs,
-	armor_parts,
-	no_merge
+	armor_parts
 };
 
 enum class read_only_reason_t
