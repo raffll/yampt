@@ -72,6 +72,23 @@ static constexpr sub_record_rule_t fact_sub_rules[] = {
 
 static constexpr const char * fact_keyed_list_sub_types[] = { "ANAM", "INTV" };
 
+static constexpr reaction_pair_t fact_reaction_pair = { "ANAM", "INTV" };
+
+static constexpr keyed_list_spec_t npco_keyed_list_spec[] = {
+	{ "NPCO", npco_layout::item_id_offset, npco_layout::item_id_length, npco_layout::record_size },
+};
+
+static constexpr keyed_list_spec_t npcs_keyed_list_spec[] = {
+	{ "NPCS", 0, 0, 0 },
+};
+
+static constexpr keyed_list_spec_t inventory_and_spell_keyed_list_specs[] = {
+	{ "NPCO", npco_layout::item_id_offset, npco_layout::item_id_length, npco_layout::record_size },
+	{ "NPCS", 0, 0, 0 },
+};
+
+static constexpr const char * armor_part_sub_types[] = { "BNAM", "CNAM" };
+
 static constexpr sub_record_rule_t race_sub_rules[] = {
 	{ "RADT", 140, element_wise_merge },
 };
@@ -91,37 +108,48 @@ static constexpr record_behavior_t behavior_table[] = {
 	  .decode_mode = decode_mode_t::leveled,
 	  .sub_rules = levi_sub_rules,
 	  .sub_rule_count = 1,
-	  .leveled_item_sub_type = "INAM" },
+	  .leveled_item_sub_type = "INAM",
+	  .leveled_level_sub_type = "INTV" },
 	{ .record_type = "LEVC",
 	  .decode_mode = decode_mode_t::leveled,
 	  .sub_rules = levi_sub_rules,
 	  .sub_rule_count = 1,
-	  .leveled_item_sub_type = "CNAM" },
+	  .leveled_item_sub_type = "CNAM",
+	  .leveled_level_sub_type = "INTV" },
 	{ .record_type = "FACT",
 	  .decode_mode = decode_mode_t::faction,
 	  .sub_rules = fact_sub_rules,
 	  .sub_rule_count = 1,
 	  .keyed_list_sub_types = fact_keyed_list_sub_types,
-	  .keyed_list_sub_type_count = 2 },
+	  .keyed_list_sub_type_count = 2,
+	  .reaction_pair = &fact_reaction_pair },
 	{ .record_type = "CONT",
 	  .decode_mode = decode_mode_t::container,
 	  .sub_rules = cont_sub_rules,
-	  .sub_rule_count = 1 },
+	  .sub_rule_count = 1,
+	  .keyed_list_specs = npco_keyed_list_spec,
+	  .keyed_list_spec_count = 1 },
 	{ .record_type = "BSGN", .decode_mode = decode_mode_t::container },
 	{ .record_type = "RACE",
 	  .decode_mode = decode_mode_t::container,
 	  .sub_rules = race_sub_rules,
-	  .sub_rule_count = 1 },
+	  .sub_rule_count = 1,
+	  .keyed_list_specs = npcs_keyed_list_spec,
+	  .keyed_list_spec_count = 1 },
 	{ .record_type = "NPC_",
 	  .decode_mode = decode_mode_t::container,
 	  .sub_rules = npc_sub_rules,
-	  .sub_rule_count = 4 },
+	  .sub_rule_count = 4,
+	  .keyed_list_specs = inventory_and_spell_keyed_list_specs,
+	  .keyed_list_spec_count = 2 },
 	{ .record_type = "CREA",
 	  .decode_mode = decode_mode_t::container,
 	  .sub_rules = crea_sub_rules,
 	  .sub_rule_count = 4,
 	  .paired_rules = crea_paired_rules,
-	  .paired_rule_count = 1 },
+	  .paired_rule_count = 1,
+	  .keyed_list_specs = inventory_and_spell_keyed_list_specs,
+	  .keyed_list_spec_count = 2 },
 	{ .record_type = "WEAP",
 	  .sub_rules = weap_sub_rules,
 	  .sub_rule_count = 1,
@@ -131,10 +159,14 @@ static constexpr record_behavior_t behavior_table[] = {
 	  .decode_mode = decode_mode_t::armor,
 	  .sub_rules = armo_sub_rules,
 	  .sub_rule_count = 1,
-	  .merge_strategy = merge_strategy_t::armor_parts },
+	  .merge_strategy = merge_strategy_t::armor_parts,
+	  .armor_part_sub_types = armor_part_sub_types,
+	  .armor_part_sub_type_count = 2 },
 	{ .record_type = "CLOT",
 	  .decode_mode = decode_mode_t::armor,
-	  .merge_strategy = merge_strategy_t::armor_parts },
+	  .merge_strategy = merge_strategy_t::armor_parts,
+	  .armor_part_sub_types = armor_part_sub_types,
+	  .armor_part_sub_type_count = 2 },
 	{ .record_type = "SCPT", .merge_strategy = merge_strategy_t::no_merge },
 	{ .record_type = "ENCH",
 	  .paired_rules = enam_paired_rules,
@@ -185,6 +217,30 @@ bool is_keyed_list_sub_type(const std::string & record_type, const std::string &
 	return false;
 }
 
+const keyed_list_spec_t * keyed_list_specs_for(const std::string & record_type, size_t & spec_count)
+{
+	const auto * behavior = find_record_behavior(record_type);
+	spec_count = behavior->keyed_list_spec_count;
+	return behavior->keyed_list_specs;
+}
+
+const reaction_pair_t * reaction_pair_for(const std::string & record_type)
+{
+	return find_record_behavior(record_type)->reaction_pair;
+}
+
+bool is_armor_part_sub_type(const std::string & record_type, const std::string & sub_type)
+{
+	const auto * behavior = find_record_behavior(record_type);
+	for (size_t i = 0; i < behavior->armor_part_sub_type_count; ++i)
+	{
+		if (sub_type == behavior->armor_part_sub_types[i])
+			return true;
+	}
+
+	return false;
+}
+
 merge_strategy_t merge_strategy_for(const std::string & record_type)
 {
 	return find_record_behavior(record_type)->merge_strategy;
@@ -208,6 +264,11 @@ decode_mode_t decode_mode_for(const std::string & record_type)
 const char * leveled_item_sub_type_for(const std::string & record_type)
 {
 	return find_record_behavior(record_type)->leveled_item_sub_type;
+}
+
+const char * leveled_level_sub_type_for(const std::string & record_type)
+{
+	return find_record_behavior(record_type)->leveled_level_sub_type;
 }
 
 const char * record_id_sub_type_for(const std::string & record_type)

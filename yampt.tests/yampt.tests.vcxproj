@@ -237,6 +237,8 @@
     <ClCompile Include="source\tests.record_behavior.cpp" />
     <ClCompile Include="source\tests.record_composition.cpp" />
     <ClCompile Include="source\tests.view_tree_format.cpp" />
+    <ClCompile Include="source\tests.plugin_index.cpp" />
+    <ClCompile Include="source\tests.determine_status.cpp" />
     <ClCompile Include="source\tests.plugin_scan_merge.cpp" />
     <ClCompile Include="source\tests.sub_record_merge.cpp" />
     <ClCompile Include="source\tests.merge_byte_splice.cpp" />

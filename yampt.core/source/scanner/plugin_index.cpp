@@ -3,6 +3,7 @@
 #include "../decoder/sub_record_schema.hpp"
 #include "../decoder/view_tree_format.hpp"
 #include "../utility/app_logger.hpp"
+#include "../utility/record_behavior.hpp"
 #include "../utility/string_utils.hpp"
 #include <algorithm>
 #include <set>
@@ -176,10 +177,12 @@ plugin_index_t::plugin_index_t(esm_reader_t & esm)
 		entry.record_id = derive_id(esm, i);
 		entry.display_name = derive_display_name(esm, i);
 
-		if (rec_type == "DIAL")
+		const auto decode_mode = decode_mode_for(rec_type);
+
+		if (decode_mode == decode_mode_t::dial)
 			current_dial = entry.record_id;
 
-		if (rec_type == "INFO")
+		if (decode_mode == decode_mode_t::info)
 		{
 			entry.dial_name = current_dial;
 			entry.record_id = current_dial + "|" + entry.record_id;

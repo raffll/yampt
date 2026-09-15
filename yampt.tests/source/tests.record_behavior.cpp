@@ -89,6 +89,75 @@ TEST_CASE("record_behavior::is_keyed_list_sub_type, FACT reaction sub-types", "[
 	REQUIRE_FALSE(is_keyed_list_sub_type("XXXX", "ANAM"));
 }
 
+TEST_CASE("record_behavior::leveled_level_sub_type_for, LEVI and LEVC use INTV", "[u]")
+{
+	REQUIRE(std::string(leveled_level_sub_type_for("LEVI")) == "INTV");
+	REQUIRE(std::string(leveled_level_sub_type_for("LEVC")) == "INTV");
+	REQUIRE(leveled_level_sub_type_for("WEAP") == nullptr);
+	REQUIRE(leveled_level_sub_type_for("XXXX") == nullptr);
+}
+
+TEST_CASE("record_behavior::keyed_list_specs_for, inventory and spell lists per record type", "[u]")
+{
+	size_t npc_count = 0;
+	const auto * npc_specs = keyed_list_specs_for("NPC_", npc_count);
+	REQUIRE(npc_count == 2);
+	REQUIRE(std::string(npc_specs[0].sub_type) == "NPCO");
+	REQUIRE(npc_specs[0].key_offset == 4);
+	REQUIRE(npc_specs[0].key_length == 32);
+	REQUIRE(npc_specs[0].minimum_record_size == 36);
+	REQUIRE(std::string(npc_specs[1].sub_type) == "NPCS");
+	REQUIRE(npc_specs[1].key_offset == 0);
+	REQUIRE(npc_specs[1].key_length == 0);
+
+	size_t crea_count = 0;
+	keyed_list_specs_for("CREA", crea_count);
+	REQUIRE(crea_count == 2);
+
+	size_t cont_count = 0;
+	const auto * cont_specs = keyed_list_specs_for("CONT", cont_count);
+	REQUIRE(cont_count == 1);
+	REQUIRE(std::string(cont_specs[0].sub_type) == "NPCO");
+
+	size_t race_count = 0;
+	const auto * race_specs = keyed_list_specs_for("RACE", race_count);
+	REQUIRE(race_count == 1);
+	REQUIRE(std::string(race_specs[0].sub_type) == "NPCS");
+}
+
+TEST_CASE("record_behavior::keyed_list_specs_for, no specs for unrelated types", "[u]")
+{
+	size_t weap_count = 0;
+	REQUIRE(keyed_list_specs_for("WEAP", weap_count) == nullptr);
+	REQUIRE(weap_count == 0);
+
+	size_t unknown_count = 0;
+	REQUIRE(keyed_list_specs_for("XXXX", unknown_count) == nullptr);
+	REQUIRE(unknown_count == 0);
+}
+
+TEST_CASE("record_behavior::reaction_pair_for, FACT pairs ANAM with INTV", "[u]")
+{
+	const auto * pair = reaction_pair_for("FACT");
+	REQUIRE(pair != nullptr);
+	REQUIRE(std::string(pair->key_sub_type) == "ANAM");
+	REQUIRE(std::string(pair->value_sub_type) == "INTV");
+
+	REQUIRE(reaction_pair_for("NPC_") == nullptr);
+	REQUIRE(reaction_pair_for("XXXX") == nullptr);
+}
+
+TEST_CASE("record_behavior::is_armor_part_sub_type, ARMO and CLOT part members", "[u]")
+{
+	REQUIRE(is_armor_part_sub_type("ARMO", "BNAM"));
+	REQUIRE(is_armor_part_sub_type("ARMO", "CNAM"));
+	REQUIRE(is_armor_part_sub_type("CLOT", "BNAM"));
+	REQUIRE(is_armor_part_sub_type("CLOT", "CNAM"));
+	REQUIRE_FALSE(is_armor_part_sub_type("ARMO", "INDX"));
+	REQUIRE_FALSE(is_armor_part_sub_type("WEAP", "BNAM"));
+	REQUIRE_FALSE(is_armor_part_sub_type("XXXX", "CNAM"));
+}
+
 TEST_CASE("record_behavior::record_id_sub_type_for, INFO uses INAM others NAME", "[u]")
 {
 	REQUIRE(std::string(record_id_sub_type_for("INFO")) == "INAM");

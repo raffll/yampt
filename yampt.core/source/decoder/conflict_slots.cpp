@@ -491,7 +491,7 @@ static void extract_armor_groups(
 				continue;
 
 			uint32_t indx_value = 0;
-			std::memcpy(&indx_value, subs[j].data, 4);
+			std::memcpy(&indx_value, subs[j].data, object_index_layout::index_size);
 			auto indx_key = std::to_string(indx_value);
 
 			size_t bnam_idx = SIZE_MAX;

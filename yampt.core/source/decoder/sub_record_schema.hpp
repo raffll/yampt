@@ -97,6 +97,23 @@ namespace fact_layout
 constexpr size_t reaction_value_size = 4;
 } // namespace fact_layout
 
+namespace record_layout
+{
+constexpr size_t header_size = 16;
+constexpr size_t size_field_offset = 4;
+constexpr size_t size_field_length = 4;
+} // namespace record_layout
+
+namespace object_index_layout
+{
+constexpr size_t index_size = 4;
+} // namespace object_index_layout
+
+namespace leveled_layout
+{
+constexpr size_t level_size = 2;
+} // namespace leveled_layout
+
 enum class sub_record_kind_t
 {
 	single_value,

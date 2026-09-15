@@ -191,22 +191,24 @@ private:
 	    const frmr_map_t & winner_map);
 
 	static merge_result_t merge_armor_parts(const merge_input_t & input);
-	static armor_partition_t partition_armor(const std::string & content);
+	static armor_partition_t partition_armor(const std::string & content, const std::string & rec_type);
 	static armor_part_map_t build_armor_part_map(const std::vector<armor_part_group_t> & groups);
 	static std::string reconstruct_armor(
 	    const std::string & winner_content,
 	    const sub_record_sequence_t & header,
 	    const std::vector<armor_part_group_t> & groups);
-	static void merge_winner_armor_groups(
-	    std::vector<armor_part_group_t> & merged_groups,
-	    const std::vector<std::string> & versions,
-	    const armor_part_map_t & first_map,
-	    const armor_part_map_t & winner_map);
-	static void collect_intermediate_armor_additions(
-	    std::vector<armor_part_group_t> & merged_groups,
-	    const std::vector<std::string> & versions,
-	    const armor_part_map_t & first_map,
-	    const armor_part_map_t & winner_map);
+
+	struct armor_merge_context_t
+	{
+		std::vector<armor_part_group_t> & merged_groups;
+		const std::vector<std::string> & versions;
+		const armor_part_map_t & first_map;
+		const armor_part_map_t & winner_map;
+		std::string rec_type;
+	};
+
+	static void merge_winner_armor_groups(const armor_merge_context_t & context);
+	static void collect_intermediate_armor_additions(const armor_merge_context_t & context);
 };
 
 class leveled_list_merge_t

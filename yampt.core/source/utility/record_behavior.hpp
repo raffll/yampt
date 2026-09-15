@@ -44,6 +44,20 @@ struct paired_merge_rule_t
 	size_t pair_count;
 };
 
+struct keyed_list_spec_t
+{
+	const char * sub_type;
+	size_t key_offset;
+	size_t key_length;
+	size_t minimum_record_size;
+};
+
+struct reaction_pair_t
+{
+	const char * key_sub_type;
+	const char * value_sub_type;
+};
+
 enum class decode_mode_t
 {
 	generic,
@@ -91,8 +105,14 @@ struct record_behavior_t
 	bool enam_effect_list = false;
 	bool merge_excluded = false;
 	const char * leveled_item_sub_type = nullptr;
+	const char * leveled_level_sub_type = nullptr;
 	const char * const * keyed_list_sub_types = nullptr;
 	size_t keyed_list_sub_type_count = 0;
+	const keyed_list_spec_t * keyed_list_specs = nullptr;
+	size_t keyed_list_spec_count = 0;
+	const reaction_pair_t * reaction_pair = nullptr;
+	const char * const * armor_part_sub_types = nullptr;
+	size_t armor_part_sub_type_count = 0;
 	const char * record_id_sub_type = "NAME";
 	read_only_reason_t read_only_reason = read_only_reason_t::editable;
 	bool allows_copy = true;
@@ -120,11 +140,15 @@ field_pair_role_t find_field_pair_role(
 bool is_repeatable_sub_record(const std::string & record_type, const std::string & sub_type);
 
 bool is_keyed_list_sub_type(const std::string & record_type, const std::string & sub_type);
+const keyed_list_spec_t * keyed_list_specs_for(const std::string & record_type, size_t & spec_count);
+const reaction_pair_t * reaction_pair_for(const std::string & record_type);
+bool is_armor_part_sub_type(const std::string & record_type, const std::string & sub_type);
 merge_strategy_t merge_strategy_for(const std::string & record_type);
 bool is_enam_effect_list(const std::string & record_type);
 bool is_merge_excluded(const std::string & record_type);
 decode_mode_t decode_mode_for(const std::string & record_type);
 const char * leveled_item_sub_type_for(const std::string & record_type);
+const char * leveled_level_sub_type_for(const std::string & record_type);
 const char * record_id_sub_type_for(const std::string & record_type);
 read_only_reason_t read_only_reason_for(const std::string & record_type);
 bool record_allows_copy(const std::string & record_type);
