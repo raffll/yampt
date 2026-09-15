@@ -2,6 +2,8 @@
 
 #include "../model/view_tree_model.hpp"
 #include <QWidget>
+#include <set>
+#include <string>
 
 class QTreeView;
 class plugin_scan_t;
@@ -31,6 +33,12 @@ private:
 	void apply_column_sizing();
 	void resizeEvent(QResizeEvent * event) override;
 
+	static std::string node_expansion_key(const view_tree_model_t::view_node_t & node);
+	std::set<std::string> capture_expanded_keys() const;
+	void restore_expanded_keys(const std::set<std::string> & expanded_keys);
+
 	QTreeView * m_tree = nullptr;
 	view_tree_model_t * m_model = nullptr;
+	std::string m_displayed_record_type;
+	std::string m_displayed_record_id;
 };
