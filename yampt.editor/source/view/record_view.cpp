@@ -1,5 +1,6 @@
 #include "record_view.hpp"
 #include <scanner/plugin_scan.hpp>
+#include <functional>
 #include <QHeaderView>
 #include <QPainter>
 #include <QResizeEvent>
@@ -139,7 +140,7 @@ void record_view_t::resize_columns()
 
 void record_view_t::refresh_expansion()
 {
-	m_tree->expandAll();
+	expand_non_numeric_groups();
 	apply_column_sizing();
 }
 
@@ -155,7 +156,22 @@ QTreeView * record_view_t::tree() const
 
 void record_view_t::expand_non_numeric_groups()
 {
-	m_tree->expandAll();
+	std::function<void(const QModelIndex &)> expand_recursive = [&](const QModelIndex & parent)
+	{
+		const auto row_count = m_model->rowCount(parent);
+		for (int row = 0; row < row_count; ++row)
+		{
+			const auto index = m_model->index(row, 0, parent);
+			const auto * node = m_model->node_from_index(index);
+			if (node != nullptr && node->type == "FRMR")
+				continue;
+
+			m_tree->expand(index);
+			expand_recursive(index);
+		}
+	};
+
+	expand_recursive({});
 }
 
 void record_view_t::apply_column_sizing()
