@@ -2334,6 +2334,29 @@ static std::string find_anam_after_frmr(const std::string & record, uint32_t frm
 	return std::string();
 }
 
+static std::string find_name_after_frmr(const std::string & record, uint32_t frmr_index)
+{
+	const auto subs = sub_record_merge_t::parse_sub_records(record.substr(16));
+	bool in_target = false;
+
+	for (const auto & entry : subs)
+	{
+		if (entry.type == "FRMR")
+		{
+			uint32_t index = 0;
+			std::memcpy(&index, entry.data.data(), 4);
+			in_target = index == frmr_index;
+
+			continue;
+		}
+
+		if (in_target && entry.type == "NAME")
+			return entry.data;
+	}
+
+	return std::string();
+}
+
 static bool has_frmr_group(const std::string & record, uint32_t frmr_index)
 {
 	const auto subs = sub_record_merge_t::parse_sub_records(record.substr(16));
@@ -2467,6 +2490,30 @@ TEST_CASE("sub_record_merge_t::merge, CELL FRMR ANAM added by intermediate adds 
 
 	REQUIRE(result.changed);
 	REQUIRE(has_frmr_group(result.content, 0x01000001));
+	REQUIRE(find_anam_after_frmr(result.content, 0x01000001) == make_string("caius"));
+}
+
+TEST_CASE("sub_record_merge_t::merge, CELL FRMR intermediate ANAM combined with winner other change", "[u]")
+{
+	auto subs_first = cell_header("Balmora") + frmr_group_no_anam(0x01000001, "misc_item");
+	auto subs_inter = cell_header("Balmora") + frmr_group(0x01000001, "misc_item", "caius");
+	auto subs_winner = cell_header("Balmora") + frmr_group_no_anam(0x01000001, "misc_item_edited");
+
+	merge_input_t input;
+	input.rec_type = "CELL";
+	input.record_id = "Balmora";
+	input.version_contents = {
+		make_record("CELL", subs_first),
+		make_record("CELL", subs_inter),
+		make_record("CELL", subs_winner),
+	};
+	input.ref_identities = identities_from_raw_frmr(input.version_contents);
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(has_frmr_group(result.content, 0x01000001));
+	REQUIRE(find_name_after_frmr(result.content, 0x01000001) == make_string("misc_item_edited"));
 	REQUIRE(find_anam_after_frmr(result.content, 0x01000001) == make_string("caius"));
 }
 
