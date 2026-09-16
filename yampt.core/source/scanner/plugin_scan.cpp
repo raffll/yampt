@@ -344,7 +344,41 @@ slot_result_t plugin_scan_t::build_slot_result(const conflict_entry_t & entry)
 			is_deleted[i] = true;
 	}
 
-	return conflict_slots::build(entry.rec_type, std::move(contents), is_deleted);
+	if (entry.rec_type != "CELL")
+		return conflict_slots::build(entry.rec_type, std::move(contents), is_deleted);
+
+	const auto ref_identities = build_cell_ref_identities(entry, contents);
+	return conflict_slots::build(entry.rec_type, contents, is_deleted, ref_identities);
+}
+
+std::vector<uint64_t> plugin_scan_t::cell_ref_identities(int plugin_idx, const std::string & content) const
+{
+	std::vector<uint64_t> identities;
+	sub_record_iter_t iter(content);
+	sub_record_view_t sub_view;
+
+	while (iter.next(sub_view))
+	{
+		if (sub_view.type != "FRMR")
+			continue;
+
+		const uint32_t raw_frmr = read_frmr_raw_index(sub_view.data, sub_view.size);
+		identities.push_back(resolve_frmr(plugin_idx, raw_frmr));
+	}
+
+	return identities;
+}
+
+std::vector<std::vector<uint64_t>> plugin_scan_t::build_cell_ref_identities(
+    const conflict_entry_t & entry,
+    const std::vector<std::string> & contents) const
+{
+	std::vector<std::vector<uint64_t>> identities(contents.size());
+
+	for (size_t i = 0; i < contents.size(); ++i)
+		identities[i] = cell_ref_identities(entry.versions[i].plugin_idx, contents[i]);
+
+	return identities;
 }
 
 std::unique_ptr<slot_result_t> plugin_scan_t::build_slot_result_for(const conflict_entry_t & entry)
@@ -383,6 +417,9 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 	for (const auto & slot : sr.aligned)
 	{
 		const auto & policy = cached_conflict_policy(entry.rec_type, slot.key.type);
+
+		if (policy.ignore_conflict)
+			continue;
 
 		std::vector<std::string> slot_values(ver_count);
 		const char * first_data = nullptr;

@@ -12,6 +12,7 @@ enum class sub_rule_flag_t : unsigned
 	element_wise_merge = 1 << 4,
 	skip_emit = 1 << 5,
 	merge_boundary = 1 << 6,
+	ignore_conflict = 1 << 7,
 };
 
 inline constexpr sub_rule_flag_t operator|(sub_rule_flag_t left, sub_rule_flag_t right)
@@ -44,6 +45,12 @@ struct paired_merge_rule_t
 	size_t expected_size;
 	const field_pair_rule_t * pairs;
 	size_t pair_count;
+};
+
+struct frmr_group_merge_rule_t
+{
+	const char * group_anchor;
+	const char * key_sub_type;
 };
 
 struct keyed_list_spec_t
@@ -100,6 +107,7 @@ struct record_behavior_t
 	const sub_record_rule_t * wildcard_rule = nullptr;
 	const paired_merge_rule_t * paired_rules = nullptr;
 	size_t paired_rule_count = 0;
+	const frmr_group_merge_rule_t * frmr_group_merge_rule = nullptr;
 	merge_strategy_t merge_strategy = merge_strategy_t::generic;
 	bool enam_effect_list = false;
 	bool merge_excluded = false;
@@ -153,3 +161,4 @@ read_only_reason_t read_only_reason_for(const std::string & record_type);
 bool record_allows_copy(const std::string & record_type);
 bool record_allows_lock(const std::string & record_type);
 bool record_allows_exclude(const std::string & record_type);
+const frmr_group_merge_rule_t * frmr_group_merge_rule_for(const std::string & record_type);

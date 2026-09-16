@@ -2286,3 +2286,298 @@ TEST_CASE("sub_record_merge_t::keyed_list_merge, highest priority modification w
 	REQUIRE(merged.size() == 1);
 	REQUIRE(merged[0] == keyed("a", "8"));
 }
+
+static std::string make_cell_data()
+{
+	return std::string(12, '\0');
+}
+
+static std::string cell_header(const std::string & cell_name)
+{
+	return make_sub("NAME", make_string(cell_name)) + make_sub("DATA", make_cell_data());
+}
+
+static std::string frmr_group(uint32_t frmr_index, const std::string & object_id, const std::string & owner)
+{
+	std::string group = make_sub("FRMR", make_uint32(frmr_index)) + make_sub("NAME", make_string(object_id));
+	if (!owner.empty())
+		group += make_sub("ANAM", make_string(owner));
+
+	return group;
+}
+
+static std::string frmr_group_no_anam(uint32_t frmr_index, const std::string & object_id)
+{
+	return make_sub("FRMR", make_uint32(frmr_index)) + make_sub("NAME", make_string(object_id));
+}
+
+static std::string find_anam_after_frmr(const std::string & record, uint32_t frmr_index)
+{
+	const auto subs = sub_record_merge_t::parse_sub_records(record.substr(16));
+	bool in_target = false;
+
+	for (const auto & entry : subs)
+	{
+		if (entry.type == "FRMR")
+		{
+			uint32_t index = 0;
+			std::memcpy(&index, entry.data.data(), 4);
+			in_target = index == frmr_index;
+
+			continue;
+		}
+
+		if (in_target && entry.type == "ANAM")
+			return entry.data;
+	}
+
+	return std::string();
+}
+
+static bool has_frmr_group(const std::string & record, uint32_t frmr_index)
+{
+	const auto subs = sub_record_merge_t::parse_sub_records(record.substr(16));
+
+	for (const auto & entry : subs)
+	{
+		if (entry.type != "FRMR")
+			continue;
+
+		uint32_t index = 0;
+		std::memcpy(&index, entry.data.data(), 4);
+		if (index == frmr_index)
+			return true;
+	}
+
+	return false;
+}
+
+static std::vector<std::vector<uint64_t>> identities_from_raw_frmr(const std::vector<std::string> & records)
+{
+	std::vector<std::vector<uint64_t>> result(records.size());
+
+	for (size_t version_idx = 0; version_idx < records.size(); ++version_idx)
+	{
+		const auto subs = sub_record_merge_t::parse_sub_records(records[version_idx].substr(16));
+
+		for (const auto & entry : subs)
+		{
+			if (entry.type != "FRMR")
+				continue;
+
+			uint32_t raw = 0;
+			std::memcpy(&raw, entry.data.data(), 4);
+			result[version_idx].push_back(static_cast<uint64_t>(raw));
+		}
+	}
+
+	return result;
+}
+
+TEST_CASE("sub_record_merge_t::merge, CELL FRMR ANAM value change from intermediate applied to winner group", "[u]")
+{
+	auto subs_first = cell_header("Balmora") + frmr_group(0x01000001, "misc_item", "fargoth");
+	auto subs_inter = cell_header("Balmora") + frmr_group(0x01000001, "misc_item", "caius");
+	auto subs_winner = cell_header("Balmora") + frmr_group(0x01000001, "misc_item", "fargoth");
+
+	merge_input_t input;
+	input.rec_type = "CELL";
+	input.record_id = "Balmora";
+	input.version_contents = {
+		make_record("CELL", subs_first),
+		make_record("CELL", subs_inter),
+		make_record("CELL", subs_winner),
+	};
+	input.ref_identities = identities_from_raw_frmr(input.version_contents);
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(has_frmr_group(result.content, 0x01000001));
+	REQUIRE(find_anam_after_frmr(result.content, 0x01000001) == make_string("caius"));
+}
+
+TEST_CASE("sub_record_merge_t::merge, CELL FRMR group without ANAM conflict not emitted", "[u]")
+{
+	auto ref_conflict = frmr_group(0x01000001, "misc_item", "fargoth");
+	auto ref_conflict_changed = frmr_group(0x01000001, "misc_item", "caius");
+	auto ref_stable = frmr_group(0x01000002, "other_item", "hlaalu");
+
+	auto subs_first = cell_header("Balmora") + ref_conflict + ref_stable;
+	auto subs_inter = cell_header("Balmora") + ref_conflict_changed + ref_stable;
+	auto subs_winner = cell_header("Balmora") + ref_conflict + ref_stable;
+
+	merge_input_t input;
+	input.rec_type = "CELL";
+	input.record_id = "Balmora";
+	input.version_contents = {
+		make_record("CELL", subs_first),
+		make_record("CELL", subs_inter),
+		make_record("CELL", subs_winner),
+	};
+	input.ref_identities = identities_from_raw_frmr(input.version_contents);
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(has_frmr_group(result.content, 0x01000001));
+	REQUIRE_FALSE(has_frmr_group(result.content, 0x01000002));
+}
+
+TEST_CASE("sub_record_merge_t::merge, CELL FRMR ANAM removed by intermediate removes owner from winner group", "[u]")
+{
+	auto subs_first = cell_header("Balmora") + frmr_group(0x01000001, "misc_item", "fargoth");
+	auto subs_inter = cell_header("Balmora") + frmr_group_no_anam(0x01000001, "misc_item");
+	auto subs_winner = cell_header("Balmora") + frmr_group(0x01000001, "misc_item", "fargoth");
+
+	merge_input_t input;
+	input.rec_type = "CELL";
+	input.record_id = "Balmora";
+	input.version_contents = {
+		make_record("CELL", subs_first),
+		make_record("CELL", subs_inter),
+		make_record("CELL", subs_winner),
+	};
+	input.ref_identities = identities_from_raw_frmr(input.version_contents);
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(has_frmr_group(result.content, 0x01000001));
+	REQUIRE(find_anam_after_frmr(result.content, 0x01000001).empty());
+}
+
+TEST_CASE("sub_record_merge_t::merge, CELL FRMR ANAM added by intermediate adds owner to winner group", "[u]")
+{
+	auto subs_first = cell_header("Balmora") + frmr_group_no_anam(0x01000001, "misc_item");
+	auto subs_inter = cell_header("Balmora") + frmr_group(0x01000001, "misc_item", "caius");
+	auto subs_winner = cell_header("Balmora") + frmr_group_no_anam(0x01000001, "misc_item");
+
+	merge_input_t input;
+	input.rec_type = "CELL";
+	input.record_id = "Balmora";
+	input.version_contents = {
+		make_record("CELL", subs_first),
+		make_record("CELL", subs_inter),
+		make_record("CELL", subs_winner),
+	};
+	input.ref_identities = identities_from_raw_frmr(input.version_contents);
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(has_frmr_group(result.content, 0x01000001));
+	REQUIRE(find_anam_after_frmr(result.content, 0x01000001) == make_string("caius"));
+}
+
+TEST_CASE("sub_record_merge_t::merge, CELL FRMR winner changed ANAM wins over intermediate", "[u]")
+{
+	auto subs_first = cell_header("Balmora") + frmr_group(0x01000001, "misc_item", "fargoth");
+	auto subs_inter = cell_header("Balmora") + frmr_group(0x01000001, "misc_item", "caius");
+	auto subs_winner = cell_header("Balmora") + frmr_group(0x01000001, "misc_item", "dagoth");
+
+	merge_input_t input;
+	input.rec_type = "CELL";
+	input.record_id = "Balmora";
+	input.version_contents = {
+		make_record("CELL", subs_first),
+		make_record("CELL", subs_inter),
+		make_record("CELL", subs_winner),
+	};
+	input.ref_identities = identities_from_raw_frmr(input.version_contents);
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE_FALSE(result.changed);
+}
+
+TEST_CASE("sub_record_merge_t::merge, CELL FRMR last ANAM changer wins", "[u]")
+{
+	auto subs_first = cell_header("Balmora") + frmr_group(0x01000001, "misc_item", "fargoth");
+	auto subs_inter_low = cell_header("Balmora") + frmr_group(0x01000001, "misc_item", "caius");
+	auto subs_inter_high = cell_header("Balmora") + frmr_group(0x01000001, "misc_item", "dagoth");
+	auto subs_winner = cell_header("Balmora") + frmr_group(0x01000001, "misc_item", "fargoth");
+
+	merge_input_t input;
+	input.rec_type = "CELL";
+	input.record_id = "Balmora";
+	input.version_contents = {
+		make_record("CELL", subs_first),
+		make_record("CELL", subs_inter_low),
+		make_record("CELL", subs_inter_high),
+		make_record("CELL", subs_winner),
+	};
+	input.ref_identities = identities_from_raw_frmr(input.version_contents);
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(find_anam_after_frmr(result.content, 0x01000001) == make_string("dagoth"));
+}
+
+TEST_CASE("sub_record_merge_t::merge, CELL FRMR no ANAM conflict is no-op", "[u]")
+{
+	auto subs_first = cell_header("Balmora") + frmr_group(0x01000001, "misc_item", "fargoth");
+	auto subs_inter = cell_header("Balmora") + frmr_group(0x01000001, "misc_item", "fargoth");
+	auto subs_winner = cell_header("Balmora") + frmr_group(0x01000001, "misc_item", "fargoth");
+
+	merge_input_t input;
+	input.rec_type = "CELL";
+	input.record_id = "Balmora";
+	input.version_contents = {
+		make_record("CELL", subs_first),
+		make_record("CELL", subs_inter),
+		make_record("CELL", subs_winner),
+	};
+	input.ref_identities = identities_from_raw_frmr(input.version_contents);
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE_FALSE(result.changed);
+}
+
+TEST_CASE("sub_record_merge_t::merge, CELL FRMR different item RefNum not matched", "[u]")
+{
+	auto subs_first = cell_header("Balmora") + frmr_group(0x01000001, "misc_item", "fargoth");
+	auto subs_inter = cell_header("Balmora") + frmr_group(0x02000001, "misc_item", "caius");
+	auto subs_winner = cell_header("Balmora") + frmr_group(0x01000001, "misc_item", "fargoth");
+
+	merge_input_t input;
+	input.rec_type = "CELL";
+	input.record_id = "Balmora";
+	input.version_contents = {
+		make_record("CELL", subs_first),
+		make_record("CELL", subs_inter),
+		make_record("CELL", subs_winner),
+	};
+	input.ref_identities = { { 0x11 }, { 0x22 }, { 0x11 } };
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE_FALSE(result.changed);
+}
+
+TEST_CASE("sub_record_merge_t::merge, CELL FRMR same low index different resolved identity not merged", "[u]")
+{
+	auto subs_first = cell_header("Balmora") + frmr_group(0x00000005, "green_1000_01", "fargoth");
+	auto subs_inter = cell_header("Balmora") + frmr_group(0x00000005, "ingred_fire_petal_01", "caius");
+	auto subs_winner = cell_header("Balmora") + frmr_group(0x00000005, "light_com_candle_07", "fargoth");
+
+	merge_input_t input;
+	input.rec_type = "CELL";
+	input.record_id = "Balmora";
+	input.version_contents = {
+		make_record("CELL", subs_first),
+		make_record("CELL", subs_inter),
+		make_record("CELL", subs_winner),
+	};
+	input.ref_identities = {
+		{ (static_cast<uint64_t>(0) << 32) | 5u },
+		{ (static_cast<uint64_t>(1) << 32) | 5u },
+		{ (static_cast<uint64_t>(2) << 32) | 5u },
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE_FALSE(result.changed);
+}

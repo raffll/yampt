@@ -63,7 +63,10 @@ private:
 	void dispatch_group(const record_group_t & group, merge_counters_t & counters);
 	void process_leveled_list(const record_group_t & group, merge_counters_t & counters);
 	void process_three_way(const record_group_t & group, merge_counters_t & counters);
-	void apply_patch_priority(const record_group_t & group, std::vector<std::string> & contents);
+	void apply_patch_priority(
+	    const record_group_t & group,
+	    std::vector<std::string> & contents,
+	    std::vector<std::vector<uint64_t>> & ref_identities);
 
 	void apply_fixes(merge_counters_t & counters);
 	void apply_fog_fixes(merge_counters_t & counters);

@@ -1,9 +1,11 @@
 #include "conflict_slots.hpp"
 #include "sub_record_schema.hpp"
+#include "../utility/app_logger.hpp"
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
 #include <set>
+#include <string>
 #include <unordered_map>
 
 struct sub_slot_t
@@ -634,6 +636,23 @@ slot_result_t conflict_slots::build(
 
 slot_result_t conflict_slots::build(
     const std::string & rec_type,
+    const std::vector<std::string> & version_contents,
+    const std::vector<bool> & version_deleted,
+    const std::vector<std::vector<uint64_t>> & ref_identities)
+{
+	slot_result_t result;
+	result.contents = version_contents;
+	result.is_deleted = version_deleted;
+	result.ref_identities = ref_identities;
+
+	parse_versions(result);
+	dispatch_strategy(rec_type, result);
+
+	return result;
+}
+
+slot_result_t conflict_slots::build(
+    const std::string & rec_type,
     std::vector<std::string> && version_contents,
     const std::vector<bool> & version_deleted)
 {
@@ -657,16 +676,35 @@ struct cell_sub_slot_t
 
 struct cell_ref_group_t
 {
-	uint32_t object_index;
+	uint64_t object_identity;
 	size_t start_idx;
 	size_t end_idx;
 };
 
+static uint64_t frmr_identity_for(
+    const std::vector<std::vector<uint64_t>> & ref_identities,
+    size_t version_idx,
+    size_t frmr_occurrence,
+    uint32_t raw_frmr)
+{
+	if (version_idx >= ref_identities.size() || frmr_occurrence >= ref_identities[version_idx].size())
+	{
+		app_logger_t::add_log(
+		    "[error] cell ref identity missing for version " + std::to_string(version_idx) + " occurrence " +
+		    std::to_string(frmr_occurrence) + "\r\n");
+
+		return (static_cast<uint64_t>(version_idx) << 32) | raw_frmr;
+	}
+
+	return ref_identities[version_idx][frmr_occurrence];
+}
+
 static void extract_cell_refs(
     const std::vector<std::vector<sub_record_view_t>> & parsed,
+    const std::vector<std::vector<uint64_t>> & ref_identities,
     std::vector<std::vector<cell_ref_group_t>> & ver_refs,
     std::vector<size_t> & ver_header_end,
-    std::vector<uint32_t> & all_object_indices)
+    std::vector<uint64_t> & all_object_identities)
 {
 	const size_t ver_count = parsed.size();
 	ver_refs.resize(ver_count);
@@ -674,6 +712,8 @@ static void extract_cell_refs(
 
 	for (size_t i = 0; i < ver_count; ++i)
 	{
+		size_t frmr_occurrence = 0;
+
 		for (size_t j = 0; j < parsed[i].size(); ++j)
 		{
 			if (parsed[i][j].type != "FRMR")
@@ -682,7 +722,9 @@ static void extract_cell_refs(
 			if (ver_refs[i].empty())
 				ver_header_end[i] = j;
 
-			uint32_t obj_idx = read_frmr_ref_index(parsed[i][j].data, parsed[i][j].size);
+			const uint32_t raw_frmr = read_frmr_raw_index(parsed[i][j].data, parsed[i][j].size);
+			const uint64_t identity = frmr_identity_for(ref_identities, i, frmr_occurrence, raw_frmr);
+			++frmr_occurrence;
 
 			size_t end_pos = parsed[i].size();
 			for (size_t k = j + 1; k < parsed[i].size(); ++k)
@@ -694,13 +736,15 @@ static void extract_cell_refs(
 				}
 			}
 
-			ver_refs[i].push_back({ obj_idx, j, end_pos });
+			ver_refs[i].push_back({ identity, j, end_pos });
 
 			const bool exists = std::any_of(
-			    all_object_indices.begin(), all_object_indices.end(), [&](uint32_t index) { return index == obj_idx; });
+			    all_object_identities.begin(),
+			    all_object_identities.end(),
+			    [&](uint64_t value) { return value == identity; });
 
 			if (!exists)
-				all_object_indices.push_back(obj_idx);
+				all_object_identities.push_back(identity);
 		}
 
 		if (ver_refs[i].empty())
@@ -759,7 +803,7 @@ static void align_cell_header(
 static void collect_ref_group_slots(
     const std::vector<std::vector<sub_record_view_t>> & parsed,
     const std::vector<std::vector<cell_ref_group_t>> & ver_refs,
-    uint32_t object_index,
+    uint64_t object_identity,
     std::vector<cell_sub_slot_t> & ref_slots)
 {
 	const size_t ver_count = parsed.size();
@@ -767,7 +811,7 @@ static void collect_ref_group_slots(
 	{
 		for (const auto & ref : ver_refs[i])
 		{
-			if (ref.object_index != object_index)
+			if (ref.object_identity != object_identity)
 				continue;
 
 			std::unordered_map<std::string, int> type_count;
@@ -789,7 +833,7 @@ static void collect_ref_group_slots(
 static void align_ref_group_slots(
     const std::vector<std::vector<sub_record_view_t>> & parsed,
     const std::vector<std::vector<cell_ref_group_t>> & ver_refs,
-    uint32_t object_index,
+    uint64_t object_identity,
     const std::vector<cell_sub_slot_t> & ref_slots,
     slot_result_t & result)
 {
@@ -800,7 +844,7 @@ static void align_ref_group_slots(
 	{
 		for (const auto & ref : ver_refs[i])
 		{
-			if (ref.object_index != object_index)
+			if (ref.object_identity != object_identity)
 				continue;
 
 			const size_t safe_end = std::min(ref.end_idx, parsed[i].size());
@@ -834,23 +878,23 @@ static void align_ref_group_slots(
 static void align_cell_ref_group(
     const std::vector<std::vector<sub_record_view_t>> & parsed,
     const std::vector<std::vector<cell_ref_group_t>> & ver_refs,
-    uint32_t object_index,
+    uint64_t object_identity,
     slot_result_t & result)
 {
 	std::vector<cell_sub_slot_t> ref_slots;
-	collect_ref_group_slots(parsed, ver_refs, object_index, ref_slots);
-	align_ref_group_slots(parsed, ver_refs, object_index, ref_slots, result);
+	collect_ref_group_slots(parsed, ver_refs, object_identity, ref_slots);
+	align_ref_group_slots(parsed, ver_refs, object_identity, ref_slots, result);
 }
 
 void conflict_slots::build_cell(slot_result_t & result)
 {
 	std::vector<std::vector<cell_ref_group_t>> ver_refs;
 	std::vector<size_t> ver_header_end;
-	std::vector<uint32_t> all_object_indices;
-	extract_cell_refs(result.parsed, ver_refs, ver_header_end, all_object_indices);
+	std::vector<uint64_t> all_object_identities;
+	extract_cell_refs(result.parsed, result.ref_identities, ver_refs, ver_header_end, all_object_identities);
 
 	align_cell_header(result.parsed, ver_header_end, result);
 
-	for (const auto & obj_idx : all_object_indices)
-		align_cell_ref_group(result.parsed, ver_refs, obj_idx, result);
+	for (const auto & identity : all_object_identities)
+		align_cell_ref_group(result.parsed, ver_refs, identity, result);
 }

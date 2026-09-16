@@ -1,6 +1,7 @@
 #include "view_tree_model.hpp"
 #include <decoder/view_tree_format.hpp>
 #include <scanner/record_conflict.hpp>
+#include <utility/app_logger.hpp>
 #include <cstdio>
 #include <cstring>
 
@@ -65,8 +66,29 @@ static uint32_t read_object_index(const sub_record_view_t & sub_rec)
 	return read_frmr_ref_index(sub_rec.data, sub_rec.size);
 }
 
+static std::string read_ref_object_id(
+    const std::vector<sub_record_view_t> & subs,
+    size_t start_idx,
+    size_t end_idx)
+{
+	for (size_t i = start_idx; i < end_idx; ++i)
+	{
+		if (subs[i].type != "NAME")
+			continue;
+
+		std::string object_id(subs[i].data, subs[i].size);
+		if (!object_id.empty() && object_id.back() == '\0')
+			object_id.pop_back();
+
+		return object_id;
+	}
+
+	return {};
+}
+
 static void collect_cell_ref_groups(
     const std::vector<sub_record_view_t> & subs,
+    const std::vector<uint64_t> & ref_identities,
     std::vector<cell_ref_view_t> & out_refs,
     size_t & out_header_end)
 {
@@ -80,6 +102,7 @@ static void collect_cell_ref_groups(
 		}
 	}
 
+	size_t frmr_ordinal = 0;
 	for (size_t i = 0; i < subs.size(); ++i)
 	{
 		if (subs[i].type != "FRMR")
@@ -104,26 +127,36 @@ static void collect_cell_ref_groups(
 			}
 		}
 
+		if (frmr_ordinal >= ref_identities.size())
+		{
+			app_logger_t::add_log(
+			    "[error] CELL ref identity missing for FRMR ordinal " + std::to_string(frmr_ordinal) + "\r\n");
+			++frmr_ordinal;
+			continue;
+		}
+
+		ref_key_t identity { ref_identities[frmr_ordinal], read_ref_object_id(subs, i, group_end) };
 		const bool is_persistent = (nam0_pos == SIZE_MAX) || (i < nam0_pos);
-		out_refs.push_back({ obj_idx, i, group_end, is_persistent });
+		out_refs.push_back({ obj_idx, identity, i, group_end, is_persistent });
+		++frmr_ordinal;
 	}
 
 	if (out_refs.empty())
 		out_header_end = subs.size();
 }
 
-static void collect_unique_object_indices(
+static void collect_unique_ref_identities(
     const std::vector<std::vector<cell_ref_view_t>> & col_refs,
-    std::vector<uint32_t> & all_indices)
+    std::vector<ref_key_t> & all_identities)
 {
 	for (const auto & refs : col_refs)
 	{
 		for (const auto & ref_group : refs)
 		{
 			bool found = false;
-			for (const auto & existing : all_indices)
+			for (const auto & existing : all_identities)
 			{
-				if (existing == ref_group.object_index)
+				if (existing == ref_group.identity)
 				{
 					found = true;
 					break;
@@ -131,7 +164,7 @@ static void collect_unique_object_indices(
 			}
 
 			if (!found)
-				all_indices.push_back(ref_group.object_index);
+				all_identities.push_back(ref_group.identity);
 		}
 	}
 }
@@ -150,7 +183,7 @@ static void build_ref_slots_for_object(
     size_t col_count,
     const std::vector<std::vector<sub_record_view_t>> & all_subs,
     const std::vector<std::vector<cell_ref_view_t>> & col_refs,
-    uint32_t object_index,
+    const ref_key_t & identity,
     std::vector<sub_slot_t> & ref_slots)
 {
 	std::vector<size_t> col_start(col_count, 0);
@@ -163,7 +196,7 @@ static void build_ref_slots_for_object(
 
 		for (const auto & ref_group : col_refs[col])
 		{
-			if (ref_group.object_index != object_index)
+			if (!(ref_group.identity == identity))
 				continue;
 
 			col_start[col] = ref_group.start_idx;
@@ -184,13 +217,13 @@ struct ref_lookup_result_t
 static ref_lookup_result_t find_ref_sub_record(
     const std::vector<sub_record_view_t> & subs,
     const std::vector<cell_ref_view_t> & refs,
-    uint32_t object_index,
+    const ref_key_t & identity,
     const std::string & slot_type,
     int slot_occurrence)
 {
 	for (const auto & ref_group : refs)
 	{
-		if (ref_group.object_index != object_index)
+		if (!(ref_group.identity == identity))
 			continue;
 
 		int occur = 0;
@@ -218,7 +251,7 @@ void view_tree_model_t::decode_schema_children_ref(
     size_t col_count,
     const std::vector<std::vector<sub_record_view_t>> & all_subs,
     const std::vector<std::vector<cell_ref_view_t>> & col_refs,
-    uint32_t object_index,
+    const ref_key_t & identity,
     const sub_slot_t & slot)
 {
 	static const std::vector<sub_record_view_t> empty_subs;
@@ -248,7 +281,7 @@ void view_tree_model_t::decode_schema_children_ref(
 				{
 					const auto & subs = col < all_subs.size() ? all_subs[col] : empty_subs;
 					const auto & refs = col < col_refs.size() ? col_refs[col] : empty_refs;
-					const auto result = find_ref_sub_record(subs, refs, object_index, slot.type, slot.occurrence);
+					const auto result = find_ref_sub_record(subs, refs, identity, slot.type, slot.occurrence);
 
 					frow.values[col] =
 					    result.view.data ? flag_bit_value(result.view.data, result.view.size, fdef, bit) : non_existent_value;
@@ -271,7 +304,7 @@ void view_tree_model_t::decode_schema_children_ref(
 		{
 			const auto & subs = col < all_subs.size() ? all_subs[col] : empty_subs;
 			const auto & refs = col < col_refs.size() ? col_refs[col] : empty_refs;
-			const auto result = find_ref_sub_record(subs, refs, object_index, slot.type, slot.occurrence);
+			const auto result = find_ref_sub_record(subs, refs, identity, slot.type, slot.occurrence);
 
 			frow.values[col] = result.view.data
 			                       ? decode_field(fdef, result.view.data, result.view.size, m_display_codepage)
@@ -291,7 +324,7 @@ void view_tree_model_t::decode_hex_children_ref(
     size_t col_count,
     const std::vector<std::vector<sub_record_view_t>> & all_subs,
     const std::vector<std::vector<cell_ref_view_t>> & col_refs,
-    uint32_t object_index,
+    const ref_key_t & identity,
     const sub_slot_t & slot)
 {
 	static const std::vector<sub_record_view_t> empty_subs;
@@ -310,7 +343,7 @@ void view_tree_model_t::decode_hex_children_ref(
 		{
 			const auto & subs = col < all_subs.size() ? all_subs[col] : empty_subs;
 			const auto & refs = col < col_refs.size() ? col_refs[col] : empty_refs;
-			const auto result = find_ref_sub_record(subs, refs, object_index, slot.type, slot.occurrence);
+			const auto result = find_ref_sub_record(subs, refs, identity, slot.type, slot.occurrence);
 
 			frow.values[col] =
 			    result.view.data ? format_hex_chunk(result.view.data, result.view.size, offset) : non_existent_value;
@@ -323,13 +356,13 @@ void view_tree_model_t::decode_hex_children_ref(
 	}
 }
 
-static bool is_ref_persistent(const std::vector<std::vector<cell_ref_view_t>> & col_refs, uint32_t object_index)
+static bool is_ref_persistent(const std::vector<std::vector<cell_ref_view_t>> & col_refs, const ref_key_t & identity)
 {
 	for (const auto & refs : col_refs)
 	{
 		for (const auto & ref_group : refs)
 		{
-			if (ref_group.object_index != object_index)
+			if (!(ref_group.identity == identity))
 				continue;
 
 			return ref_group.persistent;
@@ -343,7 +376,7 @@ view_tree_model_t::view_node_t view_tree_model_t::build_ref_child(
     size_t col_count,
     const std::vector<std::vector<sub_record_view_t>> & all_subs,
     const std::vector<std::vector<cell_ref_view_t>> & col_refs,
-    uint32_t object_index,
+    const ref_key_t & identity,
     const sub_slot_t & slot)
 {
 	const char * first_data = nullptr;
@@ -354,7 +387,7 @@ view_tree_model_t::view_node_t view_tree_model_t::build_ref_child(
 		if (col >= all_subs.size())
 			continue;
 
-		const auto result = find_ref_sub_record(all_subs[col], col_refs[col], object_index, slot.type, slot.occurrence);
+		const auto result = find_ref_sub_record(all_subs[col], col_refs[col], identity, slot.type, slot.occurrence);
 		if (result.view.data && !first_data)
 		{
 			first_data = result.view.data;
@@ -376,7 +409,7 @@ view_tree_model_t::view_node_t view_tree_model_t::build_ref_child(
 		sub_group.row_conflict_all = conflict_all_t::only_one;
 
 		decode_schema_children_ref(
-		    sub_group, schema, first_data, first_size, col_count, all_subs, col_refs, object_index, slot);
+		    sub_group, schema, first_data, first_size, col_count, all_subs, col_refs, identity, slot);
 
 		for (size_t col = 0; col < col_count; ++col)
 		{
@@ -385,7 +418,7 @@ view_tree_model_t::view_node_t view_tree_model_t::build_ref_child(
 			{
 				for (const auto & ref_group : col_refs[col])
 				{
-					if (ref_group.object_index == object_index)
+					if (ref_group.identity == identity)
 					{
 						present = true;
 						break;
@@ -419,7 +452,7 @@ view_tree_model_t::view_node_t view_tree_model_t::build_ref_child(
 			continue;
 		}
 
-		const auto result = find_ref_sub_record(all_subs[col], col_refs[col], object_index, slot.type, slot.occurrence);
+		const auto result = find_ref_sub_record(all_subs[col], col_refs[col], identity, slot.type, slot.occurrence);
 		if (!result.view.data)
 		{
 			child_field.values[col] = non_existent_value;
@@ -454,17 +487,23 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 
 	std::vector<std::vector<cell_ref_view_t>> col_refs(col_count);
 	std::vector<size_t> col_header_end(col_count, 0);
-	std::vector<uint32_t> all_object_indices;
+	std::vector<ref_key_t> all_ref_identities;
 
+	static const std::vector<uint64_t> empty_identities;
 	for (size_t col = 0; col < col_count; ++col)
 	{
 		if (col >= all_subs.size())
 			continue;
 
-		collect_cell_ref_groups(all_subs[col], col_refs[col], col_header_end[col]);
+		const auto & identities =
+		    (context.slot_result && col < context.slot_result->ref_identities.size())
+		        ? context.slot_result->ref_identities[col]
+		        : empty_identities;
+
+		collect_cell_ref_groups(all_subs[col], identities, col_refs[col], col_header_end[col]);
 	}
 
-	collect_unique_object_indices(col_refs, all_object_indices);
+	collect_unique_ref_identities(col_refs, all_ref_identities);
 
 	std::vector<sub_slot_t> header_slots;
 	build_cell_header_slots(col_count, all_subs, col_header_end, header_slots);
@@ -489,53 +528,43 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 		m_rows.push_back(std::move(row));
 	}
 
-	std::vector<uint32_t> persistent_indices;
-	std::vector<uint32_t> temporary_indices;
+	std::vector<ref_key_t> persistent_identities;
+	std::vector<ref_key_t> temporary_identities;
 
-	for (const auto & obj_idx : all_object_indices)
+	for (const auto & identity : all_ref_identities)
 	{
-		if (is_ref_persistent(col_refs, obj_idx))
-			persistent_indices.push_back(obj_idx);
+		if (is_ref_persistent(col_refs, identity))
+			persistent_identities.push_back(identity);
 		else
-			temporary_indices.push_back(obj_idx);
+			temporary_identities.push_back(identity);
 	}
 
-	auto build_ref_group = [&](uint32_t obj_idx) -> view_node_t
+	auto build_ref_group = [&](const ref_key_t & identity) -> view_node_t
 	{
 		std::vector<sub_slot_t> ref_slots;
-		build_ref_slots_for_object(col_count, all_subs, col_refs, obj_idx, ref_slots);
+		build_ref_slots_for_object(col_count, all_subs, col_refs, identity, ref_slots);
 
-		std::string object_name;
-		for (size_t col = 0; col < col_count; ++col)
+		uint32_t display_index = 0;
+		bool display_index_found = false;
+		for (size_t col = 0; col < col_count && !display_index_found; ++col)
 		{
-			if (col >= all_subs.size())
+			if (col >= col_refs.size())
 				continue;
 
 			for (const auto & ref_group : col_refs[col])
 			{
-				if (ref_group.object_index != obj_idx)
+				if (!(ref_group.identity == identity))
 					continue;
 
-				for (size_t i = ref_group.start_idx; i < ref_group.end_idx; ++i)
-				{
-					if (all_subs[col][i].type != "NAME")
-						continue;
-
-					object_name = std::string(all_subs[col][i].data, all_subs[col][i].size);
-					if (!object_name.empty() && object_name.back() == '\0')
-						object_name.pop_back();
-
-					break;
-				}
+				display_index = ref_group.object_index;
+				display_index_found = true;
 				break;
 			}
-
-			if (!object_name.empty())
-				break;
 		}
 
+		const std::string index_label = "#" + std::to_string(display_index);
 		std::string ref_label =
-		    object_name.empty() ? "#" + std::to_string(obj_idx) : "#" + std::to_string(obj_idx) + " " + object_name;
+		    identity.object_id.empty() ? index_label : index_label + " " + identity.object_id;
 
 		view_node_t group_row;
 		group_row.type = "FRMR";
@@ -553,10 +582,10 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 
 			for (const auto & ref_group : col_refs[col])
 			{
-				if (ref_group.object_index != obj_idx)
+				if (!(ref_group.identity == identity))
 					continue;
 
-				group_row.values[col] = std::to_string(obj_idx);
+				group_row.values[col] = std::to_string(ref_group.object_index);
 				group_row.binary_ranges[col] = { static_cast<int>(ref_group.start_idx),
 					                             static_cast<int>(ref_group.start_idx) + 1 };
 				break;
@@ -565,7 +594,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 
 		for (const auto & slot : ref_slots)
 		{
-			auto child = build_ref_child(col_count, all_subs, col_refs, obj_idx, slot);
+			auto child = build_ref_child(col_count, all_subs, col_refs, identity, slot);
 			propagate_conflict_upward(group_row, child, col_count);
 			group_row.children.push_back(std::move(child));
 		}
@@ -600,7 +629,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 	};
 
 	auto build_section_group = [&](const std::string & section_label,
-	                               const std::vector<uint32_t> & indices) -> view_node_t
+	                               const std::vector<ref_key_t> & identities) -> view_node_t
 	{
 		view_node_t section;
 		section.type = "FRMR";
@@ -610,9 +639,9 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 		section.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
 		section.row_conflict_all = conflict_all_t::only_one;
 
-		for (const auto & obj_idx : indices)
+		for (const auto & identity : identities)
 		{
-			auto ref_group = build_ref_group(obj_idx);
+			auto ref_group = build_ref_group(identity);
 			propagate_conflict_upward(section, ref_group, col_count);
 			section.children.push_back(std::move(ref_group));
 		}
@@ -624,9 +653,9 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 			{
 				for (const auto & ref_group : col_refs[col])
 				{
-					for (const auto & idx : indices)
+					for (const auto & identity : identities)
 					{
-						if (ref_group.object_index == idx)
+						if (ref_group.identity == identity)
 						{
 							any_present = true;
 							break;
@@ -639,7 +668,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 			}
 
 			char count_buf[32];
-			std::snprintf(count_buf, sizeof(count_buf), "%zu references", indices.size());
+			std::snprintf(count_buf, sizeof(count_buf), "%zu references", identities.size());
 			section.values[col] = any_present ? std::string(count_buf) : non_existent_value;
 		}
 
@@ -648,18 +677,9 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 		return section;
 	};
 
-	if (!persistent_indices.empty())
-		m_rows.push_back(build_section_group("Persistent", persistent_indices));
+	if (!persistent_identities.empty())
+		m_rows.push_back(build_section_group("Persistent", persistent_identities));
 
-	for (const auto & slot : header_slots)
-	{
-		if (slot.type != "NAM0")
-			continue;
-
-		auto row = build_slot_row(col_count, all_subs, col_header_indices, slot);
-		m_rows.push_back(std::move(row));
-	}
-
-	if (!temporary_indices.empty())
-		m_rows.push_back(build_section_group("Temporary", temporary_indices));
+	if (!temporary_identities.empty())
+		m_rows.push_back(build_section_group("Temporary", temporary_identities));
 }

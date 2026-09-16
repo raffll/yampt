@@ -54,6 +54,7 @@ public:
 	int active_plugin_index() const;
 	const std::vector<std::string> & master_list(int idx) const;
 	uint64_t resolve_frmr(int plugin_idx, uint32_t raw_frmr) const;
+	std::vector<uint64_t> cell_ref_identities(int plugin_idx, const std::string & content) const;
 
 	const std::vector<conflict_entry_t> & entries() const;
 	const conflict_entry_t * find(const std::string & type, const std::string & id) const;
@@ -111,6 +112,9 @@ private:
 	const conflict_policy_t & cached_conflict_policy(const std::string & rec_type, const std::string & sub_type);
 
 	slot_result_t build_slot_result(const conflict_entry_t & entry);
+	std::vector<std::vector<uint64_t>> build_cell_ref_identities(
+	    const conflict_entry_t & entry,
+	    const std::vector<std::string> & contents) const;
 	void insert_or_update_version(version_descriptor_t desc);
 
 	struct loaded_plugin_t

@@ -715,6 +715,178 @@ frmr_map_t sub_record_merge_t::build_frmr_map(const std::vector<frmr_group_t> & 
 	return result;
 }
 
+namespace
+{
+
+struct anam_state_t
+{
+	bool present = false;
+	std::string data;
+
+	bool operator==(const anam_state_t & other) const = default;
+};
+
+anam_state_t read_group_anam(const frmr_group_t & group, const std::string & key_sub_type)
+{
+	for (const auto & entry : group.sub_records)
+	{
+		if (entry.type == key_sub_type)
+			return { true, entry.data };
+	}
+
+	return {};
+}
+
+using identity_group_map_t = std::map<uint64_t, frmr_group_t>;
+
+const frmr_group_t * find_group(const identity_group_map_t & groups_by_identity, uint64_t identity)
+{
+	const auto it_group = groups_by_identity.find(identity);
+	if (it_group == groups_by_identity.end())
+		return nullptr;
+
+	return &it_group->second;
+}
+
+identity_group_map_t build_identity_group_map(
+    const cell_partition_t & partition,
+    const std::vector<uint64_t> & identities)
+{
+	identity_group_map_t result;
+
+	for (size_t group_idx = 0; group_idx < partition.groups.size(); ++group_idx)
+	{
+		if (group_idx >= identities.size())
+		{
+			app_logger_t::add_log(
+			    "[error] frmr merge: missing identity for group " + std::to_string(group_idx) + "\r\n");
+
+			break;
+		}
+
+		frmr_group_t group = partition.groups[group_idx];
+		group.identity = identities[group_idx];
+		result.emplace(group.identity, std::move(group));
+	}
+
+	return result;
+}
+
+std::optional<anam_state_t> resolve_anam_override(
+    const std::vector<identity_group_map_t> & version_groups,
+    uint64_t identity,
+    const std::string & key_sub_type)
+{
+	const auto * master_group = find_group(version_groups.front(), identity);
+	const auto * winner_group = find_group(version_groups.back(), identity);
+	if (!master_group || !winner_group)
+		return std::nullopt;
+
+	const auto master_anam = read_group_anam(*master_group, key_sub_type);
+	const auto winner_anam = read_group_anam(*winner_group, key_sub_type);
+	if (winner_anam != master_anam)
+		return std::nullopt;
+
+	std::optional<anam_state_t> override_anam;
+
+	for (size_t version_idx = 1; version_idx + 1 < version_groups.size(); ++version_idx)
+	{
+		const auto * inter_group = find_group(version_groups[version_idx], identity);
+		if (!inter_group)
+			continue;
+
+		const auto inter_anam = read_group_anam(*inter_group, key_sub_type);
+		if (inter_anam != master_anam)
+			override_anam = inter_anam;
+	}
+
+	return override_anam;
+}
+
+frmr_group_t apply_anam_override(
+    const frmr_group_t & winner_group,
+    const anam_state_t & override_anam,
+    const std::string & key_sub_type)
+{
+	frmr_group_t result;
+	result.frmr_index = winner_group.frmr_index;
+
+	for (const auto & entry : winner_group.sub_records)
+	{
+		if (entry.type == key_sub_type)
+			continue;
+
+		result.sub_records.push_back(entry);
+	}
+
+	if (!override_anam.present)
+		return result;
+
+	sub_record_entry_t anam_entry { key_sub_type, override_anam.data };
+	const auto it_anam = std::find_if(
+	    winner_group.sub_records.begin(),
+	    winner_group.sub_records.end(),
+	    [&key_sub_type](const sub_record_entry_t & entry) { return entry.type == key_sub_type; });
+
+	if (it_anam != winner_group.sub_records.end())
+	{
+		const auto position = static_cast<size_t>(it_anam - winner_group.sub_records.begin());
+		result.sub_records.insert(result.sub_records.begin() + static_cast<long>(position), anam_entry);
+
+		return result;
+	}
+
+	result.sub_records.push_back(anam_entry);
+
+	return result;
+}
+
+} // namespace
+
+sub_record_sequence_t sub_record_merge_t::merge_frmr_groups_phase(
+    const std::vector<std::string> & versions,
+    const std::vector<std::vector<uint64_t>> & ref_identities,
+    const sub_record_sequence_t & output,
+    const std::string & rec_type)
+{
+	const auto * rule = frmr_group_merge_rule_for(rec_type);
+	if (!rule)
+		return output;
+
+	if (ref_identities.size() != versions.size())
+	{
+		app_logger_t::add_log("[error] frmr merge: ref identities missing for CELL\r\n");
+
+		return output;
+	}
+
+	std::vector<identity_group_map_t> version_groups;
+	for (size_t version_idx = 0; version_idx < versions.size(); ++version_idx)
+		version_groups.push_back(
+		    build_identity_group_map(partition_cell(versions[version_idx]), ref_identities[version_idx]));
+
+	const auto & winner_identities = ref_identities.back();
+	const auto winner_partition = partition_cell(versions.back());
+	auto result = output;
+
+	for (size_t group_idx = 0; group_idx < winner_partition.groups.size(); ++group_idx)
+	{
+		if (group_idx >= winner_identities.size())
+			break;
+
+		const uint64_t identity = winner_identities[group_idx];
+		const auto override_anam = resolve_anam_override(version_groups, identity, rule->key_sub_type);
+		if (!override_anam.has_value())
+			continue;
+
+		const auto merged_group =
+		    apply_anam_override(winner_partition.groups[group_idx], *override_anam, rule->key_sub_type);
+		result.insert(result.end(), merged_group.sub_records.begin(), merged_group.sub_records.end());
+	}
+
+	return result;
+}
+
 armor_partition_t sub_record_merge_t::partition_armor(const std::string & content, const std::string & rec_type)
 {
 	armor_partition_t result;
@@ -1248,7 +1420,11 @@ merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
 		output = replace_faction_reactions(output, merged_reactions, *reaction_pair);
 	}
 
-	if (output == winner_subs && !variable_size_merged)
+	const auto output_before_frmr = output;
+	output = merge_frmr_groups_phase(versions, input.ref_identities, output, input.rec_type);
+	const bool frmr_groups_added = output != output_before_frmr;
+
+	if (output == winner_subs && !variable_size_merged && !frmr_groups_added)
 		return { false, winner_content };
 
 	const auto result = reconstruct_record(winner_content, output);

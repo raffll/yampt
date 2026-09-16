@@ -87,7 +87,38 @@ TEST_CASE("sub_record_iter::read_frmr_ref_index, max 24bit value", "[u]")
 	REQUIRE(read_frmr_ref_index(data.data(), data.size()) == 0x00FFFFFF);
 }
 
-TEST_CASE("conflict_slots::build, refs with same lower 24 bits aligned", "[u]")
+static uint64_t ref_key(uint32_t plugin_idx, uint32_t ref_index)
+{
+	return (static_cast<uint64_t>(plugin_idx) << 32) | ref_index;
+}
+
+static size_t count_frmr_slots(const slot_result_t & result)
+{
+	size_t frmr_slots = 0;
+	for (const auto & slot : result.aligned)
+	{
+		if (slot.key.type == "FRMR")
+			++frmr_slots;
+	}
+
+	return frmr_slots;
+}
+
+static bool frmr_slot_spans(const slot_result_t & result, size_t version_a, size_t version_b)
+{
+	for (const auto & slot : result.aligned)
+	{
+		if (slot.key.type != "FRMR")
+			continue;
+
+		if (slot.indices[version_a] != SIZE_MAX && slot.indices[version_b] != SIZE_MAX)
+			return true;
+	}
+
+	return false;
+}
+
+TEST_CASE("conflict_slots::build, master ref and plugin override align by resolved identity", "[u]")
 {
 	auto header_subs = make_sub("NAME", make_string("TestCell")) + make_sub("DATA", std::string(12, '\0'));
 
@@ -102,32 +133,22 @@ TEST_CASE("conflict_slots::build, refs with same lower 24 bits aligned", "[u]")
 
 	std::vector<std::string> versions = { content_v1, content_v2 };
 	std::vector<bool> deleted = { false, false };
-	auto result = conflict_slots::build("CELL", versions, deleted);
+	std::vector<std::vector<uint64_t>> identities = { { ref_key(0, 0x020164) }, { ref_key(0, 0x020164) } };
 
-	bool found_frmr_aligned = false;
-	for (const auto & slot : result.aligned)
-	{
-		if (slot.key.type != "FRMR")
-			continue;
+	auto result = conflict_slots::build("CELL", versions, deleted, identities);
 
-		if (slot.indices[0] != SIZE_MAX && slot.indices[1] != SIZE_MAX)
-		{
-			found_frmr_aligned = true;
-			break;
-		}
-	}
-
-	REQUIRE(found_frmr_aligned);
+	REQUIRE(count_frmr_slots(result) == 1);
+	REQUIRE(frmr_slot_spans(result, 0, 1));
 }
 
-TEST_CASE("conflict_slots::build, different refs stay separate", "[u]")
+TEST_CASE("conflict_slots::build, two plugins adding same low index stay separate", "[u]")
 {
 	auto header_subs = make_sub("NAME", make_string("TestCell")) + make_sub("DATA", std::string(12, '\0'));
 
-	auto ref_a = make_sub("FRMR", make_uint32(0x00000001)) + make_sub("NAME", make_string("item_a")) +
+	auto ref_a = make_sub("FRMR", make_uint32(0x00000005)) + make_sub("NAME", make_string("green_1000_01")) +
 	             make_sub("DATA", make_position());
 
-	auto ref_b = make_sub("FRMR", make_uint32(0x00000002)) + make_sub("NAME", make_string("item_b")) +
+	auto ref_b = make_sub("FRMR", make_uint32(0x00000005)) + make_sub("NAME", make_string("ingred_fire_petal_01")) +
 	             make_sub("DATA", make_position());
 
 	auto content_v1 = make_record("CELL", header_subs + ref_a);
@@ -135,16 +156,134 @@ TEST_CASE("conflict_slots::build, different refs stay separate", "[u]")
 
 	std::vector<std::string> versions = { content_v1, content_v2 };
 	std::vector<bool> deleted = { false, false };
-	auto result = conflict_slots::build("CELL", versions, deleted);
+	std::vector<std::vector<uint64_t>> identities = { { ref_key(1, 5) }, { ref_key(2, 5) } };
 
-	int frmr_slot_count = 0;
-	for (const auto & slot : result.aligned)
-	{
-		if (slot.key.type == "FRMR")
-			++frmr_slot_count;
-	}
+	auto result = conflict_slots::build("CELL", versions, deleted, identities);
 
-	REQUIRE(frmr_slot_count == 2);
+	REQUIRE(count_frmr_slots(result) == 2);
+	REQUIRE_FALSE(frmr_slot_spans(result, 0, 1));
+}
+
+TEST_CASE("conflict_slots::build, master override and unrelated new ref split into two groups", "[u]")
+{
+	auto header_subs = make_sub("NAME", make_string("TestCell")) + make_sub("DATA", std::string(12, '\0'));
+
+	auto ref_door_master = make_sub("FRMR", make_uint32(0x00000005)) + make_sub("NAME", make_string("door_01")) +
+	                       make_sub("DATA", make_position());
+
+	auto ref_door_override = make_sub("FRMR", make_uint32(0x01000005)) + make_sub("NAME", make_string("door_01")) +
+	                         make_sub("DATA", make_position());
+
+	auto ref_new_barrel = make_sub("FRMR", make_uint32(0x00000005)) + make_sub("NAME", make_string("barrel_07")) +
+	                      make_sub("DATA", make_position());
+
+	auto content_master = make_record("CELL", header_subs + ref_door_master);
+	auto content_a = make_record("CELL", header_subs + ref_door_override);
+	auto content_b = make_record("CELL", header_subs + ref_new_barrel);
+
+	std::vector<std::string> versions = { content_master, content_a, content_b };
+	std::vector<bool> deleted = { false, false, false };
+	std::vector<std::vector<uint64_t>> identities = {
+		{ ref_key(0, 5) },
+		{ ref_key(0, 5) },
+		{ ref_key(2, 5) },
+	};
+
+	auto result = conflict_slots::build("CELL", versions, deleted, identities);
+
+	REQUIRE(count_frmr_slots(result) == 2);
+	REQUIRE(frmr_slot_spans(result, 0, 1));
+	REQUIRE_FALSE(frmr_slot_spans(result, 0, 2));
+}
+
+TEST_CASE("conflict_slots::build, multiple overrides of same master ref align into one group", "[u]")
+{
+	auto header_subs = make_sub("NAME", make_string("TestCell")) + make_sub("DATA", std::string(12, '\0'));
+
+	auto ref_master = make_sub("FRMR", make_uint32(0x00000005)) + make_sub("NAME", make_string("urn_01")) +
+	                  make_sub("DATA", make_position());
+
+	auto ref_a = make_sub("FRMR", make_uint32(0x01000005)) + make_sub("NAME", make_string("urn_01")) +
+	             make_sub("DATA", make_position());
+
+	auto ref_b = make_sub("FRMR", make_uint32(0x01000005)) + make_sub("NAME", make_string("urn_01")) +
+	             make_sub("DATA", make_position());
+
+	auto content_master = make_record("CELL", header_subs + ref_master);
+	auto content_a = make_record("CELL", header_subs + ref_a);
+	auto content_b = make_record("CELL", header_subs + ref_b);
+
+	std::vector<std::string> versions = { content_master, content_a, content_b };
+	std::vector<bool> deleted = { false, false, false };
+	std::vector<std::vector<uint64_t>> identities = {
+		{ ref_key(0, 5) },
+		{ ref_key(0, 5) },
+		{ ref_key(0, 5) },
+	};
+
+	auto result = conflict_slots::build("CELL", versions, deleted, identities);
+
+	REQUIRE(count_frmr_slots(result) == 1);
+	REQUIRE(frmr_slot_spans(result, 0, 1));
+	REQUIRE(frmr_slot_spans(result, 1, 2));
+}
+
+TEST_CASE("conflict_slots::build, override targeting different master stays separate", "[u]")
+{
+	auto header_subs = make_sub("NAME", make_string("TestCell")) + make_sub("DATA", std::string(12, '\0'));
+
+	auto ref_morrowind = make_sub("FRMR", make_uint32(0x00000005)) + make_sub("NAME", make_string("statue_01")) +
+	                     make_sub("DATA", make_position());
+
+	auto ref_tribunal_override = make_sub("FRMR", make_uint32(0x02000005)) + make_sub("NAME", make_string("statue_02")) +
+	                             make_sub("DATA", make_position());
+
+	auto content_v1 = make_record("CELL", header_subs + ref_morrowind);
+	auto content_v2 = make_record("CELL", header_subs + ref_tribunal_override);
+
+	std::vector<std::string> versions = { content_v1, content_v2 };
+	std::vector<bool> deleted = { false, false };
+	std::vector<std::vector<uint64_t>> identities = { { ref_key(0, 5) }, { ref_key(1, 5) } };
+
+	auto result = conflict_slots::build("CELL", versions, deleted, identities);
+
+	REQUIRE(count_frmr_slots(result) == 2);
+	REQUIRE_FALSE(frmr_slot_spans(result, 0, 1));
+}
+
+TEST_CASE("ref_key_t::operator==, same refnum and object id are equal", "[u]")
+{
+	ref_key_t key_a { ref_key(0, 0x020164), "door_01" };
+	ref_key_t key_b { ref_key(0, 0x020164), "door_01" };
+
+	REQUIRE(key_a == key_b);
+}
+
+TEST_CASE("ref_key_t::operator==, same low index different object id stay distinct", "[u]")
+{
+	ref_key_t green { ref_key(1, 5), "green_1000_01" };
+	ref_key_t petal { ref_key(2, 5), "ingred_fire_petal_01" };
+	ref_key_t candle { ref_key(3, 5), "light_com_candle_07" };
+
+	REQUIRE_FALSE(green == petal);
+	REQUIRE_FALSE(petal == candle);
+	REQUIRE_FALSE(green == candle);
+}
+
+TEST_CASE("ref_key_t::operator==, same refnum different object id not equal", "[u]")
+{
+	ref_key_t statue_a { ref_key(0, 5), "statue_01" };
+	ref_key_t statue_b { ref_key(0, 5), "statue_02" };
+
+	REQUIRE_FALSE(statue_a == statue_b);
+}
+
+TEST_CASE("ref_key_t::operator==, master ref and override share one key", "[u]")
+{
+	ref_key_t master_ref { ref_key(0, 0x035019), "urn_01" };
+	ref_key_t override_ref { ref_key(0, 0x035019), "urn_01" };
+
+	REQUIRE(master_ref == override_ref);
 }
 
 TEST_CASE("record_conflict::compute_conflict_all_skip_empty, ignores non-existent", "[u]")
@@ -221,6 +360,24 @@ TEST_CASE("record_conflict::find_conflict_policy, unknown type returns default",
 {
 	const auto policy = record_conflict::find_conflict_policy("NPC_", "DATA");
 	REQUIRE(policy.skip_non_existent == false);
+}
+
+TEST_CASE("record_conflict::find_conflict_policy, CELL NAM0 ignores conflict", "[u]")
+{
+	const auto policy = record_conflict::find_conflict_policy("CELL", "NAM0");
+	REQUIRE(policy.ignore_conflict == true);
+}
+
+TEST_CASE("record_conflict::find_conflict_policy, CELL DATA does not ignore conflict", "[u]")
+{
+	const auto policy = record_conflict::find_conflict_policy("CELL", "DATA");
+	REQUIRE(policy.ignore_conflict == false);
+}
+
+TEST_CASE("record_conflict::find_conflict_policy, unknown type does not ignore conflict", "[u]")
+{
+	const auto policy = record_conflict::find_conflict_policy("NPC_", "DATA");
+	REQUIRE(policy.ignore_conflict == false);
 }
 
 TEST_CASE("record_conflict::non_existent_value, cannot collide with format_value_full", "[u]")
@@ -304,7 +461,8 @@ TEST_CASE("conflict_slots::build, NAM0 appears in header slots", "[u]")
 
 	std::vector<std::string> versions = { content };
 	std::vector<bool> deleted = { false };
-	auto result = conflict_slots::build("CELL", versions, deleted);
+	std::vector<std::vector<uint64_t>> identities = { { ref_key(0, 1) } };
+	auto result = conflict_slots::build("CELL", versions, deleted, identities);
 
 	bool found_nam0 = false;
 	for (const auto & slot : result.aligned)
@@ -331,7 +489,8 @@ TEST_CASE("conflict_slots::build, header sub-records before first FRMR", "[u]")
 
 	std::vector<std::string> versions = { content };
 	std::vector<bool> deleted = { false };
-	auto result = conflict_slots::build("CELL", versions, deleted);
+	std::vector<std::vector<uint64_t>> identities = { { ref_key(0, 100) } };
+	auto result = conflict_slots::build("CELL", versions, deleted, identities);
 
 	int header_types_found = 0;
 	for (const auto & slot : result.aligned)

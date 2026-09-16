@@ -9,9 +9,11 @@ using enum sub_rule_flag_t;
 static constexpr sub_record_rule_t cell_wildcard = { "*", 0, skip_non_existent };
 
 static constexpr sub_record_rule_t cell_sub_rules[] = {
-	{ "NAM0", 0, skip_emit },
+	{ "NAM0", 0, skip_emit | ignore_conflict },
 	{ "FRMR", 0, merge_boundary },
 };
+
+static constexpr frmr_group_merge_rule_t cell_frmr_group_merge = { "FRMR", "ANAM" };
 
 static constexpr field_pair_rule_t crea_npdt_attack_pairs[] = {
 	{ 68, 72, 4 },
@@ -108,7 +110,8 @@ static constexpr record_behavior_t behavior_table[] = {
 	  .copy_strategy = copy_strategy_t::header_and_selected_group,
 	  .sub_rules = cell_sub_rules,
 	  .sub_rule_count = 2,
-	  .wildcard_rule = &cell_wildcard },
+	  .wildcard_rule = &cell_wildcard,
+	  .frmr_group_merge_rule = &cell_frmr_group_merge },
 	{ .record_type = "LEVI",
 	  .decode_mode = decode_mode_t::leveled,
 	  .sub_rules = levi_sub_rules,
@@ -299,6 +302,15 @@ bool record_allows_lock(const std::string & record_type)
 bool record_allows_exclude(const std::string & record_type)
 {
 	return find_record_behavior(record_type)->allows_exclude;
+}
+
+const frmr_group_merge_rule_t * frmr_group_merge_rule_for(const std::string & record_type)
+{
+	const auto * behavior = find_record_behavior(record_type);
+	if (!behavior)
+		return nullptr;
+
+	return behavior->frmr_group_merge_rule;
 }
 
 const sub_record_rule_t * find_sub_record_rule(

@@ -8,14 +8,38 @@
 
 static constexpr uint32_t frmr_ref_index_mask = 0x00FFFFFF;
 
-inline uint32_t read_frmr_ref_index(const char * data, size_t size)
+inline uint32_t read_frmr_raw_index(const char * data, size_t size)
 {
 	uint32_t raw_value = 0;
 	if (size >= 4)
 		std::memcpy(&raw_value, data, 4);
 
-	return raw_value & frmr_ref_index_mask;
+	return raw_value;
 }
+
+inline uint32_t read_frmr_ref_index(const char * data, size_t size)
+{
+	return read_frmr_raw_index(data, size) & frmr_ref_index_mask;
+}
+
+struct ref_key_t
+{
+	uint64_t refnum = 0;
+	std::string object_id;
+
+	bool operator==(const ref_key_t & other) const
+	{
+		return refnum == other.refnum && object_id == other.object_id;
+	}
+
+	bool operator<(const ref_key_t & other) const
+	{
+		if (refnum != other.refnum)
+			return refnum < other.refnum;
+
+		return object_id < other.object_id;
+	}
+};
 
 struct sub_record_view_t
 {

@@ -192,7 +192,10 @@ void auto_merge_t::process_leveled_list(const record_group_t & group, merge_coun
 	++counters.lists;
 }
 
-void auto_merge_t::apply_patch_priority(const record_group_t & group, std::vector<std::string> & contents)
+void auto_merge_t::apply_patch_priority(
+    const record_group_t & group,
+    std::vector<std::string> & contents,
+    std::vector<std::vector<uint64_t>> & ref_identities)
 {
 	if (m_config.patch_plugins.empty())
 		return;
@@ -216,6 +219,9 @@ void auto_merge_t::apply_patch_priority(const record_group_t & group, std::vecto
 			continue;
 
 		contents.back() = contents[v];
+		if (!ref_identities.empty())
+			ref_identities.back() = ref_identities[v];
+
 		add_log("[info] patch priority: " + group.rec_type + " \"" + group.record_id + "\" (" + filename + ")");
 		return;
 	}
@@ -224,12 +230,22 @@ void auto_merge_t::apply_patch_priority(const record_group_t & group, std::vecto
 void auto_merge_t::process_three_way(const record_group_t & group, merge_counters_t & counters)
 {
 	auto contents = read_version_contents(group);
-	apply_patch_priority(group, contents);
+
+	std::vector<std::vector<uint64_t>> ref_identities;
+	if (group.rec_type == "CELL")
+	{
+		ref_identities.resize(contents.size());
+		for (size_t v = 0; v < contents.size(); ++v)
+			ref_identities[v] = m_scan.cell_ref_identities(group.versions[v].plugin_idx, contents[v]);
+	}
+
+	apply_patch_priority(group, contents, ref_identities);
 
 	merge_input_t input;
 	input.rec_type = group.rec_type;
 	input.record_id = group.record_id;
 	input.version_contents = std::move(contents);
+	input.ref_identities = std::move(ref_identities);
 
 	for (size_t v = 1; v < group.versions.size() - 1; ++v)
 	{

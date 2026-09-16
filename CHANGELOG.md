@@ -3,6 +3,9 @@
 ## [XXX]
 
 ### yEditor
+- [NEW] When two plugins change the owner of the same placed object in a cell (the person or faction who gets angry if you steal it), the merged patch now keeps that owner change instead of losing it. Only the owner is merged: the object otherwise stays exactly as the winning plugin left it, and no other placed objects are copied. This applies to changing an owner, adding one, or clearing one
+- [FIX] The cell conflict view no longer lines up unrelated placed objects as if they were the same object. When separate plugins each add their own object to a cell, those objects can share an internal slot number, and they were being shown stacked in one row with mismatched values. Objects are now matched by their true identity, so a plugin's edit to a base-game object still lines up with the original, while objects added independently by different plugins are shown as separate entries
+- [FIX] A cell that differs between plugins only in its internal object count is no longer flagged as a conflict or override. That count is a meaningless bookkeeping value the game recalculates, so cells that are otherwise identical are now treated as identical
 - [FIX] Inventory and spell lists now merge correctly when the master record has none: an item or spell added by a plugin is kept in the merged patch even if the base game record had no inventory or spells at all. Previously the addition was dropped unless the master already listed at least one entry of that kind
 
 ## [0.1233] - 2026-09-15
