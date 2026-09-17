@@ -28,6 +28,28 @@ static bool check_all_identical(const std::vector<std::string> & values)
 	return true;
 }
 
+static void assign_field_row_conflict(
+    view_tree_model_t::view_node_t & field_row,
+    const conflict_policy_t & policy)
+{
+	if (policy.ignore_conflict)
+	{
+		field_row.row_conflict_all = conflict_all_t::only_one;
+		field_row.cell_conflict_this.assign(field_row.values.size(), conflict_this_t::identical_to_master);
+		return;
+	}
+
+	if (policy.skip_non_existent)
+	{
+		field_row.row_conflict_all = record_conflict::compute_conflict_all_skip_empty(field_row.values);
+		field_row.cell_conflict_this = record_conflict::compute_conflict_this_skip_empty(field_row.values);
+		return;
+	}
+
+	field_row.row_conflict_all = record_conflict::compute_conflict_all(field_row.values);
+	field_row.cell_conflict_this = record_conflict::compute_conflict_this(field_row.values);
+}
+
 static std::string format_hex_chunk(const char * data_ptr, size_t data_size, size_t offset)
 {
 	if (offset >= data_size)
@@ -118,16 +140,7 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 	}
 	row.all_identical = all_same;
 
-	if (policy.skip_non_existent)
-	{
-		row.row_conflict_all = record_conflict::compute_conflict_all_skip_empty(row.values);
-		row.cell_conflict_this = record_conflict::compute_conflict_this_skip_empty(row.values);
-	}
-	else
-	{
-		row.row_conflict_all = record_conflict::compute_conflict_all(row.values);
-		row.cell_conflict_this = record_conflict::compute_conflict_this(row.values);
-	}
+	assign_field_row_conflict(row, policy);
 
 	const sub_record_schema_t * schema = nullptr;
 	if (first_data && has_content_dependent_schema(m_record_type, slot.type))
@@ -141,7 +154,7 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 		decode_hex_children(row, first_size, col_count, all_subs, col_indices, slot);
 	}
 
-	if (!row.children.empty())
+	if (!row.children.empty() && !policy.ignore_conflict)
 	{
 		row.row_conflict_all = conflict_all_t::unknown;
 		for (const auto & child : row.children)
@@ -235,12 +248,7 @@ void view_tree_model_t::decode_schema_children(
 				}
 
 				frow.all_identical = check_all_identical(frow.values);
-				frow.row_conflict_all = policy.skip_non_existent
-				                            ? record_conflict::compute_conflict_all_skip_empty(frow.values)
-				                            : record_conflict::compute_conflict_all(frow.values);
-				frow.cell_conflict_this = policy.skip_non_existent
-				                              ? record_conflict::compute_conflict_this_skip_empty(frow.values)
-				                              : record_conflict::compute_conflict_this(frow.values);
+				assign_field_row_conflict(frow, policy);
 
 				if (frow.row_conflict_all > flags_group.row_conflict_all)
 					flags_group.row_conflict_all = frow.row_conflict_all;
@@ -320,11 +328,7 @@ void view_tree_model_t::decode_schema_children(
 		}
 
 		frow.all_identical = check_all_identical(frow.values);
-		frow.row_conflict_all = policy.skip_non_existent ? record_conflict::compute_conflict_all_skip_empty(frow.values)
-		                                                 : record_conflict::compute_conflict_all(frow.values);
-		frow.cell_conflict_this = policy.skip_non_existent
-		                              ? record_conflict::compute_conflict_this_skip_empty(frow.values)
-		                              : record_conflict::compute_conflict_this(frow.values);
+		assign_field_row_conflict(frow, policy);
 
 		if (!fdef.group)
 		{
@@ -406,11 +410,7 @@ void view_tree_model_t::decode_hex_children(
 		}
 
 		frow.all_identical = check_all_identical(frow.values);
-		frow.row_conflict_all = policy.skip_non_existent ? record_conflict::compute_conflict_all_skip_empty(frow.values)
-		                                                 : record_conflict::compute_conflict_all(frow.values);
-		frow.cell_conflict_this = policy.skip_non_existent
-		                              ? record_conflict::compute_conflict_this_skip_empty(frow.values)
-		                              : record_conflict::compute_conflict_this(frow.values);
+		assign_field_row_conflict(frow, policy);
 		parent_row.children.push_back(std::move(frow));
 	}
 }
