@@ -1,4 +1,5 @@
 #include "plugin_scan.hpp"
+#include "../decoder/record_header_flags.hpp"
 #include "../decoder/sub_record_iter.hpp"
 #include "../decoder/sub_record_schema.hpp"
 #include "../decoder/view_tree_format.hpp"
@@ -405,6 +406,29 @@ const conflict_policy_t & plugin_scan_t::cached_conflict_policy(
 	return m_conflict_policy_cache.emplace(cache_key, policy).first->second;
 }
 
+static void accumulate_header_flags(
+    const slot_result_t & sr,
+    const std::vector<bool> & is_deleted,
+    conflict_accumulator_t & accum)
+{
+	constexpr uint32_t meaningful_flags = record_header_flags::persistent | record_header_flags::blocked;
+
+	std::vector<std::string> flag_values(sr.contents.size());
+	for (size_t vi = 0; vi < sr.contents.size(); ++vi)
+	{
+		if (is_deleted[vi])
+		{
+			flag_values[vi] = non_existent_value;
+			continue;
+		}
+
+		const uint32_t flags = record_header_flags::read_flags(sr.contents[vi]) & meaningful_flags;
+		flag_values[vi] = std::to_string(flags);
+	}
+
+	accum.accumulate(flag_values, true);
+}
+
 void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 {
 	const size_t ver_count = entry.versions.size();
@@ -451,6 +475,8 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 		else
 			accum.accumulate(slot_values, policy.skip_non_existent);
 	}
+
+	accumulate_header_flags(sr, is_deleted, accum);
 
 	entry.conflict_all = accum.worst_all;
 

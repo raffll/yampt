@@ -245,6 +245,48 @@ TEST_CASE("sub_record_merge_t::merge, preserves winner header flags", "[u]")
 	REQUIRE(output_flags == 0x0400);
 }
 
+TEST_CASE("sub_record_merge_t::merge, intermediate clears header flag winner unchanged", "[u]")
+{
+	auto subs = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("A"));
+
+	auto first = make_record("CREA", subs, 0x0400);
+	auto inter = make_record("CREA", subs, 0);
+	auto winner = make_record("CREA", subs, 0x0400);
+
+	merge_input_t input;
+	input.rec_type = "CREA";
+	input.record_id = "id";
+	input.version_contents = { first, inter, winner };
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	uint32_t output_flags = 0;
+	std::memcpy(&output_flags, result.content.data() + 12, 4);
+	REQUIRE(output_flags == 0);
+}
+
+TEST_CASE("sub_record_merge_t::merge, header flag set by intermediate winner unchanged", "[u]")
+{
+	auto subs = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("A"));
+
+	auto first = make_record("CREA", subs, 0);
+	auto inter = make_record("CREA", subs, 0x0400);
+	auto winner = make_record("CREA", subs, 0);
+
+	merge_input_t input;
+	input.rec_type = "CREA";
+	input.record_id = "id";
+	input.version_contents = { first, inter, winner };
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	uint32_t output_flags = 0;
+	std::memcpy(&output_flags, result.content.data() + 12, 4);
+	REQUIRE(output_flags == 0x0400);
+}
+
 TEST_CASE("sub_record_merge_t::merge, added sub-record preserved", "[u]")
 {
 	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("model.nif"));

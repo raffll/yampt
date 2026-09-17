@@ -1,4 +1,5 @@
 #include "sub_record_merge.hpp"
+#include "../decoder/record_header_flags.hpp"
 #include "../decoder/sub_record_iter.hpp"
 #include "../decoder/sub_record_schema.hpp"
 #include "../utility/app_logger.hpp"
@@ -1057,7 +1058,10 @@ merge_result_t sub_record_merge_t::merge_armor_parts(const merge_input_t & input
 	    [](const armor_part_group_t & lhs, const armor_part_group_t & rhs)
 	{ return lhs.armor_index < rhs.armor_index; });
 
-	const auto result = reconstruct_armor(winner_content, merged_header, merged_groups);
+	auto result = reconstruct_armor(winner_content, merged_header, merged_groups);
+
+	const uint32_t merged_flags = record_header_flags::merge_flags(versions);
+	record_header_flags::write_flags(result, merged_flags);
 
 	if (result == winner_content)
 		return { false, winner_content };
@@ -1424,10 +1428,14 @@ merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
 	output = merge_frmr_groups_phase(versions, input.ref_identities, output, input.rec_type);
 	const bool frmr_groups_added = output != output_before_frmr;
 
-	if (output == winner_subs && !variable_size_merged && !frmr_groups_added)
+	const uint32_t merged_flags = record_header_flags::merge_flags(versions);
+	const bool header_flags_changed = merged_flags != record_header_flags::read_flags(winner_content);
+
+	if (output == winner_subs && !variable_size_merged && !frmr_groups_added && !header_flags_changed)
 		return { false, winner_content };
 
-	const auto result = reconstruct_record(winner_content, output);
+	auto result = reconstruct_record(winner_content, output);
+	record_header_flags::write_flags(result, merged_flags);
 	return { true, result };
 }
 
@@ -1801,11 +1809,13 @@ merge_result_t leveled_list_merge_t::merge(const merge_input_t & input)
 	sort_merged_items(merged);
 
 	const auto header_part = merge_header_part(versions, input.rec_type);
-	const auto record = build_merged_list_record(input.rec_type, header_part, merged);
+	auto record = build_merged_list_record(input.rec_type, header_part, merged);
+	record_header_flags::write_flags(record, record_header_flags::merge_flags(versions));
 
 	sort_merged_items(master_items);
 	const auto master_header_part = merge_header_part({ first_content, first_content }, input.rec_type);
-	const auto master_record = build_merged_list_record(input.rec_type, master_header_part, master_items);
+	auto master_record = build_merged_list_record(input.rec_type, master_header_part, master_items);
+	record_header_flags::write_flags(master_record, record_header_flags::read_flags(first_content));
 
 	if (record == master_record)
 		return { false, first_content };

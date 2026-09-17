@@ -187,6 +187,7 @@
     <ClCompile Include="source\decoder\conflict_slots.cpp" />
     <ClCompile Include="source\decoder\field_validator.cpp" />
     <ClCompile Include="source\decoder\field_encoder.cpp" />
+    <ClCompile Include="source\decoder\record_header_flags.cpp" />
     <ClCompile Include="source\decoder\sub_record_schema.cpp" />
     <ClCompile Include="source\decoder\view_group_def.cpp" />
     <ClCompile Include="source\decoder\content_alignment.cpp" />
@@ -258,6 +259,7 @@
     <ClInclude Include="source\decoder\sub_record_iter.hpp" />
     <ClInclude Include="source\decoder\field_validator.hpp" />
     <ClInclude Include="source\decoder\field_encoder.hpp" />
+    <ClInclude Include="source\decoder\record_header_flags.hpp" />
     <ClInclude Include="source\decoder\sub_record_schema.hpp" />
     <ClInclude Include="source\decoder\view_group_def.hpp" />
     <ClInclude Include="source\decoder\content_alignment.hpp" />

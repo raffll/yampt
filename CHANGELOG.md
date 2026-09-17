@@ -7,6 +7,7 @@
 - [FIX] The cell conflict view no longer lines up unrelated placed objects as if they were the same object. When separate plugins each add their own object to a cell, those objects can share an internal slot number, and they were being shown stacked in one row with mismatched values. Objects are now matched by their true identity, so a plugin's edit to a base-game object still lines up with the original, while objects added independently by different plugins are shown as separate entries
 - [FIX] A cell that differs between plugins only in its internal object count is no longer flagged as a conflict or override. That count is a meaningless bookkeeping value the game recalculates, so cells that are otherwise identical are now treated as identical
 - [FIX] Inventory and spell lists now merge correctly when the master record has none: an item or spell added by a plugin is kept in the merged patch even if the base game record had no inventory or spells at all. Previously the addition was dropped unless the master already listed at least one entry of that kind
+- [FIX] A record's Persistent and Blocked flags now merge across plugins instead of always taking the winning plugin's value. When one plugin changes a flag and another leaves it as the original, the change is kept, and the two flags merge independently so a change to one never discards a change to the other. Differences in these flags now also show as conflicts in the record view
 
 ## [0.1233] - 2026-09-15
 

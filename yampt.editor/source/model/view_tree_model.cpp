@@ -1,6 +1,7 @@
 #include "view_tree_model.hpp"
 #include "../view/plugin_icon.hpp"
 #include "editable_column_set.hpp"
+#include <decoder/record_header_flags.hpp>
 #include <decoder/view_tree_format.hpp>
 #include <scanner/record_conflict.hpp>
 #include <utility/record_behavior.hpp>
@@ -173,7 +174,6 @@ size_t view_tree_model_t::setup_columns(plugin_scan_t & scan, const conflict_ent
 static std::string read_record_flag_bit(plugin_scan_t & scan, const record_version_t & ver, uint32_t mask)
 {
 	static constexpr size_t record_header_size = 16;
-	static constexpr size_t flags_offset = 12;
 
 	std::string content;
 	if (scan.is_active_plugin(ver.plugin_idx))
@@ -191,10 +191,7 @@ static std::string read_record_flag_bit(plugin_scan_t & scan, const record_versi
 	if (content.size() < record_header_size)
 		return non_existent_value;
 
-	uint32_t flags = 0;
-	std::memcpy(&flags, content.data() + flags_offset, 4);
-
-	return (flags & mask) ? "Yes" : "No";
+	return (record_header_flags::read_flags(content) & mask) ? "Yes" : "No";
 }
 
 static bool check_all_identical(const std::vector<std::string> & values)
@@ -234,8 +231,8 @@ void view_tree_model_t::build_header_row(plugin_scan_t & scan, const conflict_en
 	flags_group.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
 	flags_group.row_conflict_all = conflict_all_t::only_one;
 
-	static constexpr std::array<std::pair<const char *, uint32_t>, 2> record_flag_bits = {
-		{ { "Persistent", 0x00000400 }, { "Blocked", 0x00002000 } }
+	static const std::array<std::pair<const char *, uint32_t>, 2> record_flag_bits = {
+		{ { "Persistent", record_header_flags::persistent }, { "Blocked", record_header_flags::blocked } }
 	};
 
 	for (const auto & flag_bit : record_flag_bits)
