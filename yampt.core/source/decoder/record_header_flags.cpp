@@ -1,8 +1,7 @@
 #include "record_header_flags.hpp"
 #include <cstring>
 
-namespace record_header_flags
-{
+namespace record_header_flags {
 static bool intermediate_claims_bit(uint32_t first, uint32_t inter, uint32_t winner, uint32_t current, uint32_t mask)
 {
 	const bool inter_changed = (inter & mask) != (first & mask);

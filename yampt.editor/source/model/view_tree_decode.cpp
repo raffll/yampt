@@ -28,9 +28,7 @@ static bool check_all_identical(const std::vector<std::string> & values)
 	return true;
 }
 
-static void assign_field_row_conflict(
-    view_tree_model_t::view_node_t & field_row,
-    const conflict_policy_t & policy)
+static void assign_field_row_conflict(view_tree_model_t::view_node_t & field_row, const conflict_policy_t & policy)
 {
 	if (policy.ignore_conflict)
 	{
@@ -307,8 +305,8 @@ void view_tree_model_t::decode_schema_children(
 			if (column_schema == nullptr)
 			{
 				app_logger_t::add_log(
-				    "[error] no schema for " + m_record_type + " " + slot.type + " size " +
-				        std::to_string(sv.size) + "\r\n",
+				    "[error] no schema for " + m_record_type + " " + slot.type + " size " + std::to_string(sv.size) +
+				        "\r\n",
 				    true);
 				frow.values[col] = non_existent_value;
 				continue;

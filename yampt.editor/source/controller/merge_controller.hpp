@@ -90,7 +90,6 @@ public:
 	void toggle_active_lock(const merge_lock_t & lock);
 	bool is_active_locked(const merge_lock_t & lock) const;
 
-
 	void save_active_plugin();
 	void sync_active_locks();
 

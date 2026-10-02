@@ -188,7 +188,10 @@ static bool intermediate_claims_span(
 	return inter_changed && winner_unchanged && current_unclaimed;
 }
 
-static void merge_field_bits(std::string & result, const sub_record_merge_t::field_merge_input_t & input, const field_def_t & field)
+static void merge_field_bits(
+    std::string & result,
+    const sub_record_merge_t::field_merge_input_t & input,
+    const field_def_t & field)
 {
 	const size_t width = flag_byte_width(field);
 
@@ -215,7 +218,10 @@ static void merge_field_bits(std::string & result, const sub_record_merge_t::fie
 	}
 }
 
-static void merge_bool_bit(std::string & result, const sub_record_merge_t::field_merge_input_t & input, const field_def_t & field)
+static void merge_bool_bit(
+    std::string & result,
+    const sub_record_merge_t::field_merge_input_t & input,
+    const field_def_t & field)
 {
 	const size_t offset = field.offset;
 	if (offset >= input.size)
@@ -240,7 +246,10 @@ static size_t field_span(const field_def_t & field, size_t size)
 	return field.size;
 }
 
-static void merge_value_field(std::string & result, const sub_record_merge_t::field_merge_input_t & input, const field_def_t & field)
+static void merge_value_field(
+    std::string & result,
+    const sub_record_merge_t::field_merge_input_t & input,
+    const field_def_t & field)
 {
 	const size_t length = field_span(field, input.size);
 	if (length == 0 || field.offset + length > input.size)
@@ -300,7 +309,8 @@ std::vector<sub_record_merge_t::keyed_item_t> sub_record_merge_t::keyed_list_mer
 	for (const auto & item : master)
 		master_data.emplace(item.key, item.data);
 
-	auto find_in_version = [](const std::vector<keyed_item_t> & version, const std::string & key) -> const keyed_item_t *
+	auto find_in_version = [](const std::vector<keyed_item_t> & version,
+	                          const std::string & key) -> const keyed_item_t *
 	{
 		for (const auto & item : version)
 		{
@@ -421,11 +431,9 @@ static void fix_paired_fields(
 	}
 }
 
-static constexpr field_pair_rule_t enam_magnitude_pair = {
-	enam_layout::magnitude_min_offset,
-	enam_layout::magnitude_max_offset,
-	enam_layout::magnitude_field_size
-};
+static constexpr field_pair_rule_t enam_magnitude_pair = { enam_layout::magnitude_min_offset,
+	                                                       enam_layout::magnitude_max_offset,
+	                                                       enam_layout::magnitude_field_size };
 
 static void fix_magnitude_pair(
     std::string & result,
@@ -439,11 +447,7 @@ static void fix_magnitude_pair(
 	result.replace(slot_offset, enam_slot_size, merged_slot);
 }
 
-static std::string merge_enam_slot_bytes(
-    const char * first,
-    const char * inter,
-    const char * winner,
-    size_t size)
+static std::string merge_enam_slot_bytes(const char * first, const char * inter, const char * winner, size_t size)
 {
 	std::string result(winner, size);
 
@@ -609,12 +613,10 @@ void sub_record_merge_t::apply_intermediate(
 		if (output_idx < 0)
 			continue;
 
-		const matched_entry_t entries {
-			first[static_cast<size_t>(first_idx)],
-			intermediate[i],
-			winner[static_cast<size_t>(winner_idx)],
-			output[static_cast<size_t>(output_idx)]
-		};
+		const matched_entry_t entries { first[static_cast<size_t>(first_idx)],
+			                            intermediate[i],
+			                            winner[static_cast<size_t>(winner_idx)],
+			                            output[static_cast<size_t>(output_idx)] };
 
 		merge_matched_entry(entries, rec_type);
 	}
@@ -632,15 +634,9 @@ void sub_record_merge_t::merge_matched_entry(const matched_entry_t & entries, co
 
 	if (same_size && has_schema(rec_type, entries.inter_entry.type))
 	{
-		const field_merge_input_t input {
-			rec_type,
-			entries.inter_entry.type,
-			first_data.data(),
-			inter_data.data(),
-			winner_data.data(),
-			entries.output_entry.data.data(),
-			first_data.size()
-		};
+		const field_merge_input_t input { rec_type,          entries.inter_entry.type, first_data.data(),
+			                              inter_data.data(), winner_data.data(),       entries.output_entry.data.data(),
+			                              first_data.size() };
 
 		entries.output_entry.data = merge_fields_three_way(input);
 		apply_paired_rules(entries.output_entry.data, first_data, entries.inter_entry, winner_data, rec_type);
@@ -716,8 +712,7 @@ frmr_map_t sub_record_merge_t::build_frmr_map(const std::vector<frmr_group_t> & 
 	return result;
 }
 
-namespace
-{
+namespace {
 
 struct anam_state_t
 {
@@ -1136,8 +1131,7 @@ static std::vector<sub_record_merge_t::keyed_item_t> collect_faction_reactions(
 		    &existing_value,
 		    it_existing->second.data(),
 		    std::min<size_t>(fact_layout::reaction_value_size, it_existing->second.size()));
-		std::memcpy(
-		    &new_value, value.data(), std::min<size_t>(fact_layout::reaction_value_size, value.size()));
+		std::memcpy(&new_value, value.data(), std::min<size_t>(fact_layout::reaction_value_size, value.size()));
 
 		if (new_value < existing_value)
 			it_existing->second = value;

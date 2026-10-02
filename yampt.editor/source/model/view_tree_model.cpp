@@ -12,8 +12,8 @@
 #include <iterator>
 #include <map>
 #include <set>
-#include <utility>
 #include <theme_system.hpp>
+#include <utility>
 #include <QBrush>
 #include <QCoreApplication>
 #include <QFont>

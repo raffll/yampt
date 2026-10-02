@@ -328,8 +328,8 @@ TEST_CASE("leveled_list_merge_t::merge, plugin changes entry PC level wins", "[u
 TEST_CASE("leveled_list_merge_t::merge, unchanged level keeps master value", "[u]")
 {
 	auto first_subs = make_levi_header("list_id", 1, 0, 1) + make_levi_entry("dwe_long", 13);
-	auto mod_subs = make_levi_header("list_id", 1, 0, 2) + make_levi_entry("dwe_long", 13) +
-	                make_levi_entry("new_item", 5);
+	auto mod_subs =
+	    make_levi_header("list_id", 1, 0, 2) + make_levi_entry("dwe_long", 13) + make_levi_entry("new_item", 5);
 
 	leveled_list_input_t input;
 	input.rec_type = "LEVI";
@@ -432,8 +432,8 @@ TEST_CASE("leveled_list_merge_t::merge, two mods same count is not summed", "[u]
 TEST_CASE("leveled_list_merge_t::merge, last plugin count wins on conflict", "[u]")
 {
 	auto first_subs = make_levi_header("list_id", 1, 0, 1) + make_levi_entry("iron_sword", 1);
-	auto mod1_subs = make_levi_header("list_id", 1, 0, 2) + make_levi_entry("iron_sword", 1) +
-	                 make_levi_entry("iron_sword", 1);
+	auto mod1_subs =
+	    make_levi_header("list_id", 1, 0, 2) + make_levi_entry("iron_sword", 1) + make_levi_entry("iron_sword", 1);
 	auto mod2_subs = make_levi_header("list_id", 1, 0, 5) + make_levi_entry("iron_sword", 1) +
 	                 make_levi_entry("iron_sword", 1) + make_levi_entry("iron_sword", 1) +
 	                 make_levi_entry("iron_sword", 1) + make_levi_entry("iron_sword", 1);
@@ -454,12 +454,12 @@ TEST_CASE("leveled_list_merge_t::merge, last plugin count wins on conflict", "[u
 
 TEST_CASE("leveled_list_merge_t::merge, unchanged count keeps master", "[u]")
 {
-	auto first_subs = make_levi_header("list_id", 1, 0, 2) + make_levi_entry("iron_sword", 1) +
-	                  make_levi_entry("iron_sword", 1);
-	auto mod1_subs = make_levi_header("list_id", 1, 0, 2) + make_levi_entry("iron_sword", 1) +
-	                 make_levi_entry("iron_sword", 1);
-	auto mod2_subs = make_levi_header("list_id", 1, 0, 2) + make_levi_entry("iron_sword", 1) +
-	                 make_levi_entry("iron_sword", 1);
+	auto first_subs =
+	    make_levi_header("list_id", 1, 0, 2) + make_levi_entry("iron_sword", 1) + make_levi_entry("iron_sword", 1);
+	auto mod1_subs =
+	    make_levi_header("list_id", 1, 0, 2) + make_levi_entry("iron_sword", 1) + make_levi_entry("iron_sword", 1);
+	auto mod2_subs =
+	    make_levi_header("list_id", 1, 0, 2) + make_levi_entry("iron_sword", 1) + make_levi_entry("iron_sword", 1);
 
 	leveled_list_input_t input;
 	input.rec_type = "LEVI";
@@ -480,8 +480,8 @@ TEST_CASE("leveled_list_merge_t::merge, added item count from last plugin", "[u]
 	auto first_subs = make_levi_header("list_id", 1, 0, 0);
 	auto mod1_subs = make_levi_header("list_id", 1, 0, 3) + make_levi_entry("new_item", 1) +
 	                 make_levi_entry("new_item", 1) + make_levi_entry("new_item", 1);
-	auto mod2_subs = make_levi_header("list_id", 1, 0, 2) + make_levi_entry("new_item", 1) +
-	                 make_levi_entry("new_item", 1);
+	auto mod2_subs =
+	    make_levi_header("list_id", 1, 0, 2) + make_levi_entry("new_item", 1) + make_levi_entry("new_item", 1);
 
 	leveled_list_input_t input;
 	input.rec_type = "LEVI";
@@ -518,15 +518,15 @@ TEST_CASE("auto_merge_t::execute, leveled list entry level merges from plugin fi
 {
 	namespace fs = std::filesystem;
 
-	const auto master_body = make_tes3_header_record() +
-	                         make_record("LEVI", make_levi_header("test_list", 1, 0, 1) +
-	                                                 make_levi_entry("dwe_long", 13));
-	const auto plugin_body = make_tes3_header_record() +
-	                         make_record("LEVI", make_levi_header("test_list", 1, 0, 1) +
-	                                                 make_levi_entry("dwe_long", 14));
-	const auto revert_body = make_tes3_header_record() +
-	                         make_record("LEVI", make_levi_header("test_list", 1, 0, 1) +
-	                                                 make_levi_entry("dwe_long", 13));
+	const auto master_body =
+	    make_tes3_header_record() +
+	    make_record("LEVI", make_levi_header("test_list", 1, 0, 1) + make_levi_entry("dwe_long", 13));
+	const auto plugin_body =
+	    make_tes3_header_record() +
+	    make_record("LEVI", make_levi_header("test_list", 1, 0, 1) + make_levi_entry("dwe_long", 14));
+	const auto revert_body =
+	    make_tes3_header_record() +
+	    make_record("LEVI", make_levi_header("test_list", 1, 0, 1) + make_levi_entry("dwe_long", 13));
 
 	const auto master_path = temp_plugin_path("yampt_levi_master.esm");
 	const auto plugin_path = temp_plugin_path("yampt_levi_plugin.esp");
@@ -596,8 +596,7 @@ TEST_CASE("leveled_list_merge_t::merge, DATA flags merge per bit", "[u]")
 TEST_CASE("leveled_list_merge_t::merge, DATA unchanged flag keeps master bit", "[u]")
 {
 	auto first_subs = make_levi_header("list_id", 1, 0, 1) + make_levi_entry("item_a", 1);
-	auto mod_subs = make_levi_header("list_id", 3, 0, 2) + make_levi_entry("item_a", 1) +
-	                make_levi_entry("item_b", 2);
+	auto mod_subs = make_levi_header("list_id", 3, 0, 2) + make_levi_entry("item_a", 1) + make_levi_entry("item_b", 2);
 
 	leveled_list_input_t input;
 	input.rec_type = "LEVI";
@@ -617,14 +616,13 @@ TEST_CASE("auto_merge_t::execute, leveled list DATA flags merge per bit from plu
 	namespace fs = std::filesystem;
 
 	const auto master_body = make_tes3_header_record() +
-	                         make_record("LEVI", make_levi_header("flag_list", 0, 0, 1) +
-	                                                 make_levi_entry("item_a", 1));
-	const auto plugin1_body = make_tes3_header_record() +
-	                          make_record("LEVI", make_levi_header("flag_list", 1, 0, 1) +
-	                                                  make_levi_entry("item_a", 1));
-	const auto plugin2_body = make_tes3_header_record() +
-	                          make_record("LEVI", make_levi_header("flag_list", 2, 0, 1) +
-	                                                  make_levi_entry("item_a", 1));
+	                         make_record("LEVI", make_levi_header("flag_list", 0, 0, 1) + make_levi_entry("item_a", 1));
+	const auto plugin1_body =
+	    make_tes3_header_record() +
+	    make_record("LEVI", make_levi_header("flag_list", 1, 0, 1) + make_levi_entry("item_a", 1));
+	const auto plugin2_body =
+	    make_tes3_header_record() +
+	    make_record("LEVI", make_levi_header("flag_list", 2, 0, 1) + make_levi_entry("item_a", 1));
 
 	const auto master_path = temp_plugin_path("yampt_levi_flag_master.esm");
 	const auto plugin1_path = temp_plugin_path("yampt_levi_flag_p1.esp");
@@ -654,9 +652,7 @@ TEST_CASE("auto_merge_t::execute, leveled list DATA flags merge per bit from plu
 
 static std::string make_npc_record(const std::string & npc_id, uint32_t flag_value)
 {
-	return make_record(
-	    "NPC_",
-	    make_sub("NAME", make_string(npc_id)) + make_sub("FLAG", make_uint32(flag_value)));
+	return make_record("NPC_", make_sub("NAME", make_string(npc_id)) + make_sub("FLAG", make_uint32(flag_value)));
 }
 
 static uint32_t read_npc_flag(const std::string & content)

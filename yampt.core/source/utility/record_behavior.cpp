@@ -180,32 +180,21 @@ static constexpr record_behavior_t behavior_table[] = {
 	  .armor_part_sub_types = armor_part_sub_types,
 	  .armor_part_sub_type_count = 2 },
 	{ .record_type = "SCPT", .merge_excluded = true },
-	{ .record_type = "ENCH",
-	  .paired_rules = enam_paired_rules,
-	  .paired_rule_count = 1,
-	  .enam_effect_list = true },
-	{ .record_type = "SPEL",
-	  .paired_rules = enam_paired_rules,
-	  .paired_rule_count = 1,
-	  .enam_effect_list = true },
-	{ .record_type = "ALCH",
-	  .paired_rules = enam_paired_rules,
-	  .paired_rule_count = 1,
-	  .enam_effect_list = true },
+	{ .record_type = "ENCH", .paired_rules = enam_paired_rules, .paired_rule_count = 1, .enam_effect_list = true },
+	{ .record_type = "SPEL", .paired_rules = enam_paired_rules, .paired_rule_count = 1, .enam_effect_list = true },
+	{ .record_type = "ALCH", .paired_rules = enam_paired_rules, .paired_rule_count = 1, .enam_effect_list = true },
 	{ .record_type = "INGR", .paired_rules = enam_paired_rules, .paired_rule_count = 1 },
 	{ .record_type = "LTEX", .sub_rules = ltex_sub_rules, .sub_rule_count = 1 },
 	{ .record_type = "LAND", .merge_excluded = true },
 	{ .record_type = "PGRD", .merge_excluded = true },
 	{ .record_type = "REGN" },
 	{ .record_type = "DIAL", .decode_mode = decode_mode_t::dial },
-	{ .record_type = "INFO",
-	  .decode_mode = decode_mode_t::info,
-	  .record_id_sub_type = "INAM" },
+	{ .record_type = "INFO", .decode_mode = decode_mode_t::info, .record_id_sub_type = "INAM" },
 };
 
-static constexpr record_behavior_t generic_behavior = {
-	.record_type = "*", .sub_rules = generic_sub_rules, .sub_rule_count = 1
-};
+static constexpr record_behavior_t generic_behavior = { .record_type = "*",
+	                                                    .sub_rules = generic_sub_rules,
+	                                                    .sub_rule_count = 1 };
 
 const record_behavior_t * find_record_behavior(const std::string & record_type)
 {

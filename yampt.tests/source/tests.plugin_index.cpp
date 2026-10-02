@@ -177,7 +177,8 @@ TEST_CASE("plugin_index_t::plugin_index_t, record without id sub-record keys on 
 TEST_CASE("plugin_index_t::plugin_index_t, DELE sub-record marks record deleted", "[i]")
 {
 	auto weap = make_record(
-	    "WEAP", make_sub_record("NAME", std::string("gone_weapon\0", 12)) + make_sub_record("DELE", std::string(4, '\0')));
+	    "WEAP",
+	    make_sub_record("NAME", std::string("gone_weapon\0", 12)) + make_sub_record("DELE", std::string(4, '\0')));
 
 	const auto index = build_index({ make_tes3(), weap }, "yampt_pidx_dele.esm");
 
@@ -188,8 +189,10 @@ TEST_CASE("plugin_index_t::plugin_index_t, DELE sub-record marks record deleted"
 
 TEST_CASE("plugin_index_t::plugin_index_t, first occurrence wins on duplicate key", "[i]")
 {
-	auto weap_a = make_record("WEAP", make_sub_record("NAME", std::string("dup\0", 4)) + make_sub_record("WPDT", std::string("first", 5)));
-	auto weap_b = make_record("WEAP", make_sub_record("NAME", std::string("dup\0", 4)) + make_sub_record("WPDT", std::string("second", 6)));
+	auto weap_a = make_record(
+	    "WEAP", make_sub_record("NAME", std::string("dup\0", 4)) + make_sub_record("WPDT", std::string("first", 5)));
+	auto weap_b = make_record(
+	    "WEAP", make_sub_record("NAME", std::string("dup\0", 4)) + make_sub_record("WPDT", std::string("second", 6)));
 
 	const auto index = build_index({ make_tes3(), weap_a, weap_b }, "yampt_pidx_dup.esm");
 

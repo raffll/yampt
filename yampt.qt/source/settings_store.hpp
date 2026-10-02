@@ -140,7 +140,6 @@ public:
 	std::string merge_excludes() const;
 	void set_merge_excludes(const std::string & value);
 
-
 	bool merge_fog_fix_enabled() const;
 	void set_merge_fog_fix_enabled(bool value);
 	bool merge_summon_fix_enabled() const;
@@ -148,10 +147,8 @@ public:
 	bool merge_cell_name_fix_enabled() const;
 	void set_merge_cell_name_fix_enabled(bool value);
 
-
 	int display_codepage() const;
 	void set_display_codepage(int value);
-
 
 	bool clean_evil_gmst_enabled() const;
 	void set_clean_evil_gmst_enabled(bool value);

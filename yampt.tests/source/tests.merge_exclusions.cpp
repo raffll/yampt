@@ -101,12 +101,10 @@ TEST_CASE("merge_exclusions_t::is_record_excluded, anchored id with metacharacte
 
 TEST_CASE("merge_exclusions_t::parse, round-trips kinds and targets", "[u]")
 {
-	const std::vector<exclude_rule_t> rules {
-		{ exclude_kind_t::file, "SomeMod.esp" },
-		{ exclude_kind_t::record_id, "^MyMod_.*" },
-		{ exclude_kind_t::record_type, "REGN" },
-		{ exclude_kind_t::sub_record, "CELL:NAM0" }
-	};
+	const std::vector<exclude_rule_t> rules { { exclude_kind_t::file, "SomeMod.esp" },
+		                                      { exclude_kind_t::record_id, "^MyMod_.*" },
+		                                      { exclude_kind_t::record_type, "REGN" },
+		                                      { exclude_kind_t::sub_record, "CELL:NAM0" } };
 
 	const auto serialized = merge_exclusions_t::serialize(rules);
 	const auto parsed = merge_exclusions_t::parse(serialized);

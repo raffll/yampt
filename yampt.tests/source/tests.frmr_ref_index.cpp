@@ -235,8 +235,8 @@ TEST_CASE("conflict_slots::build, override targeting different master stays sepa
 	auto ref_morrowind = make_sub("FRMR", make_uint32(0x00000005)) + make_sub("NAME", make_string("statue_01")) +
 	                     make_sub("DATA", make_position());
 
-	auto ref_tribunal_override = make_sub("FRMR", make_uint32(0x02000005)) + make_sub("NAME", make_string("statue_02")) +
-	                             make_sub("DATA", make_position());
+	auto ref_tribunal_override = make_sub("FRMR", make_uint32(0x02000005)) +
+	                             make_sub("NAME", make_string("statue_02")) + make_sub("DATA", make_position());
 
 	auto content_v1 = make_record("CELL", header_subs + ref_morrowind);
 	auto content_v2 = make_record("CELL", header_subs + ref_tribunal_override);

@@ -1252,12 +1252,12 @@ static std::string make_reaction_pairs(const std::vector<std::pair<std::string, 
 
 TEST_CASE("sub_record_merge_t::merge, FACT reactions merge by faction regardless of order", "[u]")
 {
-	auto subs_first = make_sub("NAME", make_string("id")) +
-	                  make_reaction_pairs({ { "faction_x", 10 }, { "faction_y", 20 } });
-	auto subs_inter = make_sub("NAME", make_string("id")) +
-	                  make_reaction_pairs({ { "faction_y", 20 }, { "faction_x", 55 } });
-	auto subs_winner = make_sub("NAME", make_string("id")) +
-	                   make_reaction_pairs({ { "faction_x", 10 }, { "faction_y", 20 } });
+	auto subs_first =
+	    make_sub("NAME", make_string("id")) + make_reaction_pairs({ { "faction_x", 10 }, { "faction_y", 20 } });
+	auto subs_inter =
+	    make_sub("NAME", make_string("id")) + make_reaction_pairs({ { "faction_y", 20 }, { "faction_x", 55 } });
+	auto subs_winner =
+	    make_sub("NAME", make_string("id")) + make_reaction_pairs({ { "faction_x", 10 }, { "faction_y", 20 } });
 
 	merge_input_t input;
 	input.rec_type = "FACT";
@@ -1285,11 +1285,11 @@ TEST_CASE("sub_record_merge_t::merge, FACT reactions merge by faction regardless
 
 TEST_CASE("sub_record_merge_t::merge, FACT reaction deletion respected", "[u]")
 {
-	auto subs_first = make_sub("NAME", make_string("id")) +
-	                  make_reaction_pairs({ { "faction_x", 10 }, { "faction_y", 20 } });
+	auto subs_first =
+	    make_sub("NAME", make_string("id")) + make_reaction_pairs({ { "faction_x", 10 }, { "faction_y", 20 } });
 	auto subs_inter = make_sub("NAME", make_string("id")) + make_reaction_pairs({ { "faction_x", 10 } });
-	auto subs_winner = make_sub("NAME", make_string("id")) +
-	                   make_reaction_pairs({ { "faction_x", 10 }, { "faction_y", 20 } });
+	auto subs_winner =
+	    make_sub("NAME", make_string("id")) + make_reaction_pairs({ { "faction_x", 10 }, { "faction_y", 20 } });
 
 	merge_input_t input;
 	input.rec_type = "FACT";
@@ -1322,9 +1322,8 @@ TEST_CASE("sub_record_merge_t::merge, NPCO unions additions and respects master 
 	std::memcpy(&npco_c[4], "item_c", 6);
 
 	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("NPCO", npco_a);
-	auto subs_inter =
-	    make_sub("NAME", make_string("id")) + make_sub("NPCO", npco_a) + make_sub("NPCO", npco_b) +
-	    make_sub("NPCO", npco_c);
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("NPCO", npco_a) + make_sub("NPCO", npco_b) +
+	                  make_sub("NPCO", npco_c);
 	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPCO", npco_a);
 
 	merge_input_t input;
@@ -1354,9 +1353,8 @@ TEST_CASE("sub_record_merge_t::merge, NPCS unions added spells and respects dele
 	};
 
 	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("NPCS", make_npcs("spell_a"));
-	auto subs_inter =
-	    make_sub("NAME", make_string("id")) + make_sub("NPCS", make_npcs("spell_a")) +
-	    make_sub("NPCS", make_npcs("spell_b"));
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("NPCS", make_npcs("spell_a")) +
+	                  make_sub("NPCS", make_npcs("spell_b"));
 	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPCS", make_npcs("spell_a"));
 
 	merge_input_t input;
@@ -1444,9 +1442,8 @@ TEST_CASE("sub_record_merge_t::merge, NPCS added by plugin when master has none"
 	};
 
 	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("name"));
-	auto subs_inter =
-	    make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("name")) +
-	    make_sub("NPCS", make_npcs("ghost_ability"));
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("name")) +
+	                  make_sub("NPCS", make_npcs("ghost_ability"));
 	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("name"));
 
 	merge_input_t input;

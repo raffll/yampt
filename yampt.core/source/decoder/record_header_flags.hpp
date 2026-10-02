@@ -4,8 +4,7 @@
 #include <string>
 #include <vector>
 
-namespace record_header_flags
-{
+namespace record_header_flags {
 constexpr size_t flags_offset = 12;
 constexpr size_t flags_length = 4;
 

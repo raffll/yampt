@@ -429,5 +429,6 @@ void auto_merge_t::add_log(const std::string & message)
 
 std::string auto_merge_t::filter_ignored_sub_records(const std::string & rec_type, const std::string & content) const
 {
-	return sub_record_merge_t::filter_sub_records_by_rules(rec_type, content, m_config.exclusions.ignored_sub_records());
+	return sub_record_merge_t::filter_sub_records_by_rules(
+	    rec_type, content, m_config.exclusions.ignored_sub_records());
 }

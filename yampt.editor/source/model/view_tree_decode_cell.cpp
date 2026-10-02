@@ -66,10 +66,7 @@ static uint32_t read_object_index(const sub_record_view_t & sub_rec)
 	return read_frmr_ref_index(sub_rec.data, sub_rec.size);
 }
 
-static std::string read_ref_object_id(
-    const std::vector<sub_record_view_t> & subs,
-    size_t start_idx,
-    size_t end_idx)
+static std::string read_ref_object_id(const std::vector<sub_record_view_t> & subs, size_t start_idx, size_t end_idx)
 {
 	for (size_t i = start_idx; i < end_idx; ++i)
 	{
@@ -283,8 +280,8 @@ void view_tree_model_t::decode_schema_children_ref(
 					const auto & refs = col < col_refs.size() ? col_refs[col] : empty_refs;
 					const auto result = find_ref_sub_record(subs, refs, identity, slot.type, slot.occurrence);
 
-					frow.values[col] =
-					    result.view.data ? flag_bit_value(result.view.data, result.view.size, fdef, bit) : non_existent_value;
+					frow.values[col] = result.view.data ? flag_bit_value(result.view.data, result.view.size, fdef, bit)
+					                                    : non_existent_value;
 				}
 
 				frow.all_identical = check_all_identical(frow.values);
@@ -495,10 +492,9 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 		if (col >= all_subs.size())
 			continue;
 
-		const auto & identities =
-		    (context.slot_result && col < context.slot_result->ref_identities.size())
-		        ? context.slot_result->ref_identities[col]
-		        : empty_identities;
+		const auto & identities = (context.slot_result && col < context.slot_result->ref_identities.size())
+		                              ? context.slot_result->ref_identities[col]
+		                              : empty_identities;
 
 		collect_cell_ref_groups(all_subs[col], identities, col_refs[col], col_header_end[col]);
 	}
@@ -563,8 +559,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 		}
 
 		const std::string index_label = "#" + std::to_string(display_index);
-		std::string ref_label =
-		    identity.object_id.empty() ? index_label : index_label + " " + identity.object_id;
+		std::string ref_label = identity.object_id.empty() ? index_label : index_label + " " + identity.object_id;
 
 		view_node_t group_row;
 		group_row.type = "FRMR";

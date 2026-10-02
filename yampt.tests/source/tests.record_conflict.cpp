@@ -354,9 +354,8 @@ TEST_CASE("record_conflict::combine_worst_this, two versions no slots yields mas
 
 TEST_CASE("record_conflict::combine_worst_this, identical slots keep identical", "[u]")
 {
-	std::vector<std::vector<conflict_this_t>> per_slot = {
-		{ conflict_this_t::master, conflict_this_t::identical_to_master }
-	};
+	std::vector<std::vector<conflict_this_t>> per_slot = { { conflict_this_t::master,
+		                                                     conflict_this_t::identical_to_master } };
 	const auto result = record_conflict::combine_worst_this(2, per_slot);
 
 	REQUIRE(result[0] == conflict_this_t::master);

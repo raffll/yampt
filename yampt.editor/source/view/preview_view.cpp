@@ -7,6 +7,7 @@
 #include <utility/char_diff.hpp>
 #include <utility/record_behavior.hpp>
 #include <string>
+#include <theme_system.hpp>
 #include <vector>
 #include <QAbstractItemView>
 #include <QComboBox>
@@ -21,7 +22,6 @@
 #include <QTextCharFormat>
 #include <QTextEdit>
 #include <QVBoxLayout>
-#include <theme_system.hpp>
 
 namespace {
 
