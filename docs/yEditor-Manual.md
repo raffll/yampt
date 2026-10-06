@@ -57,6 +57,8 @@ Content excluded from the merged patch is not marked in any special way. Whether
 
 When a plugin has field edits that have not yet been written to disk, an asterisk appears before the filename in the ID column. The asterisk disappears once the plugin is saved.
 
+The application window title also reflects the active plugin: it reads "yEditor" followed by the [Active] marker and the active plugin's file name, and an asterisk is appended while that plugin has unsaved changes.
+
 ## Record View
 
 Clicking a record in the nav tree displays its full content in the record view. Sub-records are decoded into readable fields where the format is known (names, positions, flags, stats). Unknown or binary sub-records display as raw byte counts. A dialogue condition reads as a plain sentence such as "Function Choice == 1", with its raw condition text shown and editable underneath.

@@ -382,7 +382,7 @@ void editor_window_t::update_window_title()
 {
 	QString title = tr("yEditor");
 	if (!m_active_plugin_name.isEmpty())
-		title += tr(" - %1").arg(m_active_plugin_name);
+		title += tr(" - [Active] %1").arg(m_active_plugin_name);
 
 	if (m_has_unsaved_changes)
 		title += tr(" *");
