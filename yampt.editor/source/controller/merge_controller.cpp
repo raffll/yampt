@@ -869,11 +869,21 @@ int merge_controller_t::create_merge_records()
 
 std::string merge_controller_t::resolve_active_output_path() const
 {
+	const int active_idx = m_session.scan().active_plugin_index();
+
+	if (active_idx >= 0)
+	{
+		const auto & original_path = m_session.scan().plugin_path(active_idx);
+		const bool is_loaded_plugin = original_path.find_first_of("/\\") != std::string::npos;
+
+		if (is_loaded_plugin)
+			return original_path;
+	}
+
 	const auto output_dir = resolve_output_directory();
 	if (output_dir.empty())
 		return {};
 
-	const int active_idx = m_session.scan().active_plugin_index();
 	const std::string filename =
 	    active_idx >= 0 ? m_session.scan().plugin_filename(active_idx) : std::string(merged_patch::filename);
 
