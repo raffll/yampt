@@ -3,6 +3,7 @@
 ## [XXX]
 
 ### yTranslator
+- [NEW] The search field in the toolbar shows a clear button (×) when text is present, as an alternative to pressing Escape
 - [FIX] Propagating a translation now only applies to entries that are Untranslated. Entries with any other status — Translated, In Progress, Generated, and so on — are left unchanged
 
 ### yEditor

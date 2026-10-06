@@ -144,6 +144,7 @@ void main_window_t::setup_toolbar()
 
 	m_search_field = new QLineEdit(this);
 	m_search_field->setPlaceholderText(tr("Filter by..."));
+	m_search_field->setClearButtonEnabled(true);
 	m_search_field->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 	m_toolbar->addWidget(m_search_field);
 
