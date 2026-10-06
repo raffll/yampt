@@ -152,3 +152,15 @@ std::vector<highlight_position_t> highlight_coordinator_t::find_grammar_highligh
 
 	return results;
 }
+
+std::set<highlight_kind_t> scope_kinds_for_record(
+    const std::set<highlight_kind_t> & enabled_kinds,
+    rec_type_t type)
+{
+	auto scoped = enabled_kinds;
+
+	if (type != rec_type_t::dial && type != rec_type_t::info)
+		scoped.erase(highlight_kind_t::hyperlink);
+
+	return scoped;
+}

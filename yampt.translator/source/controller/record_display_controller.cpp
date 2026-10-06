@@ -146,7 +146,7 @@ void record_display_controller_t::apply_initial_highlights(
 	const auto translation_lower =
 	    string_utils::to_lower_utf8(m_deps.editor_view.translation_editor()->toPlainText().toStdString());
 
-	const auto enabled_kinds = m_deps.editor_view.enabled_highlight_kinds();
+	const auto enabled_kinds = hyperlink_scoped_kinds(row_data->type);
 
 	const highlight_request_t orig_request { &annotations, true, highlight_sort_policy_t::length_first, enabled_kinds };
 	auto orig_highlights = highlight_coordinator_t::find_annotation_highlights(original_lower, orig_request);
@@ -236,7 +236,7 @@ void record_display_controller_t::load_record_plain(const table_row_t * row_data
 void record_display_controller_t::refresh_highlight_filter(const table_row_t * row_data)
 {
 	const auto annotations = m_deps.glossary.annotate(row_data->old_text);
-	const auto enabled_kinds = m_deps.editor_view.enabled_highlight_kinds();
+	const auto enabled_kinds = hyperlink_scoped_kinds(row_data->type);
 
 	const auto original_lower =
 	    string_utils::to_lower_utf8(m_deps.editor_view.original_view()->toPlainText().toStdString());
@@ -260,7 +260,7 @@ void record_display_controller_t::apply_translation_highlights(const table_row_t
 	    string_utils::to_lower_utf8(m_deps.editor_view.translation_editor()->toPlainText().toStdString());
 
 	const highlight_request_t request {
-		&annotations, false, highlight_sort_policy_t::hyperlink_first, m_deps.editor_view.enabled_highlight_kinds()
+		&annotations, false, highlight_sort_policy_t::hyperlink_first, hyperlink_scoped_kinds(row_data->type)
 	};
 	auto highlights = highlight_coordinator_t::find_annotation_highlights(current_text, request);
 
@@ -354,4 +354,9 @@ void record_display_controller_t::update_annotations(document_t * active_doc)
 	}
 
 	m_deps.annotations_view.update_annotations(annotations, speaker_name, gender_str, enchantment_str);
+}
+
+std::set<highlight_kind_t> record_display_controller_t::hyperlink_scoped_kinds(rec_type_t type) const
+{
+	return scope_kinds_for_record(m_deps.editor_view.enabled_highlight_kinds(), type);
 }

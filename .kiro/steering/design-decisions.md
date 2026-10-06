@@ -47,7 +47,7 @@ The glossary is built from these record types:
 - RNAM — race/faction rank names (kind = `glossary_term`, green highlight)
 - INDX — skill/attribute names (kind = `glossary_term`, green highlight)
 
-Glossary terms show for all record types. DIAL hyperlinks show for all record types.
+Glossary terms show for all record types. DIAL hyperlinks show only for DIAL and INFO record types.
 
 ## Forbidden Characters in Syntax Highlighter
 
