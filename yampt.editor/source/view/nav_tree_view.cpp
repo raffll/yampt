@@ -1,9 +1,11 @@
 #include "nav_tree_view.hpp"
+#include <utility/string_utils.hpp>
 #include <functional>
 #include <QDragEnterEvent>
 #include <QDragMoveEvent>
 #include <QDropEvent>
 #include <QHeaderView>
+#include <QKeyEvent>
 #include <QMimeData>
 #include <QSignalBlocker>
 #include <QTreeView>
@@ -65,6 +67,7 @@ nav_tree_view_t::nav_tree_view_t(plugin_scan_t & scan, QWidget * parent)
 	});
 
 	m_tree->viewport()->installEventFilter(this);
+	m_tree->installEventFilter(this);
 }
 
 void nav_tree_view_t::rebuild()
@@ -247,9 +250,68 @@ void nav_tree_view_t::restore_expansion_state()
 
 bool nav_tree_view_t::eventFilter(QObject * obj, QEvent * event)
 {
-	if (obj != m_tree->viewport())
-		return QWidget::eventFilter(obj, event);
+	if (obj == m_tree && event->type() == QEvent::KeyPress)
+	{
+		if (handle_type_ahead(static_cast<QKeyEvent *>(event)))
+			return true;
 
+		return QWidget::eventFilter(obj, event);
+	}
+
+	if (obj == m_tree->viewport())
+		return handle_viewport_drag(event);
+
+	return QWidget::eventFilter(obj, event);
+}
+
+bool nav_tree_view_t::handle_type_ahead(QKeyEvent * key_event)
+{
+	const auto modifiers = key_event->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier);
+	if (modifiers != Qt::NoModifier)
+		return false;
+
+	const auto & text = key_event->text();
+	if (text.size() != 1)
+		return false;
+
+	const auto character = text.at(0);
+	if (!character.isLetterOrNumber())
+		return false;
+
+	const auto needle = string_utils::to_lower(std::string(1, character.toLatin1()));
+	const auto & current = m_tree->currentIndex();
+	const int current_row = (current.isValid() && !current.parent().isValid()) ? current.row() : -1;
+	const int matched = next_matching_plugin_row(needle, current_row);
+
+	if (matched < 0)
+		return true;
+
+	m_tree->setCurrentIndex(m_model->index(matched, 0, {}));
+	m_tree->scrollTo(m_model->index(matched, 0, {}));
+	return true;
+}
+
+int nav_tree_view_t::next_matching_plugin_row(const std::string & lowered_prefix, int start_row) const
+{
+	const int total_rows = m_model->rowCount({});
+	if (total_rows == 0)
+		return -1;
+
+	const int begin = (start_row + 1) % total_rows;
+
+	for (int offset = 0; offset < total_rows; ++offset)
+	{
+		const int row = (begin + offset) % total_rows;
+		const auto & filename = string_utils::to_lower(m_model->plugin_filename_at(row));
+		if (filename.starts_with(lowered_prefix))
+			return row;
+	}
+
+	return -1;
+}
+
+bool nav_tree_view_t::handle_viewport_drag(QEvent * event)
+{
 	if (event->type() == QEvent::DragEnter)
 	{
 		auto * drag = static_cast<QDragEnterEvent *>(event);
@@ -280,5 +342,5 @@ bool nav_tree_view_t::eventFilter(QObject * obj, QEvent * event)
 		return true;
 	}
 
-	return QWidget::eventFilter(obj, event);
+	return QWidget::eventFilter(m_tree->viewport(), event);
 }

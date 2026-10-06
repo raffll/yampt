@@ -56,6 +56,7 @@ public:
 	node_info_t node_at(const QModelIndex & index) const;
 	QModelIndex find_index(const std::string & rec_type, const std::string & record_id) const;
 	QModelIndex index_for_node(const node_info_t & info) const;
+	std::string plugin_filename_at(int top_level_row) const;
 	void notify_record_changed(const std::string & rec_type, const std::string & record_id);
 	void notify_plugin_changed(int plugin_idx);
 

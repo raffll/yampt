@@ -4,7 +4,6 @@
 
 - title should also add [Active]
 - remove save, save all, and any code related to saving file on demand, asterisk etc
-- Plugin list navigation: pressing a letter key should jump to the first plugin starting with that letter — yEditor
 - Hyperlink highlighting in original/translated text boxes should only apply to DIAL/INFO record types, not to item names, cell names etc. — yTranslator
 
 ## Medium

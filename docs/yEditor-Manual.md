@@ -55,6 +55,8 @@ The tree has two columns: ID and Name, showing the record identifier and its dis
 
 Content excluded from the merged patch is not marked in any special way. Whether a plugin, record, or sub-record is left out of the merge, it still appears and is colored by its conflict status exactly like everything else. Exclusion only affects what the auto-merge writes, not how content is shown.
 
+With the navigation tree focused, you can jump straight to a plugin by typing. Press a letter or number key and the selection moves to the next plugin whose file name begins with that character; pressing the same key again steps to the following match and wraps back to the first plugin after the last one. Matching ignores letter case, and only plugin rows respond, so the keys never select a record.
+
 When a plugin has field edits that have not yet been written to disk, an asterisk appears before the filename in the ID column. The asterisk disappears once the plugin is saved.
 
 The application window title also reflects the active plugin: it reads "yEditor" followed by the [Active] marker and the active plugin's file name, and an asterisk is appended while that plugin has unsaved changes.

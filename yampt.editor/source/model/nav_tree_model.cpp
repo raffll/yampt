@@ -502,6 +502,14 @@ void nav_tree_model_t::notify_plugin_changed(int plugin_idx)
 	}
 }
 
+std::string nav_tree_model_t::plugin_filename_at(int top_level_row) const
+{
+	if (top_level_row < 0 || top_level_row >= static_cast<int>(m_tree.size()))
+		return {};
+
+	return m_scan.plugin_filename(m_tree[static_cast<size_t>(top_level_row)].plugin_idx);
+}
+
 QModelIndex nav_tree_model_t::index_for_node(const node_info_t & info) const
 {
 	if (info.plugin_idx < 0)

@@ -6,6 +6,7 @@
 #include <QWidget>
 
 class QTreeView;
+class QKeyEvent;
 class plugin_scan_t;
 class editable_column_set_t;
 
@@ -44,6 +45,9 @@ signals:
 
 private:
 	bool eventFilter(QObject * obj, QEvent * event) override;
+	bool handle_type_ahead(QKeyEvent * key_event);
+	int next_matching_plugin_row(const std::string & lowered_prefix, int start_row) const;
+	bool handle_viewport_drag(QEvent * event);
 	void save_expansion_state();
 	void restore_expansion_state();
 	void restore_selection(const nav_tree_model_t::node_info_t & info);
