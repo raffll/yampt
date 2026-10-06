@@ -15,7 +15,6 @@ class editor_window_t : public QMainWindow
 public:
 	explicit editor_window_t(QWidget * parent = nullptr);
 
-	void set_unsaved_changes(bool dirty);
 	void set_active_plugin_name(const QString & filename);
 
 protected:
@@ -37,7 +36,6 @@ private:
 	plugin_workspace_view_t * m_plugin_workspace_view = nullptr;
 	settings_store_t m_settings { "yEditor.ini" };
 
-	bool m_has_unsaved_changes = false;
 	QString m_active_plugin_name;
 
 	QAction * m_conflicts_action = nullptr;

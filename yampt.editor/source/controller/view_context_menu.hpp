@@ -20,7 +20,6 @@ class view_context_menu_t
 {
 public:
 	using settings_changed_fn = std::function<void()>;
-	using unsaved_changed_fn = std::function<void(bool)>;
 
 	view_context_menu_t(
 	    plugin_session_t & session,
@@ -28,8 +27,7 @@ public:
 	    nav_tree_view_t & nav_view,
 	    merge_controller_t & merge_controller,
 	    settings_store_t & settings,
-	    settings_changed_fn on_settings_changed,
-	    unsaved_changed_fn on_unsaved_changed);
+	    settings_changed_fn on_settings_changed);
 
 	void show_view_menu(const QPoint & global_pos, const QModelIndex & index);
 	void show_nav_menu(const QPoint & global_pos, const nav_tree_model_t::node_info_t & info);
@@ -88,5 +86,4 @@ private:
 	merge_controller_t & m_merge;
 	settings_store_t & m_settings;
 	settings_changed_fn m_on_settings_changed;
-	unsaved_changed_fn m_on_unsaved_changed;
 };

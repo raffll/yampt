@@ -4,7 +4,6 @@
 #include "../session/plugin_session.hpp"
 #include "../view/nav_tree_view.hpp"
 #include "../view/record_view.hpp"
-#include <io/binary_file_io.hpp>
 #include <scanner/auto_merge.hpp>
 #include <scanner/merge_patch_ops.hpp>
 #include <scanner/sub_record_merge.hpp>
@@ -74,25 +73,6 @@ bool merge_controller_t::confirm_merged_patch_regeneration(int merged_idx)
 	return answer == QMessageBox::Yes;
 }
 
-bool merge_controller_t::prompt_save_before_merge()
-{
-	if (!m_session.has_any_unsaved())
-		return true;
-
-	const auto answer = QMessageBox::question(
-	    nullptr,
-	    QCoreApplication::translate("yEditor", "Unsaved Changes"),
-	    QCoreApplication::translate("yEditor", "Save unsaved plugins before creating the merged patch?"),
-	    QMessageBox::Save | QMessageBox::Cancel,
-	    QMessageBox::Save);
-
-	if (answer == QMessageBox::Cancel)
-		return false;
-
-	save_all_dirty();
-	return true;
-}
-
 void merge_controller_t::activate_merged_patch_target(int merged_idx)
 {
 	m_session.register_created_plugin(std::string(merged_patch::filename));
@@ -124,9 +104,6 @@ void merge_controller_t::rebuild_merged_patch_conflicts()
 
 bool merge_controller_t::create_merged_patch()
 {
-	if (!prompt_save_before_merge())
-		return false;
-
 	if (m_session.scan().plugin_count() < 1)
 	{
 		m_log("[error] no plugins loaded");
@@ -199,31 +176,6 @@ void merge_controller_t::load_existing_merged_patch()
 	}
 }
 
-bool merge_controller_t::prompt_save_active_before_switch()
-{
-	if (!m_session.scan().has_active())
-		return true;
-
-	const int active_idx = m_session.scan().active_plugin_index();
-	if (active_idx < 0 || !m_session.is_plugin_dirty(active_idx))
-		return true;
-
-	const auto answer = QMessageBox::question(
-	    nullptr,
-	    QCoreApplication::translate("yEditor", "Save Active Plugin"),
-	    QCoreApplication::translate("yEditor", "Save changes to the current active plugin before switching?"),
-	    QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel,
-	    QMessageBox::Save);
-
-	if (answer == QMessageBox::Cancel)
-		return false;
-
-	if (answer == QMessageBox::Save)
-		save_active_plugin();
-
-	return true;
-}
-
 static void stamp_current_modified_time(const std::string & path)
 {
 	std::error_code error_code;
@@ -235,9 +187,6 @@ static void stamp_current_modified_time(const std::string & path)
 void merge_controller_t::create_new_plugin(const std::string & filename)
 {
 	if (filename.empty())
-		return;
-
-	if (!prompt_save_active_before_switch())
 		return;
 
 	m_session.register_created_plugin(filename);
@@ -269,9 +218,6 @@ void merge_controller_t::set_active_plugin(int plugin_idx)
 		return;
 
 	if (m_session.scan().is_active_plugin(plugin_idx))
-		return;
-
-	if (!prompt_save_active_before_switch())
 		return;
 
 	m_session.scan().set_active_from_loaded(plugin_idx);
@@ -939,35 +885,6 @@ void merge_controller_t::save_active_plugin()
 		    " records)");
 	else
 		m_log("[error] failed to save " + output_path);
-}
-
-bool merge_controller_t::save_plugin(int plugin_idx)
-{
-	auto & plugin = m_session.scan().mutable_plugin(plugin_idx);
-	const auto & path = m_session.scan().plugin_path(plugin_idx);
-	const bool written = binary_file_io::write_file(plugin.get_records(), path);
-	if (!written)
-	{
-		m_log("[error] failed to save " + path);
-		return false;
-	}
-
-	m_session.clear_plugin_dirty(plugin_idx);
-	m_log("[info] saved " + path);
-	return true;
-}
-
-void merge_controller_t::save_all_dirty()
-{
-	const auto dirty_copy = m_session.dirty_plugins();
-
-	for (int plugin_idx = 0; plugin_idx < static_cast<int>(m_session.scan().plugin_count()); ++plugin_idx)
-	{
-		if (dirty_copy.count(m_session.scan().plugin_filename(plugin_idx)) == 0)
-			continue;
-
-		save_plugin(plugin_idx);
-	}
 }
 
 bool merge_controller_t::save_active_to_file(

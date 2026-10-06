@@ -169,11 +169,6 @@ void nav_tree_model_t::set_patch_plugins(const std::set<std::string> * patch)
 	m_filter.set_patch_plugins(patch);
 }
 
-void nav_tree_model_t::set_dirty_plugins(const std::set<std::string> * dirty)
-{
-	m_filter.set_dirty_plugins(dirty);
-}
-
 void nav_tree_model_t::set_editable_columns(const editable_column_set_t * editable)
 {
 	m_editable_columns = editable;
@@ -705,11 +700,7 @@ QVariant nav_tree_model_t::file_node_display_text(const file_node_t & file_node)
 
 	const auto icons = plugin_icon::prefix(flags).trimmed();
 
-	std::string label = display_buffer;
-	if (m_filter.dirty_plugins() && m_filter.dirty_plugins()->count(filename))
-		label = "* " + label;
-
-	QString text = QString::fromUtf8(label.c_str());
+	QString text = QString::fromUtf8(display_buffer);
 	if (!icons.isEmpty())
 		text = icons + " " + text;
 

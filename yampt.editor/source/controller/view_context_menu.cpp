@@ -44,15 +44,13 @@ view_context_menu_t::view_context_menu_t(
     nav_tree_view_t & nav_view,
     merge_controller_t & merge_controller,
     settings_store_t & settings,
-    settings_changed_fn on_settings_changed,
-    unsaved_changed_fn on_unsaved_changed)
+    settings_changed_fn on_settings_changed)
     : m_session(session)
     , m_record_view(record_view)
     , m_nav_view(nav_view)
     , m_merge(merge_controller)
     , m_settings(settings)
     , m_on_settings_changed(std::move(on_settings_changed))
-    , m_on_unsaved_changed(std::move(on_unsaved_changed))
 {}
 
 void view_context_menu_t::show_nav_menu(const QPoint & global_pos, const nav_tree_model_t::node_info_t & info)
@@ -155,21 +153,6 @@ void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_mo
 		m_session.save_session_state(QDir(settings_store_t::settings_dir()).filePath("yEditor.ini"));
 		m_nav_view.notify_plugin_changed(info.plugin_idx);
 	});
-
-	menu.addSeparator();
-
-	auto * save_action = menu.addAction(
-	    QCoreApplication::translate("yEditor", "Save"),
-	    [this, info]()
-	{
-		if (m_merge.save_plugin(info.plugin_idx))
-			m_nav_view.notify_plugin_changed(info.plugin_idx);
-
-		if (m_on_unsaved_changed)
-			m_on_unsaved_changed(m_session.has_any_unsaved());
-	});
-	save_action->setToolTip(QCoreApplication::translate("yEditor", "Write in-memory changes to the plugin file"));
-	save_action->setEnabled(m_session.is_plugin_dirty(info.plugin_idx));
 }
 
 void view_context_menu_t::add_exclude_record_action(QMenu & menu, const nav_tree_model_t::node_info_t & info)

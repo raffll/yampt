@@ -35,21 +35,18 @@ public:
 	void clear();
 	void set_hide_duplicates(bool hide);
 	void set_patch_plugins(const std::set<std::string> * patch);
-	void set_dirty_plugins(const std::set<std::string> * dirty);
 
 	bool passes(const conflict_entry_t & entry, int plugin_idx) const;
 	bool passes_lua_conflict(const handler_conflict_t & conflict) const;
 	bool has_active_filter() const;
 	bool hide_duplicates() const;
 	const std::set<std::string> * patch_plugins() const;
-	const std::set<std::string> * dirty_plugins() const;
 
 private:
 	filter_state_t m_filter;
 	bool m_has_filter = false;
 	bool m_hide_duplicates = false;
 	const std::set<std::string> * m_patch_plugins = nullptr;
-	const std::set<std::string> * m_dirty_plugins = nullptr;
 
 	static bool contains_case_insensitive(const std::string & haystack, const std::string & needle);
 	static bool has_version_status(const conflict_entry_t & entry, int plugin_idx, conflict_this_t status);

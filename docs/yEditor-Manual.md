@@ -16,7 +16,7 @@ The main window opens immediately, and a progress dialog shows how far the load 
 
 Use **Unload All** to close everything and start fresh.
 
-If any loaded plugin has unsaved field edits, you are prompted before those edits would be lost. Loading a new set of plugins, unloading everything, cleaning, and closing the application each offer to save the pending changes, discard them, or cancel the action and keep everything as it is.
+Every edit is written to disk the moment you make it, so there is nothing to save by hand. Loading a new set of plugins, unloading everything, cleaning, and closing the application all proceed immediately without any save prompt.
 
 ## Main Layout
 
@@ -57,9 +57,7 @@ Content excluded from the merged patch is not marked in any special way. Whether
 
 With the navigation tree focused, you can jump straight to a plugin by typing. Press a letter or number key and the selection moves to the next plugin whose file name begins with that character; pressing the same key again steps to the following match and wraps back to the first plugin after the last one. Matching ignores letter case, and only plugin rows respond, so the keys never select a record.
 
-When a plugin has field edits that have not yet been written to disk, an asterisk appears before the filename in the ID column. The asterisk disappears once the plugin is saved.
-
-The application window title also reflects the active plugin: it reads "yEditor" followed by the [Active] marker and the active plugin's file name, and an asterisk is appended while that plugin has unsaved changes.
+The application window title shows the active plugin: it reads "yEditor" followed by the [Active] marker and the active plugin's file name.
 
 ## Record View
 
@@ -97,13 +95,12 @@ Right-click a record node belonging to the active plugin in the navigation tree 
 
 Right-click a record node belonging to another loaded plugin to see the **Copy Record to Active Plugin** option, which copies the whole record from that plugin into the active plugin. It is greyed out unless an active plugin exists and the record is not already in it.
 
-The same menu offers **Remove Record from Plugin**. After a confirmation prompt, the record is dropped from that plugin in memory and the plugin is marked as having unsaved changes. The record disappears from the file the next time you save the plugin. This removal cannot be undone; the only way to recover the record is to close the plugin without saving. The option is greyed out unless editing is enabled.
+The same menu offers **Remove Record from Plugin**. After a confirmation prompt, the record is dropped from that plugin and the change is written to disk immediately. This removal cannot be undone. The option is greyed out unless editing is enabled.
 
 Right-click a plugin node in the navigation tree for plugin-level options:
 
 - **Exclude from Merged Patch** / **Include in Merged Patch** — excluded plugins are completely ignored during auto-merge. Their records will not appear in the merged patch regardless of conflicts.
 - **Mark as Guard Patch** — the guard patch acts as a priority barrier during auto-merge. Plugins loaded before the guard that modify the same records are ignored. Only the guard's version and later plugins are considered. If the final plugin's version matches master (reverting a change), the guard's version is used instead of letting the revert through.
-- **Save** — writes the plugin's pending field edits to disk and removes its asterisk. This option is enabled only while the plugin has unsaved changes; when the plugin is already saved it appears greyed out.
 
 ## View Menu
 
@@ -141,13 +138,9 @@ When you click a cell in the record view, the Edit panel shows its value on the 
 
 The Diff button below the comparison turns this highlighting on and off. With it off, both panes show plain text with no coloring, which is useful for reading the raw content of each version. Toggling it keeps your current scroll position rather than jumping back to the top.
 
-Direct editing of loaded plugins is off by default. Turn it on in Settings under the Editing page, where a warning explains that editing a plugin rewrites it on save and can break it. The choice is remembered between sessions. The merged patch column is always editable regardless of this setting.
+Direct editing of loaded plugins is off by default. Turn it on in Settings under the Editing page, where a warning explains that editing a plugin rewrites it automatically and can break it. The choice is remembered between sessions. The merged patch column is always editable regardless of this setting.
 
-When editing is enabled (via the Editing page in Settings), clicking a decoded field in any plugin's column activates the Edit panel as an editor. The right pane becomes editable and an Apply button appears. For enum fields (race, class, type), a dropdown selector shows all valid values. For flag fields (NPC flags, cell flags), the dropdown presents checkboxes for each flag bit. Free-text fields such as names and IDs accept direct text input. The panel validates the input against the field's constraints — numeric range, string length, and codepage encoding limits. A message to the left of the value selector and Apply button shows the field's accepted range while you edit (for example "Range: 0 to 255" for a byte field or "Range: up to 32 bytes" for a name); if the value becomes invalid, the field is marked red and the message switches to "Error:" followed by the reason. Fields edited through a dropdown show no range message, since the list already limits the choices. Some fields the game recomputes on its own, such as a leveled list's entry Count, cannot be edited; selecting one shows "Auto-calculated, not editable" in that same message spot and leaves the field read-only. A record's ID field is likewise read-only, since it identifies the record and renaming it in place would break references; selecting it shows "Record ID, not editable". Landscape records are read-only in full — their terrain data is not something the editor lets you change — and selecting any of their fields shows "Landscape data, not editable". The Apply button stays disabled until the value is both valid and different from the original. Clicking Apply updates the loaded plugin held in memory and refreshes the record view to reflect the new state. It does not write the plugin file at this point; the change is kept until you choose to save it.
-
-A plugin with changes that have not yet been written to disk is marked with an asterisk next to its name in the navigation panel, and the window title also shows an asterisk while any loaded plugin has unsaved changes. This gives you a clear view of which plugins have pending edits, so you can make several changes and decide when to commit them.
-
-To write a plugin's pending changes to disk, right-click that plugin in the navigation panel and choose **Save**. This option is available only while the plugin has unsaved changes. Saving writes the plugin file and removes its asterisk. The File menu offers **Save** to write the currently selected plugin and **Save All** to write every plugin with unsaved changes at once. Text you have typed into a field but not yet applied is not saved; only changes you confirmed with Apply are written.
+When editing is enabled (via the Editing page in Settings), clicking a decoded field in any plugin's column activates the Edit panel as an editor. The right pane becomes editable and an Apply button appears. For enum fields (race, class, type), a dropdown selector shows all valid values. For flag fields (NPC flags, cell flags), the dropdown presents checkboxes for each flag bit. Free-text fields such as names and IDs accept direct text input. The panel validates the input against the field's constraints — numeric range, string length, and codepage encoding limits. A message to the left of the value selector and Apply button shows the field's accepted range while you edit (for example "Range: 0 to 255" for a byte field or "Range: up to 32 bytes" for a name); if the value becomes invalid, the field is marked red and the message switches to "Error:" followed by the reason. Fields edited through a dropdown show no range message, since the list already limits the choices. Some fields the game recomputes on its own, such as a leveled list's entry Count, cannot be edited; selecting one shows "Auto-calculated, not editable" in that same message spot and leaves the field read-only. A record's ID field is likewise read-only, since it identifies the record and renaming it in place would break references; selecting it shows "Record ID, not editable". Landscape records are read-only in full — their terrain data is not something the editor lets you change — and selecting any of their fields shows "Landscape data, not editable". The Apply button stays disabled until the value is both valid and different from the original. Clicking Apply updates the plugin and writes the change to its file right away, then refreshes the record view to reflect the new state. There is no separate save step and no pending-changes marker. Text you have typed into a field but not yet applied is not written; only changes you confirmed with Apply are saved.
 
 ## History
 
@@ -157,7 +150,7 @@ The history is a record of what you did this session only. It is not written to 
 
 ## Creating a Merged Patch
 
-Click **Create Merged Patch** in the toolbar to run the automatic merge. If any loaded plugin has unsaved field edits, you are first offered to save those plugins or cancel the merge. The merge uses the current on-screen state of each plugin, so saving first keeps the files on disk consistent with what goes into the merged patch. Cancelling stops the merge and changes nothing.
+Click **Create Merged Patch** in the toolbar to run the automatic merge. The merge uses the current state of each plugin, which is always already written to disk, so it runs straight away without any save prompt.
 
 The auto-merge performs several operations:
 
@@ -180,7 +173,7 @@ Click **Create New Plugin** in the toolbar to create an empty plugin and make it
 
 Whenever a plugin is written — a new plugin created with an existing name, or the merged patch rebuilt — its modification date is set to the current moment. Because the Open Folder method orders plugins by modification date, this places the freshly written file last in load order, so it wins over everything it was built from, matching how the game and Mod Organizer 2 treat the newest file.
 
-To switch which plugin receives copies, right-click any plugin in the navigation tree and choose **Set as Active Plugin**. The option is greyed out for the plugin that is already active. Because only one plugin can be active at a time, switching first offers to save the current active plugin's changes so nothing is lost; you can save, discard, or cancel the switch. To go back to copying into the merged patch, set it as active again.
+To switch which plugin receives copies, right-click any plugin in the navigation tree and choose **Set as Active Plugin**. The option is greyed out for the plugin that is already active. Switching takes effect immediately; the active plugin's edits are already written to disk, so nothing is lost. To go back to copying into the merged patch, set it as active again.
 
 ### Locking Merged Patch Values
 
@@ -205,7 +198,7 @@ Open Settings via Ctrl+, or the Tools menu. Five pages are available:
 - **Merged Patch** — two sub-tabs control how auto-merge behaves:
   - **Excludes** — one table listing everything left out of the merged patch. Each row has a kind and a target. The kind chooses what the rule matches: an entire plugin File (by filename), a Record ID (a regular expression matched against record IDs), a whole Record Type (a four-letter code such as REGN), or a single Sub-Record (in `TYPE:SUB` form such as `CELL:NAM0`). Pick a kind, type the target, and press Add; select a row and press Remove to delete it. Excluding only keeps the matched content out of the merged patch — it does not change how anything is shown or how conflicts are detected. Right-clicking a record or a sub-record in the record view adds the matching rule here automatically.
   - **Fixes** — toggle individual bug fixes applied during merge: fog density correction, summon persistence flag, and cell name reversion prevention.
-- **Editing** — turn direct editing of loaded plugins on or off. When on, clicking a decoded field in any plugin's column lets you edit it in place. This is off by default and carries a warning, because editing a plugin rewrites it on save and can break it if a value is malformed. The merged patch is always editable regardless of this setting. The choice is remembered between sessions.
+- **Editing** — turn direct editing of loaded plugins on or off. When on, clicking a decoded field in any plugin's column lets you edit it in place. This is off by default and carries a warning, because editing a plugin rewrites it automatically and can break it if a value is malformed. The merged patch is always editable regardless of this setting. The choice is remembered between sessions.
 - **Cleaning** — toggle which cleaning operations the Clean All button performs. Evil GMSTs are Construction Set artifacts from Tribunal/Bloodmoon that can cause issues in mods that don't require those expansions. Junk cells are empty exterior cell records that only contain position data and serve no purpose. The Header Repair group provides additional fixes applied during cleaning: updating master file sizes in the plugin header to match the actual file sizes on disk, and updating the plugin version field to 1.3 (required by some engines).
 
 ## Cleaning Plugins

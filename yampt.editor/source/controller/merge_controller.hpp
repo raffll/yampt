@@ -93,11 +93,7 @@ public:
 	void save_active_plugin();
 	void sync_active_locks();
 
-	bool save_plugin(int plugin_idx);
-	void save_all_dirty();
-
 private:
-	bool prompt_save_before_merge();
 	bool confirm_merged_patch_regeneration(int merged_idx);
 	void activate_merged_patch_target(int merged_idx);
 	void rebuild_merged_patch_conflicts();
@@ -112,7 +108,6 @@ private:
 	    const std::string & description);
 	void refresh_after_active_edit(const std::string & rec_type, const std::string & record_id);
 	void relock_after_edit(const std::string & rec_type, const std::string & record_id);
-	bool prompt_save_active_before_switch();
 
 	std::string read_source_content(int plugin_idx, const std::string & rec_type, const std::string & record_id);
 	std::string ensure_active_record(
