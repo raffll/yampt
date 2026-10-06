@@ -113,7 +113,7 @@ Type text into the search field to filter the Records table. Only rows matching 
 - **.\*** — interpret the query as a regular expression.
 - **Key / Original / Translation** — choose which columns to search. Multiple can be active at once.
 
-Press Escape or click the × button inside the search field to clear the search and show all rows again. The × button appears automatically when the field contains text.
+Press Escape or click the Clear button in the toolbar to clear the search and show all rows again.
 
 ## Status Filter (Statuses tab)
 

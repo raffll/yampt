@@ -144,9 +144,12 @@ void main_window_t::setup_toolbar()
 
 	m_search_field = new QLineEdit(this);
 	m_search_field->setPlaceholderText(tr("Filter by..."));
-	m_search_field->setClearButtonEnabled(true);
 	m_search_field->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 	m_toolbar->addWidget(m_search_field);
+
+	m_search_clear = new QToolButton(this);
+	m_search_clear->setText(tr("Clear"));
+	m_toolbar->addWidget(m_search_clear);
 
 	m_case_sensitive_check = new QToolButton(this);
 	m_case_sensitive_check->setText(tr("Aa"));
@@ -177,6 +180,7 @@ void main_window_t::setup_toolbar()
 	m_toolbar->addWidget(m_search_col_translation);
 
 	m_search_field->setToolTip(tr("Search across entries"));
+	m_search_clear->setToolTip(tr("Clear the filter"));
 	m_case_sensitive_check->setToolTip(tr("Case-sensitive search"));
 	m_regex_check->setToolTip(tr("Regular expression search"));
 	m_search_col_key->setToolTip(tr("Search in key column"));
@@ -981,6 +985,7 @@ void main_window_t::connect_editor_signals()
 void main_window_t::connect_search_signals()
 {
 	connect(m_search_field, &QLineEdit::textChanged, this, &main_window_t::on_search_changed);
+	connect(m_search_clear, &QToolButton::clicked, m_search_field, &QLineEdit::clear);
 	connect(m_case_sensitive_check, &QToolButton::toggled, this, [this]() { on_case_sensitive_changed(0); });
 	connect(m_regex_check, &QToolButton::toggled, this, [this]() { on_search_changed(m_search_query); });
 

@@ -3,14 +3,14 @@
 ## [XXX]
 
 ### yTranslator
-- [NEW] The search field in the toolbar shows a clear button (×) when text is present, as an alternative to pressing Escape
+- [NEW] The toolbar has a Clear button next to the search field that empties the filter, as an alternative to pressing Escape
 - [FIX] Propagating a translation now only applies to entries that are Untranslated. Entries with any other status — Translated, In Progress, Generated, and so on — are left unchanged
 
 ### yEditor
-- [CHANGE] The window title now shows the [Active] marker before the active plugin's file name (for example "yEditor - [Active] Merged Patch.esp"), matching the [Active] label already shown in the navigation tree and record view
-- [FIX] Editing a field (such as an NPC display name) on a loaded plugin now saves back to that plugin's original file. Previously, the save always wrote to the configured output directory, so edits on a plugin other than the merged patch would silently land in the wrong location
 - [NEW] When two plugins change the owner of the same placed object in a cell (the person or faction who gets angry if you steal it), the merged patch now keeps that owner change instead of losing it. Only the owner is merged: the object otherwise stays exactly as the winning plugin left it, and no other placed objects are copied. This applies to changing an owner, adding one, or clearing one
 - [NEW] In the navigation tree you can jump to a plugin by typing: with the tree focused, press a letter or number key and the selection moves to the next plugin whose file name begins with that character, wrapping back to the top after the last match. Only plugin rows respond, so the keys never land on a record
+- [CHANGE] The window title now shows the [Active] marker before the active plugin's file name (for example "yEditor - [Active] Merged Patch.esp"), matching the [Active] label already shown in the navigation tree and record view
+- [FIX] Editing a field (such as an NPC display name) on a loaded plugin now saves back to that plugin's original file. Previously, the save always wrote to the configured output directory, so edits on a plugin other than the merged patch would silently land in the wrong location
 - [FIX] The cell conflict view no longer lines up unrelated placed objects as if they were the same object. When separate plugins each add their own object to a cell, those objects can share an internal slot number, and they were being shown stacked in one row with mismatched values. Objects are now matched by their true identity, so a plugin's edit to a base-game object still lines up with the original, while objects added independently by different plugins are shown as separate entries
 - [FIX] A cell that differs between plugins only in its internal object count is no longer flagged as a conflict or override. That count is a meaningless bookkeeping value the game recalculates, so cells that are otherwise identical are now treated as identical
 - [FIX] Inventory and spell lists now merge correctly when the master record has none: an item or spell added by a plugin is kept in the merged patch even if the base game record had no inventory or spells at all. Previously the addition was dropped unless the master already listed at least one entry of that kind

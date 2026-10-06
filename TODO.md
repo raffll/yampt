@@ -1,11 +1,5 @@
 # TODO
 
-## Easy
-
-- title should also add [Active]
-- remove save, save all, and any code related to saving file on demand, asterisk etc
-- Hyperlink highlighting in original/translated text boxes should only apply to DIAL/INFO record types, not to item names, cell names etc. — yTranslator
-
 ## Medium
 
 - Show NPC gender in the FNAM section — visual indicator (icon or label) — yTranslator
