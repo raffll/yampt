@@ -7,11 +7,9 @@
 - Filter bar: add a clear button (as an alternative to Esc) — yTranslator
 - Plugin list navigation: pressing a letter key should jump to the first plugin starting with that letter — yEditor
 - Hyperlink highlighting in original/translated text boxes should only apply to DIAL/INFO record types, not to item names, cell names etc. — yTranslator
-- Propagation should skip entries already marked as `translated` — yTranslator
 
 ## Medium
 
-- Fix capitalisation bug: changing case on one entry (e.g. CELL) incorrectly changes another (e.g. DIAL) that shares the same `old_text` — yTranslator
 - Show NPC gender in the FNAM section — visual indicator (icon or label) — yTranslator
 - advanced filters: locked only, excluded only — yEditor
 - Auto-save after edit not working — user applied an FNAM edit but changes were not saved to disk — yEditor

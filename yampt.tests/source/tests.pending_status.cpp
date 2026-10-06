@@ -98,7 +98,7 @@ TEST_CASE("dict_document_t::commit, second commit without explicit intent defaul
 	const auto result = doc.commit(row_b, "Manually typed", status_t::in_progress);
 
 	REQUIRE(result.success);
-	REQUIRE(result.status == status_t::propagated);
+	REQUIRE(result.status == status_t::in_progress);
 
 	cleanup_test_dict(path);
 }
