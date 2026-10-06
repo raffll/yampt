@@ -2,6 +2,24 @@
 #include "../utility/app_logger.hpp"
 #include "../utility/string_utils.hpp"
 #include "binary_file_io.hpp"
+#include <string_view>
+
+static bool is_plausible_record_tag(std::string_view tag)
+{
+	if (tag.size() != esm_reader_t::sub_record_id_size)
+		return false;
+
+	for (const char character : tag)
+	{
+		const bool is_upper = character >= 'A' && character <= 'Z';
+		const bool is_digit = character >= '0' && character <= '9';
+		const bool is_underscore = character == '_';
+		if (!is_upper && !is_digit && !is_underscore)
+			return false;
+	}
+
+	return true;
+}
 
 esm_reader_t::esm_reader_t(const std::string & path)
 {
@@ -30,9 +48,25 @@ void esm_reader_t::split_file(const std::string & content, const std::string & p
 		while (record_end != content.size())
 		{
 			record_begin = record_end;
+			const auto & record_tag = content.substr(record_begin, sub_record_id_size);
+
+			if (!is_plausible_record_tag(record_tag))
+			{
+				const auto & sanitized_tag = string_utils::replace_non_printable_with_dot(record_tag);
+				app_logger_t::add_log(
+				    "[error] record at offset " + std::to_string(record_begin) + " has an invalid type tag \"" +
+				    sanitized_tag + "\", stopping (possibly broken file or record)\r\n");
+				break;
+			}
+
 			const auto & size_bytes = content.substr(record_begin + record_size_field_offset, record_size_field_length);
 			const auto record_size = domain_types::convert_string_byte_array_to_uint(size_bytes) + record_header_size;
 			record_end = record_begin + record_size;
+
+			app_logger_t::add_log(
+			    "[debug] record_begin=" + std::to_string(record_begin) + " size=" + std::to_string(record_size) +
+			        " id=" + record_tag + "\r\n",
+			    true);
 
 			if (record_end > content.size())
 			{

@@ -694,3 +694,30 @@ TEST_CASE("plugin_scan_t::build_slot_result_for, rebuilds alignment on demand", 
 	REQUIRE(slot_result->contents.size() == 2);
 	REQUIRE_FALSE(slot_result->aligned.empty());
 }
+
+TEST_CASE("plugin_scan_t::resolve_frmr, out of range master yields sentinel", "[i]")
+{
+	slot_result_fixture_t fixture;
+
+	const auto plugin_a = make_plugin({ make_weap_record("iron_dagger", "Iron Dagger") });
+	fixture.add_plugin("yampt_test_frmr_oor.esp", plugin_a);
+
+	const uint32_t raw_frmr = 0x05000010;
+	const uint64_t result = fixture.scan.resolve_frmr(0, raw_frmr);
+
+	REQUIRE(result == plugin_scan_t::frmr_unresolved_identity);
+	REQUIRE(result != ((static_cast<uint64_t>(0) << 32) | 0x10));
+}
+
+TEST_CASE("plugin_scan_t::resolve_frmr, in range high byte zero unchanged", "[i]")
+{
+	slot_result_fixture_t fixture;
+
+	const auto plugin_a = make_plugin({ make_weap_record("iron_dagger", "Iron Dagger") });
+	fixture.add_plugin("yampt_test_frmr_inrange.esp", plugin_a);
+
+	const uint32_t raw_frmr = 0x00000010;
+	const uint64_t result = fixture.scan.resolve_frmr(0, raw_frmr);
+
+	REQUIRE(result == ((static_cast<uint64_t>(0) << 32) | 0x10));
+}

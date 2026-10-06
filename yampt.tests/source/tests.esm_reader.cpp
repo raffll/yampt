@@ -198,3 +198,60 @@ TEST_CASE("esm_reader_t::remove_record, erases record and shifts indices", "[i]"
 	REQUIRE(reader.get_key().exist == true);
 	REQUIRE(reader.get_key().text == "sGamma");
 }
+
+TEST_CASE("esm_reader_t::split_file, parses consecutive records", "[i]")
+{
+	auto tes3 = make_record("TES3", make_sub_record("HEDR", std::string(300, '\0')));
+	auto gmst = make_record("GMST", make_sub_record("NAME", std::string("sSetting\0", 9)));
+	auto cell = make_record("CELL", make_sub_record("NAME", std::string("Balmora\0", 8)));
+	auto npc = make_record("NPC_", make_sub_record("NAME", std::string("fargoth\0", 8)));
+
+	std::string file_content = tes3 + gmst + cell + npc;
+
+	const auto temp_path = get_temp_path("yampt_test_consecutive.esm");
+	binary_file_io::write_text(file_content, temp_path);
+	esm_reader_t reader(temp_path);
+	std::filesystem::remove(temp_path);
+
+	REQUIRE(reader.is_loaded());
+	REQUIRE(reader.get_records().size() == 4);
+	REQUIRE(reader.get_records()[0].id == "TES3");
+	REQUIRE(reader.get_records()[1].id == "GMST");
+	REQUIRE(reader.get_records()[2].id == "CELL");
+	REQUIRE(reader.get_records()[3].id == "NPC_");
+}
+
+TEST_CASE("esm_reader_t::split_file, stops on boundary drift", "[i]")
+{
+	auto tes3 = make_record("TES3", make_sub_record("HEDR", std::string(300, '\0')));
+	auto gmst = make_record("GMST", make_sub_record("NAME", std::string("sSetting\0", 9)));
+
+	auto cell_body = make_sub_record("NAME", std::string("Balmora\0", 8));
+	std::string drift_header;
+	drift_header += "CELL";
+	drift_header += domain_types::convert_uint_to_string_byte_array(cell_body.size() + 2);
+	drift_header += domain_types::convert_uint_to_string_byte_array(0);
+	drift_header += domain_types::convert_uint_to_string_byte_array(0);
+	auto drift_record = drift_header + cell_body;
+
+	auto npc = make_record("NPC_", make_sub_record("NAME", std::string("fargoth\0", 8)));
+	auto armo = make_record("ARMO", make_sub_record("NAME", std::string("iron_helm\0", 10)));
+
+	std::string file_content = tes3 + gmst + drift_record + npc + armo;
+
+	const auto temp_path = get_temp_path("yampt_test_drift.esm");
+	binary_file_io::write_text(file_content, temp_path);
+	esm_reader_t reader(temp_path);
+	std::filesystem::remove(temp_path);
+
+	REQUIRE(reader.get_records().size() == 3);
+	REQUIRE(reader.get_records()[0].id == "TES3");
+	REQUIRE(reader.get_records()[1].id == "GMST");
+	REQUIRE(reader.get_records()[2].id == "CELL");
+
+	for (const auto & record : reader.get_records())
+	{
+		REQUIRE(record.id != "NPC_");
+		REQUIRE(record.id != "ARMO");
+	}
+}

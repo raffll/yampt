@@ -60,7 +60,13 @@ uint64_t plugin_scan_t::resolve_frmr(int plugin_idx, uint32_t raw_frmr) const
 	const auto & masters = m_plugins[plugin_idx]->master_files;
 	const size_t master_array_idx = local_master - 1;
 	if (master_array_idx >= masters.size())
-		return (static_cast<uint64_t>(plugin_idx) << 32) | ref_index;
+	{
+		app_logger_t::add_log(
+		    "[error] resolve_frmr: plugin_idx=" + std::to_string(plugin_idx) + " raw_frmr=" +
+		    std::to_string(raw_frmr) + " references local master index " + std::to_string(local_master) +
+		    " but the plugin declares only " + std::to_string(masters.size()) + " masters\r\n");
+		return frmr_unresolved_identity;
+	}
 
 	const auto & master_filename = masters[master_array_idx];
 	for (int i = 0; i < static_cast<int>(m_plugins.size()); ++i)
