@@ -34,6 +34,7 @@ inline const char * display(const std::string & type)
 		{ "LIGH", "Light" },
 		{ "LOCK", "Lockpick" },
 		{ "LTEX", "Land Texture" },
+		{ "LUAL", "Lua Config" },
 		{ "MGEF", "Magic Effect" },
 		{ "MISC", "Misc. Item" },
 		{ "NPC_", "NPC" },
