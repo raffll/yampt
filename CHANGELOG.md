@@ -4,6 +4,7 @@
 
 ### yTranslator
 - [NEW] The toolbar has a Clear button next to the search field that empties the filter, as an alternative to pressing Escape
+- [NEW] NPC display-name entries now show the character's gender next to the name in the Annotations panel, the same way dialogue entries show the speaker's gender; it appears in dictionaries created after this change
 - [FIX] Propagating a translation now only applies to entries that are Untranslated. Entries with any other status — Translated, In Progress, Generated, and so on — are left unchanged
 
 ### yEditor

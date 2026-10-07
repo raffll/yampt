@@ -81,6 +81,7 @@ void creator_single_t::make_fnam()
 			creator_helpers::insert_entry_single(m_ctx, key_text, text, text, rec_type_t::fnam);
 
 		creator_helpers::enrich_fnam_enchantment(m_ctx, key_text, m_ctx.esm);
+		creator_helpers::enrich_fnam_gender(m_ctx, key_text, m_ctx.esm);
 	}
 }
 

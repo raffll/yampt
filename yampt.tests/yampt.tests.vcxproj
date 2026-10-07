@@ -236,6 +236,7 @@
     <ClCompile Include="source\tests.sub_record_schema.cpp" />
     <ClCompile Include="source\tests.record_behavior.cpp" />
     <ClCompile Include="source\tests.record_composition.cpp" />
+    <ClCompile Include="source\tests.record_types.cpp" />
     <ClCompile Include="source\tests.view_tree_format.cpp" />
     <ClCompile Include="source\tests.plugin_index.cpp" />
     <ClCompile Include="source\tests.determine_status.cpp" />

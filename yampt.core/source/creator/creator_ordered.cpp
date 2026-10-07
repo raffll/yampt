@@ -130,6 +130,7 @@ void creator_ordered_t::process_fnam(size_t i)
 	insert_entry_base(key_text, old_text, new_text, rec_type_t::fnam, status_t::translated);
 
 	creator_helpers::enrich_fnam_enchantment(m_ctx, key_text, m_ctx.esm);
+	creator_helpers::enrich_fnam_gender(m_ctx, key_text, m_ctx.esm);
 }
 
 void creator_ordered_t::process_desc(size_t i)
