@@ -244,14 +244,90 @@ TEST_CASE("esm_reader_t::split_file, stops on boundary drift", "[i]")
 	esm_reader_t reader(temp_path);
 	std::filesystem::remove(temp_path);
 
-	REQUIRE(reader.get_records().size() == 3);
+	REQUIRE(reader.get_records().size() == 2);
 	REQUIRE(reader.get_records()[0].id == "TES3");
 	REQUIRE(reader.get_records()[1].id == "GMST");
-	REQUIRE(reader.get_records()[2].id == "CELL");
+
+	for (const auto & record : reader.get_records())
+	{
+		REQUIRE(record.id != "CELL");
+		REQUIRE(record.id != "NPC_");
+		REQUIRE(record.id != "ARMO");
+	}
+}
+
+TEST_CASE("esm_reader_t::split_file, valid records with sub-records tile and parse", "[i]")
+{
+	auto tes3 = make_record("TES3", make_sub_record("HEDR", std::string(300, '\0')));
+
+	auto npc_body = make_sub_record("NAME", std::string("fargoth\0", 8)) +
+	                make_sub_record("FNAM", std::string("Fargoth\0", 8)) +
+	                make_sub_record("RNAM", std::string("Wood Elf\0", 9));
+	auto npc = make_record("NPC_", npc_body);
+
+	auto info = make_record("INFO", "");
+
+	std::string file_content = tes3 + npc + info;
+
+	const auto temp_path = get_temp_path("yampt_test_tile_valid.esm");
+	binary_file_io::write_text(file_content, temp_path);
+	esm_reader_t reader(temp_path);
+	std::filesystem::remove(temp_path);
+
+	REQUIRE(reader.is_loaded());
+	REQUIRE(reader.get_records().size() == 3);
+	REQUIRE(reader.get_records()[0].id == "TES3");
+	REQUIRE(reader.get_records()[1].id == "NPC_");
+	REQUIRE(reader.get_records()[2].id == "INFO");
+}
+
+TEST_CASE("esm_reader_t::split_file, stops on sub-record tiling mismatch", "[i]")
+{
+	auto tes3 = make_record("TES3", make_sub_record("HEDR", std::string(300, '\0')));
+
+	auto cell_body =
+	    make_sub_record("NAME", std::string("Balmora\0", 8)) + make_sub_record("FRMR", std::string(4, '\0'));
+	std::string mis_sized_header;
+	mis_sized_header += "CELL";
+	mis_sized_header += domain_types::convert_uint_to_string_byte_array(cell_body.size() - 8);
+	mis_sized_header += domain_types::convert_uint_to_string_byte_array(0);
+	mis_sized_header += domain_types::convert_uint_to_string_byte_array(0);
+	auto mis_sized_record = mis_sized_header + cell_body;
+
+	auto npc = make_record("NPC_", make_sub_record("NAME", std::string("fargoth\0", 8)));
+	auto armo = make_record("ARMO", make_sub_record("NAME", std::string("iron_helm\0", 10)));
+
+	std::string file_content = tes3 + mis_sized_record + npc + armo;
+
+	const auto temp_path = get_temp_path("yampt_test_tile_mismatch.esm");
+	binary_file_io::write_text(file_content, temp_path);
+	esm_reader_t reader(temp_path);
+	std::filesystem::remove(temp_path);
+
+	REQUIRE(reader.get_records().size() == 1);
+	REQUIRE(reader.get_records()[0].id == "TES3");
 
 	for (const auto & record : reader.get_records())
 	{
 		REQUIRE(record.id != "NPC_");
 		REQUIRE(record.id != "ARMO");
 	}
+}
+
+TEST_CASE("esm_reader_t::split_file, empty-body record tiles", "[i]")
+{
+	auto tes3 = make_record("TES3", make_sub_record("HEDR", std::string(300, '\0')));
+	auto dial = make_record("DIAL", "");
+
+	std::string file_content = tes3 + dial;
+
+	const auto temp_path = get_temp_path("yampt_test_tile_empty.esm");
+	binary_file_io::write_text(file_content, temp_path);
+	esm_reader_t reader(temp_path);
+	std::filesystem::remove(temp_path);
+
+	REQUIRE(reader.is_loaded());
+	REQUIRE(reader.get_records().size() == 2);
+	REQUIRE(reader.get_records()[0].id == "TES3");
+	REQUIRE(reader.get_records()[1].id == "DIAL");
 }

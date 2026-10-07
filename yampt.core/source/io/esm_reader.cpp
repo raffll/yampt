@@ -21,6 +21,30 @@ static bool is_plausible_record_tag(std::string_view tag)
 	return true;
 }
 
+static bool sub_records_tile_exactly(const std::string & record_content)
+{
+	const auto body_end = record_content.size();
+	auto cursor = esm_reader_t::record_header_size;
+
+	while (cursor < body_end)
+	{
+		if (cursor + esm_reader_t::sub_record_header_size > body_end)
+			return false;
+
+		const auto & size_field =
+		    record_content.substr(cursor + esm_reader_t::sub_record_id_size, esm_reader_t::sub_record_id_size);
+		const auto sub_size = domain_types::convert_string_byte_array_to_uint(size_field);
+		const auto next_cursor = cursor + esm_reader_t::sub_record_header_size + sub_size;
+
+		if (next_cursor > body_end)
+			return false;
+
+		cursor = next_cursor;
+	}
+
+	return cursor == body_end;
+}
+
 esm_reader_t::esm_reader_t(const std::string & path)
 {
 	const auto & content = binary_file_io::read_file(path);
@@ -77,6 +101,22 @@ void esm_reader_t::split_file(const std::string & content, const std::string & p
 			}
 
 			const auto & record_content = content.substr(record_begin, record_size);
+
+			if (!sub_records_tile_exactly(record_content))
+			{
+				app_logger_t::add_log(
+				    "[error] record at offset " + std::to_string(record_begin) + " (tag \"" + record_tag +
+				    "\") declares size " + std::to_string(record_size) +
+				    " but its sub-records do not tile exactly to the record body, stopping (possibly broken file "
+				    "or record)\r\n");
+				break;
+			}
+
+			app_logger_t::add_log(
+			    "[debug] tiling ok record_begin=" + std::to_string(record_begin) + " size=" +
+			        std::to_string(record_size) + "\r\n",
+			    true);
+
 			const auto & record_id = record_content.substr(0, sub_record_id_size);
 			m_records.push_back({ record_id, record_content, record_content.size(), false });
 		}
