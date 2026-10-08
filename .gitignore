@@ -31,3 +31,4 @@ dictionaries/*.dic
 /bugs
 /tests
 /.agents
+/.worktrees
