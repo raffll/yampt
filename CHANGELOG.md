@@ -5,6 +5,7 @@
 ### yTranslator
 - [NEW] The toolbar has a Clear button next to the search field that empties the filter, as an alternative to pressing Escape
 - [NEW] NPC display-name entries now show the character's gender next to the name in the Annotations panel, the same way dialogue entries show the speaker's gender; it appears in dictionaries created after this change
+- [CHANGE] The blue dialogue-topic highlighting in the Original and Translation boxes now appears only while editing a dialogue topic or dialogue response entry; on all other record types it is no longer shown. The green glossary highlighting is unaffected and still appears for every record type
 - [FIX] Propagating a translation now only applies to entries that are Untranslated. Entries with any other status — Translated, In Progress, Generated, and so on — are left unchanged
 
 ### yEditor
@@ -103,7 +104,6 @@
 - [CHANGE] Hyperlink and glossary annotations are now built only from entries with the Translated status, so unverified translations no longer contribute topic links or glossary terms
 - [CHANGE] When editing a localization file, the two columns are now labelled for the file type: Cell and Translation for .cel, Topic Form and Topic for .top, and Translation and Topic for .mrk
 - [CHANGE] History entries now show the status in square brackets to match the timestamp style
-- [CHANGE] The blue dialogue-topic highlighting in the Original and Translation boxes now appears only while editing a dialogue topic or dialogue response entry; on all other record types it is no longer shown. The green glossary highlighting is unaffected and still appears for every record type
 - [FIX] The validation status now states the reason when a translation is invalid (for example the byte limit it exceeds, or the forbidden character it contains), instead of only the character count
 - [FIX] A translation is now propagated to other entries with the same source text even when the translation is identical to the original (a proper noun), while entries that already hold that text are left untouched
 - [FIX] An invalid translation (containing a forbidden character or exceeding the byte limit) is marked with the Error status and is no longer propagated to other entries; propagation also skips any entry whose record type cannot hold the text within its own byte limit
