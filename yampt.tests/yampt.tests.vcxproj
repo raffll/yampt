@@ -260,6 +260,7 @@
     <ClCompile Include="source\tests.cell_matcher.cpp" />
     <ClCompile Include="source\tests.dial_matcher.cpp" />
     <ClCompile Include="source\tests.nav_tree_filter.cpp" />
+    <ClCompile Include="source\tests.type_ahead.cpp" />
     <ClCompile Include="source\tests.highlight_coordinator.cpp" />
     <ClCompile Include="source\tests.highlight_applier.cpp" />
     <ClCompile Include="source\tests.patch_builder.cpp" />
@@ -318,6 +319,7 @@
     <ClCompile Include="..\yampt.translator\source\model\table_columns.cpp" />
     <ClCompile Include="..\yampt.editor\source\session\profile_file_reader.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\nav_tree_filter.cpp" />
+    <ClCompile Include="..\yampt.editor\source\view\type_ahead.cpp" />
     <ClCompile Include="..\yampt.editor\source\session\plugin_session.cpp" />
     <ClCompile Include="..\yampt.editor\source\patcher\patch_builder.cpp" />
 

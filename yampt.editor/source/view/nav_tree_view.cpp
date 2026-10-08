@@ -1,5 +1,7 @@
 #include "nav_tree_view.hpp"
+#include "type_ahead.hpp"
 #include <utility/string_utils.hpp>
+#include <vector>
 #include <functional>
 #include <QDragEnterEvent>
 #include <QDragMoveEvent>
@@ -289,20 +291,13 @@ bool nav_tree_view_t::handle_type_ahead(QKeyEvent * key_event)
 int nav_tree_view_t::next_matching_plugin_row(const std::string & lowered_prefix, int start_row) const
 {
 	const int total_rows = m_model->rowCount({});
-	if (total_rows == 0)
-		return -1;
 
-	const int begin = (start_row + 1) % total_rows;
+	std::vector<std::string> filenames;
+	filenames.reserve(static_cast<size_t>(total_rows));
+	for (int row = 0; row < total_rows; ++row)
+		filenames.push_back(m_model->plugin_filename_at(row));
 
-	for (int offset = 0; offset < total_rows; ++offset)
-	{
-		const int row = (begin + offset) % total_rows;
-		const auto & filename = string_utils::to_lower(m_model->plugin_filename_at(row));
-		if (filename.starts_with(lowered_prefix))
-			return row;
-	}
-
-	return -1;
+	return type_ahead::next_matching_row(filenames, lowered_prefix, start_row);
 }
 
 bool nav_tree_view_t::handle_viewport_drag(QEvent * event)
