@@ -16,8 +16,8 @@ Qt6 GUI for viewing, comparing, and patching plugins. Similar to TES5Edit/xEdit.
 - Composable filters: Conflicts Only, search by ID/name, and advanced criteria combine as AND
 
 **Editing**
-- **Direct field editing of source plugins — toggle Enable Editing on the toolbar, change values in the Edit panel**
-- Applying a field edit writes the plugin to disk immediately — there is no manual save step
+- **Direct field editing — select a decoded field in the Edit panel, change its value, and press Apply**
+- Applying a field edit writes the change to the active plugin automatically — there is no manual save step
 - Remove a record from a plugin — right-click the record and choose Remove Record from Plugin; the record is dropped immediately
 - History tab lists the edits and record removals made during the session (not saved, resets on unload)
 
