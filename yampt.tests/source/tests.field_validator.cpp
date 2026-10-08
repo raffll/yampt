@@ -119,6 +119,64 @@ TEST_CASE("field_validator::validate_field, string_fixed size limits", "[u]")
 	}
 }
 
+TEST_CASE("field_validator::validate_string_fixed, rejects unmappable character", "[u]")
+{
+	field_def_t field = { "val", field_type_t::string_fixed, 0, 32, nullptr, nullptr, 0, nullptr };
+
+	SECTION("cyrillic in 1252 rejected")
+	{
+		auto result = field_validator::validate_field(field, "\xD0\xAF", codepage_t::windows_1252, 0);
+		REQUIRE_FALSE(result.valid);
+	}
+	SECTION("cjk in 1252 rejected")
+	{
+		auto result = field_validator::validate_field(field, "\xE4\xB8\x80", codepage_t::windows_1252, 0);
+		REQUIRE_FALSE(result.valid);
+	}
+	SECTION("western letter with tilde in 1251 rejected")
+	{
+		auto result = field_validator::validate_field(field, "\xC3\xB1", codepage_t::windows_1251, 0);
+		REQUIRE_FALSE(result.valid);
+	}
+	SECTION("representable text passes")
+	{
+		auto result = field_validator::validate_field(field, "Hello", codepage_t::windows_1252, 0);
+		REQUIRE(result.valid);
+	}
+	SECTION("representable western accents pass in 1252")
+	{
+		auto result = field_validator::validate_field(field, "\xC3\xB1", codepage_t::windows_1252, 0);
+		REQUIRE(result.valid);
+	}
+	SECTION("representable cyrillic passes in 1251")
+	{
+		auto result = field_validator::validate_field(field, "\xD0\xAF", codepage_t::windows_1251, 0);
+		REQUIRE(result.valid);
+	}
+	SECTION("byte-length limit still rejects overlong input")
+	{
+		field_def_t small_field = { "val", field_type_t::string_fixed, 0, 4, nullptr, nullptr, 0, nullptr };
+		auto result = field_validator::validate_field(small_field, "ABCDE", codepage_t::windows_1252, 0);
+		REQUIRE_FALSE(result.valid);
+	}
+}
+
+TEST_CASE("field_validator::validate_string_var, rejects unmappable character", "[u]")
+{
+	field_def_t field = { "val", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr };
+
+	SECTION("cjk in 1250 rejected")
+	{
+		auto result = field_validator::validate_field(field, "\xE4\xB8\x80", codepage_t::windows_1250, 0);
+		REQUIRE_FALSE(result.valid);
+	}
+	SECTION("representable text passes")
+	{
+		auto result = field_validator::validate_field(field, "Zdravstvuyte", codepage_t::windows_1250, 0);
+		REQUIRE(result.valid);
+	}
+}
+
 TEST_CASE("field_validator::validate_field, enum names", "[u]")
 {
 	field_def_t field = { "val", field_type_t::enum_u8, 0, 1, enum_names, nullptr, 0, nullptr };

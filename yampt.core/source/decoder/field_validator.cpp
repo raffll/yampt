@@ -111,11 +111,20 @@ static validate_result_t validate_float(std::string_view input)
 	return make_valid();
 }
 
+static std::string unmappable_message(codepage_t codepage)
+{
+	return "contains characters that cannot be encoded in the selected codepage (" +
+	       std::to_string(static_cast<int>(codepage)) + ")";
+}
+
 static validate_result_t validate_string_fixed(std::string_view input, codepage_t codepage, size_t max_bytes)
 {
-	const std::string encoded = encode_from_utf8(std::string(input), codepage);
+	const encode_result_t result = encode_from_utf8_checked(std::string(input), codepage);
 
-	if (encoded.size() > max_bytes)
+	if (result.has_unmappable_chars)
+		return make_invalid(unmappable_message(codepage));
+
+	if (result.encoded.size() > max_bytes)
 		return make_invalid("encoded string exceeds field size");
 
 	return make_valid();
@@ -123,9 +132,12 @@ static validate_result_t validate_string_fixed(std::string_view input, codepage_
 
 static validate_result_t validate_string_var(std::string_view input, codepage_t codepage)
 {
-	const std::string encoded = encode_from_utf8(std::string(input), codepage);
+	const encode_result_t result = encode_from_utf8_checked(std::string(input), codepage);
 
-	if (encoded.size() > max_string_var_bytes)
+	if (result.has_unmappable_chars)
+		return make_invalid(unmappable_message(codepage));
+
+	if (result.encoded.size() > max_string_var_bytes)
 		return make_invalid("encoded string exceeds maximum size");
 
 	return make_valid();
