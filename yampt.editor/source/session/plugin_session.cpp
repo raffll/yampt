@@ -404,11 +404,32 @@ void plugin_session_t::load_plugins_internal(const std::vector<std::string> & pa
 	if (m_scan.plugin_count() == 0)
 		return;
 
+	warn_missing_masters();
+
 	emit load_phase(QCoreApplication::translate("yEditor", "Computing conflicts...").toStdString());
 	emit load_progress(0, 1);
 	m_scan.rebuild_conflicts([this](size_t done, size_t total)
 	{ emit load_progress(static_cast<int>(done), static_cast<int>(total)); });
 	emit plugins_loaded();
+}
+
+void plugin_session_t::warn_missing_masters()
+{
+	const int plugin_count = static_cast<int>(m_scan.plugin_count());
+
+	std::vector<std::string> loaded_filenames;
+	loaded_filenames.reserve(static_cast<size_t>(plugin_count));
+	for (int i = 0; i < plugin_count; ++i)
+		loaded_filenames.push_back(m_scan.plugin_filename(i));
+
+	for (int i = 0; i < plugin_count; ++i)
+	{
+		const auto missing = plugin_scan_t::missing_masters(m_scan.master_list(i), loaded_filenames);
+		for (const auto & master : missing)
+			emit log_message(
+			    "[warning] " + m_scan.plugin_filename(i) + " declares master \"" + master +
+			    "\" which is not loaded (it may be in a different folder)");
+	}
 }
 
 std::vector<std::string> plugin_session_t::parse_mo2_profile(const QString & profile_dir)

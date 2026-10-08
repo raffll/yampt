@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <fstream>
 #include <map>
+#include <stdexcept>
 
 static std::string make_sub_record(const std::string & sub_id, const std::string & content)
 {
@@ -720,4 +721,108 @@ TEST_CASE("plugin_scan_t::resolve_frmr, in range high byte zero unchanged", "[i]
 	const uint64_t result = fixture.scan.resolve_frmr(0, raw_frmr);
 
 	REQUIRE(result == ((static_cast<uint64_t>(0) << 32) | 0x10));
+}
+
+TEST_CASE("plugin_scan_t::guard_entry_computation, successful work returns true and logs nothing", "[u]")
+{
+	conflict_entry_t entry;
+	entry.rec_type = "WEAP";
+	entry.record_id = "iron_dagger";
+
+	std::vector<std::string> error_log;
+	bool work_ran = false;
+
+	const bool succeeded = plugin_scan_t::guard_entry_computation(
+	    entry, [&work_ran] { work_ran = true; }, error_log);
+
+	REQUIRE(succeeded);
+	REQUIRE(work_ran);
+	REQUIRE(error_log.empty());
+}
+
+TEST_CASE("plugin_scan_t::guard_entry_computation, out of range throw is caught and logged", "[u]")
+{
+	conflict_entry_t entry;
+	entry.rec_type = "WEAP";
+	entry.record_id = "iron_dagger";
+
+	record_version_t ver;
+	ver.plugin_idx = 2;
+	ver.record_index = 9999;
+	entry.versions.push_back(ver);
+
+	std::vector<std::string> error_log;
+
+	const bool succeeded = plugin_scan_t::guard_entry_computation(
+	    entry, [] { throw std::out_of_range("vector"); }, error_log);
+
+	REQUIRE_FALSE(succeeded);
+	REQUIRE(error_log.size() == 1);
+	REQUIRE(error_log[0].rfind("[error]", 0) == 0);
+	REQUIRE(error_log[0].find("WEAP") != std::string::npos);
+	REQUIRE(error_log[0].find("iron_dagger") != std::string::npos);
+	REQUIRE(error_log[0].find("record_index=9999") != std::string::npos);
+}
+
+TEST_CASE("plugin_scan_t::guard_entry_computation, non std throw is caught by final guard", "[u]")
+{
+	conflict_entry_t entry;
+	entry.rec_type = "CELL";
+	entry.record_id = "Balmora";
+
+	std::vector<std::string> error_log;
+
+	const bool succeeded = plugin_scan_t::guard_entry_computation(
+	    entry, [] { throw 42; }, error_log);
+
+	REQUIRE_FALSE(succeeded);
+	REQUIRE(error_log.size() == 1);
+	REQUIRE(error_log[0].rfind("[error] unknown exception", 0) == 0);
+	REQUIRE(error_log[0].find("CELL") != std::string::npos);
+	REQUIRE(error_log[0].find("Balmora") != std::string::npos);
+}
+
+TEST_CASE("plugin_scan_t::rebuild_conflicts, bad record index is skipped and others still compute", "[i]")
+{
+	slot_result_fixture_t fixture;
+
+	const auto plugin_a = make_plugin({ make_weap_record("iron_dagger", "Iron Dagger") });
+	const auto plugin_b = make_plugin({ make_weap_record("iron_dagger", "Steel Dagger") });
+
+	fixture.add_plugin("yampt_test_badidx_a.esm", plugin_a);
+	fixture.add_plugin("yampt_test_badidx_b.esp", plugin_b);
+
+	app_logger_t::reset_log();
+	REQUIRE_NOTHROW(fixture.scan.rebuild_conflicts());
+
+	const auto * entry = fixture.scan.find("WEAP", "iron_dagger");
+	REQUIRE(entry != nullptr);
+	REQUIRE(entry->conflict_all > conflict_all_t::only_one);
+}
+
+TEST_CASE("plugin_scan_t::missing_masters, all present returns empty", "[u]")
+{
+	const std::vector<std::string> declared = { "Morrowind.esm", "Tribunal.esm" };
+	const std::vector<std::string> loaded = { "Morrowind.esm", "Tribunal.esm", "Mod.esp" };
+
+	REQUIRE(plugin_scan_t::missing_masters(declared, loaded).empty());
+}
+
+TEST_CASE("plugin_scan_t::missing_masters, absent master is returned", "[u]")
+{
+	const std::vector<std::string> declared = { "Morrowind.esm", "Bloodmoon.esm" };
+	const std::vector<std::string> loaded = { "Morrowind.esm" };
+
+	const auto missing = plugin_scan_t::missing_masters(declared, loaded);
+
+	REQUIRE(missing.size() == 1);
+	REQUIRE(missing[0] == "Bloodmoon.esm");
+}
+
+TEST_CASE("plugin_scan_t::missing_masters, case-mismatched master is not missing", "[u]")
+{
+	const std::vector<std::string> declared = { "morrowind.ESM" };
+	const std::vector<std::string> loaded = { "Morrowind.esm" };
+
+	REQUIRE(plugin_scan_t::missing_masters(declared, loaded).empty());
 }

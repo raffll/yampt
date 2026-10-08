@@ -49,6 +49,28 @@ const std::vector<std::string> & plugin_scan_t::master_list(int idx) const
 	return m_plugins[idx]->master_files;
 }
 
+std::vector<std::string> plugin_scan_t::missing_masters(
+    const std::vector<std::string> & declared_masters,
+    const std::vector<std::string> & loaded_filenames)
+{
+	std::vector<std::string> missing;
+
+	for (const auto & declared : declared_masters)
+	{
+		const bool present = std::any_of(
+		    loaded_filenames.begin(),
+		    loaded_filenames.end(),
+		    [&declared](const std::string & loaded) {
+			    return string_utils::case_insensitive_equal(declared, loaded);
+		    });
+
+		if (!present)
+			missing.push_back(declared);
+	}
+
+	return missing;
+}
+
 uint64_t plugin_scan_t::resolve_frmr(int plugin_idx, uint32_t raw_frmr) const
 {
 	const uint32_t local_master = (raw_frmr & 0xFF000000) >> 24;
@@ -158,19 +180,63 @@ void plugin_scan_t::rebuild_conflicts(const conflict_progress_fn_t & progress_fn
 	compute_all_conflicts(progress_fn);
 }
 
-void plugin_scan_t::process_entry_range(size_t begin_index, size_t end_index)
+static std::string describe_entry_versions(const conflict_entry_t & entry)
+{
+	std::string description = entry.rec_type + " \"" + entry.record_id + "\"";
+	for (const auto & ver : entry.versions)
+		description += " [plugin_idx=" + std::to_string(ver.plugin_idx) + " record_index=" +
+		               std::to_string(ver.record_index) + "]";
+
+	return description;
+}
+
+bool plugin_scan_t::guard_entry_computation(
+    const conflict_entry_t & entry,
+    const std::function<void()> & work,
+    std::vector<std::string> & error_log)
+{
+	try
+	{
+		work();
+		return true;
+	}
+	catch (const std::exception & error)
+	{
+		error_log.push_back(
+		    "[error] skipped conflict computation for " + describe_entry_versions(entry) + ": " + error.what() +
+		    "\r\n");
+
+		return false;
+	}
+	catch (...)
+	{
+		error_log.push_back(
+		    "[error] unknown exception computing conflict for " + describe_entry_versions(entry) + "\r\n");
+
+		return false;
+	}
+}
+
+void plugin_scan_t::process_entry_range(size_t begin_index, size_t end_index, std::vector<std::string> & error_log)
 {
 	for (size_t entry_index = begin_index; entry_index < end_index; ++entry_index)
 	{
 		auto & entry = m_entries[entry_index];
 
-		std::sort(
-		    entry.versions.begin(),
-		    entry.versions.end(),
-		    [](const record_version_t & lhs, const record_version_t & rhs) { return lhs.plugin_idx < rhs.plugin_idx; });
+		guard_entry_computation(
+		    entry,
+		    [this, &entry] {
+			    std::sort(
+			        entry.versions.begin(),
+			        entry.versions.end(),
+			        [](const record_version_t & lhs, const record_version_t & rhs) {
+				        return lhs.plugin_idx < rhs.plugin_idx;
+			        });
 
-		if (entry.versions.size() >= 2)
-			compute_conflict(entry);
+			    if (entry.versions.size() >= 2)
+				    compute_conflict(entry);
+		    },
+		    error_log);
 	}
 }
 
@@ -190,15 +256,29 @@ void plugin_scan_t::compute_all_conflicts(const conflict_progress_fn_t & progres
 		const size_t batch_count = batch_end - batch_start;
 		const size_t chunk = (batch_count + worker_count - 1) / worker_count;
 
+		const size_t worker_count_for_batch = (batch_count + chunk - 1) / chunk;
+		std::vector<std::vector<std::string>> worker_errors(worker_count_for_batch);
+
 		std::vector<std::thread> workers;
+		size_t worker_slot = 0;
 		for (size_t chunk_start = batch_start; chunk_start < batch_end; chunk_start += chunk)
 		{
 			const size_t chunk_end = std::min(chunk_start + chunk, batch_end);
-			workers.emplace_back([this, chunk_start, chunk_end] { process_entry_range(chunk_start, chunk_end); });
+			auto & slot = worker_errors[worker_slot];
+			workers.emplace_back(
+			    [this, chunk_start, chunk_end, &slot] { process_entry_range(chunk_start, chunk_end, slot); });
+
+			++worker_slot;
 		}
 
 		for (auto & worker : workers)
 			worker.join();
+
+		for (const auto & slot : worker_errors)
+		{
+			for (const auto & message : slot)
+				app_logger_t::add_log(message);
+		}
 
 		if (progress_fn)
 			progress_fn(batch_end, total_entries);

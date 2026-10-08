@@ -55,6 +55,13 @@ public:
 	bool is_active_plugin(int idx) const;
 	int active_plugin_index() const;
 	const std::vector<std::string> & master_list(int idx) const;
+	static std::vector<std::string> missing_masters(
+	    const std::vector<std::string> & declared_masters,
+	    const std::vector<std::string> & loaded_filenames);
+	static bool guard_entry_computation(
+	    const conflict_entry_t & entry,
+	    const std::function<void()> & work,
+	    std::vector<std::string> & error_log);
 	uint64_t resolve_frmr(int plugin_idx, uint32_t raw_frmr) const;
 	std::vector<uint64_t> cell_ref_identities(int plugin_idx, const std::string & content) const;
 
@@ -110,7 +117,7 @@ private:
 
 	void compute_conflict(conflict_entry_t & entry);
 	void compute_all_conflicts(const conflict_progress_fn_t & progress_fn);
-	void process_entry_range(size_t begin_index, size_t end_index);
+	void process_entry_range(size_t begin_index, size_t end_index, std::vector<std::string> & error_log);
 	const conflict_policy_t & cached_conflict_policy(const std::string & rec_type, const std::string & sub_type);
 
 	slot_result_t build_slot_result(const conflict_entry_t & entry);

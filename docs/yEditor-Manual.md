@@ -16,6 +16,8 @@ The main window opens immediately, and a progress dialog shows how far the load 
 
 If a plugin's data cannot be read cleanly, loading stops at that point and an error is reported in the Log tab, rather than continuing and showing its records under the wrong type.
 
+When a loaded plugin declares a master file that is not among the plugins you loaded, a warning naming the plugin and the missing master appears in the Log tab. The master may simply live in a different folder; the plugin still loads, but conflicts involving the absent master cannot be resolved fully.
+
 Use **Unload All** to close everything and start fresh.
 
 Every edit is written to disk the moment you make it, so there is nothing to save by hand. Loading a new set of plugins, unloading everything, cleaning, and closing the application all proceed immediately without any save prompt.

@@ -82,6 +82,7 @@ private:
 	    const std::vector<std::string> & data_dirs);
 	std::string resolve_single_content(const std::string & content_name, const std::vector<std::string> & data_dirs);
 	void load_plugins_internal(const std::vector<std::string> & paths);
+	void warn_missing_masters();
 	void restore_folder_session();
 	void restore_active_plugin(const std::string & active_path);
 	void build_lua_paths_for_mo2(const QString & profile_dir);
