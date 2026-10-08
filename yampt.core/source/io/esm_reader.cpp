@@ -21,6 +21,12 @@ static bool is_plausible_record_tag(std::string_view tag)
 	return true;
 }
 
+struct record_validation_result_t
+{
+	bool valid = false;
+	size_t record_size = 0;
+};
+
 static bool sub_records_tile_exactly(const std::string & record_content)
 {
 	const auto body_end = record_content.size();
@@ -32,7 +38,7 @@ static bool sub_records_tile_exactly(const std::string & record_content)
 			return false;
 
 		const auto & size_field =
-		    record_content.substr(cursor + esm_reader_t::sub_record_id_size, esm_reader_t::sub_record_id_size);
+		    record_content.substr(cursor + esm_reader_t::sub_record_id_size, esm_reader_t::record_size_field_length);
 		const auto sub_size = domain_types::convert_string_byte_array_to_uint(size_field);
 		const auto next_cursor = cursor + esm_reader_t::sub_record_header_size + sub_size;
 
@@ -43,6 +49,57 @@ static bool sub_records_tile_exactly(const std::string & record_content)
 	}
 
 	return cursor == body_end;
+}
+
+static record_validation_result_t validate_record_at(std::string_view content, size_t record_begin)
+{
+	const auto & record_tag = std::string(content.substr(record_begin, esm_reader_t::sub_record_id_size));
+
+	if (!is_plausible_record_tag(record_tag))
+	{
+		const auto & sanitized_tag = string_utils::replace_non_printable_with_dot(record_tag);
+		app_logger_t::add_log(
+		    "[error] record at offset " + std::to_string(record_begin) + " has an invalid type tag \"" +
+		    sanitized_tag + "\", stopping (possibly broken file or record)\r\n");
+		return {};
+	}
+
+	const auto & size_bytes = std::string(
+	    content.substr(record_begin + esm_reader_t::record_size_field_offset, esm_reader_t::record_size_field_length));
+	const auto record_size =
+	    domain_types::convert_string_byte_array_to_uint(size_bytes) + esm_reader_t::record_header_size;
+
+	app_logger_t::add_log(
+	    "[debug] record_begin=" + std::to_string(record_begin) + " size=" + std::to_string(record_size) +
+	        " id=" + record_tag + "\r\n",
+	    true);
+
+	if (record_begin + record_size > content.size())
+	{
+		app_logger_t::add_log(
+		    "[warning] record at offset " + std::to_string(record_begin) + " declares size " +
+		    std::to_string(record_size) + " which exceeds file size, stopping\r\n");
+		return {};
+	}
+
+	const auto & record_content = std::string(content.substr(record_begin, record_size));
+
+	if (!sub_records_tile_exactly(record_content))
+	{
+		app_logger_t::add_log(
+		    "[error] record at offset " + std::to_string(record_begin) + " (tag \"" + record_tag +
+		    "\") declares size " + std::to_string(record_size) +
+		    " but its sub-records do not tile exactly to the record body, stopping (possibly broken file "
+		    "or record)\r\n");
+		return {};
+	}
+
+	app_logger_t::add_log(
+	    "[debug] tiling ok record_begin=" + std::to_string(record_begin) + " size=" +
+	        std::to_string(record_size) + "\r\n",
+	    true);
+
+	return { true, record_size };
 }
 
 esm_reader_t::esm_reader_t(const std::string & path)
@@ -68,57 +125,18 @@ void esm_reader_t::split_file(const std::string & content, const std::string & p
 	try
 	{
 		size_t record_begin = 0;
-		size_t record_end = 0;
-		while (record_end != content.size())
+		while (record_begin != content.size())
 		{
-			record_begin = record_end;
-			const auto & record_tag = content.substr(record_begin, sub_record_id_size);
+			const auto & validation = validate_record_at(content, record_begin);
 
-			if (!is_plausible_record_tag(record_tag))
-			{
-				const auto & sanitized_tag = string_utils::replace_non_printable_with_dot(record_tag);
-				app_logger_t::add_log(
-				    "[error] record at offset " + std::to_string(record_begin) + " has an invalid type tag \"" +
-				    sanitized_tag + "\", stopping (possibly broken file or record)\r\n");
+			if (!validation.valid)
 				break;
-			}
 
-			const auto & size_bytes = content.substr(record_begin + record_size_field_offset, record_size_field_length);
-			const auto record_size = domain_types::convert_string_byte_array_to_uint(size_bytes) + record_header_size;
-			record_end = record_begin + record_size;
-
-			app_logger_t::add_log(
-			    "[debug] record_begin=" + std::to_string(record_begin) + " size=" + std::to_string(record_size) +
-			        " id=" + record_tag + "\r\n",
-			    true);
-
-			if (record_end > content.size())
-			{
-				app_logger_t::add_log(
-				    "[warning] record at offset " + std::to_string(record_begin) + " declares size " +
-				    std::to_string(record_size) + " which exceeds file size, stopping\r\n");
-				break;
-			}
-
-			const auto & record_content = content.substr(record_begin, record_size);
-
-			if (!sub_records_tile_exactly(record_content))
-			{
-				app_logger_t::add_log(
-				    "[error] record at offset " + std::to_string(record_begin) + " (tag \"" + record_tag +
-				    "\") declares size " + std::to_string(record_size) +
-				    " but its sub-records do not tile exactly to the record body, stopping (possibly broken file "
-				    "or record)\r\n");
-				break;
-			}
-
-			app_logger_t::add_log(
-			    "[debug] tiling ok record_begin=" + std::to_string(record_begin) + " size=" +
-			        std::to_string(record_size) + "\r\n",
-			    true);
-
+			const auto & record_content = content.substr(record_begin, validation.record_size);
 			const auto & record_id = record_content.substr(0, sub_record_id_size);
 			m_records.push_back({ record_id, record_content, record_content.size(), false });
+
+			record_begin += validation.record_size;
 		}
 		m_loaded = true;
 	}
