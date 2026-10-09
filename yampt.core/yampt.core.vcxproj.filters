@@ -62,6 +62,7 @@
     <ClCompile Include="source\decoder\conflict_slots.cpp" />
     <ClCompile Include="source\scanner\plugin_index.cpp" />
     <ClCompile Include="source\scanner\plugin_scan.cpp" />
+    <ClCompile Include="source\scanner\tree_source.cpp" />
     <ClCompile Include="source\scanner\merge_patch_store.cpp" />
     <ClCompile Include="source\scanner\omwscripts_parser.cpp" />
     <ClCompile Include="source\scanner\handler_parser.cpp" />
@@ -74,6 +75,9 @@
     <ClInclude Include="source\utility\domain_types.hpp" />
     <ClInclude Include="source\utility\app_logger.hpp" />
     <ClInclude Include="source\utility\string_utils.hpp" />
+    <ClInclude Include="source\utility\plugin_icon_glyphs.hpp" />
+    <ClInclude Include="source\utility\plugin_icon_tiers.hpp" />
+    <ClInclude Include="source\scanner\tree_source.hpp" />
     <ClInclude Include="source\utility\case_fold.hpp" />
     <ClInclude Include="source\utility\record_types.hpp" />
     <ClInclude Include="source\utility\status_types.hpp" />

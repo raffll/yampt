@@ -1,5 +1,6 @@
 #pragma once
 
+#include "editor_appearance.hpp"
 #include "nav_tree_filter.hpp"
 #include <io/codepage.hpp>
 #include <scanner/plugin_scan.hpp>
@@ -86,8 +87,8 @@ private:
 	bool m_show_deleted_strikeout = false;
 	codepage_t m_display_codepage = codepage_t::windows_1252;
 	const editable_column_set_t * m_editable_columns = nullptr;
+	editor_appearance_t m_appearance;
 
-	conflict_this_t record_foreground_for_plugin(const conflict_entry_t & entry, int plugin_idx) const;
 	bool has_whole_record_lock(const std::string & rec_type, const std::string & record_id) const;
 
 	void build_tree();

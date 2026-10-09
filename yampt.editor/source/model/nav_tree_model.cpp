@@ -1,63 +1,15 @@
 #include "nav_tree_model.hpp"
-#include "../view/plugin_icon.hpp"
 #include "../view/record_type_name.hpp"
+#include "../session/merged_patch_name.hpp"
 #include "editable_column_set.hpp"
 #include <io/codepage.hpp>
+#include <scanner/tree_source.hpp>
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
 #include <cstring>
 #include <map>
-#include <set>
-#include <theme_system.hpp>
-#include <QBrush>
 #include <QFont>
-
-static conflict_this_t accumulate_worst_conflict_this(conflict_this_t worst, conflict_this_t status)
-{
-	if (status == conflict_this_t::identical_to_master)
-		return worst;
-
-	if (status > worst)
-		return status;
-
-	return worst;
-}
-
-static conflict_this_t resolve_record_foreground(conflict_this_t worst)
-{
-	if (worst == conflict_this_t::unknown || worst == conflict_this_t::master)
-		return conflict_this_t::identical_to_master;
-
-	return worst;
-}
-
-static size_t unique_plugin_count(const conflict_entry_t & entry)
-{
-	std::set<int> plugins;
-	for (const auto & version : entry.versions)
-		plugins.insert(version.plugin_idx);
-	return plugins.size();
-}
-
-conflict_this_t nav_tree_model_t::record_foreground_for_plugin(const conflict_entry_t & entry, int plugin_idx) const
-{
-	if (entry.versions.size() <= 1)
-		return conflict_this_t::unknown;
-
-	if (m_filter.hide_duplicates() && unique_plugin_count(entry) <= 1)
-		return conflict_this_t::unknown;
-
-	for (const auto & version : entry.versions)
-	{
-		if (version.plugin_idx != plugin_idx)
-			continue;
-
-		return version.status;
-	}
-
-	return conflict_this_t::unknown;
-}
 
 static int natural_compare(const std::string & a, const std::string & b)
 {
@@ -120,7 +72,9 @@ static const char * type_to_display_name(const std::string & type)
 nav_tree_model_t::nav_tree_model_t(plugin_scan_t & scan, QObject * parent)
     : QAbstractItemModel(parent)
     , m_scan(scan)
-{}
+{
+	m_appearance.set_scan(&m_scan);
+}
 
 void nav_tree_model_t::rebuild()
 {
@@ -167,6 +121,7 @@ void nav_tree_model_t::set_display_codepage(codepage_t codepage)
 void nav_tree_model_t::set_patch_plugins(const std::set<std::string> * patch)
 {
 	m_filter.set_patch_plugins(patch);
+	m_appearance.set_patch_plugins(patch);
 }
 
 void nav_tree_model_t::set_editable_columns(const editable_column_set_t * editable)
@@ -690,15 +645,7 @@ QVariant nav_tree_model_t::file_node_display_text(const file_node_t & file_node)
 	    file_node.plugin_idx,
 	    m_scan.plugin_filename(file_node.plugin_idx).c_str());
 
-	const auto & filename = m_scan.plugin_filename(file_node.plugin_idx);
-
-	plugin_icon::tier_flags_t flags;
-	flags.filename = filename;
-	flags.is_overridden = plugin_icon::path_is_overwrite(m_scan.plugin_path(file_node.plugin_idx));
-	flags.is_guard = m_filter.patch_plugins() && m_filter.patch_plugins()->count(filename);
-	flags.is_active = m_scan.is_active_plugin(file_node.plugin_idx);
-
-	const auto icons = plugin_icon::prefix(flags).trimmed();
+	const auto icons = m_appearance.plugin_prefix(file_node.plugin_idx).trimmed();
 
 	QString text = QString::fromUtf8(display_buffer);
 	if (!icons.isEmpty())
@@ -709,34 +656,26 @@ QVariant nav_tree_model_t::file_node_display_text(const file_node_t & file_node)
 
 QVariant nav_tree_model_t::file_node_appearance(const file_node_t & file_node, int role) const
 {
-	const auto & entries = m_scan.entries();
-	conflict_all_t worst_all = conflict_all_t::only_one;
-	conflict_this_t worst_this = conflict_this_t::unknown;
-
+	std::vector<size_t> entry_indices;
 	for (const auto & group : file_node.groups)
 	{
 		for (const auto & rec : group.records)
-		{
-			const auto & entry = entries[rec.entry_idx];
-			const auto this_color = record_foreground_for_plugin(entry, file_node.plugin_idx);
-
-			worst_this = accumulate_worst_conflict_this(worst_this, this_color);
-
-			if (entry.conflict_all > worst_all)
-				worst_all = entry.conflict_all;
-		}
+			entry_indices.push_back(rec.entry_idx);
 	}
+
+	const auto worst = tree_source_t::worst_group_conflict(
+	    { m_scan, entry_indices, file_node.plugin_idx, m_filter.hide_duplicates() });
 
 	if (role == Qt::BackgroundRole)
 	{
-		if (worst_all < conflict_all_t::no_conflict)
+		if (worst.worst_all < conflict_all_t::no_conflict)
 			return {};
 
-		return QBrush(theme_system_t::instance().conflict_all_background(worst_all));
+		return m_appearance.background_brush(worst.worst_all);
 	}
 
 	if (role == Qt::ForegroundRole)
-		return QBrush(theme_system_t::instance().conflict_this_foreground(resolve_record_foreground(worst_this)));
+		return m_appearance.foreground_brush(tree_source_t::resolve_foreground_class(worst.worst_this));
 
 	return {};
 }
@@ -785,30 +724,23 @@ QVariant nav_tree_model_t::data_for_type_group(size_t file_idx, int row, int col
 	if (role != Qt::BackgroundRole && role != Qt::ForegroundRole && role != Qt::FontRole)
 		return {};
 
-	conflict_all_t worst_all = conflict_all_t::only_one;
-	conflict_this_t worst_this = conflict_this_t::unknown;
-
+	std::vector<size_t> entry_indices;
 	for (const auto & rec : group.records)
-	{
-		const auto & entry = entries[rec.entry_idx];
-		const auto this_color = record_foreground_for_plugin(entry, m_tree[file_idx].plugin_idx);
+		entry_indices.push_back(rec.entry_idx);
 
-		worst_this = accumulate_worst_conflict_this(worst_this, this_color);
-
-		if (entry.conflict_all > worst_all)
-			worst_all = entry.conflict_all;
-	}
+	const auto worst = tree_source_t::worst_group_conflict(
+	    { m_scan, entry_indices, m_tree[file_idx].plugin_idx, m_filter.hide_duplicates() });
 
 	if (role == Qt::BackgroundRole)
 	{
-		if (worst_all < conflict_all_t::no_conflict)
+		if (worst.worst_all < conflict_all_t::no_conflict)
 			return {};
 
-		return QBrush(theme_system_t::instance().conflict_all_background(worst_all));
+		return m_appearance.background_brush(worst.worst_all);
 	}
 
 	if (role == Qt::ForegroundRole)
-		return QBrush(theme_system_t::instance().conflict_this_foreground(resolve_record_foreground(worst_this)));
+		return m_appearance.foreground_brush(tree_source_t::resolve_foreground_class(worst.worst_this));
 
 	if (role == Qt::FontRole && m_show_deleted_strikeout)
 	{
@@ -836,7 +768,8 @@ QVariant nav_tree_model_t::data_for_record(size_t file_idx, size_t group_idx, in
 
 	const auto & vis = group.records[static_cast<size_t>(row)];
 	const auto & entry = entries[vis.entry_idx];
-	const auto record_color = record_foreground_for_plugin(entry, m_tree[file_idx].plugin_idx);
+	const auto record_color = tree_source_t::record_foreground_class(
+	    { entry, m_tree[file_idx].plugin_idx, m_filter.hide_duplicates() });
 
 	if (role == Qt::DisplayRole)
 	{
@@ -868,23 +801,23 @@ QVariant nav_tree_model_t::data_for_record(size_t file_idx, size_t group_idx, in
 	if (role == Qt::BackgroundRole)
 	{
 		if (is_locked)
-			return QBrush(theme_system_t::instance().get_color(color_name_t::locked_background));
+			return m_appearance.locked_background();
 
 		if (entry.conflict_all < conflict_all_t::no_conflict)
 			return {};
 
-		if (m_filter.hide_duplicates() && unique_plugin_count(entry) <= 1)
+		if (m_filter.hide_duplicates() && tree_source_t::unique_plugin_count(entry) <= 1)
 			return {};
 
-		return QBrush(theme_system_t::instance().conflict_all_background(entry.conflict_all));
+		return m_appearance.background_brush(entry.conflict_all);
 	}
 
 	if (role == Qt::ForegroundRole)
 	{
 		if (is_locked)
-			return QBrush(theme_system_t::instance().get_color(color_name_t::locked_text));
+			return m_appearance.locked_text();
 
-		return QBrush(theme_system_t::instance().conflict_this_foreground(resolve_record_foreground(record_color)));
+		return m_appearance.foreground_brush(tree_source_t::resolve_foreground_class(record_color));
 	}
 
 	if (role == Qt::FontRole && m_show_deleted_strikeout && entry.has_dele)

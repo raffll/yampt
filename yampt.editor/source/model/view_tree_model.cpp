@@ -1,9 +1,10 @@
 #include "view_tree_model.hpp"
-#include "../view/plugin_icon.hpp"
+#include "../session/merged_patch_name.hpp"
 #include "editable_column_set.hpp"
 #include <decoder/record_header_flags.hpp>
 #include <decoder/view_tree_format.hpp>
 #include <scanner/record_conflict.hpp>
+#include <scanner/tree_source.hpp>
 #include <utility/record_behavior.hpp>
 #include <algorithm>
 #include <array>
@@ -37,6 +38,7 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 	beginResetModel();
 
 	m_scan_for_header = &scan;
+	m_appearance.set_scan(&scan);
 	m_rows.clear();
 	m_synthetic_fields.clear();
 	m_column_names.clear();
@@ -357,6 +359,7 @@ const std::vector<view_tree_model_t::view_node_t> & view_tree_model_t::rows() co
 void view_tree_model_t::set_patch_plugins(const std::set<std::string> * patch)
 {
 	m_patch_plugins = patch;
+	m_appearance.set_patch_plugins(patch);
 }
 
 void view_tree_model_t::set_editable_columns(const editable_column_set_t * editable)
@@ -401,6 +404,7 @@ static QString lua_classification_text(handler_class_t classification)
 void view_tree_model_t::reset_lua_state()
 {
 	m_scan_for_header = nullptr;
+	m_appearance.set_scan(nullptr);
 	m_rows.clear();
 	m_synthetic_fields.clear();
 	m_column_names.clear();
@@ -836,18 +840,9 @@ static QVariant sub_record_foreground(const view_tree_model_t::view_node_t & row
 	{
 		conflict_this_t worst = conflict_this_t::unknown;
 		for (const auto & status : cell_conflicts)
-		{
-			if (status == conflict_this_t::identical_to_master)
-				continue;
+			worst = tree_source_t::accumulate_worst_this(worst, status);
 
-			if (status > worst)
-				worst = status;
-		}
-
-		if (worst == conflict_this_t::unknown || worst == conflict_this_t::master)
-			return QBrush(theme.conflict_this_foreground(conflict_this_t::identical_to_master));
-
-		return QBrush(theme.conflict_this_foreground(worst));
+		return QBrush(theme.conflict_this_foreground(tree_source_t::resolve_foreground_class(worst)));
 	}
 
 	const int col = column - 1;
@@ -955,7 +950,7 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 	case Qt::BackgroundRole:
 	{
 		if (is_active_column(index.column()) && row_is_locked(*node, index))
-			return QBrush(theme_system_t::instance().get_color(color_name_t::locked_background));
+			return m_appearance.locked_background();
 
 		if (node->is_optional_placeholder)
 			return QBrush(theme_system_t::instance().get_color(color_name_t::optional_placeholder_background));
@@ -966,7 +961,7 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 	case Qt::ForegroundRole:
 	{
 		if (is_active_column(index.column()) && row_is_locked(*node, index))
-			return QBrush(theme_system_t::instance().get_color(color_name_t::locked_text));
+			return m_appearance.locked_text();
 
 		if (node->is_optional_placeholder)
 			return QBrush(theme_system_t::instance().get_color(color_name_t::optional_placeholder_text));
@@ -1149,18 +1144,7 @@ QVariant view_tree_model_t::headerData(int section, Qt::Orientation orientation,
 		QString prefix;
 
 		if (col < static_cast<int>(m_column_plugin_indices.size()))
-		{
-			const int pi = m_column_plugin_indices[col];
-
-			plugin_icon::tier_flags_t flags;
-			flags.filename = name;
-			flags.is_overridden =
-			    m_scan_for_header && plugin_icon::path_is_overwrite(m_scan_for_header->plugin_path(pi));
-			flags.is_guard = m_patch_plugins && m_patch_plugins->count(name);
-			flags.is_active = m_scan_for_header && m_scan_for_header->is_active_plugin(pi);
-
-			prefix = plugin_icon::prefix(flags);
-		}
+			prefix = m_appearance.plugin_prefix(m_column_plugin_indices[col]);
 
 		return prefix + QString::fromStdString(name);
 	}
@@ -1177,9 +1161,7 @@ QVariant view_tree_model_t::headerData(int section, Qt::Orientation orientation,
 		if (m_column_names.size() <= 1)
 			return {};
 
-		const auto & theme = theme_system_t::instance();
-
-		return QBrush(theme.conflict_this_foreground(m_plugin_conflict_this[col]));
+		return m_appearance.foreground_brush(m_plugin_conflict_this[col]);
 	}
 
 	return {};

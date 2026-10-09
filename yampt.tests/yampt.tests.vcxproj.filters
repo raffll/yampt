@@ -6,6 +6,7 @@
     <ClCompile Include="source\tests.app_logger.cpp" />
     <ClCompile Include="source\tests.merge_patch_store.cpp" />
     <ClCompile Include="source\tests.plugin_icon.cpp" />
+    <ClCompile Include="source\tests.tree_source.cpp" />
     <ClCompile Include="source\tests.merged_patch_name.cpp" />
     <ClCompile Include="source\tests.header_repair.cpp" />
     <ClCompile Include="source\tests.file_list.cpp" />
@@ -162,6 +163,7 @@
     <ClCompile Include="..\yampt.editor\source\patcher\patch_builder.cpp" />
 
     <ClCompile Include="..\yampt.editor\source\model\nav_tree_model.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\editor_appearance.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\lua_tree_model.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\editable_column_set.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\view_tree_model.cpp" />
