@@ -664,7 +664,7 @@ QVariant nav_tree_model_t::file_node_appearance(const file_node_t & file_node, i
 	}
 
 	const auto worst = tree_source_t::worst_group_conflict(
-	    { m_scan, entry_indices, file_node.plugin_idx, m_filter.hide_duplicates() });
+	    { m_scan.entries(), entry_indices, file_node.plugin_idx, m_filter.hide_duplicates() });
 
 	if (role == Qt::BackgroundRole)
 	{
@@ -729,7 +729,7 @@ QVariant nav_tree_model_t::data_for_type_group(size_t file_idx, int row, int col
 		entry_indices.push_back(rec.entry_idx);
 
 	const auto worst = tree_source_t::worst_group_conflict(
-	    { m_scan, entry_indices, m_tree[file_idx].plugin_idx, m_filter.hide_duplicates() });
+	    { m_scan.entries(), entry_indices, m_tree[file_idx].plugin_idx, m_filter.hide_duplicates() });
 
 	if (role == Qt::BackgroundRole)
 	{

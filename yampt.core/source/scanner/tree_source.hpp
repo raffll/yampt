@@ -23,7 +23,7 @@ struct foreground_query_t
 
 struct group_query_t
 {
-	const plugin_scan_t & scan;
+	std::span<const conflict_entry_t> entries;
 	std::span<const size_t> entry_indices;
 	int plugin_idx = -1;
 	bool hide_duplicates = false;

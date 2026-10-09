@@ -65,11 +65,9 @@ group_conflict_t tree_source_t::worst_group_conflict(const group_query_t & query
 {
 	group_conflict_t result;
 
-	const auto & entries = query.scan.entries();
-
 	for (const auto entry_idx : query.entry_indices)
 	{
-		const auto & entry = entries[entry_idx];
+		const auto & entry = query.entries[entry_idx];
 		const auto this_class =
 		    record_foreground_class({ entry, query.plugin_idx, query.hide_duplicates });
 

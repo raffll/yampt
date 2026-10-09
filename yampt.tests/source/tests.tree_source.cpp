@@ -141,3 +141,52 @@ TEST_CASE("tree_source_t::unique_plugin_count, counts distinct plugins", "[u]")
 
 	REQUIRE(tree_source_t::unique_plugin_count(entry) == 2);
 }
+
+TEST_CASE("tree_source_t::worst_group_conflict, folds worst this skipping identical to master", "[u]")
+{
+	std::vector<conflict_entry_t> entries;
+	entries.push_back(
+	    make_entry({ make_version(0, conflict_this_t::master), make_version(1, conflict_this_t::override_wins) }));
+	entries.push_back(
+	    make_entry({ make_version(0, conflict_this_t::master), make_version(1, conflict_this_t::identical_to_master) }));
+	entries.push_back(
+	    make_entry({ make_version(0, conflict_this_t::master), make_version(1, conflict_this_t::conflict_wins) }));
+
+	const std::vector<size_t> entry_indices = { 0, 1, 2 };
+
+	const auto worst = tree_source_t::worst_group_conflict({ entries, entry_indices, 1, false });
+
+	REQUIRE(worst.worst_this == conflict_this_t::conflict_wins);
+}
+
+TEST_CASE("tree_source_t::worst_group_conflict, raises worst all to the maximum", "[u]")
+{
+	auto first = make_entry({ make_version(0, conflict_this_t::master), make_version(1, conflict_this_t::override_wins) });
+	first.conflict_all = conflict_all_t::no_conflict;
+
+	auto second = make_entry({ make_version(0, conflict_this_t::master), make_version(1, conflict_this_t::conflict_wins) });
+	second.conflict_all = conflict_all_t::conflict;
+
+	auto third = make_entry({ make_version(0, conflict_this_t::master), make_version(1, conflict_this_t::override_wins) });
+	third.conflict_all = conflict_all_t::override_benign;
+
+	const std::vector<conflict_entry_t> entries = { first, second, third };
+	const std::vector<size_t> entry_indices = { 0, 1, 2 };
+
+	const auto worst = tree_source_t::worst_group_conflict({ entries, entry_indices, 1, false });
+
+	REQUIRE(worst.worst_all == conflict_all_t::conflict);
+}
+
+TEST_CASE("tree_source_t::worst_group_conflict, hide duplicates single plugin contributes unknown", "[u]")
+{
+	const std::vector<conflict_entry_t> entries = { make_entry(
+	    { make_version(4, conflict_this_t::override_wins), make_version(4, conflict_this_t::conflict_wins) }) };
+	const std::vector<size_t> entry_indices = { 0 };
+
+	const auto hidden = tree_source_t::worst_group_conflict({ entries, entry_indices, 4, true });
+	REQUIRE(hidden.worst_this == conflict_this_t::unknown);
+
+	const auto shown = tree_source_t::worst_group_conflict({ entries, entry_indices, 4, false });
+	REQUIRE(shown.worst_this == conflict_this_t::override_wins);
+}
