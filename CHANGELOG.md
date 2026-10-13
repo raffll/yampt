@@ -1,6 +1,6 @@
 # Changelog
 
-## [XXX]
+## [0.1264] - 2026-10-13
 
 ### yTranslator
 - [NEW] The toolbar has a Clear button next to the search field that empties the filter, as an alternative to pressing Escape
