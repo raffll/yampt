@@ -44,15 +44,13 @@ view_context_menu_t::view_context_menu_t(
     nav_tree_view_t & nav_view,
     merge_controller_t & merge_controller,
     settings_store_t & settings,
-    settings_changed_fn on_settings_changed,
-    unsaved_changed_fn on_unsaved_changed)
+    settings_changed_fn on_settings_changed)
     : m_session(session)
     , m_record_view(record_view)
     , m_nav_view(nav_view)
     , m_merge(merge_controller)
     , m_settings(settings)
     , m_on_settings_changed(std::move(on_settings_changed))
-    , m_on_unsaved_changed(std::move(on_unsaved_changed))
 {}
 
 void view_context_menu_t::show_nav_menu(const QPoint & global_pos, const nav_tree_model_t::node_info_t & info)
@@ -123,8 +121,8 @@ void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_mo
 
 	auto rules = merge_exclusions_t::parse(m_settings.merge_excludes());
 	const exclude_rule_t file_rule { exclude_kind_t::file, filename };
-	const bool excluded =
-	    std::any_of(rules.begin(), rules.end(), [&file_rule](const exclude_rule_t & rule) { return rule == file_rule; });
+	const bool excluded = std::any_of(
+	    rules.begin(), rules.end(), [&file_rule](const exclude_rule_t & rule) { return rule == file_rule; });
 
 	auto * set_active_action = menu.addAction(
 	    QCoreApplication::translate("yEditor", "Set as Active Plugin"),
@@ -155,21 +153,6 @@ void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_mo
 		m_session.save_session_state(QDir(settings_store_t::settings_dir()).filePath("yEditor.ini"));
 		m_nav_view.notify_plugin_changed(info.plugin_idx);
 	});
-
-	menu.addSeparator();
-
-	auto * save_action = menu.addAction(
-	    QCoreApplication::translate("yEditor", "Save"),
-	    [this, info]()
-	{
-		if (m_merge.save_plugin(info.plugin_idx))
-			m_nav_view.notify_plugin_changed(info.plugin_idx);
-
-		if (m_on_unsaved_changed)
-			m_on_unsaved_changed(m_session.has_any_unsaved());
-	});
-	save_action->setToolTip(QCoreApplication::translate("yEditor", "Write in-memory changes to the plugin file"));
-	save_action->setEnabled(m_session.is_plugin_dirty(info.plugin_idx));
 }
 
 void view_context_menu_t::add_exclude_record_action(QMenu & menu, const nav_tree_model_t::node_info_t & info)
@@ -187,9 +170,7 @@ void view_context_menu_t::add_exclude_record_action(QMenu & menu, const nav_tree
 	                            : QCoreApplication::translate("yEditor", "Exclude Record from Merged Patch");
 
 	menu.addAction(
-	    label,
-	    [this, token, excluded]()
-	{ apply_record_exclusion({ exclude_kind_t::record_id, token }, !excluded); });
+	    label, [this, token, excluded]() { apply_record_exclusion({ exclude_kind_t::record_id, token }, !excluded); });
 }
 
 void view_context_menu_t::add_exclude_type_action(QMenu & menu, const nav_tree_model_t::node_info_t & info)
@@ -197,8 +178,8 @@ void view_context_menu_t::add_exclude_type_action(QMenu & menu, const nav_tree_m
 	auto rules = merge_exclusions_t::parse(m_settings.merge_excludes());
 	const exclude_rule_t type_rule { exclude_kind_t::record_type, info.rec_type };
 
-	const bool excluded =
-	    std::any_of(rules.begin(), rules.end(), [&type_rule](const exclude_rule_t & rule) { return rule == type_rule; });
+	const bool excluded = std::any_of(
+	    rules.begin(), rules.end(), [&type_rule](const exclude_rule_t & rule) { return rule == type_rule; });
 
 	const auto label = excluded ? QCoreApplication::translate("yEditor", "Include Type in Merged Patch")
 	                            : QCoreApplication::translate("yEditor", "Exclude Type from Merged Patch");
@@ -219,9 +200,7 @@ void view_context_menu_t::apply_record_exclusion(const exclude_rule_t & rule, bo
 	}
 	else
 	{
-		rules.erase(
-		    std::remove(rules.begin(), rules.end(), rule),
-		    rules.end());
+		rules.erase(std::remove(rules.begin(), rules.end(), rule), rules.end());
 	}
 
 	m_settings.set_merge_excludes(merge_exclusions_t::serialize(rules));
@@ -348,7 +327,8 @@ void view_context_menu_t::toggle_ignore_rule(const std::string & rule, bool remo
 
 	if (remove_rule)
 		rules.erase(std::remove(rules.begin(), rules.end(), sub_rule), rules.end());
-	else if (std::none_of(rules.begin(), rules.end(), [&sub_rule](const exclude_rule_t & other) { return other == sub_rule; }))
+	else if (std::none_of(
+	             rules.begin(), rules.end(), [&sub_rule](const exclude_rule_t & other) { return other == sub_rule; }))
 		rules.push_back(sub_rule);
 
 	m_settings.set_merge_excludes(merge_exclusions_t::serialize(rules));

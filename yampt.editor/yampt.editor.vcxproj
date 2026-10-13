@@ -206,6 +206,7 @@
     <ClCompile Include="source\model\filter_composer.cpp" />
     <ClCompile Include="source\patcher\patch_builder.cpp" />
     <ClCompile Include="source\view\nav_tree_view.cpp" />
+    <ClCompile Include="source\view\type_ahead.cpp" />
     <ClCompile Include="source\view\record_view.cpp" />
 
     <ClCompile Include="source\session\lua_scan_worker.cpp" />
@@ -220,6 +221,7 @@
     <ClInclude Include="source\model\edit_log.hpp" />
     <ClInclude Include="source\patcher\patch_builder.hpp" />
     <ClInclude Include="source\session\merged_patch_name.hpp" />
+    <ClInclude Include="source\view\type_ahead.hpp" />
     <ClInclude Include="source\view\count_label_format.hpp" />
     <ClInclude Include="source\view\record_type_name.hpp" />
     <ClInclude Include="source\view\plugin_icon.hpp" />

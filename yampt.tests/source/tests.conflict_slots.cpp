@@ -212,7 +212,8 @@ TEST_CASE("conflict_slots::build, header ends before first FRMR", "[u]")
 	      { "NAME", "object_id" },
 	      { "DATA", std::string(24, '\0') } });
 
-	auto result = conflict_slots::build("CELL", { v1 }, { false });
+	std::vector<std::vector<uint64_t>> identities = { { (static_cast<uint64_t>(0) << 32) | 100u } };
+	auto result = conflict_slots::build("CELL", { v1 }, { false }, identities);
 
 	REQUIRE(result.aligned.size() >= 2);
 	REQUIRE(result.aligned[0].key.type == "NAME");

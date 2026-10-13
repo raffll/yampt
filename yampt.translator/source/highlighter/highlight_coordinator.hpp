@@ -1,6 +1,7 @@
 #pragma once
 
 #include <editor/glossary.hpp>
+#include <utility/domain_types.hpp>
 #include <set>
 #include <string>
 #include <vector>
@@ -48,3 +49,7 @@ public:
 	    const std::string & text,
 	    const std::vector<std::pair<int, int>> & misspelled_ranges);
 };
+
+std::set<highlight_kind_t> scope_kinds_for_record(
+    const std::set<highlight_kind_t> & enabled_kinds,
+    rec_type_t type);

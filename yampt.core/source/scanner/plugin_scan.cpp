@@ -1,4 +1,5 @@
 #include "plugin_scan.hpp"
+#include "../decoder/record_header_flags.hpp"
 #include "../decoder/sub_record_iter.hpp"
 #include "../decoder/sub_record_schema.hpp"
 #include "../decoder/view_tree_format.hpp"
@@ -48,6 +49,28 @@ const std::vector<std::string> & plugin_scan_t::master_list(int idx) const
 	return m_plugins[idx]->master_files;
 }
 
+std::vector<std::string> plugin_scan_t::missing_masters(
+    const std::vector<std::string> & declared_masters,
+    const std::vector<std::string> & loaded_filenames)
+{
+	std::vector<std::string> missing;
+
+	for (const auto & declared : declared_masters)
+	{
+		const bool present = std::any_of(
+		    loaded_filenames.begin(),
+		    loaded_filenames.end(),
+		    [&declared](const std::string & loaded) {
+			    return string_utils::case_insensitive_equal(declared, loaded);
+		    });
+
+		if (!present)
+			missing.push_back(declared);
+	}
+
+	return missing;
+}
+
 uint64_t plugin_scan_t::resolve_frmr(int plugin_idx, uint32_t raw_frmr) const
 {
 	const uint32_t local_master = (raw_frmr & 0xFF000000) >> 24;
@@ -59,7 +82,13 @@ uint64_t plugin_scan_t::resolve_frmr(int plugin_idx, uint32_t raw_frmr) const
 	const auto & masters = m_plugins[plugin_idx]->master_files;
 	const size_t master_array_idx = local_master - 1;
 	if (master_array_idx >= masters.size())
-		return (static_cast<uint64_t>(plugin_idx) << 32) | ref_index;
+	{
+		app_logger_t::add_log(
+		    "[error] resolve_frmr: plugin_idx=" + std::to_string(plugin_idx) + " raw_frmr=" +
+		    std::to_string(raw_frmr) + " references local master index " + std::to_string(local_master) +
+		    " but the plugin declares only " + std::to_string(masters.size()) + " masters\r\n");
+		return frmr_unresolved_identity;
+	}
 
 	const auto & master_filename = masters[master_array_idx];
 	for (int i = 0; i < static_cast<int>(m_plugins.size()); ++i)
@@ -151,19 +180,63 @@ void plugin_scan_t::rebuild_conflicts(const conflict_progress_fn_t & progress_fn
 	compute_all_conflicts(progress_fn);
 }
 
-void plugin_scan_t::process_entry_range(size_t begin_index, size_t end_index)
+static std::string describe_entry_versions(const conflict_entry_t & entry)
+{
+	std::string description = entry.rec_type + " \"" + entry.record_id + "\"";
+	for (const auto & ver : entry.versions)
+		description += " [plugin_idx=" + std::to_string(ver.plugin_idx) + " record_index=" +
+		               std::to_string(ver.record_index) + "]";
+
+	return description;
+}
+
+bool plugin_scan_t::guard_entry_computation(
+    const conflict_entry_t & entry,
+    const std::function<void()> & work,
+    std::vector<std::string> & error_log)
+{
+	try
+	{
+		work();
+		return true;
+	}
+	catch (const std::exception & error)
+	{
+		error_log.push_back(
+		    "[error] skipped conflict computation for " + describe_entry_versions(entry) + ": " + error.what() +
+		    "\r\n");
+
+		return false;
+	}
+	catch (...)
+	{
+		error_log.push_back(
+		    "[error] unknown exception computing conflict for " + describe_entry_versions(entry) + "\r\n");
+
+		return false;
+	}
+}
+
+void plugin_scan_t::process_entry_range(size_t begin_index, size_t end_index, std::vector<std::string> & error_log)
 {
 	for (size_t entry_index = begin_index; entry_index < end_index; ++entry_index)
 	{
 		auto & entry = m_entries[entry_index];
 
-		std::sort(
-		    entry.versions.begin(),
-		    entry.versions.end(),
-		    [](const record_version_t & lhs, const record_version_t & rhs) { return lhs.plugin_idx < rhs.plugin_idx; });
+		guard_entry_computation(
+		    entry,
+		    [this, &entry] {
+			    std::sort(
+			        entry.versions.begin(),
+			        entry.versions.end(),
+			        [](const record_version_t & lhs, const record_version_t & rhs) {
+				        return lhs.plugin_idx < rhs.plugin_idx;
+			        });
 
-		if (entry.versions.size() >= 2)
-			compute_conflict(entry);
+			    if (entry.versions.size() >= 2)
+				    compute_conflict(entry);
+		    },
+		    error_log);
 	}
 }
 
@@ -183,15 +256,29 @@ void plugin_scan_t::compute_all_conflicts(const conflict_progress_fn_t & progres
 		const size_t batch_count = batch_end - batch_start;
 		const size_t chunk = (batch_count + worker_count - 1) / worker_count;
 
+		const size_t worker_count_for_batch = (batch_count + chunk - 1) / chunk;
+		std::vector<std::vector<std::string>> worker_errors(worker_count_for_batch);
+
 		std::vector<std::thread> workers;
+		size_t worker_slot = 0;
 		for (size_t chunk_start = batch_start; chunk_start < batch_end; chunk_start += chunk)
 		{
 			const size_t chunk_end = std::min(chunk_start + chunk, batch_end);
-			workers.emplace_back([this, chunk_start, chunk_end] { process_entry_range(chunk_start, chunk_end); });
+			auto & slot = worker_errors[worker_slot];
+			workers.emplace_back(
+			    [this, chunk_start, chunk_end, &slot] { process_entry_range(chunk_start, chunk_end, slot); });
+
+			++worker_slot;
 		}
 
 		for (auto & worker : workers)
 			worker.join();
+
+		for (const auto & slot : worker_errors)
+		{
+			for (const auto & message : slot)
+				app_logger_t::add_log(message);
+		}
 
 		if (progress_fn)
 			progress_fn(batch_end, total_entries);
@@ -344,7 +431,41 @@ slot_result_t plugin_scan_t::build_slot_result(const conflict_entry_t & entry)
 			is_deleted[i] = true;
 	}
 
-	return conflict_slots::build(entry.rec_type, std::move(contents), is_deleted);
+	if (entry.rec_type != "CELL")
+		return conflict_slots::build(entry.rec_type, std::move(contents), is_deleted);
+
+	const auto ref_identities = build_cell_ref_identities(entry, contents);
+	return conflict_slots::build(entry.rec_type, contents, is_deleted, ref_identities);
+}
+
+std::vector<uint64_t> plugin_scan_t::cell_ref_identities(int plugin_idx, const std::string & content) const
+{
+	std::vector<uint64_t> identities;
+	sub_record_iter_t iter(content);
+	sub_record_view_t sub_view;
+
+	while (iter.next(sub_view))
+	{
+		if (sub_view.type != "FRMR")
+			continue;
+
+		const uint32_t raw_frmr = read_frmr_raw_index(sub_view.data, sub_view.size);
+		identities.push_back(resolve_frmr(plugin_idx, raw_frmr));
+	}
+
+	return identities;
+}
+
+std::vector<std::vector<uint64_t>> plugin_scan_t::build_cell_ref_identities(
+    const conflict_entry_t & entry,
+    const std::vector<std::string> & contents) const
+{
+	std::vector<std::vector<uint64_t>> identities(contents.size());
+
+	for (size_t i = 0; i < contents.size(); ++i)
+		identities[i] = cell_ref_identities(entry.versions[i].plugin_idx, contents[i]);
+
+	return identities;
 }
 
 std::unique_ptr<slot_result_t> plugin_scan_t::build_slot_result_for(const conflict_entry_t & entry)
@@ -371,6 +492,29 @@ const conflict_policy_t & plugin_scan_t::cached_conflict_policy(
 	return m_conflict_policy_cache.emplace(cache_key, policy).first->second;
 }
 
+static void accumulate_header_flags(
+    const slot_result_t & sr,
+    const std::vector<bool> & is_deleted,
+    conflict_accumulator_t & accum)
+{
+	constexpr uint32_t meaningful_flags = record_header_flags::persistent | record_header_flags::blocked;
+
+	std::vector<std::string> flag_values(sr.contents.size());
+	for (size_t vi = 0; vi < sr.contents.size(); ++vi)
+	{
+		if (is_deleted[vi])
+		{
+			flag_values[vi] = non_existent_value;
+			continue;
+		}
+
+		const uint32_t flags = record_header_flags::read_flags(sr.contents[vi]) & meaningful_flags;
+		flag_values[vi] = std::to_string(flags);
+	}
+
+	accum.accumulate(flag_values, true);
+}
+
 void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 {
 	const size_t ver_count = entry.versions.size();
@@ -383,6 +527,9 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 	for (const auto & slot : sr.aligned)
 	{
 		const auto & policy = cached_conflict_policy(entry.rec_type, slot.key.type);
+
+		if (policy.ignore_conflict)
+			continue;
 
 		std::vector<std::string> slot_values(ver_count);
 		const char * first_data = nullptr;
@@ -414,6 +561,8 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 		else
 			accum.accumulate(slot_values, policy.skip_non_existent);
 	}
+
+	accumulate_header_flags(sr, is_deleted, accum);
 
 	entry.conflict_all = accum.worst_all;
 

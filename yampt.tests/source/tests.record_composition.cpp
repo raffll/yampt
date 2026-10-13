@@ -37,12 +37,12 @@ const record_sub_record_t * entry_of(const std::string & record_type, const std:
 	return nullptr;
 }
 
-const std::vector<std::string> all_record_types = {
-	"ACTI", "ALCH", "APPA", "ARMO", "BODY", "BOOK", "BSGN", "CLAS", "CLOT", "CONT", "CREA",
-	"DOOR", "ENCH", "GLOB", "GMST", "INGR", "LIGH", "LOCK", "MGEF", "MISC", "NPC_",
-	"PROB", "RACE", "REPA", "SKIL", "SNDG", "SOUN", "SPEL", "SSCR", "STAT", "WEAP",
-	"DIAL", "INFO", "FACT", "LEVI", "LEVC", "REGN", "SCPT", "PGRD", "LAND", "CELL", "CELL@ref", "LTEX"
-};
+const std::vector<std::string> all_record_types = { "ACTI", "ALCH",     "APPA", "ARMO", "BODY", "BOOK", "BSGN", "CLAS",
+	                                                "CLOT", "CONT",     "CREA", "DOOR", "ENCH", "GLOB", "GMST", "INGR",
+	                                                "LIGH", "LOCK",     "MGEF", "MISC", "NPC_", "PROB", "RACE", "REPA",
+	                                                "SKIL", "SNDG",     "SOUN", "SPEL", "SSCR", "STAT", "WEAP", "DIAL",
+	                                                "INFO", "FACT",     "LEVI", "LEVC", "REGN", "SCPT", "PGRD", "LAND",
+	                                                "CELL", "CELL@ref", "LTEX" };
 
 } // namespace
 

@@ -375,7 +375,7 @@ std::string flag_bit_value(const char * data, size_t data_size, const field_def_
 
 	const size_t byte_count = (field.type == field_type_t::flags_u8)    ? 1
 	                          : (field.type == field_type_t::flags_u16) ? 2
-	                                                                     : 4;
+	                                                                    : 4;
 
 	uint32_t value = 0;
 	std::memcpy(&value, data + field.offset, std::min(byte_count, data_size - field.offset));

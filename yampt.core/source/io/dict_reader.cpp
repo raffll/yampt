@@ -36,7 +36,7 @@ void dict_reader_t::parse_record(yyjson_val * record, rec_type_t type, const std
 	if (entry.new_text.empty() && type != rec_type_t::gmst && type != rec_type_t::script)
 		app_logger_t::add_log("[warning] empty \"new\" field in " + type_str + ": " + entry.key_text + "\r\n", true);
 
-	if (type == rec_type_t::info)
+	if (type == rec_type_t::info || type == rec_type_t::fnam)
 	{
 		entry.speaker_name = json_reader_t::get_string(record, "speaker_name", "");
 		entry.gender = json_reader_t::get_string(record, "gender", "");

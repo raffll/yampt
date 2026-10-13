@@ -79,9 +79,8 @@ TEST_CASE("sub_record_merge_t::merge_fields_three_way, multi-byte field is not s
 	auto winner = make_wpdt(0x0100);
 	winner[11] = static_cast<char>(0x64); // high byte of Health only
 
-	const sub_record_merge_t::field_merge_input_t merge_input {
-		"WEAP", "WPDT", base.data(), inter.data(), winner.data(), winner.data(), base.size()
-	};
+	const sub_record_merge_t::field_merge_input_t merge_input { "WEAP",        "WPDT",        base.data(), inter.data(),
+		                                                        winner.data(), winner.data(), base.size() };
 	const auto merged = sub_record_merge_t::merge_fields_three_way(merge_input);
 
 	uint16_t merged_health = 0;
@@ -202,8 +201,7 @@ TEST_CASE("sub_record_merge_t::merge, BKDT two mods change different fields both
 static std::string make_npc_flag_record(uint32_t flags)
 {
 	const auto subs =
-	    make_sub("NAME", make_cstr("guard")) +
-	    make_sub("FLAG", std::string(reinterpret_cast<const char *>(&flags), 4));
+	    make_sub("NAME", make_cstr("guard")) + make_sub("FLAG", std::string(reinterpret_cast<const char *>(&flags), 4));
 	return make_record("NPC_", subs);
 }
 

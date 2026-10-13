@@ -43,12 +43,6 @@ public:
 	const std::set<std::string> & patch_plugins() const;
 	void set_patch_plugins(const std::set<std::string> & patch);
 
-	void mark_plugin_dirty(int plugin_idx);
-	void clear_plugin_dirty(int plugin_idx);
-	bool is_plugin_dirty(int plugin_idx) const;
-	const std::set<std::string> & dirty_plugins() const;
-	bool has_any_unsaved() const;
-
 	load_source_t load_source() const;
 	const std::string & load_base_path() const;
 
@@ -88,6 +82,7 @@ private:
 	    const std::vector<std::string> & data_dirs);
 	std::string resolve_single_content(const std::string & content_name, const std::vector<std::string> & data_dirs);
 	void load_plugins_internal(const std::vector<std::string> & paths);
+	void warn_missing_masters();
 	void restore_folder_session();
 	void restore_active_plugin(const std::string & active_path);
 	void build_lua_paths_for_mo2(const QString & profile_dir);
@@ -97,7 +92,6 @@ private:
 	std::unique_ptr<patch_builder_t> m_patch_builder;
 
 	std::set<std::string> m_patch_plugins;
-	std::set<std::string> m_dirty_plugins;
 	std::set<std::string> m_created_plugins;
 	load_source_t m_load_source = load_source_t::none;
 	std::string m_load_base_path;

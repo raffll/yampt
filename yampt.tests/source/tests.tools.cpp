@@ -17,6 +17,24 @@ TEST_CASE("domain_types::convert_string_byte_array_to_uint, basic conversions", 
 	REQUIRE(domain_types::convert_string_byte_array_to_uint(text) == 68);
 }
 
+TEST_CASE("domain_types::convert_string_byte_array_to_uint, high top byte", "[u]")
+{
+	std::string text { '\x00', '\x00', '\x00', '\x80' };
+	REQUIRE(domain_types::convert_string_byte_array_to_uint(text) == 2147483648u);
+}
+
+TEST_CASE("domain_types::convert_string_byte_array_to_uint, all bytes set", "[u]")
+{
+	std::string text { '\xFF', '\xFF', '\xFF', '\xFF' };
+	REQUIRE(domain_types::convert_string_byte_array_to_uint(text) == 4294967295u);
+}
+
+TEST_CASE("domain_types::convert_string_byte_array_to_uint, small value unchanged", "[u]")
+{
+	std::string text { '\x10', '\x00', '\x00', '\x00' };
+	REQUIRE(domain_types::convert_string_byte_array_to_uint(text) == 16u);
+}
+
 TEST_CASE("domain_types::convert_uint_to_string_byte_array, basic conversion", "[u]")
 {
 	REQUIRE(domain_types::convert_uint_to_string_byte_array(1145128260) == "DEAD");

@@ -6,6 +6,7 @@
 #include <QWidget>
 
 class QTreeView;
+class QKeyEvent;
 class plugin_scan_t;
 class editable_column_set_t;
 
@@ -26,7 +27,6 @@ public:
 	void set_hide_duplicates(bool hide);
 	void set_show_deleted_strikeout(bool value);
 	void set_patch_plugins(const std::set<std::string> * patch);
-	void set_dirty_plugins(const std::set<std::string> * dirty);
 	void set_editable_columns(const editable_column_set_t * editable);
 	void set_display_codepage(codepage_t codepage);
 
@@ -44,6 +44,9 @@ signals:
 
 private:
 	bool eventFilter(QObject * obj, QEvent * event) override;
+	bool handle_type_ahead(QKeyEvent * key_event);
+	int next_matching_plugin_row(const std::string & lowered_prefix, int start_row) const;
+	bool handle_viewport_drag(QEvent * event);
 	void save_expansion_state();
 	void restore_expansion_state();
 	void restore_selection(const nav_tree_model_t::node_info_t & info);

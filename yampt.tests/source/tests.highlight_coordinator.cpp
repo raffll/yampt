@@ -173,3 +173,56 @@ TEST_CASE("highlight_coordinator_t::combine_translation_annotations, inflected f
 
 	REQUIRE(inflection_highlighted);
 }
+
+TEST_CASE("highlight_coordinator::scope_kinds_for_record, dial keeps hyperlink", "[u]")
+{
+	const std::set<highlight_kind_t> enabled {
+		highlight_kind_t::hyperlink, highlight_kind_t::inflection, highlight_kind_t::glossary
+	};
+
+	const auto scoped = scope_kinds_for_record(enabled, rec_type_t::dial);
+
+	REQUIRE(scoped.count(highlight_kind_t::hyperlink) == 1);
+	REQUIRE(scoped.count(highlight_kind_t::inflection) == 1);
+	REQUIRE(scoped.count(highlight_kind_t::glossary) == 1);
+}
+
+TEST_CASE("highlight_coordinator::scope_kinds_for_record, info keeps hyperlink", "[u]")
+{
+	const std::set<highlight_kind_t> enabled {
+		highlight_kind_t::hyperlink, highlight_kind_t::inflection, highlight_kind_t::glossary
+	};
+
+	const auto scoped = scope_kinds_for_record(enabled, rec_type_t::info);
+
+	REQUIRE(scoped.count(highlight_kind_t::hyperlink) == 1);
+}
+
+TEST_CASE("highlight_coordinator::scope_kinds_for_record, non-dial drops hyperlink keeps rest", "[u]")
+{
+	const std::set<highlight_kind_t> enabled {
+		highlight_kind_t::hyperlink, highlight_kind_t::inflection, highlight_kind_t::glossary
+	};
+
+	for (const auto type : { rec_type_t::cell, rec_type_t::fnam, rec_type_t::gmst })
+	{
+		const auto scoped = scope_kinds_for_record(enabled, type);
+
+		REQUIRE(scoped.count(highlight_kind_t::hyperlink) == 0);
+		REQUIRE(scoped.count(highlight_kind_t::inflection) == 1);
+		REQUIRE(scoped.count(highlight_kind_t::glossary) == 1);
+	}
+}
+
+TEST_CASE("highlight_coordinator::scope_kinds_for_record, absent hyperlink stays absent", "[u]")
+{
+	const std::set<highlight_kind_t> enabled { highlight_kind_t::glossary };
+
+	const auto scoped_dial = scope_kinds_for_record(enabled, rec_type_t::dial);
+	const auto scoped_cell = scope_kinds_for_record(enabled, rec_type_t::cell);
+
+	REQUIRE(scoped_dial.count(highlight_kind_t::hyperlink) == 0);
+	REQUIRE(scoped_cell.count(highlight_kind_t::hyperlink) == 0);
+	REQUIRE(scoped_dial.count(highlight_kind_t::glossary) == 1);
+	REQUIRE(scoped_cell.count(highlight_kind_t::glossary) == 1);
+}

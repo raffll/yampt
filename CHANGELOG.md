@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.1264] - 2026-10-13
+
+### yTranslator
+- [NEW] The toolbar has a Clear button next to the search field that empties the filter, as an alternative to pressing Escape
+- [NEW] NPC display-name entries now show the character's gender next to the name in the Annotations panel, the same way dialogue entries show the speaker's gender; it appears in dictionaries created after this change
+- [CHANGE] The blue dialogue-topic highlighting in the Original and Translation boxes now appears only while editing a dialogue topic or dialogue response entry; on all other record types it is no longer shown. The green glossary highlighting is unaffected and still appears for every record type
+- [FIX] Propagating a translation now only applies to entries that are Untranslated. Entries with any other status — Translated, In Progress, Generated, and so on — are left unchanged
+
+### yEditor
+- [NEW] When two plugins change the owner of the same placed object in a cell (the person or faction who gets angry if you steal it), the merged patch now keeps that owner change instead of losing it. Only the owner is merged: the object otherwise stays exactly as the winning plugin left it, and no other placed objects are copied. This applies to changing an owner, adding one, or clearing one
+- [NEW] In the navigation tree you can jump to a plugin by typing: with the tree focused, press a letter or number key and the selection moves to the next plugin whose file name begins with that character, wrapping back to the top after the last match. Only plugin rows respond, so the keys never land on a record
+- [CHANGE] The window title now shows the [Active] marker before the active plugin's file name (for example "yEditor - [Active] Merged Patch.esp"), matching the [Active] label already shown in the navigation tree and record view
+- [CHANGE] OpenMW Lua configuration records now show the readable name "Lua Config" in the navigation tree and the Advanced Filters record-type list, instead of the raw four-letter code
+- [FIX] Editing a field (such as an NPC display name) on a loaded plugin now saves back to that plugin's original file. Previously, the save always wrote to the configured output directory, so edits on a plugin other than the merged patch would silently land in the wrong location
+- [FIX] The cell conflict view no longer lines up unrelated placed objects as if they were the same object. When separate plugins each add their own object to a cell, those objects can share an internal slot number, and they were being shown stacked in one row with mismatched values. Objects are now matched by their true identity, so a plugin's edit to a base-game object still lines up with the original, while objects added independently by different plugins are shown as separate entries
+- [FIX] A cell that differs between plugins only in its internal object count is no longer flagged as a conflict or override. That count is a meaningless bookkeeping value the game recalculates, so cells that are otherwise identical are now treated as identical
+- [FIX] Inventory and spell lists now merge correctly when the master record has none: an item or spell added by a plugin is kept in the merged patch even if the base game record had no inventory or spells at all. Previously the addition was dropped unless the master already listed at least one entry of that kind
+- [FIX] A record's Persistent and Blocked flags now merge across plugins instead of always taking the winning plugin's value. When one plugin changes a flag and another leaves it as the original, the change is kept, and the two flags merge independently so a change to one never discards a change to the other. Differences in these flags now also show as conflicts in the record view
+- [FIX] Records no longer appear under the wrong record type (for example a script shown under Cell, or armor under NPC) in large load orders. A plugin whose data cannot be parsed cleanly now reports an error instead of silently showing records under the wrong type
+- [FIX] Loading plugins whose master files are not present in the loaded folder no longer crashes the application. Each missing master is now reported in the Log tab, naming the plugin and the master it expects, and any record that cannot be read while conflicts are computed is skipped with an error message instead of ending the program
+- [FIX] Editing a field now refuses characters that cannot be stored in the selected text codepage, showing an error next to the Apply button instead of silently dropping or replacing them
+- [REMOVE] Removed the manual Save and Save All actions and the unsaved-changes asterisk. The merged patch, the active plugin's edits, and the merge locks are now saved automatically whenever they change, so there is nothing to save by hand and loading, unloading, cleaning, switching the active plugin, and closing never prompt to save
+
 ## [0.1233] - 2026-09-15
 
 ### yTranslator

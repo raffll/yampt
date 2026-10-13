@@ -204,7 +204,7 @@ private:
 	    size_t col_count,
 	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
 	    const std::vector<std::vector<struct cell_ref_view_t>> & col_refs,
-	    uint32_t object_index,
+	    const ref_key_t & identity,
 	    const sub_slot_t & slot);
 
 	void decode_hex_children_ref(
@@ -213,14 +213,14 @@ private:
 	    size_t col_count,
 	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
 	    const std::vector<std::vector<struct cell_ref_view_t>> & col_refs,
-	    uint32_t object_index,
+	    const ref_key_t & identity,
 	    const sub_slot_t & slot);
 
 	view_node_t build_ref_child(
 	    size_t col_count,
 	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
 	    const std::vector<std::vector<struct cell_ref_view_t>> & col_refs,
-	    uint32_t object_index,
+	    const ref_key_t & identity,
 	    const sub_slot_t & slot);
 
 	view_node_t build_slot_row(
@@ -268,6 +268,7 @@ Q_DECLARE_METATYPE(view_tree_model_t::sub_record_occurrence_t)
 struct cell_ref_view_t
 {
 	uint32_t object_index;
+	ref_key_t identity;
 	size_t start_idx;
 	size_t end_idx;
 	bool persistent;

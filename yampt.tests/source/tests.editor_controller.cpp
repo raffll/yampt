@@ -160,6 +160,50 @@ TEST_CASE("dict_document_t::propagate, returns propagated count", "[i]")
 	cleanup_test_dict(path);
 }
 
+TEST_CASE("dict_document_t::propagate, skips non-untranslated entries", "[i]")
+{
+	dict_t data;
+	auto & chapter = data[rec_type_t::cell];
+
+	record_entry_t entry_untranslated;
+	entry_untranslated.key_text = "key_a";
+	entry_untranslated.old_text = "Old Cell";
+	entry_untranslated.new_text = "Old Cell";
+	entry_untranslated.status = status_t::untranslated;
+	chapter.records.push_back(std::move(entry_untranslated));
+
+	record_entry_t entry_translated;
+	entry_translated.key_text = "key_b";
+	entry_translated.old_text = "Old Cell";
+	entry_translated.new_text = "Existing Translation";
+	entry_translated.status = status_t::translated;
+	chapter.records.push_back(std::move(entry_translated));
+
+	record_entry_t entry_in_progress;
+	entry_in_progress.key_text = "key_c";
+	entry_in_progress.old_text = "Old Cell";
+	entry_in_progress.new_text = "Work In Progress";
+	entry_in_progress.status = status_t::in_progress;
+	chapter.records.push_back(std::move(entry_in_progress));
+
+	const auto path = create_test_dict(data);
+	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
+
+	const auto count = doc.propagate("Old Cell", "Propagated Value");
+
+	REQUIRE(count == 1);
+
+	const auto & result = doc.data().at(rec_type_t::cell);
+	REQUIRE(result.records[0].new_text == "Propagated Value");
+	REQUIRE(result.records[0].status == status_t::propagated);
+	REQUIRE(result.records[1].new_text == "Existing Translation");
+	REQUIRE(result.records[1].status == status_t::translated);
+	REQUIRE(result.records[2].new_text == "Work In Progress");
+	REQUIRE(result.records[2].status == status_t::in_progress);
+
+	cleanup_test_dict(path);
+}
+
 TEST_CASE("editor_controller_t::load, returns correct old and new text", "[i][qt]")
 {
 	glossary_t annotations;

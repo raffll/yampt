@@ -2,11 +2,15 @@
 #include "record_types.hpp"
 #include "string_utils.hpp"
 #include <cassert>
+#include <cstdint>
 #include <iomanip>
 #include <sstream>
 
 static constexpr size_t bytes_per_uint16 = 2;
 static constexpr size_t bytes_per_uint32 = 4;
+static constexpr unsigned shift_byte_1 = 8;
+static constexpr unsigned shift_byte_2 = 16;
+static constexpr unsigned shift_byte_3 = 24;
 
 const std::vector<std::string> domain_types::script_keywords { "messagebox", "choice", "say" };
 
@@ -176,10 +180,11 @@ size_t domain_types::convert_string_byte_array_to_uint(const std::string & str)
 	}
 
 	if (str.size() == bytes_per_uint32)
-		return static_cast<unsigned int>(ubuffer[0] | ubuffer[1] << 8 | ubuffer[2] << 16 | ubuffer[3] << 24);
+		return static_cast<uint32_t>(ubuffer[0]) | (static_cast<uint32_t>(ubuffer[1]) << shift_byte_1) |
+		       (static_cast<uint32_t>(ubuffer[2]) << shift_byte_2) | (static_cast<uint32_t>(ubuffer[3]) << shift_byte_3);
 
 	if (str.size() == bytes_per_uint16)
-		return static_cast<unsigned int>(ubuffer[0] | ubuffer[1] << 8);
+		return static_cast<uint32_t>(ubuffer[0]) | (static_cast<uint32_t>(ubuffer[1]) << shift_byte_1);
 
 	if (str.size() == 1)
 		return ubuffer[0];

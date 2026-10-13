@@ -16,7 +16,6 @@
 #include <scanner/lua_scanner.hpp>
 #include <scanner/plugin_scan.hpp>
 #include <QLabel>
-#include <QMessageBox>
 #include <QProgressDialog>
 #include <QSplitter>
 #include <QTabWidget>
@@ -65,8 +64,6 @@ public:
 	void refresh_views();
 	void reset_all_filters();
 
-	bool confirm_discard_or_save_unsaved();
-
 	QWidget * sidebar_widget() const
 	{
 		return m_nav_tabs;
@@ -86,8 +83,6 @@ public slots:
 	void on_load_mo2_profile();
 	void on_load_openmw_cfg();
 	void on_unload_all();
-	void on_save();
-	void on_save_all();
 	void on_create_merged_patch();
 	void on_create_new_plugin();
 	void on_clean_all();
@@ -112,7 +107,6 @@ private slots:
 
 signals:
 	void filters_active_changed(bool active);
-	void unsaved_changes_changed(bool dirty);
 	void active_plugin_changed(const QString & filename);
 
 private:
@@ -133,8 +127,6 @@ private:
 	void on_lua_scan_complete(const lua_scan_result_t & result);
 	nav_tree_model_t::filter_state_t build_effective_filter() const;
 	void apply_effective_filter();
-	QMessageBox::StandardButton prompt_unsaved(bool allow_discard);
-
 	void show_progress(const QString & label);
 	void update_progress(int done, int total);
 	void set_progress_phase(const QString & label);

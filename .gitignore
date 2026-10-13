@@ -30,3 +30,5 @@ dictionaries/*.dic
 /.kiro/specs
 /bugs
 /tests
+/.agents
+/.worktrees

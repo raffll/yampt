@@ -176,6 +176,41 @@ TEST_CASE("dict_writer_t::write, enchantment field round-trip", "[i]")
 	cleanup(path);
 }
 
+TEST_CASE("dict_writer_t::write, persists fnam gender", "[i]")
+{
+	const auto path = temp_path("yampt_test_fnam_gender.json");
+	app_logger_t::reset_log();
+
+	dict_t dict = domain_types::initialize_dict();
+	record_entry_t npc;
+	npc.key_text = "NPC_^fargoth";
+	npc.old_text = "Fargoth";
+	npc.new_text = "Fargoth";
+	npc.status = status_t::translated;
+	npc.speaker_name = "Fargoth";
+	npc.gender = "F";
+	dict.at(rec_type_t::fnam).insert(npc);
+	dict.at(rec_type_t::info).insert({ "key_info", "Hello there", "Witaj", status_t::translated, "Fargoth", "M" });
+
+	dict_writer_t::write(dict, path);
+	REQUIRE(fs::exists(path));
+
+	dict_reader_t reader(path);
+	REQUIRE(reader.is_loaded());
+
+	const auto * fnam = reader.get_dict().at(rec_type_t::fnam).find("NPC_^fargoth");
+	REQUIRE(fnam != nullptr);
+	REQUIRE(fnam->speaker_name == "Fargoth");
+	REQUIRE(fnam->gender == "F");
+
+	const auto * info = reader.get_dict().at(rec_type_t::info).find("key_info");
+	REQUIRE(info != nullptr);
+	REQUIRE(info->speaker_name == "Fargoth");
+	REQUIRE(info->gender == "M");
+
+	cleanup(path);
+}
+
 TEST_CASE("dict_writer_t::write, all statuses round-trip", "[i]")
 {
 	const auto path = temp_path("yampt_test_statuses.json");

@@ -13,6 +13,7 @@ struct merge_input_t
 	std::string record_id;
 	std::vector<std::string> version_contents;
 	std::set<size_t> patch_version_indices;
+	std::vector<std::vector<uint64_t>> ref_identities;
 };
 
 struct merge_result_t
@@ -42,6 +43,7 @@ struct frmr_group_t
 {
 	uint32_t frmr_index;
 	sub_record_sequence_t sub_records;
+	uint64_t identity = 0;
 };
 
 struct cell_partition_t
@@ -164,6 +166,12 @@ private:
 	    const merge_input_t & input,
 	    const sub_record_sequence_t & winner_subs,
 	    const sub_record_sequence_t & output);
+
+	static sub_record_sequence_t merge_frmr_groups_phase(
+	    const std::vector<std::string> & versions,
+	    const std::vector<std::vector<uint64_t>> & ref_identities,
+	    const sub_record_sequence_t & output,
+	    const std::string & rec_type);
 
 	struct matched_entry_t
 	{

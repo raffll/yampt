@@ -1,4 +1,5 @@
 ﻿#include "creator_helpers.hpp"
+#include "../utility/record_types.hpp"
 #include "../utility/string_utils.hpp"
 #include <hunspell/hunspell.hxx>
 #include <sstream>
@@ -722,4 +723,31 @@ void creator_helpers::enrich_fnam_enchantment(
 	auto * entry = ctx.dict.at(rec_type_t::fnam).find(key_text);
 	if (entry)
 		entry->enchantment = esm_source.get_value().text;
+}
+
+void creator_helpers::enrich_fnam_gender(
+    creator_context_t & ctx,
+    const std::string & key_text,
+    esm_reader_t & esm_source)
+{
+	if (!record_types::is_gendered_fnam_record(esm_source.get_record().id))
+		return;
+
+	esm_source.set_key("NAME");
+	esm_source.set_value("FNAM");
+	const auto display_name = esm_source.get_value().text;
+
+	esm_source.set_value("FLAG");
+	if (!esm_source.get_value().exist)
+		return;
+
+	const std::string gender =
+	    ((domain_types::convert_string_byte_array_to_uint(esm_source.get_value().content) & 0x0001) != 0) ? "F" : "M";
+
+	auto * entry = ctx.dict.at(rec_type_t::fnam).find(key_text);
+	if (!entry)
+		return;
+
+	entry->gender = gender;
+	entry->speaker_name = display_name;
 }

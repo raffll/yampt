@@ -261,14 +261,10 @@ struct id_rule_t
 };
 
 static constexpr id_rule_t id_rule_table[] = {
-	{ "TES3", id_strategy_t::empty, nullptr },
-	{ "CELL", id_strategy_t::cell, nullptr },
-	{ "SKIL", id_strategy_t::index_based, nullptr },
-	{ "MGEF", id_strategy_t::index_based, nullptr },
-	{ "SCPT", id_strategy_t::script, nullptr },
-	{ "DIAL", id_strategy_t::sub_text, "NAME" },
-	{ "INFO", id_strategy_t::sub_text, "INAM" },
-	{ "LAND", id_strategy_t::land, nullptr },
+	{ "TES3", id_strategy_t::empty, nullptr },       { "CELL", id_strategy_t::cell, nullptr },
+	{ "SKIL", id_strategy_t::index_based, nullptr }, { "MGEF", id_strategy_t::index_based, nullptr },
+	{ "SCPT", id_strategy_t::script, nullptr },      { "DIAL", id_strategy_t::sub_text, "NAME" },
+	{ "INFO", id_strategy_t::sub_text, "INAM" },     { "LAND", id_strategy_t::land, nullptr },
 	{ "PGRD", id_strategy_t::pgrd, nullptr },
 };
 

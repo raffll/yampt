@@ -1,5 +1,7 @@
 #include <catch2/catch_all.hpp>
+#include <string>
 #include <view/display_name.hpp>
+#include <view/record_type_name.hpp>
 
 TEST_CASE("display_name_t::to_string, filename only", "[u]")
 {
@@ -45,4 +47,14 @@ TEST_CASE("display_name_t::filename, returns stored filename", "[u]")
 
 	display.set_filename("changed.json");
 	REQUIRE(display.filename() == "changed.json");
+}
+
+TEST_CASE("record_type_name::display, lual maps to lua config", "[u]")
+{
+	REQUIRE(std::string(record_type_name::display("LUAL")) == "Lua Config");
+}
+
+TEST_CASE("record_type_name::display, unknown tag returns null", "[u]")
+{
+	REQUIRE(record_type_name::display("ZZZZ") == nullptr);
 }

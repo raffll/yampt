@@ -234,12 +234,12 @@ TEST_CASE("sub_record_merge_t::merge, CELL merges header DATA three-way", "[u]")
 	constexpr uint32_t cell_flag_interior = 0x01;
 	constexpr uint32_t cell_flag_has_water = 0x02;
 
-	auto hdr_first = make_sub("NAME", make_string("TestCell")) +
-	                 make_sub("DATA", make_cell_data(cell_flag_interior, 0, 0));
+	auto hdr_first =
+	    make_sub("NAME", make_string("TestCell")) + make_sub("DATA", make_cell_data(cell_flag_interior, 0, 0));
 	auto hdr_inter = make_sub("NAME", make_string("TestCell")) +
 	                 make_sub("DATA", make_cell_data(cell_flag_interior | cell_flag_has_water, 0, 0));
-	auto hdr_winner = make_sub("NAME", make_string("TestCell")) +
-	                  make_sub("DATA", make_cell_data(cell_flag_interior, 0, 0));
+	auto hdr_winner =
+	    make_sub("NAME", make_string("TestCell")) + make_sub("DATA", make_cell_data(cell_flag_interior, 0, 0));
 
 	merge_input_t input;
 	input.rec_type = "CELL";
@@ -255,4 +255,3 @@ TEST_CASE("sub_record_merge_t::merge, CELL merges header DATA three-way", "[u]")
 	REQUIRE(result.changed);
 	REQUIRE((read_cell_data_flags(result.content) & cell_flag_has_water) != 0);
 }
-

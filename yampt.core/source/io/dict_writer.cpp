@@ -58,7 +58,7 @@ static void write_entry(std::ofstream & file, const record_entry_t & entry, rec_
 	file << ",\n";
 	file << "      \"status\": \"" << status_to_string(entry.status) << "\"";
 
-	if (type == rec_type_t::info)
+	if (type == rec_type_t::info || type == rec_type_t::fnam)
 	{
 		if (!entry.speaker_name.empty())
 		{

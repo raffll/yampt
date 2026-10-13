@@ -178,6 +178,7 @@ private:
 	QTabWidget * m_record_tabs = nullptr;
 
 	QLineEdit * m_search_field = nullptr;
+	QToolButton * m_search_clear = nullptr;
 	QToolButton * m_case_sensitive_check = nullptr;
 	QToolButton * m_regex_check = nullptr;
 	QToolButton * m_search_col_key = nullptr;

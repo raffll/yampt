@@ -53,7 +53,6 @@ void plugin_session_t::load_from_openmw_cfg(const QString & cfg_path)
 void plugin_session_t::unload_all()
 {
 	m_scan = plugin_scan_t();
-	m_dirty_plugins.clear();
 	m_patch_builder->clear();
 	m_load_source = load_source_t::none;
 	m_load_base_path.clear();
@@ -95,31 +94,6 @@ const std::set<std::string> & plugin_session_t::patch_plugins() const
 void plugin_session_t::set_patch_plugins(const std::set<std::string> & patch)
 {
 	m_patch_plugins = patch;
-}
-
-void plugin_session_t::mark_plugin_dirty(int plugin_idx)
-{
-	m_dirty_plugins.insert(m_scan.plugin_filename(plugin_idx));
-}
-
-void plugin_session_t::clear_plugin_dirty(int plugin_idx)
-{
-	m_dirty_plugins.erase(m_scan.plugin_filename(plugin_idx));
-}
-
-bool plugin_session_t::is_plugin_dirty(int plugin_idx) const
-{
-	return m_dirty_plugins.count(m_scan.plugin_filename(plugin_idx)) != 0;
-}
-
-const std::set<std::string> & plugin_session_t::dirty_plugins() const
-{
-	return m_dirty_plugins;
-}
-
-bool plugin_session_t::has_any_unsaved() const
-{
-	return !m_dirty_plugins.empty();
 }
 
 plugin_session_t::load_source_t plugin_session_t::load_source() const
@@ -373,7 +347,6 @@ void plugin_session_t::build_lua_paths_for_openmw(const QString & cfg_path)
 void plugin_session_t::load_plugins_internal(const std::vector<std::string> & paths)
 {
 	m_scan = plugin_scan_t();
-	m_dirty_plugins.clear();
 	m_patch_builder->clear();
 
 	const int total_steps = static_cast<int>(paths.size());
@@ -431,11 +404,32 @@ void plugin_session_t::load_plugins_internal(const std::vector<std::string> & pa
 	if (m_scan.plugin_count() == 0)
 		return;
 
+	warn_missing_masters();
+
 	emit load_phase(QCoreApplication::translate("yEditor", "Computing conflicts...").toStdString());
 	emit load_progress(0, 1);
 	m_scan.rebuild_conflicts([this](size_t done, size_t total)
 	{ emit load_progress(static_cast<int>(done), static_cast<int>(total)); });
 	emit plugins_loaded();
+}
+
+void plugin_session_t::warn_missing_masters()
+{
+	const int plugin_count = static_cast<int>(m_scan.plugin_count());
+
+	std::vector<std::string> loaded_filenames;
+	loaded_filenames.reserve(static_cast<size_t>(plugin_count));
+	for (int i = 0; i < plugin_count; ++i)
+		loaded_filenames.push_back(m_scan.plugin_filename(i));
+
+	for (int i = 0; i < plugin_count; ++i)
+	{
+		const auto missing = plugin_scan_t::missing_masters(m_scan.master_list(i), loaded_filenames);
+		for (const auto & master : missing)
+			emit log_message(
+			    "[warning] " + m_scan.plugin_filename(i) + " declares master \"" + master +
+			    "\" which is not loaded (it may be in a different folder)");
+	}
 }
 
 std::vector<std::string> plugin_session_t::parse_mo2_profile(const QString & profile_dir)

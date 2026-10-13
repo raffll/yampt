@@ -662,7 +662,8 @@ std::string script_parser_t::build_message_blob(const std::string & cur_line) co
 	if (m_keyword == "choice")
 	{
 		auto blob = argument_text.substr(first_quote);
-		while (!blob.empty() && (blob.back() == ' ' || blob.back() == '\t' || blob.back() == '\r' || blob.back() == '\n'))
+		while (!blob.empty() &&
+		       (blob.back() == ' ' || blob.back() == '\t' || blob.back() == '\r' || blob.back() == '\n'))
 			blob.pop_back();
 
 		return blob;

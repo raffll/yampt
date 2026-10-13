@@ -85,8 +85,7 @@ field_edit_controller_t::field_edit_controller_t(plugin_session_t & session, QOb
 
 edit_result_t field_edit_controller_t::commit_field_edit(const field_edit_request_t & request)
 {
-	const std::string * content_ptr =
-	    m_session.scan().find_active_content(request.record_type, request.record_id);
+	const std::string * content_ptr = m_session.scan().find_active_content(request.record_type, request.record_id);
 
 	if (!content_ptr)
 		return { false, "record content not found" };

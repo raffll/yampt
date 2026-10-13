@@ -1,10 +1,10 @@
 #include <catch2/catch_all.hpp>
 #include <rapidcheck/catch.h>
+#include <utility/string_utils.hpp>
 #include <cmath>
 #include <rapidcheck.h>
 #include <settings_store.hpp>
 #include <string>
-#include <utility/string_utils.hpp>
 #include <vector>
 #include <QCoreApplication>
 #include <QFile>

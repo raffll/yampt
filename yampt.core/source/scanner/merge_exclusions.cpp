@@ -155,8 +155,7 @@ void merge_exclusions_t::compile()
 				m_id_regexes.emplace_back(rule.target, std::regex::icase);
 			}
 			catch (...)
-			{
-			}
+			{}
 
 			continue;
 		}

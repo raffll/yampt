@@ -60,6 +60,7 @@ private:
 	void load_record_plain(const table_row_t * row_data);
 	void load_book_preview(const table_row_t * row_data, document_t * active_doc);
 	void apply_initial_highlights(const table_row_t * row_data, const editor_load_result_t & load_result);
+	std::set<highlight_kind_t> hyperlink_scoped_kinds(rec_type_t type) const;
 
 	record_display_deps_t m_deps;
 };

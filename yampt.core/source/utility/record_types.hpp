@@ -92,4 +92,9 @@ constexpr std::string_view fnam_display_name(std::string_view record_id)
 	return {};
 }
 
+constexpr bool is_gendered_fnam_record(std::string_view record_id)
+{
+	return record_id == "NPC_";
+}
+
 } // namespace record_types

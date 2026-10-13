@@ -5,9 +5,7 @@ scdt_patcher_t::scdt_patcher_t(const std::string & original_scdt)
     : m_scdt(original_scdt)
 {}
 
-text_patch_result_t scdt_patcher_t::apply_text_patch(
-    const std::string & old_text,
-    const text_patch_params_t & params)
+text_patch_result_t scdt_patcher_t::apply_text_patch(const std::string & old_text, const text_patch_params_t & params)
 {
 	text_patch_result_t result;
 
@@ -95,8 +93,8 @@ bool scdt_patcher_t::blob_size_field_matches(const std::string & old_blob) const
 		return false;
 
 	const auto size_field_pos = m_cursor - message_blob_size_field_length;
-	const auto declared_size = domain_types::convert_string_byte_array_to_uint(
-	    m_scdt.substr(size_field_pos, message_blob_size_field_length));
+	const auto declared_size =
+	    domain_types::convert_string_byte_array_to_uint(m_scdt.substr(size_field_pos, message_blob_size_field_length));
 
 	return declared_size == old_blob.size();
 }
@@ -158,7 +156,8 @@ bool scdt_patcher_t::button_size_field_matches(const std::string & old_button) c
 void scdt_patcher_t::patch_button(const std::string & old_button, const std::string & new_button)
 {
 	const auto size_field_pos = m_cursor - button_size_field_length;
-	const auto encoded_size = domain_types::convert_uint_to_string_byte_array(new_button.size() + button_null_terminator);
+	const auto encoded_size =
+	    domain_types::convert_uint_to_string_byte_array(new_button.size() + button_null_terminator);
 
 	m_scdt.erase(size_field_pos, button_size_field_length);
 	m_scdt.insert(size_field_pos, encoded_size.substr(0, button_size_field_length));
@@ -229,5 +228,3 @@ void scdt_patcher_t::patch_getpccell_expr_size(const std::string & old_text, con
 
 	m_cursor = expr_size_pos + expression_size;
 }
-
-
