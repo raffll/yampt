@@ -1,4 +1,7 @@
-# Wildcard-free schema spec (OpenMW-grounded, working notes)
+# Record Schemas
+
+Per-record sub-record field inventory, OpenMW-grounded — the source-of-truth map
+the schema tables in `sub_record_schema.cpp` are built from.
 
 Format per row: SUB — Label — [R]epeatable/[S]ingle — size(0=string/var) — layout-array
 

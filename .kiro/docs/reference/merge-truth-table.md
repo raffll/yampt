@@ -22,7 +22,7 @@ result = highest-priority claimer's value, else Base
 
 Key consequence: **W == B does NOT mean "keep Base".** If an intermediate changed the unit and the winner did not, the intermediate's value stands. Reverting to Base in that case is the bug this spec exists to prevent.
 
-Deletion is a change like any other (see "Removal" at the end, and the "Removal From Master Is Intentional" decision in `design-decisions.md`).
+Deletion is a change like any other (see "Removal" at the end, and the "Removal From Master Is Intentional" decision in `../architecture/design-decisions.md`).
 
 ---
 
@@ -96,7 +96,7 @@ Flag fields (sub-record FLAG and the record-header FLAGS dword at header offset 
 
 ## Removal is a change
 
-A version that removes a unit present in Base is a changer whose value is "absent". It participates in the table exactly like a value change: an intermediate removal with an unchanged winner stands (3.3 shape); a winner that keeps the unit while an intermediate removes it → winner wins. Absence in a plugin that never had the unit is NOT a removal (FRMR/reference exception aside — see `frmr-reference-model.md`).
+A version that removes a unit present in Base is a changer whose value is "absent". It participates in the table exactly like a value change: an intermediate removal with an unchanged winner stands (3.3 shape); a winner that keeps the unit while an intermediate removes it → winner wins. Absence in a plugin that never had the unit is NOT a removal (FRMR/reference exception aside — see `frmr-references.md`).
 
 ---
 
@@ -161,8 +161,8 @@ General rule (any arity): scan versions highest-priority → Base; the first ver
 #### Notes
 
 - A version absent for a unit that Base also lacks (and this version doesn't introduce) is not a changer — it contributes nothing.
-- Removal by an intermediate with an unchanged winner is kept (P3.6, P4.8/P4.9), per the "Removal From Master Is Intentional" decision in `design-decisions.md`. The merged patch omits the unit.
-- **FRMR/reference exception:** for placed references, mere absence is NOT a removal — only an explicit `DELE` (or the moved-ref mechanism) removes. See `frmr-reference-model.md`. This overrides the removal rows above for FRMR only.
+- Removal by an intermediate with an unchanged winner is kept (P3.6, P4.8/P4.9), per the "Removal From Master Is Intentional" decision in `../architecture/design-decisions.md`. The merged patch omits the unit.
+- **FRMR/reference exception:** for placed references, mere absence is NOT a removal — only an explicit `DELE` (or the moved-ref mechanism) removes. See `frmr-references.md`. This overrides the removal rows above for FRMR only.
 - Repeatable/keyed units (leveled entries, NPCO/NPCS/FACT, ENAM slots) apply these presence tables per key, not per record; union of keys with per-key resolution.
 
 ### Conflict-detection semantics — `skip_non_existent`

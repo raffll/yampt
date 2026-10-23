@@ -17,3 +17,24 @@
 
 - editor diff off by couple characters
 - NPDT 12 vs 52 merged patch
+
+## Tech Debt (acknowledged — do not re-report in audits)
+
+Size/line/nesting/argument-count limits are grandfathered for existing code (see code-style.md), so pure "over the limit" cases are not tracked here. These are genuine structural/behavioral debts:
+
+- `translate_all_requested` handler in `main_window` holds orchestration logic — extract to a translation controller (Anti-Gravity Rule) — yTranslator
+- SCDT messagebox segment limited to 254 chars (1-byte size field, vanilla bytecode format); only affects vanilla Morrowind, OpenMW recompiles from SCTX source
+- `creator_helpers` `insert_entry_*` family takes 4-6 args — pass via structs (`insert_params_t`, `insert_from_base_params_t`), ~40 call sites across creator_single/ordered/helpers — deferred, large blast radius
+- `highlight_coordinator_t` is a static-only class — should be a namespace (classes-vs-namespaces rule)
+- `insert_duplicate` has an unused `status` parameter — remove and update call sites
+- `esm_converter.hpp` and `esm_reader.hpp` non-mutating accessors missing `const`
+- `spell_checker_t::is_mwscript_keyword` has an inline per-byte compare (ASCII on purpose) — could consolidate onto a shared ASCII helper
+- `script_parser::trim_last_new_line_chars` has an unreachable `|| npos` branch — remove it
+- `sub_record_merge_t` and `leveled_list_merge_t` share one `.hpp/.cpp` pair — extract `leveled_list_merge_t` into its own file (one-class-per-file)
+- Validation feedback diverges between yTranslator (informs, three-tier, own validator in yampt.translator) and yEditor (blocks, binary, validator in yampt.core) — contradicts Consistent Across Apps; consider a shared validation core, unified message wording, and a deliberate block-vs-inform decision per app
+
+### Table-driven migration debt (inline type checks predating the table-driven rule — migrate to the behavior table, do not copy or add more)
+
+- `sub_record_merge.cpp`: `merge()` dispatch on `"CELL"`/`"SCPT"`/`"ARMO"`/`"CLOT"`; `is_enam_record_type` (`"ENCH"`/`"SPEL"`/`"ALCH"`); FACT `ANAM`/`INTV` skip in `apply_intermediate`; FACT reaction phase keyed on `"FACT"`; LEVI/CNAM sub-type choice in `build_merged_list_record`
+- `auto_merge.cpp`: `is_type_enabled` LAND skip; `dispatch_group` / `should_skip_group` routing on `"LEVI"`/`"LEVC"`/`"DIAL"`/`"INFO"`
+- `plugin_index.cpp`: `derive_id` and `derive_display_name` type dispatch (`"CELL"`, `"SKIL"`/`"MGEF"`, `"SCPT"`, `"DIAL"`, `"INFO"`, `"LAND"`, `"PGRD"`, `"GLOB"`, `"TES3"`)

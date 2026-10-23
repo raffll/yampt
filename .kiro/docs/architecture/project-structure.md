@@ -18,10 +18,13 @@ yampt/
 │   │   ├── converter/     # esm_converter_t, script_parser_t, scdt_patcher_t
 │   │   ├── translator/    # translation_engine_t
 │   │   ├── scanner/       # plugin_scan_t, plugin_index_t, record_conflict, merge_patch_store, merge_patch_ops, auto_merge, sub_record_merge, batch_cleaner, fixers
-│   │   ├── decoder/       # conflict_slots, sub_record_iter, sub_record_schema, view_tree_format, content_alignment, view_group_def
+│   │   ├── decoder/       # conflict_slots, sub_record_iter, sub_record_schema, view_tree_format, content_alignment, view_group_def, field_encoder, field_validator, record_header_flags, scvr_condition
 │   │   ├── io/            # File format readers/writers (ESM, JSON, codepage, file_list, yaml_l10n, binary_file_io)
-│   │   └── utility/       # Pure helpers (domain_types, app_logger, string_utils, record_types, status_types, dict_kind)
+│   │   └── utility/       # Pure helpers (domain_types, app_logger, string_utils, record_types, status_types, dict_kind, record_behavior, case_fold, char_diff, keyword_trie, language_config)
 │   └── yampt.core.vcxproj
+├── yampt.qt/               # Qt bridge library (C++ static lib + Qt6) → yampt.qt.lib
+│   ├── source/            # theme_system, conflict_types, settings_store, path_resolver, resource_paths, translation_example
+│   └── yampt.qt.vcxproj
 ├── yampt.cli/              # CLI entry point → yampt.exe (links yampt.lib)
 │   ├── source/
 │   │   ├── interface/     # CLI boundary (user_interface_t)
@@ -363,7 +366,7 @@ yampt.qt (StaticLibrary → yampt.qt.lib)
 
 - **Depends on**: yampt.core (headers only via include path) + Qt6
 - **Contains**: Qt-dependent utilities that wrap or extend core types with Qt features
-- **Current contents**: `theme_system`, `conflict_types` (QColor helpers), `settings_store` (QSettings wrapper), `path_resolver` (platform-aware path resolution)
+- **Current contents**: `theme_system`, `conflict_types` (QColor helpers), `settings_store` (QSettings wrapper), `path_resolver` (platform-aware path resolution), `resource_paths` (resource directory accessors), `translation_example`
 - **Include paths**: `$(ProjectDir)source`, `$(SolutionDir)yampt.core\source`, Qt6 includes
 - When adding a Qt-dependent class that other projects need, put it here.
 

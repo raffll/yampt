@@ -295,7 +295,7 @@ The core sub-record merge rule is: a piece (bit / byte span) is taken from an in
 
 ### scdt_patcher null-terminator tolerance
 
-`scdt_patcher_t::validate_text_size` accepts a declared size of either `old_text.size()` OR `old_text.size() + 1` — the `+1` covers compiled MWScript strings that include a trailing null in the length field. Message segments use a 2-byte size field for the first segment and 1-byte for later segments. The getpccell `'X'`-marker/back-2-bytes trick is documented in project-paths.md.
+`scdt_patcher_t::validate_text_size` accepts a declared size of either `old_text.size()` OR `old_text.size() + 1` — the `+1` covers compiled MWScript strings that include a trailing null in the length field. Message segments use a 2-byte size field for the first segment and 1-byte for later segments. The getpccell `'X'`-marker/back-2-bytes trick is documented in `project-structure.md`.
 
 ## Revert Must Never Propagate
 
@@ -332,4 +332,4 @@ For the FRMR-group owner merge specifically: if an intermediate plugin removes t
 
 Modders remove references, owners, and list entries on purpose (cutting content, clearing ownership, deleting placed objects). Restoring what a plugin deleted silently reverts the modder's intent and reintroduces content they meant to be gone.
 
-> Note: The FRMR absence exception (FRMR absence is NOT deletion, only explicit `DELE` deletes a reference) is documented in `frmr-reference-model.md`. That is a domain carve-out specific to the engine's reference model, not a contradiction of this decision.
+> Note: The FRMR absence exception (FRMR absence is NOT deletion, only explicit `DELE` deletes a reference) is documented in `../reference/frmr-references.md`. That is a domain carve-out specific to the engine's reference model, not a contradiction of this decision.

@@ -1,6 +1,8 @@
 # Documentation
 
-## Always Update Docs
+## Remove, Don't Mark Done
+
+In any document (TODO.md, CHANGELOG notes, planning docs, lists, steering, docs), never leave an entry marked as done, completed, resolved, fixed, or struck through, and never keep an entry describing something that no longer exists. Delete it outright. A document reflects the current state only — not a history of what was finished or removed. The CHANGELOG is the sole exception: it is a deliberate, versioned history and keeps its past entries.
 
 Every user-visible change ships with its documentation update in the same task. Do not ask whether to update docs, and do not defer it — update them as part of the change.
 

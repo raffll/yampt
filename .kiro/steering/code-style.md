@@ -2,6 +2,8 @@
 
 ## File Organization
 
+> Scope: the size limits below (max 1000 lines per file, max 50 lines per function, max 3 nesting levels, max 2 arguments) apply to **new and modified code**. Existing files/functions that already exceed a limit are grandfathered — do not retroactively split them, and do not flag them in audits. When you add a new file or function, it must fit. When you substantially edit an existing oversized unit, bring the part you touch into compliance (extract what you're changing) rather than growing it further; a full split is optional, not required.
+
 - One file, one responsibility
 - Max 1000 lines per file
 - One class per file
@@ -17,7 +19,7 @@ Exceptions to the one-class-one-file rule:
 
 ## Main Window Anti-Gravity Rule
 
-Never add new logic directly to `main_window_t` or `editor_window_t`. These classes are signal routers — they connect UI events to controllers. New features go on the appropriate controller or a new controller. The main window only:
+Never add new logic directly to an app's main-window class. These classes are signal routers — they connect UI events to controllers. New features go on the appropriate controller or a new controller. The main window only:
 - Constructs views and controllers
 - Connects signals to controller methods
 - Reads controller results to update views
@@ -32,9 +34,11 @@ If a new feature needs orchestration (showing dialogs, running operations, updat
 - Remove unused function arguments — do not leave unnamed or commented-out parameters
 - Always do testable interfaces
 - Unit test for every function
-- Every algorithm must be callable from a unit test without instantiating heavy dependencies (no file I/O, no UI, no loaded plugins). Extract pure logic into public static methods on a dedicated class (e.g. `sub_record_merge_t::merge()`, `leveled_list_merge_t::merge()`) that accept data via parameters and return results. Class methods that need infrastructure (loading files, accessing plugin arrays) are thin wrappers that collect data and delegate to the testable class.
+- Every algorithm must be callable from a unit test without instantiating heavy dependencies (no file I/O, no UI, no loaded plugins). Extract pure logic into public static methods on a dedicated class that accept data via parameters and return results. Class methods that need infrastructure (loading files, accessing plugin arrays) are thin wrappers that collect data and delegate to the testable class.
 
 ## Naming
+
+> Scope: the minimum-name-length rule (no name shorter than 5 characters) applies to **new and modified code** — new identifiers must comply. Existing short names are grandfathered; do not mass-rename them and do not flag them in audits. Rename a short name when you are already editing that symbol's surrounding code, not as a standalone sweep.
 
 - No name shorter than 5 characters — no abbreviations
 - Names must always match what the variable actually is; if reused, generalize the name
@@ -108,9 +112,7 @@ Parameter names in declarations (`.hpp`) must be identical to the corresponding 
 
 ## Use Named Constants for Status Strings
 
-Never compare against raw status string literals (`"untranslated"`, `"translated"`, etc.). Always use the named constants from `tools_t::status_t::` — e.g. `tools_t::status_t::untranslated`, `tools_t::status_t::adapted`. This prevents typos and keeps all status values in one place.
-
-Target: replace the `const char *` constants with a proper `enum class status_t`. After migration, status cannot be compared to `std::string` directly — serialize/deserialize only at JSON boundaries.
+Never compare against raw status string literals (`"untranslated"`, `"translated"`, etc.). Always use the shared named status constants. This prevents typos and keeps all status values in one place. Serialize/deserialize status only at JSON boundaries — do not compare it to a raw string elsewhere.
 
 ## View Class Suffix: `_view_t`
 
@@ -224,7 +226,6 @@ auto key_text = esm.get_key().text;
 - Modernize — use C++20
 - No comments unless the code cannot be explained by function or variable names alone. If a comment is unavoidable, keep it to one short line.
 - No decorative comment banners (dashed lines, boxes, ASCII art).
-- Always remove items from TODO.md that are done or cancelled — never leave stale entries.
 - One class = one `.hpp` + one `.cpp`. Never split a class across multiple `.cpp` files. If a class exceeds 1000 lines, it has more than one responsibility — extract a new class, don't add a second `.cpp`.
 - When hiding a UI feature (settings page, combo box, panel), fully remove it from the layout — do not just call `setVisible(false)`. Hidden widgets still occupy space, intercept events, and cause visual glitches. Remove the `addWidget`/`addTab` call entirely; keep the object alive only if its API is still used internally.
 
@@ -236,7 +237,7 @@ All user-visible strings in yampt.translator and yampt.editor must be wrapped fo
 - Non-QObject classes: `QCoreApplication::translate("yTranslator", "text")` or `"yEditor"`
 - Never leave raw string literals in UI code (menus, tooltips, labels, messages, dialog titles, button text)
 - This includes: combo box items (`addItem`), checkbox labels, form row labels (`addRow`), context menu actions (`addAction`), `QInputDialog` titles and prompts, list widget category items, and toolbar/statusbar text
-- Log messages (`app_logger_t`, `append_log`) stay English — they are developer-facing
+- Log messages stay English — they are developer-facing
 - Shortcut key sequences (`"Ctrl+S"`, `"F10"`) are not translated
 - Settings keys and internal identifiers are not translated
 - Internal toolbar object names (`addToolBar("Main")`) are not translated
@@ -352,51 +353,38 @@ When fixing compile or linker errors, do NOT change the project architecture. Do
 
 ## Path Handling
 
-Never build or compare filesystem paths by hand. Use the shared path mechanisms so separators, trailing slashes, case, and `..`/`.` segments are handled consistently.
+Never build or compare filesystem paths by hand. Use the shared path helpers so separators, trailing slashes, case, and `..`/`.` segments are handled consistently.
 
 ### Joining Paths
 
-Never concatenate a directory and a leaf with `+ "/" +`, `+ "\\" +`, or by relying on a trailing slash baked into the directory string.
+Never concatenate a directory and a leaf with `+ "/" +`, `+ "\\" +`, or by relying on a trailing slash baked into the directory string. Use the shared path-join helper for C++ `std::string` paths, and the Qt file-path API for `QString` paths — each inserts exactly one separator regardless of trailing/leading slashes.
 
-- C++ `std::string` paths: `string_utils::join_path(base, leaf)` — inserts exactly one separator regardless of a trailing slash on `base` or a leading slash on `leaf`.
-- Qt `QString` paths: `QDir(dir).filePath(name)`.
-
-Directory accessors do NOT return a trailing slash. `resource_paths::*_dir()` (`config_dir`, `workspace_dir`, `models_dir`, `providers_dir`, `dictionaries_dir`, `translations_dir`) and `settings_store_t::settings_dir()` return a bare directory path — always join a leaf onto them with the helpers above, never by string addition.
+Directory accessors return a bare directory path with NO trailing slash — always join a leaf onto them with the helpers above, never by string addition.
 
 ### Normalizing and Comparing Paths
 
-- To get a canonical form of a path (forward slashes, resolved `.`/`..`, normalized drive/UNC prefix): `string_utils::canonicalize_path`.
-- To test whether two paths refer to the same location: `string_utils::paths_equal` (canonicalizes both and is case-insensitive on Windows). Never compare raw path strings with `==`.
-- When a canonical string is needed as a map/set key with case-insensitive dedup, use `string_utils::to_lower(canonicalize_path(path))`.
-- `string_utils::normalize_path` only swaps backslashes and strips trailing slashes; prefer `canonicalize_path` when segment resolution or comparison matters.
+- To get a canonical form (forward slashes, resolved `.`/`..`, normalized drive/UNC prefix), use the shared canonicalize helper.
+- To test whether two paths refer to the same location, use the shared path-equality helper (it canonicalizes both and is case-insensitive on Windows). Never compare raw path strings with `==`.
+- When a canonical string is needed as a map/set key with case-insensitive dedup, lowercase the canonical form.
 
 ### No Local Reimplementations
 
-Do not write local `static` helpers or lambdas that lowercase, normalize, join, or compare paths. Reuse the functions in `string_utils` (per the "No Duplicated Utility Functions" rule below). If a needed operation is missing, add it to `string_utils` with a unit test, not inline.
+Do not write local `static` helpers or lambdas that lowercase, normalize, join, or compare paths. Reuse the shared string/path utilities (per the "No Duplicated Utility Functions" rule below). If a needed operation is missing, add it to the shared utility module with a unit test, not inline.
 
 ## No Duplicated Utility Functions
 
-Common string/path operations must live in one shared location (`yampt/utility/string_utils.hpp`). Never reimplement as local `static` functions or lambdas:
-
-- `to_lower(std::string_view) -> std::string`
-- `normalize_path(std::string_view) -> std::string` (backslash → forward slash)
-- `extract_filename(std::string_view) -> std::string_view`
-- `trim(std::string_view) -> std::string`
-
-If you need one of these, include `string_utils.hpp`. Do not write a local copy.
+Common string/path operations (lowercasing, normalizing backslashes, extracting a filename, trimming, joining, canonicalizing, comparing) must live in one shared string-utility module. Never reimplement them as local `static` functions or lambdas. If you need one, include the shared module; if it is missing an operation, add it there with a unit test rather than writing a local copy.
 
 ## No CLI Log Headers
 
 Do not use decorative ASCII separator lines or column headers in log output. Each log line must be self-describing with labeled counters:
 
-```cpp
-// Good
-tools_t::add_log("CELL: created=5, missing=2, identical=10, total=17\r\n");
+```
+Good:  CELL: created=5, missing=2, identical=10, total=17
 
-// Bad
-tools_t::add_log("-----------------------------------------------\r\n"
-                 "          Created / Missing / Identical /   All\r\n"
-                 "-----------------------------------------------\r\n");
+Bad:   -----------------------------------------------
+                 Created / Missing / Identical /   All
+       -----------------------------------------------
 ```
 
 ## Log Message Style
@@ -413,21 +401,19 @@ Rules:
 - Lowercase prefix tag, lowercase message body
 - No ad-hoc prefixes: `-->`, `->`, `Error:`, `Warning:`, `INFO:`
 
-```cpp
-// Good
-tools_t::add_log("[info] loading \"Morrowind.esm\"\r\n");
-tools_t::add_log("[error] cannot open \"file.esp\" for writing\r\n");
-tools_t::add_log("[warning] duplicate CELL record: Balmora\r\n");
+```
+Good:  [info] loading "Morrowind.esm"
+       [error] cannot open "file.esp" for writing
+       [warning] duplicate CELL record: Balmora
 
-// Bad
-tools_t::add_log("--> Loading \"Morrowind.esm\"\r\n");
-tools_t::add_log("Error: loading \"file.esp\" (wrong path)\r\n");
-tools_t::add_log("Warning: duplicate CELL value Balmora\r\n");
+Bad:   --> Loading "Morrowind.esm"
+       Error: loading "file.esp" (wrong path)
+       Warning: duplicate CELL value Balmora
 ```
 
 ## GUI Log Tab Headers
 
-The `log_tab_t::append_log(operation_name, text)` first argument is the operation name displayed as a section header in the log panel. Use lowercase with no extra formatting:
+The operation name shown as a section header in the GUI log panel uses lowercase with no extra formatting:
 
 - `"make dict"`, `"make base"`, `"convert"`, `"create"`, `"merge"`
 - `"download models"`, `"spelling"`
