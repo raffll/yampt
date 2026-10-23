@@ -7,6 +7,7 @@
 - [NEW] NPC display-name entries now show the character's gender next to the name in the Annotations panel, the same way dialogue entries show the speaker's gender; it appears in dictionaries created after this change
 - [CHANGE] The blue dialogue-topic highlighting in the Original and Translation boxes now appears only while editing a dialogue topic or dialogue response entry; on all other record types it is no longer shown. The green glossary highlighting is unaffected and still appears for every record type
 - [FIX] Propagating a translation now only applies to entries that are Untranslated. Entries with any other status — Translated, In Progress, Generated, and so on — are left unchanged
+- [FIX] Selecting a record now shows the Translation box scrolled to the top of the text, matching the Original box, instead of jumping to the end; long translations now start at the beginning when you select the entry
 
 ### yEditor
 - [NEW] When two plugins change the owner of the same placed object in a cell (the person or faction who gets angry if you steal it), the merged patch now keeps that owner change instead of losing it. Only the owner is merged: the object otherwise stays exactly as the winning plugin left it, and no other placed objects are copied. This applies to changing an owner, adding one, or clearing one
