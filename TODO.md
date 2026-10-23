@@ -27,7 +27,6 @@ Size/line/nesting/argument-count limits are grandfathered for existing code (see
 - `creator_helpers` `insert_entry_*` family takes 4-6 args — pass via structs (`insert_params_t`, `insert_from_base_params_t`), ~40 call sites across creator_single/ordered/helpers — deferred, large blast radius
 - `spell_checker_t::is_mwscript_keyword` has an inline per-byte compare (ASCII on purpose) — could consolidate onto a shared ASCII helper
 - `script_parser::trim_last_new_line_chars` `|| npos` branch is NOT dead — it is the only path that trims the appended CRLF when `m_old_script.size() == 1` (`size - 2` underflows to npos); keep it
-- `sub_record_merge_t` and `leveled_list_merge_t` share one `.hpp/.cpp` pair — extract `leveled_list_merge_t` into its own file (one-class-per-file)
 - Validation feedback diverges between yTranslator (informs, three-tier, own validator in yampt.translator) and yEditor (blocks, binary, validator in yampt.core) — contradicts Consistent Across Apps; consider a shared validation core, unified message wording, and a deliberate block-vs-inform decision per app
 
 ### Table-driven migration debt (inline type checks predating the table-driven rule — migrate to the behavior table, do not copy or add more)
