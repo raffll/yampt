@@ -333,3 +333,7 @@ For the FRMR-group owner merge specifically: if an intermediate plugin removes t
 Modders remove references, owners, and list entries on purpose (cutting content, clearing ownership, deleting placed objects). Restoring what a plugin deleted silently reverts the modder's intent and reintroduces content they meant to be gone.
 
 > Note: The FRMR absence exception (FRMR absence is NOT deletion, only explicit `DELE` deletes a reference) is documented in `../reference/frmr-references.md`. That is a domain carve-out specific to the engine's reference model, not a contradiction of this decision.
+
+## script_parser trim_last_new_line_chars — the `|| npos` branch is intentional
+
+`script_parser::trim_last_new_line_chars` contains a condition with a `|| ... == std::string::npos` branch that looks unreachable but is not. It is the only path that trims the appended CRLF when `m_old_script.size() == 1`, where `size - 2` underflows to `npos`. Removing the branch regresses the single-character script case. Keep it.

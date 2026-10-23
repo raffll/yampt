@@ -20,17 +20,17 @@
 
 ## Tech Debt (acknowledged — do not re-report in audits)
 
-Size/line/nesting/argument-count limits are grandfathered for existing code (see code-style.md), so pure "over the limit" cases are not tracked here. These are genuine structural/behavioral debts:
+Size/line/nesting/argument-count/name-length limits are grandfathered for existing code (see code-style.md), so pure "over the limit" cases are not tracked here. These are genuine structural/behavioral debts:
 
 - `translate_all_requested` handler in `main_window` holds orchestration logic — extract to a translation controller (Anti-Gravity Rule) — yTranslator
-- SCDT messagebox segment limited to 254 chars (1-byte size field, vanilla bytecode format); only affects vanilla Morrowind, OpenMW recompiles from SCTX source
-- `creator_helpers` `insert_entry_*` family takes 4-6 args — pass via structs (`insert_params_t`, `insert_from_base_params_t`), ~40 call sites across creator_single/ordered/helpers — deferred, large blast radius
-- `spell_checker_t::is_mwscript_keyword` has an inline per-byte compare (ASCII on purpose) — could consolidate onto a shared ASCII helper
-- `script_parser::trim_last_new_line_chars` `|| npos` branch is NOT dead — it is the only path that trims the appended CRLF when `m_old_script.size() == 1` (`size - 2` underflows to npos); keep it
-- Validation feedback diverges between yTranslator (informs, three-tier, own validator in yampt.translator) and yEditor (blocks, binary, validator in yampt.core) — contradicts Consistent Across Apps; consider a shared validation core, unified message wording, and a deliberate block-vs-inform decision per app
+- Validation feedback diverges between yTranslator (informs, three-tier, own validator in yampt.translator) and yEditor (blocks, binary, validator in yampt.core) — contradicts Consistent Across Apps; needs a design decision (shared validation core, unified message wording, deliberate block-vs-inform per app) before implementation
 
 ### Table-driven migration debt (inline type checks predating the table-driven rule — migrate to the behavior table, do not copy or add more)
 
 - `sub_record_merge.cpp`: `merge()` dispatch on `"CELL"`/`"SCPT"`/`"ARMO"`/`"CLOT"`; `is_enam_record_type` (`"ENCH"`/`"SPEL"`/`"ALCH"`); FACT `ANAM`/`INTV` skip in `apply_intermediate`; FACT reaction phase keyed on `"FACT"`; LEVI/CNAM sub-type choice in `build_merged_list_record`
 - `auto_merge.cpp`: `is_type_enabled` LAND skip; `dispatch_group` / `should_skip_group` routing on `"LEVI"`/`"LEVC"`/`"DIAL"`/`"INFO"`
 - `plugin_index.cpp`: `derive_id` and `derive_display_name` type dispatch (`"CELL"`, `"SKIL"`/`"MGEF"`, `"SCPT"`, `"DIAL"`, `"INFO"`, `"LAND"`, `"PGRD"`, `"GLOB"`, `"TES3"`)
+
+## Known Limitations (not debt — won't fix)
+
+- SCDT messagebox segment limited to 254 chars: the compiled-bytecode segment length is a 1-byte field in the vanilla Morrowind format, so a translated segment longer than 254 chars cannot be patched. Only affects the vanilla engine; OpenMW recompiles from the SCTX source and has no such limit. Not fixable without breaking the vanilla format.
