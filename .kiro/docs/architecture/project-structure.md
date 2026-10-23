@@ -114,6 +114,8 @@ Debug build:
 & $msbuild yampt.sln /p:Configuration=Debug /p:Platform=x64 /m
 ```
 
+> First build is slow (~50 min on a cold vcpkg cache): vcpkg compiles Qt6 (qtbase) and other dependencies from source, and CTranslate2 builds on its first run. This is a one-time cost — once cached, subsequent builds take seconds to a few minutes. A long silent stretch during the Qt or CTranslate2 compile is normal progress, not a hang. A clean build ends with `Liczba błędów: 0` / `0 Error(s)` in the MSBuild summary.
+
 ## Running Tests
 
 ```

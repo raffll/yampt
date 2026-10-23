@@ -47,8 +47,7 @@ void insert_duplicate(
     const std::string & key_text,
     const std::string & old_text,
     const std::string & new_text,
-    rec_type_t type,
-    status_t status);
+    rec_type_t type);
 
 void insert_via_text_match(
     creator_context_t & ctx,

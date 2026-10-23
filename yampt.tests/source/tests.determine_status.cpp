@@ -38,3 +38,16 @@ TEST_CASE("creator_helpers::is_proper_noun, null dict treats every text as prope
 	REQUIRE(creator_helpers::is_proper_noun(*ctx, "Balmora"));
 	REQUIRE(creator_helpers::is_proper_noun(*ctx, "the sword"));
 }
+
+TEST_CASE("creator_helpers::insert_duplicate, duplicate entry always gets duplicate status", "[u]")
+{
+	const auto ctx = make_context(base_mode_t::full);
+
+	creator_helpers::insert_entry_single(*ctx, "KEY", "old", "new_one", rec_type_t::fnam);
+	creator_helpers::insert_entry_single(*ctx, "KEY", "old", "new_two", rec_type_t::fnam);
+
+	const auto * entry = ctx->dict.at(rec_type_t::fnam).find("KEY");
+	REQUIRE(entry != nullptr);
+	REQUIRE(entry->status == status_t::duplicate);
+	REQUIRE(ctx->counter_doubled == 1);
+}
