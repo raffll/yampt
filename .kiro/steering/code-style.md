@@ -255,6 +255,8 @@ Decision:
 
 Never use a class with only static methods — use a namespace instead.
 
+> Scope: this applies to **new code** — a newly written stateless utility must be a namespace, not a static-only class. Existing static-only classes are grandfathered; do not mass-convert them and do not flag them in audits. Convert one to a namespace only when you are already substantially editing it for another reason.
+
 ## Function Placement
 
 - File-local `static` functions in `.cpp` — implementation-only helpers that serve one file. Internal types used by these helpers also live in the `.cpp`.
