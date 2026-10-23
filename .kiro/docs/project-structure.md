@@ -1,4 +1,11 @@
-# Project Paths & Build
+# Project Structure
+
+This document is domain/architecture reference for the yampt solution: repository
+layout, build commands, project dependency rules, include conventions, and where
+auxiliary files live. Consult it before adding files, changing project references,
+or touching the build.
+
+---
 
 ## Repository Layout
 
@@ -302,7 +309,6 @@ Only 2 false positives in vanilla Morrowind.esm:
 
 Low impact for vanilla, but mods with variables like `mychoice`, `sayHello` would be affected.
 
-
 ---
 
 ## Release Packaging (`pack_release.ps1`)
@@ -324,3 +330,112 @@ What is NOT included:
 - `tests/`, `workspace/` — development artifacts
 - `.pdb` files — debug symbols stay local
 - `.ini` files — user-specific config
+
+---
+
+## Project Dependency Graph
+
+```
+yampt.core (StaticLibrary → yampt.core.lib)
+   ↑ pure C++ — no Qt, no other projects
+   │
+yampt.qt (StaticLibrary → yampt.qt.lib)
+   ↑ depends on: yampt.core + Qt
+   │
+├── yampt.cli      → links: yampt.core.lib
+├── yampt.editor   → links: yampt.core.lib + yampt.qt.lib
+├── yampt.translator → links: yampt.core.lib + yampt.qt.lib
+└── yampt.tests    → links: yampt.core.lib + yampt.qt.lib
+                     (+ compiles yampt.translator/yampt.editor .cpp directly)
+```
+
+## Dependency Rules
+
+### yampt.core — Pure C++ Library
+
+- **No Qt includes** (`QSettings`, `QString`, `QColor`, `QDir`, `QFile`, etc.)
+- **No includes from other yampt projects** (yampt.qt, yampt.editor, yampt.translator)
+- **Only external dependencies**: CTranslate2, vcpkg C++ libraries (sentencepiece, abseil), standard library
+- **Include paths**: `$(ProjectDir)source`, `$(SolutionDir)external`, CTranslate2 include/build
+- When a new `.cpp` file is added here, all consuming projects get it automatically through `yampt.core.lib`. No additional edits needed.
+
+### yampt.qt — Qt Bridge Library
+
+- **Depends on**: yampt.core (headers only via include path) + Qt6
+- **Contains**: Qt-dependent utilities that wrap or extend core types with Qt features
+- **Current contents**: `theme_system`, `conflict_types` (QColor helpers), `settings_store` (QSettings wrapper), `path_resolver` (platform-aware path resolution)
+- **Include paths**: `$(ProjectDir)source`, `$(SolutionDir)yampt.core\source`, Qt6 includes
+- When adding a Qt-dependent class that other projects need, put it here.
+
+### yampt.cli — Console Application
+
+- **Depends on**: yampt.core.lib (linked)
+- **Does NOT depend on Qt or yampt.qt**
+- **Contains**: CLI entry point, user_interface_t
+- **Only own source files** — no cross-project `.cpp` compilation
+
+### yampt.editor — Qt GUI Application (yEditor)
+
+- **Depends on**: yampt.core.lib + yampt.qt.lib (linked via ProjectReference)
+- **Contains**: Plugin conflict viewer, merged patch editor
+- **Only own source files** — no cross-project `.cpp` compilation
+- Include paths include `yampt.core\source` and `yampt.qt\source` for headers
+
+### yampt.translator — Qt GUI Application (yTranslator)
+
+- **Depends on**: yampt.core.lib + yampt.qt.lib (linked via ProjectReference)
+- **Contains**: Translation workbench, dictionary editor
+- **Only own source files** — no cross-project `.cpp` compilation
+- Include paths include `yampt.core\source` and `yampt.qt\source` for headers
+
+### yampt.tests — Test Application
+
+- **Depends on**: yampt.core.lib + yampt.qt.lib (linked via ProjectReference)
+- **Also compiles .cpp directly from**: yampt.translator, yampt.editor (because those are Applications, not libraries — no .lib to link)
+- This is the ONLY project allowed to compile `.cpp` files from other projects
+- Include paths include all project source directories for header access
+
+## Adding New Files
+
+| File depends on... | Put it in... |
+|---|---|
+| Nothing / standard C++ only | `yampt.core` |
+| CTranslate2 | `yampt.core` |
+| Qt classes (QColor, QSettings, QWidget, etc.) but is shared | `yampt.qt` |
+| Qt + is specific to yEditor UI | `yampt.editor` |
+| Qt + is specific to yTranslator UI | `yampt.translator` |
+| Needs testing | If it's in yampt.core, tests get it free via lib. If it's in translator/editor, add the `.cpp` to yampt.tests vcxproj. |
+
+## Never Do
+
+- Never add Qt includes to yampt.core
+- Never add `#include` of yampt.qt/yampt.editor/yampt.translator headers in yampt.core
+- Never compile `.cpp` from yampt.core in other projects (they link the lib)
+- Never compile `.cpp` from yampt.qt in other projects (they link the lib)
+- Never add yampt.core.lib or yampt.qt.lib as AdditionalDependencies without also adding the ProjectReference (build order)
+
+## Output Directory (Configurable)
+
+The output directory is configurable per mode in Settings → Paths. All files created by yEditor (merged patch, cleaned plugins) go into this directory.
+
+- **Folder mode**: `{selected_folder}/{output_dir}/` — default: same as base directory (empty)
+- **MO2 mode**: `{MO2_profile_dir}/{output_dir}/` — default: `../../overwrite`
+- **OpenMW mode**: `{openmw.cfg_dir}/{output_dir}/` — default: `data`
+
+The merged patch filename is always `Merged Patch.esp` — only the output directory is configurable.
+
+---
+
+## Auxiliary Files Live in the Solution Root
+
+All auxiliary files live in the solution root (`yampt/`), not inside project subfolders.
+
+- `scripts/` — PowerShell and Python scripts (pack_model.ps1, download_models.py, finetune_model.py, pack_release.ps1)
+- `models/` — CTranslate2 translation models (nllb-600M/, etc.)
+- `docs/dictionaries/` — holds only `LICENSE`; the `.aff`/`.dic` files are generated at build time from the `external/dictionaries` submodule and are gitignored
+- `external/` — git submodules for third-party sources: `external/CTranslate2` (`OpenNMT/CTranslate2`, pinned release tag) and `external/dictionaries` (`wooorm/dictionaries`, source of all Hunspell spellcheck dictionaries). Also holds local-only, gitignored content (built CTranslate2 artifacts, translation models, `7za.exe`).
+- `build/` — output of pack/release scripts (zip files, release artifacts)
+
+Never place scripts, models, or dictionaries inside `yampt.translator/`, `yampt.editor/`, or other project subdirectories.
+
+All pack scripts (pack_release.ps1, pack_model.ps1) must write their output to `build/` in the solution root.

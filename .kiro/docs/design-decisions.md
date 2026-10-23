@@ -296,3 +296,40 @@ The core sub-record merge rule is: a piece (bit / byte span) is taken from an in
 ### scdt_patcher null-terminator tolerance
 
 `scdt_patcher_t::validate_text_size` accepts a declared size of either `old_text.size()` OR `old_text.size() + 1` — the `+1` covers compiled MWScript strings that include a trailing null in the length field. Message segments use a 2-byte size field for the first segment and 1-byte for later segments. The getpccell `'X'`-marker/back-2-bytes trick is documented in project-paths.md.
+
+## Revert Must Never Propagate
+
+Revert operations (single-entry or batch) must NEVER trigger propagation. They restore a previous state — they do not create a new translation that should spread to other entries. Violating this silently corrupts user data.
+
+When reverting an entry to a historical text/status:
+- Write `entry.new_text` and `entry.status` directly on the `dict_document_t::data_mut()` record
+- Call `dict_doc->set_dirty(true)` and `dict_doc->modified_records_insert(...)`
+- Do NOT call `dict_document_t::commit()` — it contains propagation logic
+
+`commit()` is for new user-initiated translations where propagation is intentional. Revert is the opposite: restoring old state without side effects.
+
+### Single Source of Undo
+
+The History panel is the only source of undo/revert in the application. There is no separate undo stack, no Ctrl+Z for entry text, and no other revert mechanism. All revert operations — whether triggered from the History panel (single entry) or the table context menu (batch) — read from `edit_history_t`.
+
+### Why
+
+If revert calls `commit()`, the reverted text propagates to all entries sharing the same `old_text`, silently overwriting unrelated translations across the document.
+
+## Removal From Master Is Intentional
+
+When a plugin removes something that exists in the master, that removal is a deliberate authoring decision and must be honored by the merge. A removal always wins by default — the merge never resurrects master content that a plugin deleted. Violating this silently reverts the modder's intent.
+
+- If a sub-record, group, list entry, or field is present in the master but absent in a plugin version, treat the absence as an intentional delete, not as missing data to be filled back in from the master or another plugin.
+- Do NOT re-add removed content during merge. A removal is a change like any other and follows normal last-changer-wins precedence: a plugin that removes an item is a plugin that changed it.
+- This applies to every keyed/grouped merge: leveled-list entries, keyed lists (NPCO/NPCS/FACT), FRMR groups, and any element-wise merge. Union logic keeps items added by any plugin, but an item deleted by a plugin is dropped, not kept alive by the master.
+
+### Consequence For FRMR / ANAM Conflicts
+
+For the FRMR-group owner merge specifically: if an intermediate plugin removes the owner (ANAM present in master, absent in the intermediate) that is an intentional un-own and is respected — the group is emitted with the owner removed, not with the master's owner restored.
+
+### Why
+
+Modders remove references, owners, and list entries on purpose (cutting content, clearing ownership, deleting placed objects). Restoring what a plugin deleted silently reverts the modder's intent and reintroduces content they meant to be gone.
+
+> Note: The FRMR absence exception (FRMR absence is NOT deletion, only explicit `DELE` deletes a reference) is documented in `frmr-reference-model.md`. That is a domain carve-out specific to the engine's reference model, not a contradiction of this decision.

@@ -53,11 +53,11 @@ The `field_def_role` case handling in `view_tree_model.cpp` is 103 lines, exceed
 
 ## exclude sub-record lambda nesting exceeds 3 levels
 
-The exclude sub-record lambda in `view_context_menu.cpp` nests more than 3 levels deep, violating the no-deep-nesting rule. The lambda logic should be flattened with early returns or moved into a named method.
+The exclude sub-record lambda in `view_context_menu.cpp` nests more than 3 levels deep, violating the "No Deep Nesting" rule in code-style.md. The lambda logic should be flattened with early returns or moved into a named method.
 
 ## highlight_coordinator_t is a static-only class
 
-`highlight_coordinator_t` has only static methods and no mutable state. Per the classes-vs-namespaces rule it should be a namespace, not a class.
+`highlight_coordinator_t` has only static methods and no mutable state. Per the "Classes vs Namespaces" rule in code-style.md it should be a namespace, not a class.
 
 ## insert_duplicate has an unused status parameter
 

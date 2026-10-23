@@ -4,7 +4,7 @@ Internal engineering analysis of how "validation error" feedback differs in the 
 
 ## Summary
 
-The two apps validate edited text with **separate code paths, different validation models, and different UI feedback**. Nothing is shared: even though yEditor's validator lives in `yampt.core`, yTranslator uses its own validator in `yampt.translator`. This contradicts the `consistent-across-apps` steering rule.
+The two apps validate edited text with **separate code paths, different validation models, and different UI feedback**. Nothing is shared: even though yEditor's validator lives in `yampt.core`, yTranslator uses its own validator in `yampt.translator`. This contradicts the "Consistent Across Apps" rule in `.kiro/steering/gui-conventions.md`.
 
 - **yTranslator** — informs but never blocks. Invalid text commits with `status_t::error`; feedback is a status-bar counter, an in-editor overflow highlight, and the row's error status. Three-tier model (`ok / caution / error`).
 - **yEditor** — blocks. The Apply button disables on invalid input and the controller re-rejects the commit. Feedback is a red edit box, an inline "Error:" label, and a tooltip. Binary model (`valid / invalid`).
@@ -84,7 +84,7 @@ On commit, `commit_orchestrator::execute` validates; if `error`, it sets `effect
 
 No shared vocabulary or shared source of truth.
 
-## Root-cause inconsistencies (contradict `consistent-across-apps`)
+## Root-cause inconsistencies (contradict "Consistent Across Apps" in gui-conventions.md)
 
 1. **Two validators, two models** — three-tier record-type byte limits (translator) vs. binary field-type/schema-size (editor); no shared code.
 2. **Duplicated, divergent limits** — FNAM=31 / CELL=63 / RNAM=32 / INFO 512/1024 live only in the translator; the editor uses schema sizes. They can disagree for the same field.
