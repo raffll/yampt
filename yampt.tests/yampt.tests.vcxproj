@@ -177,6 +177,7 @@
     <ClInclude Include="..\yampt.translator\source\session\session.hpp" />
     <ClInclude Include="..\yampt.translator\source\highlighter\script_tokenizer.hpp" />
     <ClInclude Include="..\yampt.translator\source\controller\editor_controller.hpp" />
+    <ClInclude Include="..\yampt.translator\source\editor\glossary_line_preparer.hpp" />
     <ClInclude Include="..\yampt.translator\source\editor\edit_history.hpp" />
     <ClInclude Include="..\yampt.translator\source\editor\byte_limit_validator.hpp" />
     <ClInclude Include="..\yampt.translator\source\editor\find_replace.hpp" />
@@ -218,6 +219,7 @@
     <ClCompile Include="source\tests.yaml_scalar.cpp" />
     <ClCompile Include="source\tests.script_tokenizer.cpp" />
     <ClCompile Include="source\tests.editor_controller.cpp" />
+    <ClCompile Include="source\tests.translation_request_controller.cpp" />
     <ClCompile Include="source\tests.commit_orchestrator.cpp" />
     <ClCompile Include="source\tests.display_helpers.cpp" />
     <ClCompile Include="source\tests.script_parser_rename.cpp" />
@@ -315,6 +317,7 @@
     <ClCompile Include="..\yampt.translator\source\highlighter\highlight_coordinator.cpp" />
     <ClCompile Include="..\yampt.translator\source\session\workspace_watcher.cpp" />
     <ClCompile Include="..\yampt.translator\source\controller\editor_controller.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\glossary_line_preparer.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\record_table_model.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\table_columns.cpp" />
     <ClCompile Include="..\yampt.editor\source\session\profile_file_reader.cpp" />
