@@ -15,7 +15,7 @@ Audit the yampt codebase. Find issues from any of these categories:
 6. **Documentation drift** — README/CHANGELOG/manual text that contradicts current code behavior, or missing entries for shipped features
 7. **Steering contradictions** — two steering rules that conflict, or a steering rule that no longer matches reality
 8. **Better solutions** — a place where the current implementation is a workaround, shortcut, or overly complex compared to what the architecture supports
-9. **Knowledge-base drift** — a `.kiro/docs/` file (or the `TODO.md` "Tech Debt" section) that no longer matches the code: a resolved tech-debt entry still listed, an outdated project-structure/dependency/architecture description, drifted ESM-format/schema/merge notes, or a design-decision that the code no longer honors
+9. **Knowledge-base drift** — a `.kiro/docs/` file that no longer matches the code: a resolved entry still listed in `reference/known-issues.md`, an outdated project-structure/dependency/architecture description, drifted ESM-format/schema/merge notes, or a design-decision that the code no longer honors
 
 ## Step 0 — Audit the Steering Rules and This Skill First
 
@@ -30,7 +30,7 @@ then check for:
 - **Rule vs reference separation** — steering files must contain only behavioral rules; domain knowledge, formats, and architecture belong in `.kiro/docs/`. Flag domain content that leaked into steering, or rules buried in docs.
 - **Content that no longer matches reality** — a steering directive, doc, or hook describing structure or behavior that has since changed.
 - **Hook correctness** — each `.kiro/hooks/*.json` is valid (trigger, matcher, action), its command/script exists, and it does not conflict with another hook or a steering rule.
-- **Skill correctness** — each skill's frontmatter (`name`, `description`), referenced paths, and instructions are valid. For this audit skill specifically, confirm the categories, paths, and the `TODO.md` "Tech Debt" reference below are all still accurate.
+- **Skill correctness** — each skill's frontmatter (`name`, `description`), referenced paths, and instructions are valid. For this audit skill specifically, confirm the categories, paths, and the `reference/known-issues.md` reference below are all still accurate.
 
 Report any Step 0 findings as category **Steering contradictions** using the same
 format below, before the code findings. If the steering rules, docs, hooks, and
@@ -43,15 +43,15 @@ Step 0 checks the config's internal consistency. Step 1 checks the `.kiro/docs/`
 knowledge base against the actual code (this step reads source, Step 0 does not).
 For each doc, confirm it still matches reality:
 
-- **`TODO.md` "Tech Debt" section** — re-check each tracked entry against the code. A violation that has since been fixed must be reported as **resolved** so it can be removed from the list (do NOT silently keep treating it as known). An entry that is still present stays suppressed as usual.
+- **`reference/known-issues.md`** — re-check each accepted/migration-debt entry against the code. A violation that has since been fixed must be reported as **resolved** so it can be removed from the list (do NOT silently keep treating it as known). An entry that is still present stays suppressed as usual.
 - **`architecture/project-structure.md`** — project list, dependency graph, folder layout, include rules, and build commands still match the solution (`.vcxproj`, `.sln`, folder tree).
 - **`reference/esm-format.md`, `reference/record-schemas.md`, `reference/merge-truth-table.md`, `reference/decision-tables.md`** — record/sub-record layouts, schema rows, merge behavior, and the decision-table inventory still match the decoder/merger code.
 - **`architecture/design-decisions.md`, `reference/frmr-references.md`** — each decision still reflects what the code does; flag any the code no longer honors.
 - **`reference/statuses.md`, `reference/languages.md`, `reference/translation-providers.md`, `reference/translation-engine-build.md`** — statuses, language list, provider config schema, and build/model steps still match the code and config files.
 
 Report Step 1 findings as category **Knowledge-base drift**, before the code
-findings. Resolved tech-debt entries are the one case where you SHOULD report
-something from `TODO.md`'s "Tech Debt" section — flag them as resolved. If every
+findings. Resolved known-issues entries are the one case where you SHOULD report
+something from `reference/known-issues.md` — flag them as resolved. If every
 doc matches the code, say "Knowledge base: matches code" and proceed to the code
 audit.
 
@@ -70,7 +70,7 @@ audit.
 **Proposed fix:** concrete description of the change (don't implement yet)
 
 - Do NOT implement the fix. Wait for my approval.
-- Do NOT report issues already listed in the `TODO.md` "Tech Debt" section — except in Step 1, where a tracked issue the code has since fixed is reported as resolved.
+- Do NOT report issues already listed in `.kiro/docs/reference/known-issues.md` — except in Step 1, where a listed issue the code has since fixed is reported as resolved.
 - Do NOT report issues in test files unless they violate the "don't delete tests" rule.
 - Prioritize: GUI behavior > bugs > architecture violations > steering drift > dead code > docs > better solutions > contradictions.
 - If you found nothing after a thorough scan, say "No issues found" — do not invent problems.

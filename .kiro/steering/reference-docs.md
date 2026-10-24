@@ -27,6 +27,8 @@ NOT auto-loaded. Consult the relevant doc before working in its area.
 | Supported languages, codepages, translation models | `.kiro/docs/reference/languages.md` |
 | Web translation providers (JSON configs, template vars, system prompt) | `.kiro/docs/reference/translation-providers.md` |
 | Building CTranslate2, downloading/fine-tuning models | `.kiro/docs/reference/translation-engine-build.md` |
+| Known limitations, accepted/grandfathered debt, migration debt (do not re-report) | `.kiro/docs/reference/known-issues.md` |
 
-Acknowledged tech debt / known violations (do not re-report in audits) live in
-`TODO.md`'s "Tech Debt" section.
+Known limitations, grandfathered style debt, and migration debt that must NOT be
+re-reported in audits live in `.kiro/docs/reference/known-issues.md`. Actionable
+work is in `TODO.md`.
