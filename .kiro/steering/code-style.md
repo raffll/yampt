@@ -35,6 +35,7 @@ If a new feature needs orchestration (showing dialogs, running operations, updat
 - Always do testable interfaces
 - Unit test for every function
 - Every algorithm must be callable from a unit test without instantiating heavy dependencies (no file I/O, no UI, no loaded plugins). Extract pure logic into public static methods on a dedicated class that accept data via parameters and return results. Class methods that need infrastructure (loading files, accessing plugin arrays) are thin wrappers that collect data and delegate to the testable class.
+  - This "no UI" constraint scopes the LOGIC tests. Widget wiring and presentation are not logic and are not tested here — they are verified by GUI tests, which deliberately instantiate real widgets offscreen (see `engineering-discipline.md` → "GUI (Widget) Tests"). This clarifies the boundary; it does not relax the rule above — the logic suite stays UI-free.
 
 ## Naming
 

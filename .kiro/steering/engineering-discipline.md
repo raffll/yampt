@@ -6,17 +6,60 @@ When fixing a bug, always write the unit test FIRST — before applying the fix.
 
 This ensures the bug is reproducible and the fix is verified.
 
+This discipline applies to GUI bugs too. A GUI bug (for example a widget showing the wrong state, a wrong scroll position, a duplicate or omitted row) gets a FAILING GUI test first, written in `yampt.gui.tests` — red before the fix, green after — exactly the same way a logic bug gets a failing logic test first. See the "GUI (Widget) Tests" section below for how such a test is built.
+
 ## Don't Delete Tests
 
 Never delete a failing test without explicit user approval. If a test fails, diagnose the root cause and fix either the test data or the code under test. Do not remove the test to make the suite pass.
 
 Never remove a test file or test entry from a vcxproj to fix build or linker errors. If a test doesn't compile or link, fix the underlying issue (add missing source files, fix includes, resolve MOC dependencies). Removing tests from the build is never an acceptable fix.
 
+Every clause here applies equally to GUI tests. In particular, the "never remove a test file or test entry from a vcxproj" clause covers the `yampt.gui.tests` vcxproj just as it covers the logic-suite vcxproj: a GUI test that fails to link is fixed by adding the missing source, moc, or include — never by dropping the test from the GUI project. See the "GUI (Widget) Tests" section below.
+
 If a test approach turns out to be fragile or unreliable, report the finding and propose an alternative — do not silently remove or skip the test.
 
 ### Synthetic ESM Tests Are Valid
 
 Synthetic ESM tests (hand-crafted binary records) are the correct approach for testing the converter. They test exactly the case we included — no more, no less. Real ESM files also don't cover all edge cases — we have to figure out edge cases ourselves by testing a lot of real plugins and then encoding each discovery as a synthetic test. When a synthetic test fails, fix the test data to match the actual binary format (check sub-record sizes, key formats like zero-padded INDX, null terminators). Do not dismiss synthetic tests as unreliable.
+
+## GUI (Widget) Tests
+
+This section is the single authoritative home for how GUI tests work. Other steering files point here for the mechanics rather than restating them.
+
+### Sanctioned Category
+
+GUI/widget tests are a sanctioned, first-class test category. They construct real Qt widgets and dispatch real events to verify what the pure-logic seam cannot reach:
+
+- widget wiring — a view's controls reflect what was loaded, and reading them back produces the expected values;
+- `load` / `save` (or `apply`) round-trips through the `settings_store_t` seam;
+- enable-vs-hide behavior (a control is greyed, not removed, when disabled);
+- gui-conventions compliance (for example the 24px settings-table row height);
+- event handling (clicking a button runs the wired slot and the expected effect occurs).
+
+### Boundary With Logic Tests
+
+The two categories do not overlap and neither replaces the other:
+
+- **Business/algorithm logic → logic test.** Pure logic is still extracted and tested WITHOUT widgets — no UI, no file I/O, no loaded plugins — in the `yampt.tests` logic suite. That suite stays widget-free.
+- **Widget wiring / presentation / conventions → GUI test.** These are verified by constructing the real widget offscreen and driving it with Qt Test.
+
+A GUI test is the ONLY sanctioned place to instantiate a widget in a test. The `code-style.md` Function Design "no UI" rule is NOT weakened by this section: it remains the binding rule for logic tests and is scoped to them. GUI tests are the named, deliberate exception that lives in its own executable.
+
+### Mechanics (Authoritative, Stated Once)
+
+- GUI tests run in a separate executable, `yampt.gui.tests`, with its own `vcxproj` in `yampt.sln`. They do NOT fold into the logic executable `yampt.tests` — folding them in would force the logic suite under a GUI `QApplication` and link `Qt6Widgets`, changing tests that currently pass.
+- Catch2 is the test runner and the assertion framework. Qt Test (`QTest::...`) is used ONLY as the widget/event driver inside Catch2 `TEST_CASE`s.
+- The process constructs exactly one `QApplication` for the whole session, under the `offscreen` QPA platform. `QT_QPA_PLATFORM=offscreen` is set BEFORE `QApplication` is constructed (via `qputenv` in the GUI test `main`), because Qt reads it during construction.
+- `Q_OBJECT` widget classes under test are MOC'd in the GUI project following the existing moc `CustomBuild` pattern (one `moc_*.cpp` per header, each compiled to a distinct `ObjectFileName`).
+- CI-safe by construction: offscreen, no real display, no visible windows, and the tests never block on a modal `exec()`.
+
+### Discovery
+
+The Catch2 adapter's `FilenameFilter` in `yampt.runsettings` matches both `yampt.tests` and `yampt.gui.tests`, so both executables are discovered.
+
+### Conventions Are Owned Elsewhere
+
+The conventions a GUI test asserts (24px settings-table rows, tooltips, enable-vs-hide, panel padding) are defined in `gui-conventions.md`, which remains their single source of truth. Do not restate those conventions here — this section owns only the test mechanics; `gui-conventions.md` owns the conventions themselves.
 
 ## No Fallbacks, No Generic Paths
 
@@ -103,3 +146,4 @@ Some classes log through a plain callback that always emits rather than the shar
 - Never delete a `[debug]` diagnostic to "clean up" before commit. Keep it, gated.
 - Debug lines are developer-facing and stay in English (they are not user-visible; the always-update-docs and localization rules do not apply to them).
 - The debug flag defaults to off, so gated `[debug]` lines produce no output in normal use and add no noise to the CLI or the GUI log.
+- GUI-test diagnostics follow the same gated `[debug]` rule as any other diagnostic — no behavior change for the test harness.

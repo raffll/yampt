@@ -16,6 +16,8 @@ table->verticalHeader()->setDefaultSectionSize(24);
 
 This applies to both yampt.translator and yampt.editor settings pages. The default Qt row height is too tall for dense data tables like provider lists and shortcut tables.
 
+GUI tests assert conventions like this one (for example a settings `QTableWidget`'s `verticalHeader()->defaultSectionSize() == 24`). This file remains the source of truth for the conventions themselves; for how such tests are built see `engineering-discipline.md` → "GUI (Widget) Tests".
+
 ## Panel Padding
 
 Tab panels and dockable view widgets in yTranslator and yEditor follow one padding convention, decided by what the panel's outer layout directly contains. Apply the principle; the code is the source of truth for which panel is which — do not maintain a per-panel registry here.
