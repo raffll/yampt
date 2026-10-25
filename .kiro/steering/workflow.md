@@ -1,5 +1,13 @@
 # Workflow
 
+## Explaining Code Changes
+
+When explaining a change to actual source code, show a short before/after snippet — at most about 5 lines per side — of just the lines that actually changed, not the whole function or file. Label the two blocks "Before" and "After". Keep the surrounding prose brief; the snippet carries the explanation.
+
+This applies only to real source-code edits. It does not apply to prose, documentation, spec/design documents, steering files, config, or data — describe those in prose as usual.
+
+Skip the snippet even for code when it does not apply: a brand-new file or large new block (there is no "before"), a pure deletion, or a rename/move with no content change. In those cases describe the change in one line instead.
+
 ## Committing
 
 ### Only Commit When Asked
