@@ -6,31 +6,31 @@ A suite of tools for working with Morrowind plugins. Includes a plugin conflict 
 
 Qt6 GUI for viewing, comparing, and patching plugins. Similar to TES5Edit/xEdit.
 
-**Viewing**
-- **Load and compare any number of plugins simultaneously — no hardcoded limits**
+### Viewing
+- Load and compare any number of plugins simultaneously — no hardcoded limits
 - Load plugins from folder, Mod Organizer 2 profiles, or OpenMW cfg
 - Navigation tree with xEdit-style conflict coloring inherited up to file level
-- **Lua handler tab: scans OpenMW Lua scripts and highlights conflicting handler registrations**
-- **Record comparison with decoded fields aligned by content identity across plugins**
+- Lua handler tab: scans OpenMW Lua scripts and highlights conflicting handler registrations
+- Record comparison with decoded fields aligned by content identity across plugins
 - Side-by-side text comparison panel
-- Composable filters: Conflicts Only, search by ID/name, and advanced criteria combine as AND
+- Composable filters: Conflicts Only, search by ID/name, and advanced criteria
 
-**Editing**
-- **Direct field editing — select a decoded field in the Edit panel, change its value, and press Apply**
+### Editing
+- Direct field editing — select a decoded field in the Edit panel, change its value, and press Apply
 - Applying a field edit writes the change to the active plugin automatically — there is no manual save step
 - Remove a record from a plugin — right-click the record and choose Remove Record from Plugin; the record is dropped immediately
 - History tab lists the edits and record removals made during the session (not saved, resets on unload)
 
-**Merging**
+### Merging
 - Automatic merged patch: leveled lists, three-way field-level merge for packed sub-records
 - Automatic fixes: fog density, summon persistence, cell name reversion
-- **Guard patch: plugins before the guard are excluded from merge for records the guard overrides**
-- **View a dialogue topic's INFO responses in their merged order, resolved using OpenMW's ordering algorithm**
+- Guard patch: plugins before the guard are excluded from merge for records the guard overrides
+- View a dialogue topic's INFO responses in their merged order, resolved using OpenMW's ordering algorithm
 - Copy or remove records, groups, or individual fields to/from the active plugin
 - Active plugin: copy into the merged patch (default) or a hand-made plugin created with Create New Plugin; switch the target with Set as Active Plugin
 - Configurable merge: one exclude list for plugin files, record IDs, record types, and sub-records, plus fix toggles
 
-**Maintenance**
+### Maintenance
 - Plugin cleaning: batch-remove evil GMSTs and junk cells
 - Header repair: update master file sizes to match actual files on disk, update plugin version to 1.3
 
@@ -38,7 +38,7 @@ Qt6 GUI for viewing, comparing, and patching plugins. Similar to TES5Edit/xEdit.
 
 Qt6 GUI for interactive plugin translation.
 
-**Editing**
+### Editing
 - Sidebar with workspace folders, auto-refresh on filesystem changes
 - Record table filtered by type, sub-type, and translation status
 - Three-panel editor: original text, adapted text, editable translation
@@ -46,42 +46,42 @@ Qt6 GUI for interactive plugin translation.
 - Entry validation, status tracking, history with undo/revert
 - Find/Replace in a dedicated left-panel tab
 
-**Analysis**
+### Analysis
 - Multi-layer syntax highlighting: MWScript keywords, hyperlinks, glossary terms, forbidden characters, with per-kind toggles (hyperlink, inflection, glossary)
 - Spell checking with per-language Hunspell dictionaries
 - Annotation system: hyperlinks, gender info, glossary matches from loaded base dicts, and inflected topic forms from loaded localization files
 - Full script preview with sync scrolling between original and translation
 - Book content preview with live update
 
-**Translation**
-- **Built-in offline translation engine — no API key required**
+### Translation
+- Built-in offline translation engine — no API key required
 - Web translation providers: DeepL, Google Translate, ChatGPT, Claude — add more via config files
 - Pick the AI model right in the Auto Translate panel, or refresh the list from the provider
-- **Curated AI examples: mark up to twenty records to guide the AI's translation style**
+- Curated AI examples: mark up to twenty records to guide the AI's translation style
 
-**Workflows**
-- **Lua l10n workflow: edit YAML localization files with auto-pairing and scaffold generation**
-- **EET file import: convert ESP-ESM Translator dictionaries to JSON**
-- **Generate localization files (.cel, .mrk, .top) from dictionary**
-- **Hyperlink insertion during plugin conversion**
-- **Apply Topic Tags: wrap dialogue topics — and their inflected forms — in the translated text of dialogue responses so they show as clickable links in-game**
-- **Remove Topic Tags: strip all topic hyperlink tags from a dictionary's dialogue responses**
+### Workflows
+- Lua l10n workflow: edit YAML localization files with auto-pairing and scaffold generation
+- EET file import: convert ESP-ESM Translator dictionaries to JSON
+- Generate localization files (.cel, .mrk, .top) from dictionary
+- Hyperlink insertion during plugin conversion
+- Apply Topic Tags: wrap dialogue topics — and their inflected forms — in the translated text of dialogue responses so they show as clickable links in-game
+- Remove Topic Tags: strip all topic hyperlink tags from a dictionary's dialogue responses
 
 ## yampt.exe — Command Line
 
 Batch tool for automated dictionary and conversion workflows.
 
-**Dictionary**
+### Dictionary
 - Create base dictionaries by pairing two language versions of a master file
 - Create dictionaries from plugins using a base dictionary
 - Merge multiple dictionaries with priority ordering
-- **Apply dialogue topic tags to a dictionary's translated text**
-- **JSON dictionary format with status tracking**
+- Apply dialogue topic tags to a dictionary's translated text
+- JSON dictionary format with status tracking
 
-**Conversion**
+### Conversion
 - Convert plugins by applying translations from dictionaries
 - Create patch plugins containing only modified records
-- **Converts compiled script data without recompiling in TES CS**
+- Converts compiled script data without recompiling in TES CS
 
 ## General
 
