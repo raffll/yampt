@@ -42,6 +42,7 @@
     <ClCompile Include="source\utility\record_behavior.cpp" />
     <ClCompile Include="source\io\profile_reader.cpp" />
     <ClCompile Include="source\scanner\sub_record_merge.cpp" />
+    <ClCompile Include="source\scanner\leveled_list_merge.cpp" />
     <ClCompile Include="source\scanner\merge_patch_ops.cpp" />
     <ClCompile Include="source\scanner\fog_fixer.cpp" />
     <ClCompile Include="source\scanner\summon_fixer.cpp" />
@@ -121,6 +122,7 @@
     <ClInclude Include="source\scanner\dial_info_align.hpp" />
     <ClInclude Include="source\scanner\conflict_enums.hpp" />
     <ClInclude Include="source\scanner\sub_record_merge.hpp" />
+    <ClInclude Include="source\scanner\leveled_list_merge.hpp" />
     <ClInclude Include="source\scanner\merge_patch_ops.hpp" />
     <ClInclude Include="source\decoder\conflict_slots.hpp" />
     <ClInclude Include="source\scanner\plugin_index.hpp" />

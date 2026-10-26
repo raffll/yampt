@@ -36,6 +36,7 @@
     <ClCompile Include="source\tests.yaml_scalar.cpp" />
     <ClCompile Include="source\tests.script_tokenizer.cpp" />
     <ClCompile Include="source\tests.editor_controller.cpp" />
+    <ClCompile Include="source\tests.translation_request_controller.cpp" />
     <ClCompile Include="source\tests.commit_orchestrator.cpp" />
     <ClCompile Include="source\tests.script_parser_rename.cpp" />
     <ClCompile Include="source\tests.converter_counters.cpp" />
@@ -144,6 +145,7 @@
     <ClCompile Include="..\yampt.translator\source\editor\glossary.cpp" />
     <ClCompile Include="..\yampt.core\source\utility\keyword_trie.cpp" />
     <ClCompile Include="..\yampt.translator\source\controller\editor_controller.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\glossary_line_preparer.cpp" />
     <ClCompile Include="..\yampt.translator\source\session\workspace_watcher.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\record_table_model.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\table_columns.cpp" />

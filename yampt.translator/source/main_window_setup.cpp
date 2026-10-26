@@ -880,62 +880,7 @@ void main_window_t::connect_editor_signals()
 	    m_translation_tab,
 	    &translation_suggestion_view_t::translate_all_requested,
 	    this,
-	    [this]()
-	{
-		if (!m_active_doc)
-		{
-			m_translation_tab->append_log("[error] no document loaded\n");
-			return;
-		}
-
-		auto * provider = m_translation_tab->active_provider();
-		if (!provider || !provider->is_available())
-		{
-			m_translation_tab->append_log("[error] translation provider not available\n");
-			return;
-		}
-
-		const int current_row = m_editor_controller.current_row();
-		if (current_row < 0)
-		{
-			m_translation_tab->append_log("[error] no row selected\n");
-			return;
-		}
-
-		const auto * row_data = m_table_model->row_at(current_row);
-		if (!row_data)
-			return;
-
-		if (row_data->status != status_t::untranslated)
-		{
-			m_translation_tab->append_log("[info] only untranslated entries can be translated\n");
-			return;
-		}
-
-		m_translation_tab->set_source_text(row_data->old_text);
-		m_translation_tab->set_target_language(m_settings.native_language());
-
-		if (m_editor_view->has_script_template())
-		{
-			const auto lines = m_editor_view->original_view()->toPlainText().split('\n');
-			std::vector<std::string> prepared_lines;
-
-			for (const auto & line : lines)
-			{
-				const auto source = line.toStdString();
-				if (source.empty())
-					prepared_lines.push_back(std::string());
-				else
-					prepared_lines.push_back(m_glossary.apply_glossary(source));
-			}
-
-			m_translation_tab->request_translation_lines(prepared_lines);
-		}
-		else
-		{
-			m_translation_tab->request_translation_segments(row_data->old_text);
-		}
-	});
+	    [this]() { m_translation_request_controller->translate_current_entry(m_active_doc); });
 
 	connect(
 	    m_translation_tab,

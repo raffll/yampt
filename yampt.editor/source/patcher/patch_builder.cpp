@@ -1,5 +1,6 @@
 #include "patch_builder.hpp"
 #include <io/binary_file_io.hpp>
+#include <scanner/leveled_list_merge.hpp>
 #include <scanner/sub_record_merge.hpp>
 #include <utility/app_logger.hpp>
 #include <algorithm>

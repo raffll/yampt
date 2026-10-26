@@ -297,6 +297,41 @@ TEST_CASE("script_parser_t::convert_script, trailing CRLF not appended", "[u]")
 	}
 }
 
+TEST_CASE("script_parser_t::trim_last_new_line_chars, trailing CRLF and short-string handling", "[u]")
+{
+	dict_merger_t merger;
+
+	SECTION("input ending with CRLF keeps exactly one trailing CRLF")
+	{
+		const std::string input = "AddTopic \"Test\"\r\n";
+		script_parser_t parser(rec_type_t::bnam, merger, "", "", input, "");
+		const std::string output = parser.get_new_script();
+		REQUIRE(output.size() >= 2);
+		REQUIRE(output.substr(output.size() - 2) == "\r\n");
+		if (output.size() >= 4)
+		{
+			REQUIRE(output.substr(output.size() - 4) != "\r\n\r\n");
+		}
+	}
+
+	SECTION("input not ending with CRLF produces output not ending with CRLF")
+	{
+		const std::string input = "AddTopic \"Test\"";
+		script_parser_t parser(rec_type_t::bnam, merger, "", "", input, "");
+		const std::string output = parser.get_new_script();
+		REQUIRE(output.size() >= 2);
+		REQUIRE(output.substr(output.size() - 2) != "\r\n");
+	}
+
+	SECTION("single-character old script trims appended CRLF")
+	{
+		const std::string input = "x";
+		script_parser_t parser(rec_type_t::bnam, merger, "", "", input, "");
+		const std::string output = parser.get_new_script();
+		REQUIRE(output == "x");
+	}
+}
+
 TEST_CASE("script_parser_t::find_new_message, short new_text", "[u]")
 {
 	const std::string script_name = "TR_m3_OE_TG_ChunzefkRockSCP";

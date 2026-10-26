@@ -1,4 +1,5 @@
 #include <catch2/catch_all.hpp>
+#include <scanner/leveled_list_merge.hpp>
 #include <scanner/sub_record_merge.hpp>
 #include <utility/app_logger.hpp>
 #include <cstring>

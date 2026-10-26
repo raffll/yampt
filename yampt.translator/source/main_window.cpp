@@ -130,6 +130,14 @@ main_window_t::main_window_t(QWidget * parent)
 	                                                                          m_extra_sel_translation,
 	                                                                          *m_grammar_check });
 
+	m_translation_request_controller =
+	    std::make_unique<translation_request_controller_t>(translation_request_deps_t { *m_translation_tab,
+	                                                                                     *m_editor_view,
+	                                                                                     *m_table_model,
+	                                                                                     m_editor_controller,
+	                                                                                     m_glossary,
+	                                                                                     m_settings });
+
 	m_shortcuts_controller = std::make_unique<shortcuts_controller_t>(
 	    shortcuts_deps_t { m_editor_controller,
 	                       *m_table_model,

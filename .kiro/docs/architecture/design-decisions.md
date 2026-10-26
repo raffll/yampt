@@ -1,0 +1,339 @@
+# Design Decisions — yampt
+
+## DictMerger: Last-Listed Wins
+
+The user always provides dictionaries from least important to most important: `Morrowind Tribunal Bloodmoon`. The **last** in the user's list has highest priority.
+
+Internally, `dict_merger_t` iterates paths in **reverse order** (`rbegin`→`rend`), then uses first-wins insertion. This means the last-listed path is processed first and its keys win over earlier ones.
+
+The reversal lives **solely inside the merger constructor**. No caller (CLI, GUI convert, GUI create, GUI make_dict_with_base) should reverse paths before passing them. All callers pass paths in user-facing order (least important → most important).
+
+The log counter `counter_rejected` counts later dicts that tried to provide a different value for an existing key but were ignored (first-wins after reversal).
+
+Do NOT add `search->second = elem.second;` to the "different value" branch. Do NOT reverse paths at call sites. Do NOT change the merger's internal iteration order.
+
+## text_match_index_ — First Entry Wins
+
+`build_text_match_index()` stores one entry per `old_text` (first-wins). It skips entries where `new_text == old_text` (untranslated). When multiple records in the merged base dict share the same `old_text` with different translations, the entry is marked as ambiguous.
+
+Since the merger processes the last-listed dict first, its records appear first in each chapter's vector. This means the highest-priority dict also wins for text-match lookups — consistent with the key-based merge behavior.
+
+### Ambiguous Status
+
+When `build_text_match_index` encounters conflicting translations for the same `old_text`:
+- `text_match_first_` stores the highest-priority translation (first encountered)
+- `text_match_conflicts_` stores ALL translations separated by ` / ` (including the first)
+- `insert_via_text_match` creates the entry with:
+  - `new_text` = the highest-priority translation (from `text_match_first_`)
+  - `status` = "ambiguous"
+  - `adapted_from` = all translations joined by ` / ` (from `text_match_conflicts_`)
+
+Ambiguous entries behave like untranslated during convert/create (the converter looks up by key, not by text_match). The adapted_from panel shows all options so the user can pick one.
+
+## Annotation/Glossary Status Filter
+
+Both glossary terms and DIAL topics (hyperlinks) are built only from entries with status `translated`. Every other status — `changed`, `ambiguous`, `in_progress`, `propagated`, `model`, `reused`, `adapted`, `error`, `untranslated` — is excluded. Unverified translations do not contribute topic links or glossary terms.
+
+This applies to both `glossary_t::collect_dial_entries` (hyperlinks) and `glossary_t::collect_glossary_entries` (FNAM/CELL/RNAM/INDX terms): each skips any entry whose `status != status_t::translated`.
+
+Inflection annotations are separate — they come from loaded `.top`/`.mrk` localization files via `inflection_store_t`, not from dictionary record status.
+
+## Glossary Sources
+
+The glossary is built from these record types:
+- DIAL — hyperlink topics (kind = `dial_topic`, blue highlight)
+- FNAM — NPC/item display names (kind = `glossary_term`, green highlight)
+- CELL — cell names (kind = `glossary_term`, green highlight)
+- RNAM — race/faction rank names (kind = `glossary_term`, green highlight)
+- INDX — skill/attribute names (kind = `glossary_term`, green highlight)
+
+Glossary terms show for all record types. DIAL hyperlinks show only for DIAL and INFO record types.
+
+## Forbidden Characters in Syntax Highlighter
+
+The composite highlighter marks these characters with orange background (`255, 200, 180`):
+- `|`, `~`, `@`, `{`, `}`
+- Control characters (0x00–0x1F) except tab (0x09), CR (0x0D), LF (0x0A)
+
+`"` is NOT highlighted — it's a valid character in script records (SCTX/BNAM) as a string delimiter.
+`/` is NOT a forbidden character.
+
+## XML Dictionary Format Is Frozen
+
+The XML dictionary format is obsolete, poorly structured, and must NOT be "fixed" or improved. It exists solely for backward compatibility with existing dictionary files. Do not refactor the XML tag names, structure, nesting, or escaping scheme. Any changes to the XML format would break all existing dictionaries in the wild.
+
+New features (like JSON export) are the path forward. The XML format stays as-is.
+
+## esm_ref Is Always esm or esm_ext
+
+`esm_ref` is a reference that points to either `esm` (in `--make` mode) or `esm_ext` (in `--make-base` mode). Both `esm` and `esm_ext` are always set and valid when the creator runs. Do not add null checks, optional wrappers, or validity guards around `esm_ref` usage.
+
+## Use old_text for Records Without Unique IDs
+
+For record types that don't have a unique composite ID (CELL, DIAL, SCTX, BNAM), always use `old_text` as the lookup/matching key — not `key_text`. The `old_text` field contains the original game text and is stable across dictionaries.
+
+All other record types (INFO, FNAM, GMST, RNAM, DESC, INDX, TEXT) have unique `key_text` values and can use `key_text` for lookups.
+
+## CELL Keys Are Cell Names
+
+All CELL dictionary entries use the foreign cell name as `key_text`. For text-keyed types (CELL, DIAL, SCTX, BNAM), the key is the original text itself — not a hash.
+
+When multiple exterior cells share the same name (adjacent grid cells forming one area), `insert_entry_base` silently skips the duplicate insertion if `old_text` and `new_text` both match the existing entry. Only genuinely conflicting translations (different `new_text` for the same key) produce `duplicate` status.
+
+The converter and script parser use `find_by_old_text()` — a secondary index on `old_text` (first-wins) — to find cell translations by the cell name text encountered in the ESM.
+
+The `chapter_t::old_text_index` is populated on `insert()` and only stores the first entry for a given `old_text`. This means if multiple cells share the same foreign name, only the first inserted one is found by `find_by_old_text()`. This matches the original first-wins behavior.
+
+## dict_creator Source File Split
+
+The `dict_creator_t` is a thin facade in `yampt.core/source/creator/`. The actual logic is split into strategy classes:
+
+- `dict_creator.hpp/.cpp` — Thin facade, picks strategy based on mode detection
+- `creator_context.hpp` — Shared state struct (ESM readers, indexes, counters, dict)
+- `creator_helpers.hpp/.cpp` — All shared logic (insert methods, index builders, script parsing, adapt_translation, determine_status)
+- `creator_single.hpp/.cpp` — Single-file mode strategy
+- `creator_base.hpp/.cpp` — Unordered base mode strategy
+- `creator_ordered.hpp/.cpp` — Ordered base mode strategy
+
+Each mode is its own class with its own `.hpp/.cpp` pair.
+
+
+## Identical-Text Entries Are Now Approved
+
+Old behavior: when `make-dict` encountered a base entry where `old_text == new_text`, it assigned the `identical` status. Entries with `identical` were skipped during `--convert` and `--create` — proper nouns were not applied to the output.
+
+New behavior: identical-text entries in base dicts receive `translated` (full mode, or partial mode when the English dictionary confirms a proper noun) or `untranslated` (partial mode when English words are detected). The `identical` status no longer exists.
+
+When `make-dict` sees a base entry with `old_text == new_text`, it passes through the base entry's status directly:
+- Base status `translated` → user dict entry is `translated` → applied during convert
+- Base status `untranslated` → user dict entry is `untranslated` → skipped during convert
+
+Net effect: `--convert` now includes proper noun entries (cells, NPCs, items with unchanged names) in the output, where before it would skip them. This produces more complete translations.
+
+Legacy migration: old dictionaries with `identical` status are migrated to `translated` on load.
+
+## dict_kind_t::base No Longer Gates Editing
+
+`dict_kind_t` still exists and is used for display purposes (the `[BASE]` tag in the sidebar, golden color in selection dialogs). However, it no longer affects editing behavior:
+
+- `dict_document_t::is_read_only()` always returns `false` regardless of `dict_kind_t`
+- `commit_edit()` applies edits to all documents regardless of kind
+- `session_t::save_all()` saves dirty documents regardless of kind
+
+All dictionaries are saveable and editable in yTranslator. The base/user distinction is purely visual.
+
+
+## Codepage Lists Must Be Sorted
+
+Whenever codepages are listed in a combo box or UI element, they must be in ascending numeric order (e.g. 1250, 1251, 1252). Never put a "default" or "most common" codepage first if it breaks numeric ordering.
+
+
+## Copy to Merged Patch — Individual Sub-Records Always Allowed
+
+Never restrict the user to copying only entire groups. Individual sub-record copy must always be available, even for sub-records that belong to a group. The merge operation must handle placing the sub-record at the correct position based on its content identity, not by occurrence order. If a sub-record belongs to a group that doesn't exist in the merge yet, the merge must create the appropriate structure to receive it — not silently misplace it or force the user to copy the whole group first.
+
+
+## SCVR Sub-Record: No Null Terminator Needed
+
+`convert_scvr` does NOT append `'\0'` to the replacement text. This is correct — not a bug.
+
+SCVR is a structured binary field (5-byte prefix + variable/cell name), not a simple null-terminated string sub-record like NAME or DNAM. OpenMW's reader uses `strnlen(ptr, size)` which handles both null-terminated and non-null-terminated data. OpenMW's writer (`writeHString`) also writes SCVR without a null terminator.
+
+Do NOT "fix" this by adding `new_text += '\0'` to `convert_scvr`.
+
+
+## esm_reader_t::scan_sub_records — Break on Zero-Size Is Correct
+
+`scan_sub_records` breaks the scan loop when `found_size == 0`. This is a defensive guard against corrupt data, not a bug.
+
+In TES3 format, no legitimate sub-record has zero size — `DELE` is 4 bytes, all others have positive sizes. A zero in the size field means the record data is malformed. Breaking prevents parsing garbage as valid sub-records.
+
+If we used `continue` (advancing by `sub_record_header_size + 0 = 8`), we'd still advance but would be reading into corrupted territory. Breaking is the safer choice — the record is already broken, so nothing useful follows.
+
+Do NOT "fix" this by replacing `break` with `continue` or `scan_pos += sub_record_header_size`.
+
+
+## check_all_identical Duplication in view_tree_decode Files
+
+`view_tree_decode.cpp` and `view_tree_decode_cell.cpp` both define a file-local `static bool check_all_identical(...)`. This is a consequence of the allowed class-split exception for `view_tree_model_t` — `static` functions cannot be shared across translation units. Both copies are used. Accepted as-is.
+
+## spell_checker_t::is_excluded — Linear Scan Is Acceptable
+
+`is_excluded` does a linear scan over `m_excluded_words` for each word during spell checking. The exclusion list is small (50–200 entries) and Hunspell's `spell()` call dominates the cost. The linear scan is noise. Accepted as-is — no hash set needed.
+
+
+## Copy Original vs Reset to Original — Two Distinct Operations
+
+- **Copy Original (F8)** — copies `old_text` into `new_text` and sets status `in_progress`. The user intends to start editing from the original as a base. Uses `document_t::commit()` with `in_progress` intent.
+- **Delete/Clear (Del key)** — copies `old_text` into `new_text` and sets status `untranslated`. The user intends to discard the translation entirely. Uses `document_t::reset_to_original()`.
+
+Both produce the same `new_text` but different statuses. The distinction matters because only `untranslated` entries are eligible for the Translate button, while `in_progress` entries are not.
+
+
+## Translate Button Error Feedback — append_log Is Sufficient
+
+When the Translate button is clicked with invalid state (no document, no row, non-untranslated entry), error messages are written via `m_translation_tab->append_log(...)`. This is not a visibility problem because the Translate button itself lives on the Auto Translate tab — if the user can click it, they can see the feedback. No status bar message needed.
+
+
+## Plugin Icons Must Be Consistent Across Panels
+
+The navigation tree (left panel) and the record view column headers (right panel) must show the same icons for each plugin. The icon logic lives in two places — `nav_tree_model.cpp::file_node_display_text` and `view_tree_model.cpp::headerData` — and must produce identical results for the same plugin index. When adding or changing an icon, update both locations.
+
+Icons are built from independent tiers, appended in this fixed order. Each tier shows at most one marker; tiers do NOT suppress each other, so a plugin can carry several markers at once (e.g. `📄⚡🚫 [Active]`).
+
+1. Base type (exactly one): ⚙ merged patch (filename `Merged Patch.esp`) / 📜 master file (`.esm`) / 📄 regular plugin.
+2. MO2 overwrite (its own tier): ⚡ when the plugin path is under an `overwrite` folder, meaning a second version of the file exists.
+3. Merge participation (mutually exclusive, session-enforced): 🚫 excluded from merged patch, or 🛡 guard patch.
+4. Active target: an `[Active]` label when this is the active plugin (the one that receives copied records).
+
+The per-record merge-lock indicator (🔒) is separate from the plugin-level tiers above: it is prepended to a record row in the navigation tree (`nav_tree_model.cpp::data_for_record`) and drawn on a locked cell in the record view (`view_tree_model.cpp` lock_cell_icon). 🔒 always means "merged-patch lock" and is shown only when the active plugin is the merged patch (filename `Merged Patch.esp`); excluded-from-merge is 🚫, never 🔒. Locks live in a dedicated in-memory store (`plugin_scan_t::m_merge_locks`) separate from the active-record store, so they are never cleared or leaked when the active plugin is switched.
+
+Locks are persisted in a sidecar file `Merged Patch.esp.locks` (INI format) written next to the merged patch in its output directory, NOT in the shared `yEditor.ini`. This binds the lock set to that specific merged patch: `merge_controller_t::save_merged_patch_locks` writes it on every lock toggle, and `load_merged_patch_locks`/`sync_active_locks` load it whenever the merged patch becomes the active plugin (create, load-existing, set-active, session restore, and each profile load). Switching to a non-merged-patch active plugin clears the in-memory locks. Loading a different profile therefore picks up that profile's own merged-patch locks and never inherits another profile's.
+
+
+## Record View Header: Use CE_HeaderSection, Draw Text Manually
+
+`record_colored_header_t::paintSection` (yampt.editor/source/view/record_view.cpp) draws each plugin column header (icon + filename, in a per-plugin conflict color). It MUST paint the background with `QStyle::CE_HeaderSection` (background/border only) and then draw the text itself with `painter->drawText` into the section `rect`.
+
+Do NOT use `QStyle::CE_Header` here. `CE_Header` draws both the section background AND the label; on the Windows style this results in the header text rendering blank for the plugin columns (confirmed: `headerData` returned the correct text, e.g. `"📜 TR_Mainland.esm"` len=18, but nothing appeared on screen). `CE_Header` combined with `SE_HeaderLabel` for the text rect produced invisible text.
+
+Do NOT compute the text rectangle via `style()->subElementRect(QStyle::SE_HeaderLabel, ...)`. Draw into the passed-in `rect` (with a small left inset, e.g. `rect.adjust(4, 0, -4, 0)`). Drawing directly into `rect` is the coordinate space that reliably renders (verified by a fill-rect probe that showed all sections paint correctly).
+
+The header text/color come from `view_tree_model_t::headerData` (DisplayRole for the icon+name string, ForegroundRole for the conflict color); fall back to `palette().color(QPalette::ButtonText)` when ForegroundRole is invalid (e.g. section 0). The model side was never the problem — the bug was purely in how the section was painted.
+
+This only manifested with more than one plugin column, because a single plugin column is the stretched last section and happened to render, masking the issue.
+
+
+## Propagation Marks the Source Entry as `propagated` Too — By Design
+
+`dict_document_t::commit(row, new_text, intent)` sets the edited entry's status to `intent`, then calls `propagate(old_text, new_text)`. When propagation touches one or more sibling records (same `old_text`), the code deliberately overwrites the source entry's status with `propagated` as well:
+
+```cpp
+if (result.propagated_count > 0)
+    entry.status = status_t::propagated;
+```
+
+This is intentional, NOT a bug. When a translation propagates, the user wants the entire set of identical records — source included — marked `propagated` so they read as one consistent propagated group. The source is not exempt.
+
+Do NOT "fix" this by preserving the source entry's `intent` status when propagation occurs. Do NOT report it as "propagation overwrites user intent on the source entry." The overwrite is the desired behavior.
+
+Note: when `propagated_count == 0` (no siblings shared the `old_text`), the source keeps `intent` — the overwrite only happens when propagation actually occurred.
+
+## Leveled List Merge: Per-Occurrence Level Merge (Diverges From TES3Merge)
+
+`leveled_list_merge_t::merge` keys each leveled-list entry by **(item ID, occurrence index within the list)**, and resolves each occurrence's PC level (INTV) by normal three-way precedence (last-listed plugin that changed it wins). This means:
+
+- A plugin that **changes** an existing entry's PC level (e.g. master lists `T_Dwe_Regular_Long @ 13`, a plugin sets it to `@ 14`) merges as a change: the merged patch shows one entry at level 14, not two entries at 13 and 14.
+- **Duplicate entries are preserved, not collapsed.** OpenMW stores a leveled list as a flat `std::vector<LevelItem>` (`components/esm3/loadlevlist.cpp`); listing the same item ID multiple times is legitimate and increases its spawn weight. So an item that appears N times stays N times in the merged patch. The **occurrence count of an item ID is itself resolved as a three-way conflict** (last-listed plugin that changed the count from the master wins), NOT summed and NOT max — two plugins that both list an item 3× yield 3, not 6; a plugin that reduces the count wins if it is the last to change it. Each occurrence's level merges independently by position, also by last-changer-wins precedence.
+- Item union and deletion are keyed on item ID: an item present in the master but absent from a plugin is removed; items added by any plugin are kept.
+
+**This diverges from TES3Merge on purpose.** TES3Merge (`sources/TES3Merge/TES3Merge/Merger/LEVI.cs`) keys entries on `(ItemEditorId, PCLevelOfPrevious)` — item ID **and** level together — so a level change is treated as two distinct entries and both are kept (the merged list would show the item at both 13 and 14). yampt intentionally treats the PC level as a mergeable property of an occurrence instead, so a level edit resolves like any other field conflict. Do NOT "align" this back to TES3Merge's item+level key.
+
+## Flag Fields Merge Per Bit
+
+In the three-way sub-record merge, a schema field of type `flags_u8`/`flags_u16`/`flags_u32` merges **bit by bit**, not as a whole value. `merge_fields_three_way` (sub_record_merge.cpp) detects a flags field via `is_flags_field` and calls `merge_field_bits`: for each bit, if a plugin flipped it relative to the master and the winner did not, the plugin's bit is taken; the winner wins per bit on conflict; the last-listed plugin wins per bit among changers. Non-flag fields still merge whole-field.
+
+Consequence: two plugins that each toggle a *different* flag on the same field both take effect, instead of the last plugin's entire flags value overwriting the other's.
+
+This only fires for sub-records that go through the element-wise merge path (`needs_element_wise` true — i.e. they have an `element_wise_merge` rule in `record_behavior.cpp`). Sub-records that are a single flags field and previously merged whole-value were given explicit `element_wise_merge` rules so they get per-bit treatment: NPC_ `FLAG`, CREA `FLAG`, CONT `FLAG`, and LEVI/LEVC `DATA` (the leveled-list calculation flags, merged via the leveled header path `merge_header_part`). Do NOT remove these rules or revert flags to whole-value merge. CELL `DATA` flags are a separate concern (cell merge path) and are not covered here.
+
+## CELL Merge: Generic Three-Way of the Header, FRMR Region Dropped Except ANAM-Owner Merge
+
+CELL uses the **generic merge** (`merge_strategy_t::generic`) — there is no CELL-specific merge strategy, no `merge_cell_refs`, and no `cell_refs` enum value. What makes CELL behave correctly is table rows on its `record_behavior_t` entry plus a boundary-truncation step in `merge_generic`, not bespoke dispatch.
+
+`merge_generic` fetches the record's behavior once and runs each parsed version sequence through the file-local `filter_for_merge` before merging: the sequence is cut at the first sub-record whose rule carries `sub_rule_flag_t::merge_boundary`. CELL's behavior row lists `sub_record_rule_t { "FRMR", 0, merge_boundary }`, so every version is truncated at its first `FRMR`. Only the pre-FRMR header (NAME, DATA cell-flags/coords, RGNN, WHGT, AMBI, NAM5, NAM0, etc.) reaches the three-way overlay; the entire placed-object region — every `FRMR` group and everything after it — is dropped before the header merge.
+
+The header stays fully dropped for merging, but one narrow, additive FRMR re-emission runs after it: the **FRMR-owner (ANAM) merge**. It is table-driven via a `frmr_group_merge_rule_t { "FRMR", "ANAM" }` on the CELL row (`frmr_group_merge_rule_for`), and lives in `sub_record_merge_t::merge_frmr_groups_phase`, called near the end of `merge_generic` on the un-truncated `partition_cell` output, gated on that rule being non-null (so no other record type runs it).
+
+Behavior of that phase — and ONLY that phase — for FRMR:
+- A reference is keyed by its resolved RefNum identity, supplied via `merge_input_t::ref_identities` (one identity per FRMR per version, in parse order). `auto_merge_t::process_three_way` computes it for CELL through `plugin_scan_t::cell_ref_identities` (which calls `resolve_frmr`, reproducing OpenMW's `adjustRefNum`), and swaps the winner's identity alongside the content when patch priority replaces the winner slot. `merge_frmr_groups_phase` zips each version's `partition_cell` groups with that version's identities into an `identity -> group` map and matches master/winner/intermediate by identity. This is the same authoritative key the conflict comparator uses; there is no masked-index key and no object-`NAME` guard on this path. The screenshot case (`green_1000_01`, `ingred_fire_petal_01`, `light_com_candle_07` all at low index 5) stays separate because the three resolve to different RefNums.
+- Only references present in BOTH master (version 0) and winner (last version) are candidates. Absence is never a deletion.
+- The owner (`ANAM`) is resolved last-changer-wins across the intermediate versions, but only when the winner did NOT change ANAM relative to master (winner-unchanged-vs-master). If the winner changed ANAM, the winner wins and nothing is emitted for that reference.
+- When an intermediate override is found, the phase emits the **winner's whole reference** as the base and overlays only its ANAM sub-record with the merged one — value change, owner addition (master/winner had none), and owner removal (intermediate dropped it) are all honored, keeping ANAM at its original position in the group. No other reference field is merged; no other reference is emitted.
+- `NAM0` is never re-emitted (it is `skip_emit`); OpenMW does not require it.
+
+Consequences:
+- Apart from ANAM-owner overlays, the FRMR object list is still **not merged and not carried**. Placed-object edits other than owner (add/remove/move/re-lock, and all non-ANAM fields) are not represented in the merged patch.
+- A CELL whose only differences are in the FRMR region is a **no-op** unless an ANAM-owner conflict is resolved; the emit gate is `output == winner_subs && !variable_size_merged && !frmr_groups_added`, where `frmr_groups_added` is set when `merge_frmr_groups_phase` appended any reference. The comparison basis is the merged sub-record **sequence**, not the reconstructed record string.
+
+`NAM0` is excluded from the header merge via `sub_record_rule_t { "NAM0", 0, skip_emit }`; `filter_for_merge` drops any `skip_emit` sub-record, so the winner's NAM0 does not reach the output and none is written. Header disambiguation between the 12-byte header `DATA` (cell flags/coords) and the 24-byte reference `DATA` needs no size-keyed rule: reference `DATA` sits after the FRMR boundary and is truncated away, so only header `DATA` is ever merged.
+
+The CELL row keeps its `decode_mode = cell`, `copy_strategy = header_and_selected_group`, and `wildcard_rule = &cell_wildcard` (`{ "*", 0, skip_non_existent }`). Decode, display, and the copy-to-merged-patch path (`merge_controller_t::copy_cell_record`) use `partition_cell` / `cell_partition_t` / `frmr_group_t` / `read_frmr_index` / `build_frmr_map`; those are retained and reused by the ANAM phase. Do NOT broaden `merge_frmr_groups_phase` into a general per-object FRMR merge, do NOT add a CELL merge strategy, and do NOT merge non-ANAM reference fields — CELL is a generic header merge with a `merge_boundary` row plus the single ANAM-owner overlay by design.
+
+## Merge/Decode Invariants and Binary Layout Constants (comprehension-critical)
+
+These are the non-obvious invariants behind the hardest merge/decode code. They are NOT evident from names alone; do not "simplify" past them.
+
+### Binary layout constants live in one place
+
+ESM sub-record byte layouts that the merger and the conflict-slot builder both depend on are declared ONCE as named `constexpr` namespaces in `yampt.core/source/decoder/sub_record_schema.hpp`, and both `sub_record_merge.cpp` and `conflict_slots.cpp` read them. Never re-hardcode these offsets/sizes as literals in algorithm code:
+
+- `enam_layout` — ENAM effect slot (24 bytes). Authoritative UESP layout: Effect@0 (u16), Skill@2 (i8), Attribute@3 (i8), Range@4 (u32), Area@8 (u32), Duration@12 (u32), Magnitude Min@16 (u32), Magnitude Max@20 (u32). `magnitude_min_offset = 16`, `magnitude_max_offset = 20`. (A prior bug hardcoded the pair as {12,16} — Duration+MagMin — silently coupling the wrong fields. Kept correct only because the schema `enam_fields` was right; the merger literal was not.)
+- `npco_layout` — NPCO inventory item (36 bytes; item ID at offset 4, length 32).
+- `npcs_layout` — NPCS spell/ability ID (32-byte fixed record).
+- `fact_layout` — FACT reaction value is a 4-byte int32 (paired with the ANAM faction name).
+
+The ENAM magnitude pair is ALSO registered as a `paired_merge_rule_t` in `record_behavior.cpp` (offsets 16/20) so min and max merge together from one plugin (see the ┌/└→🔗 pair-marker feature). The two must agree; both now derive from the same UESP-confirmed offsets.
+
+### The three-way "intermediate claims a piece" predicate
+
+The core sub-record merge rule is: a piece (bit / byte span) is taken from an intermediate plugin only when the intermediate CHANGED it relative to the master (first), the winner did NOT change it, and the output still holds the master value (unclaimed). This "claim-once, last-changer-wins" predicate is named once as `intermediate_claims_bit` (masked bit form) and `intermediate_claims_span` (memcmp form) in `sub_record_merge.cpp`; `merge_field_bits`, `merge_bool_bit`, and `merge_value_field` all call it. Do not re-inline the `inter_changed && winner_unchanged && current_unclaimed` triple — edit the shared helper. (`merge_enam_slot_bytes` uses a deliberately distinct 2-way byte form because it builds its result fresh from the winner; it is not the same predicate.)
+
+`merge_bool_bit` reuses `field_def_t::size` as a BIT INDEX (not a byte length) for `bool_bit` fields — a type pun that is intentional and load-bearing.
+
+### Intermediate reverse-scan
+
+`merge_generic` iterates intermediates high-priority→low with `for (size_t version_idx = versions.size() - 2; version_idx >= 1; --version_idx)`, deliberately excluding master (index 0) and winner (back). This only terminates because the `versions.size() < 3` early return guarantees `versions.size() >= 3` by the time the loop runs. For CELL each version is first passed through `truncate_at_merge_boundary`, so only the pre-FRMR header participates; the FRMR region is dropped, as documented under "CELL Merge: Generic Three-Way of the Header, FRMR Region Dropped".
+
+### dial_info OpenMW ordering
+
+`dial_info_align_t::resolve_openmw_order` reconstructs INFO topic order from PNAM (previous-INFO) back-links using a linked list + position map, splicing each INFO after its predecessor (front if PNAM empty, end if PNAM unknown), and re-splicing when a plugin redefines an existing INFO with a different PNAM. This mirrors OpenMW's dialogue linking; it is reverse-engineered game behavior with no external citation.
+
+### content_alignment sentinels
+
+`content_alignment.cpp` and `conflict_slots.cpp` align N plugin versions into unified slots. `SIZE_MAX` means "this sub-record is absent in this column"; `merge_column = -1` means "no merge column". These sentinels are load-bearing throughout the slot/cursor index arithmetic.
+
+### scdt_patcher null-terminator tolerance
+
+`scdt_patcher_t::validate_text_size` accepts a declared size of either `old_text.size()` OR `old_text.size() + 1` — the `+1` covers compiled MWScript strings that include a trailing null in the length field. Message segments use a 2-byte size field for the first segment and 1-byte for later segments. The getpccell `'X'`-marker/back-2-bytes trick is documented in `project-structure.md`.
+
+## Revert Must Never Propagate
+
+Revert operations (single-entry or batch) must NEVER trigger propagation. They restore a previous state — they do not create a new translation that should spread to other entries. Violating this silently corrupts user data.
+
+When reverting an entry to a historical text/status:
+- Write `entry.new_text` and `entry.status` directly on the `dict_document_t::data_mut()` record
+- Call `dict_doc->set_dirty(true)` and `dict_doc->modified_records_insert(...)`
+- Do NOT call `dict_document_t::commit()` — it contains propagation logic
+
+`commit()` is for new user-initiated translations where propagation is intentional. Revert is the opposite: restoring old state without side effects.
+
+### Single Source of Undo
+
+The History panel is the only source of undo/revert in the application. There is no separate undo stack, no Ctrl+Z for entry text, and no other revert mechanism. All revert operations — whether triggered from the History panel (single entry) or the table context menu (batch) — read from `edit_history_t`.
+
+### Why
+
+If revert calls `commit()`, the reverted text propagates to all entries sharing the same `old_text`, silently overwriting unrelated translations across the document.
+
+## Removal From Master Is Intentional
+
+When a plugin removes something that exists in the master, that removal is a deliberate authoring decision and must be honored by the merge. A removal always wins by default — the merge never resurrects master content that a plugin deleted. Violating this silently reverts the modder's intent.
+
+- If a sub-record, group, list entry, or field is present in the master but absent in a plugin version, treat the absence as an intentional delete, not as missing data to be filled back in from the master or another plugin.
+- Do NOT re-add removed content during merge. A removal is a change like any other and follows normal last-changer-wins precedence: a plugin that removes an item is a plugin that changed it.
+- This applies to every keyed/grouped merge: leveled-list entries, keyed lists (NPCO/NPCS/FACT), FRMR groups, and any element-wise merge. Union logic keeps items added by any plugin, but an item deleted by a plugin is dropped, not kept alive by the master.
+
+### Consequence For FRMR / ANAM Conflicts
+
+For the FRMR-group owner merge specifically: if an intermediate plugin removes the owner (ANAM present in master, absent in the intermediate) that is an intentional un-own and is respected — the group is emitted with the owner removed, not with the master's owner restored.
+
+### Why
+
+Modders remove references, owners, and list entries on purpose (cutting content, clearing ownership, deleting placed objects). Restoring what a plugin deleted silently reverts the modder's intent and reintroduces content they meant to be gone.
+
+> Note: The FRMR absence exception (FRMR absence is NOT deletion, only explicit `DELE` deletes a reference) is documented in `../reference/frmr-references.md`. That is a domain carve-out specific to the engine's reference model, not a contradiction of this decision.
+
+## script_parser trim_last_new_line_chars — the `|| npos` branch is intentional
+
+`script_parser::trim_last_new_line_chars` contains a condition with a `|| ... == std::string::npos` branch that looks unreachable but is not. It is the only path that trims the appended CRLF when `m_old_script.size() == 1`, where `size - 2` underflows to `npos`. Removing the branch regresses the single-character script case. Keep it.

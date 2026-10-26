@@ -8,22 +8,22 @@
 class esm_converter_t
 {
 public:
-	const auto & is_loaded()
+	const auto & is_loaded() const
 	{
 		return esm.is_loaded();
 	}
 
-	const auto & get_name()
+	const auto & get_name() const
 	{
 		return esm.get_name();
 	}
 
-	const auto & get_time()
+	const auto & get_time() const
 	{
 		return esm.get_time();
 	}
 
-	const auto & get_records()
+	const auto & get_records() const
 	{
 		return esm.get_records();
 	}

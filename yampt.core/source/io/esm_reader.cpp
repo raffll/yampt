@@ -311,7 +311,7 @@ void esm_reader_t::handle_exception(const std::exception & error)
 	m_loaded = false;
 }
 
-size_t esm_reader_t::get_modified_count()
+size_t esm_reader_t::get_modified_count() const
 {
 	size_t count = 0;
 	for (const auto & record : m_records)

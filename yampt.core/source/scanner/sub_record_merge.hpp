@@ -203,9 +203,3 @@ private:
 	static void merge_winner_armor_groups(const armor_merge_context_t & context);
 	static void collect_intermediate_armor_additions(const armor_merge_context_t & context);
 };
-
-class leveled_list_merge_t
-{
-public:
-	static merge_result_t merge(const merge_input_t & input);
-};
