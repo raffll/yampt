@@ -174,6 +174,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="source\tests.gui.main.cpp" />
+    <ClCompile Include="source\tests.gui.view_tree_lists.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\view_tree_model.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\view_tree_decode.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\view_tree_decode_cell.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\view_tree_decode_lists.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\editable_column_set.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\editor_appearance.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\field_binary_resolver.cpp" />
     <ClCompile Include="source\tests.gui.editor_appearance_settings_view.cpp" />
     <ClCompile Include="source\tests.gui.translator_appearance_settings_view.cpp" />
     <ClCompile Include="source\tests.gui.editor_settings_dialog.cpp" />
@@ -197,6 +205,12 @@
     <ClCompile Include="..\yampt.translator\source\translator\translation_example_ops.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="..\yampt.editor\source\model\view_tree_model.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include" -I"$(SolutionDir)yampt.core\source" -I"$(SolutionDir)yampt.editor\source"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
     <CustomBuild Include="..\yampt.editor\source\dialog\settings\editor_settings_dialog.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include" -I"$(SolutionDir)yampt.core\source" -I"$(SolutionDir)yampt.editor\source"</Command>
@@ -259,6 +273,9 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="$(IntDir)moc_view_tree_model.cpp">
+      <ObjectFileName>$(IntDir)moc_view_tree_model.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="$(IntDir)moc_editor_settings_dialog.cpp">
       <ObjectFileName>$(IntDir)moc_editor_settings_dialog.obj</ObjectFileName>
     </ClCompile>

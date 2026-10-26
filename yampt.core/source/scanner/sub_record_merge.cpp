@@ -50,6 +50,42 @@ std::string sub_record_merge_t::reconstruct_record(
 	return result;
 }
 
+std::string sub_record_merge_t::recompute_leveled_indx(const std::string & rec_type, const std::string & content)
+{
+	if (decode_mode_for(rec_type) != decode_mode_t::leveled)
+		return content;
+
+	const char * const item_sub_type_name = leveled_item_sub_type_for(rec_type);
+	if (item_sub_type_name == nullptr)
+		return content;
+
+	const std::string item_sub_type = item_sub_type_name;
+
+	auto output = parse_sub_records(content);
+
+	uint32_t item_count = 0;
+	bool has_indx = false;
+	for (const auto & entry : output)
+	{
+		if (entry.type == item_sub_type)
+			++item_count;
+		else if (entry.type == "INDX")
+			has_indx = true;
+	}
+
+	if (!has_indx)
+		return content;
+
+	std::string count_bytes(reinterpret_cast<const char *>(&item_count), 4);
+	for (auto & entry : output)
+	{
+		if (entry.type == "INDX")
+			entry.data = count_bytes;
+	}
+
+	return reconstruct_record(content, output);
+}
+
 std::string sub_record_merge_t::filter_sub_records_by_rules(
     const std::string & rec_type,
     const std::string & content,

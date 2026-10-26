@@ -2644,6 +2644,155 @@ TEST_CASE("sub_record_merge_t::merge, CELL FRMR different item RefNum not matche
 	REQUIRE_FALSE(result.changed);
 }
 
+static std::string make_indx_sub(uint32_t count)
+{
+	return make_sub("INDX", make_uint32(count));
+}
+
+static std::string make_levi_with_indx(
+    const std::string & list_id,
+    uint32_t stored_count,
+    const std::string & entries)
+{
+	const auto subs =
+	    make_sub("NAME", make_string(list_id)) + make_sub("DATA", make_uint32(1)) +
+	    make_sub("NNAM", std::string(1, '\0')) + make_indx_sub(stored_count) + entries;
+	return make_record("LEVI", subs);
+}
+
+static std::string levi_inam_intv(const std::string & item_id, uint16_t level)
+{
+	return make_sub("INAM", make_string(item_id)) + make_sub("INTV", make_uint16(level));
+}
+
+static std::string levc_cnam_intv(const std::string & creature_id, uint16_t level)
+{
+	return make_sub("CNAM", make_string(creature_id)) + make_sub("INTV", make_uint16(level));
+}
+
+static uint32_t read_indx_count(const std::string & content)
+{
+	const auto subs = sub_record_merge_t::parse_sub_records(content);
+	for (const auto & entry : subs)
+	{
+		if (entry.type != "INDX" || entry.data.size() < 4)
+			continue;
+
+		uint32_t value = 0;
+		std::memcpy(&value, entry.data.data(), 4);
+		return value;
+	}
+
+	return 0;
+}
+
+static size_t count_sub_records_of_type(const std::string & content, const std::string & sub_type)
+{
+	size_t count = 0;
+	for (const auto & entry : sub_record_merge_t::parse_sub_records(content))
+	{
+		if (entry.type == sub_type)
+			++count;
+	}
+
+	return count;
+}
+
+TEST_CASE("sub_record_merge_t::recompute_leveled_indx, stale count after added item is corrected", "[u]")
+{
+	auto content = make_levi_with_indx("list_id", 1, levi_inam_intv("iron_sword", 1));
+	auto subs = sub_record_merge_t::parse_sub_records(content);
+	const auto added = levi_inam_intv("steel_sword", 1);
+	for (const auto & entry : sub_record_merge_t::parse_sub_records(make_record("LEVI", added)))
+		subs.push_back(entry);
+	content = sub_record_merge_t::reconstruct_record(content, subs);
+
+	REQUIRE(read_indx_count(content) == 1);
+	REQUIRE(count_sub_records_of_type(content, "INAM") == 2);
+
+	const auto fixed = sub_record_merge_t::recompute_leveled_indx("LEVI", content);
+
+	REQUIRE(read_indx_count(fixed) == 2);
+	REQUIRE(read_indx_count(fixed) == count_sub_records_of_type(fixed, "INAM"));
+}
+
+TEST_CASE("sub_record_merge_t::recompute_leveled_indx, stale count after removed item is corrected", "[u]")
+{
+	auto content = make_levi_with_indx(
+	    "list_id", 2, levi_inam_intv("iron_sword", 1) + levi_inam_intv("steel_sword", 1));
+
+	auto subs = sub_record_merge_t::parse_sub_records(content);
+	subs.erase(subs.end() - 2, subs.end());
+	content = sub_record_merge_t::reconstruct_record(content, subs);
+
+	REQUIRE(read_indx_count(content) == 2);
+	REQUIRE(count_sub_records_of_type(content, "INAM") == 1);
+
+	const auto fixed = sub_record_merge_t::recompute_leveled_indx("LEVI", content);
+
+	REQUIRE(read_indx_count(fixed) == 1);
+	REQUIRE(read_indx_count(fixed) == count_sub_records_of_type(fixed, "INAM"));
+}
+
+TEST_CASE("sub_record_merge_t::recompute_leveled_indx, LEVC counts CNAM entries", "[u]")
+{
+	const auto subs =
+	    make_sub("NAME", make_string("crea_list")) + make_sub("DATA", make_uint32(1)) +
+	    make_sub("NNAM", std::string(1, '\0')) + make_indx_sub(1) + levc_cnam_intv("rat", 1) +
+	    levc_cnam_intv("mudcrab", 3) + levc_cnam_intv("scamp", 5);
+	const auto content = make_record("LEVC", subs);
+
+	REQUIRE(read_indx_count(content) == 1);
+
+	const auto fixed = sub_record_merge_t::recompute_leveled_indx("LEVC", content);
+
+	REQUIRE(read_indx_count(fixed) == 3);
+	REQUIRE(read_indx_count(fixed) == count_sub_records_of_type(fixed, "CNAM"));
+}
+
+TEST_CASE("sub_record_merge_t::recompute_leveled_indx, duplicate items counted individually", "[u]")
+{
+	const auto content = make_levi_with_indx(
+	    "l_b_amulets", 99,
+	    levi_inam_intv("l_n_amulet", 1) + levi_inam_intv("l_n_amulet", 1) + levi_inam_intv("l_m_amulet", 1));
+
+	const auto fixed = sub_record_merge_t::recompute_leveled_indx("LEVI", content);
+
+	REQUIRE(read_indx_count(fixed) == 3);
+}
+
+TEST_CASE("sub_record_merge_t::recompute_leveled_indx, container content returned unchanged", "[u]")
+{
+	const auto npco = std::string(32, 'a') + make_string("misc_item");
+	const auto content = make_record(
+	    "CONT",
+	    make_sub("NAME", make_string("barrel")) + make_sub("FNAM", make_string("Barrel")) +
+	        make_sub("NPCO", npco) + make_sub("NPCO", npco));
+
+	const auto fixed = sub_record_merge_t::recompute_leveled_indx("CONT", content);
+
+	REQUIRE(fixed == content);
+	REQUIRE(count_sub_records_of_type(fixed, "INDX") == 0);
+}
+
+TEST_CASE("sub_record_merge_t::reconstruct_record, container NPCO edits keep list count consistent", "[u]")
+{
+	const auto npco_a = std::string(32, 'a') + make_string("item_a");
+	const auto npco_b = std::string(32, 'b') + make_string("item_b");
+	const auto content = make_record(
+	    "CONT",
+	    make_sub("NAME", make_string("barrel")) + make_sub("FNAM", make_string("Barrel")) +
+	        make_sub("NPCO", npco_a) + make_sub("NPCO", npco_b));
+
+	REQUIRE(count_sub_records_of_type(content, "NPCO") == 2);
+
+	auto subs = sub_record_merge_t::parse_sub_records(content);
+	subs.pop_back();
+	const auto edited = sub_record_merge_t::reconstruct_record(content, subs);
+
+	REQUIRE(count_sub_records_of_type(edited, "NPCO") == 1);
+}
+
 TEST_CASE("sub_record_merge_t::merge, CELL FRMR same low index different resolved identity not merged", "[u]")
 {
 	auto subs_first = cell_header("Balmora") + frmr_group(0x00000005, "green_1000_01", "fargoth");

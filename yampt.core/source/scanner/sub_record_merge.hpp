@@ -77,6 +77,8 @@ public:
 	static std::string serialize_sub_record(const sub_record_entry_t & entry);
 	static std::string reconstruct_record(const std::string & winner_content, const sub_record_sequence_t & output);
 
+	static std::string recompute_leveled_indx(const std::string & rec_type, const std::string & content);
+
 	static std::string filter_sub_records_by_rules(
 	    const std::string & rec_type,
 	    const std::string & content,

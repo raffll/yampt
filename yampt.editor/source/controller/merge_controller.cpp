@@ -371,7 +371,7 @@ void merge_controller_t::copy_sub_record(
 		return;
 	}
 
-	m_session.scan().copy_record_to_active_raw(rec_type, record_id, result.content);
+	m_session.scan().copy_record_to_active_raw(rec_type, record_id, finalize_record_content(rec_type, result.content));
 	m_log(
 	    "[info] copied " + sub_type + " from " + m_session.scan().plugin_filename(plugin_idx) + " to active plugin (" +
 	    rec_type + ":" + record_id + ")");
@@ -442,7 +442,7 @@ void merge_controller_t::copy_group(
 	merge_subs.insert(merge_subs.end(), source_group.begin(), source_group.end());
 
 	const auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
-	m_session.scan().copy_record_to_active_raw(rec_type, record_id, patched);
+	m_session.scan().copy_record_to_active_raw(rec_type, record_id, finalize_record_content(rec_type, patched));
 	m_log(
 	    "[info] copied group \"" + group_row.label + "\" from " + m_session.scan().plugin_filename(plugin_idx) +
 	    " to active plugin (" + rec_type + ":" + record_id + ")");
@@ -572,7 +572,7 @@ void merge_controller_t::remove_sub_record(
 	merge_subs.erase(merge_subs.begin() + binary_idx);
 
 	const auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
-	m_session.scan().copy_record_to_active_raw(rec_type, record_id, patched);
+	m_session.scan().copy_record_to_active_raw(rec_type, record_id, finalize_record_content(rec_type, patched));
 	m_log("[info] removed " + removed_type + " from active plugin (" + rec_type + ":" + record_id + ")");
 
 	refresh_after_active_edit(rec_type, record_id);
@@ -619,7 +619,7 @@ void merge_controller_t::remove_group(
 	merge_subs.erase(merge_subs.begin() + range.start, merge_subs.begin() + range.end_pos);
 
 	const auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
-	m_session.scan().copy_record_to_active_raw(rec_type, record_id, patched);
+	m_session.scan().copy_record_to_active_raw(rec_type, record_id, finalize_record_content(rec_type, patched));
 	m_log("[info] removed group from active plugin (" + rec_type + ":" + record_id + ")");
 
 	refresh_after_active_edit(rec_type, record_id);
@@ -988,6 +988,13 @@ std::vector<patch_builder_t::master_entry_t> merge_controller_t::build_master_li
 	}
 
 	return masters;
+}
+
+std::string merge_controller_t::finalize_record_content(
+    const std::string & rec_type,
+    const std::string & content) const
+{
+	return sub_record_merge_t::recompute_leveled_indx(rec_type, content);
 }
 
 void merge_controller_t::refresh_after_active_edit(const std::string & rec_type, const std::string & record_id)

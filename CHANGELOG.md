@@ -22,6 +22,8 @@
 - [FIX] Records no longer appear under the wrong record type (for example a script shown under Cell, or armor under NPC) in large load orders. A plugin whose data cannot be parsed cleanly now reports an error instead of silently showing records under the wrong type
 - [FIX] Loading plugins whose master files are not present in the loaded folder no longer crashes the application. Each missing master is now reported in the Log tab, naming the plugin and the master it expects, and any record that cannot be read while conflicts are computed is skipped with an error message instead of ending the program
 - [FIX] Editing a field now refuses characters that cannot be stored in the selected text codepage, showing an error next to the Apply button instead of silently dropping or replacing them
+- [FIX] Editing a leveled list after a merged patch has been created no longer corrupts the plugin. Adding or removing an item now keeps the list's item count correct, so OpenMW and the Construction Set can read the file again instead of reporting it as unreadable
+- [FIX] Leveled lists and containers that hold the same item more than once now show every copy as its own row, so the number of rows matches the list's real contents instead of collapsing the repeats into a single entry
 - [REMOVE] Removed the manual Save and Save All actions and the unsaved-changes asterisk. The merged patch, the active plugin's edits, and the merge locks are now saved automatically whenever they change, so there is nothing to save by hand and loading, unloading, cleaning, switching the active plugin, and closing never prompt to save
 
 ## [0.1233] - 2026-09-15

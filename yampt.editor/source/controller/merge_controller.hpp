@@ -108,6 +108,7 @@ private:
 	    const std::string & description);
 	void refresh_after_active_edit(const std::string & rec_type, const std::string & record_id);
 	void relock_after_edit(const std::string & rec_type, const std::string & record_id);
+	std::string finalize_record_content(const std::string & rec_type, const std::string & content) const;
 
 	std::string read_source_content(int plugin_idx, const std::string & rec_type, const std::string & record_id);
 	std::string ensure_active_record(
