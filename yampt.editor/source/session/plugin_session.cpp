@@ -16,8 +16,17 @@ plugin_session_t::plugin_session_t(QObject * parent)
 
 plugin_session_t::~plugin_session_t() = default;
 
+void plugin_session_t::unload_if_loaded()
+{
+	if (m_load_source == load_source_t::none)
+		return;
+
+	unload_all();
+}
+
 void plugin_session_t::load_from_folder(const std::vector<std::string> & paths, const std::string & base_path)
 {
+	unload_if_loaded();
 	m_load_base_path = base_path;
 	m_load_source = load_source_t::folder;
 	m_lua_data_paths = { base_path };
@@ -31,6 +40,7 @@ void plugin_session_t::load_from_mo2_profile(const QString & profile_dir)
 	if (paths.empty())
 		return;
 
+	unload_if_loaded();
 	m_load_base_path = profile_dir.toStdString();
 	m_load_source = load_source_t::mo2_profile;
 	build_lua_paths_for_mo2(profile_dir);
@@ -43,6 +53,7 @@ void plugin_session_t::load_from_openmw_cfg(const QString & cfg_path)
 	if (paths.empty())
 		return;
 
+	unload_if_loaded();
 	const auto cfg_dir = QFileInfo(cfg_path).absolutePath();
 	m_load_base_path = cfg_dir.toStdString();
 	m_load_source = load_source_t::openmw_cfg;

@@ -370,12 +370,16 @@ void view_tree_model_t::set_editable_columns(const editable_column_set_t * edita
 void view_tree_model_t::clear()
 {
 	beginResetModel();
+	m_scan_for_header = nullptr;
+	m_appearance.set_scan(nullptr);
 	m_rows.clear();
 	m_synthetic_fields.clear();
 	m_column_names.clear();
 	m_plugin_conflict_this.clear();
 	m_column_plugin_indices.clear();
 	m_record_versions.clear();
+	m_record_locks.clear();
+	m_col_type_indices.clear();
 	m_record_type.clear();
 	m_record_id.clear();
 	m_has_active_column = false;

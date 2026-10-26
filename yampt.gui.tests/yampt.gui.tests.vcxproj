@@ -175,6 +175,7 @@
   <ItemGroup>
     <ClCompile Include="source\tests.gui.main.cpp" />
     <ClCompile Include="source\tests.gui.view_tree_lists.cpp" />
+    <ClCompile Include="source\tests.gui.second_folder_reload.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\view_tree_model.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\view_tree_decode.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\view_tree_decode_cell.cpp" />

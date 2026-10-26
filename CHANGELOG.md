@@ -24,6 +24,7 @@
 - [FIX] Editing a field now refuses characters that cannot be stored in the selected text codepage, showing an error next to the Apply button instead of silently dropping or replacing them
 - [FIX] Editing a leveled list after a merged patch has been created no longer corrupts the plugin. Adding or removing an item now keeps the list's item count correct, so OpenMW and the Construction Set can read the file again instead of reporting it as unreadable
 - [FIX] Leveled lists and containers that hold the same item more than once now show every copy as its own row, so the number of rows matches the list's real contents instead of collapsing the repeats into a single entry
+- [FIX] Opening a plugin or folder from a different location while one is already loaded no longer closes the editor. The currently loaded folder is now unloaded first and the new selection is loaded in its place, instead of leaving stale records on screen that pointed at plugins no longer present. Loading stays single-folder: opening a new location replaces what was loaded rather than watching several folders at once
 - [REMOVE] Removed the manual Save and Save All actions and the unsaved-changes asterisk. The merged patch, the active plugin's edits, and the merge locks are now saved automatically whenever they change, so there is nothing to save by hand and loading, unloading, cleaning, switching the active plugin, and closing never prompt to save
 
 ## [0.1233] - 2026-09-15

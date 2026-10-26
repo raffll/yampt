@@ -1,9 +1,5 @@
 # TODO
 
-## Easy
-
-- loading ESPs from a second folder crashes the editor silently: "open folder" loads all ESPs in one folder fine, but once a folder is loaded, opening an ESP/folder from a different location closes yEditor with no message. Intended behavior: unload the current folder and load the new one (loading only, no live multi-folder watch — parsing is too slow for that) — yEditor
-
 ## Medium
 
 - propagation is one-way: translating a text sets all duplicate occurrences to Propagated, but later editing one occurrence changes only that single record (to In Progress) and does not re-propagate the edit to the other duplicates — yEditor
