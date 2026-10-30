@@ -4,6 +4,12 @@
 
 ### yTranslator
 - [FIX] Editing one occurrence of an already-propagated translation now spreads the new text to all its duplicate occurrences again, keeping the whole group in sync. Previously only the single edited entry changed and the other duplicates kept the old text. Entries you manually finalized with another status (Translated, In Progress, Generated, and so on) are still left unchanged
+- [FIX] Selecting a record now shows the Translation box scrolled to the top of the text, matching the Original box, instead of jumping to the end; long translations now start at the beginning when you select the entry
+
+### yEditor
+- [FIX] Editing a leveled list after a merged patch has been created no longer corrupts the plugin. Adding or removing an item now keeps the list's item count correct, so OpenMW and the Construction Set can read the file again instead of reporting it as unreadable
+- [FIX] Leveled lists and containers that hold the same item more than once now show every copy as its own row, so the number of rows matches the list's real contents instead of collapsing the repeats into a single entry
+- [FIX] Opening a plugin or folder from a different location while one is already loaded no longer closes the editor. The currently loaded folder is now unloaded first and the new selection is loaded in its place, instead of leaving stale records on screen that pointed at plugins no longer present. Loading stays single-folder: opening a new location replaces what was loaded rather than watching several folders at once
 
 ## [0.1264] - 2026-10-13
 
@@ -12,7 +18,6 @@
 - [NEW] NPC display-name entries now show the character's gender next to the name in the Annotations panel, the same way dialogue entries show the speaker's gender; it appears in dictionaries created after this change
 - [CHANGE] The blue dialogue-topic highlighting in the Original and Translation boxes now appears only while editing a dialogue topic or dialogue response entry; on all other record types it is no longer shown. The green glossary highlighting is unaffected and still appears for every record type
 - [FIX] Propagating a translation now only applies to entries that are Untranslated. Entries with any other status — Translated, In Progress, Generated, and so on — are left unchanged
-- [FIX] Selecting a record now shows the Translation box scrolled to the top of the text, matching the Original box, instead of jumping to the end; long translations now start at the beginning when you select the entry
 
 ### yEditor
 - [NEW] When two plugins change the owner of the same placed object in a cell (the person or faction who gets angry if you steal it), the merged patch now keeps that owner change instead of losing it. Only the owner is merged: the object otherwise stays exactly as the winning plugin left it, and no other placed objects are copied. This applies to changing an owner, adding one, or clearing one
@@ -27,9 +32,6 @@
 - [FIX] Records no longer appear under the wrong record type (for example a script shown under Cell, or armor under NPC) in large load orders. A plugin whose data cannot be parsed cleanly now reports an error instead of silently showing records under the wrong type
 - [FIX] Loading plugins whose master files are not present in the loaded folder no longer crashes the application. Each missing master is now reported in the Log tab, naming the plugin and the master it expects, and any record that cannot be read while conflicts are computed is skipped with an error message instead of ending the program
 - [FIX] Editing a field now refuses characters that cannot be stored in the selected text codepage, showing an error next to the Apply button instead of silently dropping or replacing them
-- [FIX] Editing a leveled list after a merged patch has been created no longer corrupts the plugin. Adding or removing an item now keeps the list's item count correct, so OpenMW and the Construction Set can read the file again instead of reporting it as unreadable
-- [FIX] Leveled lists and containers that hold the same item more than once now show every copy as its own row, so the number of rows matches the list's real contents instead of collapsing the repeats into a single entry
-- [FIX] Opening a plugin or folder from a different location while one is already loaded no longer closes the editor. The currently loaded folder is now unloaded first and the new selection is loaded in its place, instead of leaving stale records on screen that pointed at plugins no longer present. Loading stays single-folder: opening a new location replaces what was loaded rather than watching several folders at once
 - [REMOVE] Removed the manual Save and Save All actions and the unsaved-changes asterisk. The merged patch, the active plugin's edits, and the merge locks are now saved automatically whenever they change, so there is nothing to save by hand and loading, unloading, cleaning, switching the active plugin, and closing never prompt to save
 
 ## [0.1233] - 2026-09-15
