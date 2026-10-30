@@ -6,7 +6,7 @@ When fixing a bug, always write the unit test FIRST — before applying the fix.
 
 This ensures the bug is reproducible and the fix is verified.
 
-This discipline applies to GUI bugs too. A GUI bug (for example a widget showing the wrong state, a wrong scroll position, a duplicate or omitted row) gets a FAILING GUI test first, written in `yampt.gui.tests` — red before the fix, green after — exactly the same way a logic bug gets a failing logic test first. See the "GUI (Widget) Tests" section below for how such a test is built.
+This discipline applies to GUI bugs too, but mind where the test belongs. Most "GUI" bugs are really computation bugs — a duplicate or omitted row, a wrong filtered set, a wrong status — and get a FAILING LOGIC test first against the extracted seam, per the "When To Write a GUI Test" section below. Only an irreducibly visual bug (a view that fails to refresh after a model change, a rendering/geometry fault) gets a FAILING GUI test first in `yampt.gui.tests`. Either way: red before the fix, green after, same as any logic bug.
 
 ## Don't Delete Tests
 
@@ -26,24 +26,27 @@ Synthetic ESM tests (hand-crafted binary records) are the correct approach for t
 
 This section is the single authoritative home for how GUI tests work. Other steering files point here for the mechanics rather than restating them.
 
-### Sanctioned Category
+### When To Write a GUI Test
 
-GUI/widget tests are a sanctioned, first-class test category. They construct real Qt widgets and dispatch real events to verify what the pure-logic seam cannot reach:
+Default, always, to a logic test. A GUI test is the slowest, heaviest, most brittle category — it drags in `QApplication`, moc, and offscreen rendering — so it is a last resort, written ONLY when the behavior genuinely cannot be observed without constructing a widget. Before reaching for one, first try to make the behavior observable without a widget by extracting the computation into a non-widget seam.
 
-- widget wiring — a view's controls reflect what was loaded, and reading them back produces the expected values;
-- `load` / `save` (or `apply`) round-trips through the `settings_store_t` seam;
-- enable-vs-hide behavior (a control is greyed, not removed, when disabled);
-- gui-conventions compliance (for example the 24px settings-table row height);
-- event handling (clicking a button runs the wired slot and the expected effect occurs).
+**A GUI test is justified ONLY for the irreducibly visual — two cases:**
 
-### Boundary With Logic Tests
+- **Signal/slot wiring with no observable seam** — a model change must refresh the live view, or a user action must drive a connected slot, and there is genuinely nothing non-visual to assert (e.g. a stale row that only a constructed, event-driven widget reveals). The computation being correct is not enough; the wire itself is under test and cannot be seen except through the widget.
+- **True rendering / visual output** — colors, layout geometry, paint output, pixel-level results. These have no non-visual seam by definition.
 
-The two categories do not overlap and neither replaces the other:
+Everything else is a logic test. If a behavior is computable it belongs in the `yampt.tests` logic suite, UI-free — including:
 
-- **Business/algorithm logic → logic test.** Pure logic is still extracted and tested WITHOUT widgets — no UI, no file I/O, no loaded plugins — in the `yampt.tests` logic suite. That suite stays widget-free.
-- **Widget wiring / presentation / conventions → GUI test.** These are verified by constructing the real widget offscreen and driving it with Qt Test.
+- all computation: filtering, merge, propagation, validation, status/intent mapping, eligibility rules (which operation is allowed for which row), byte-limit checks, text diffing, row-building from decoded records;
+- presentation *decisions* and *values*, which are computable facts, not visuals: the DECISION that a control should be greyed, a convention VALUE such as a 24px settings-table row height, or the VALUE a `load`/`save` round-trip would persist.
 
-A GUI test is the ONLY sanctioned place to instantiate a widget in a test. The `code-style.md` Function Design "no UI" rule is NOT weakened by this section: it remains the binding rule for logic tests and is scoped to them. GUI tests are the named, deliberate exception that lives in its own executable.
+If reaching a computable behavior seems to "need" a widget, that is only because the logic was not extracted. Extract it — a non-Q_OBJECT free function, namespace function, or POD-returning static per `code-style.md` Function Design — make the widget a thin caller of that seam, and test the seam logic-side. Seam extraction is a permitted production change but must be behavior-preserving (No Regressions): the widget must call the extracted logic and behave identically.
+
+**We do NOT test that widgets work.** Never write a GUI test to confirm a button fires its slot, a checkbox toggles, or a signal reaches a connected slot — Qt guarantees that; asserting it tests Qt, not our code. A GUI test that merely re-checks a computation already covered logic-side is REDUNDANT — never add it.
+
+**The one question:** can I observe this WITHOUT constructing a widget? If yes — even if it takes extracting a seam — it is a logic test. Only if the answer is genuinely no (irreducible live-view wiring, or actual rendering) does it earn a GUI test. When a feature has both a computation and a wire (propagation computes which siblings change AND the table must refresh their rows), split it: the computation is a logic test, and only the irreducible row-refresh wiring may be a GUI test.
+
+Test-Before-Fix applies either way: a wiring/rendering bug gets a FAILING GUI test first; a computation bug gets a FAILING logic test first.
 
 ### Mechanics (Authoritative, Stated Once)
 
@@ -59,7 +62,7 @@ The Catch2 adapter's `FilenameFilter` in `yampt.runsettings` matches both `yampt
 
 ### Conventions Are Owned Elsewhere
 
-The conventions a GUI test asserts (24px settings-table rows, tooltips, enable-vs-hide, panel padding) are defined in `gui-conventions.md`, which remains their single source of truth. Do not restate those conventions here — this section owns only the test mechanics; `gui-conventions.md` owns the conventions themselves.
+The GUI conventions themselves (24px settings-table rows, tooltips, enable-vs-hide, panel padding) are defined in `gui-conventions.md`, which remains their single source of truth. Do not restate them here. Note that under "When To Write a GUI Test" the DECISION or VALUE behind a convention (that a row height equals 24, that a control is greyed) is a computable fact tested logic-side; a GUI test is reserved for the irreducibly visual. This section owns only the test mechanics; `gui-conventions.md` owns the conventions themselves.
 
 ## No Fallbacks, No Generic Paths
 

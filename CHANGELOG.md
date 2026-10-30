@@ -1,5 +1,10 @@
 # Changelog
 
+## [XXX]
+
+### yTranslator
+- [FIX] Editing one occurrence of an already-propagated translation now spreads the new text to all its duplicate occurrences again, keeping the whole group in sync. Previously only the single edited entry changed and the other duplicates kept the old text. Entries you manually finalized with another status (Translated, In Progress, Generated, and so on) are still left unchanged
+
 ## [0.1264] - 2026-10-13
 
 ### yTranslator

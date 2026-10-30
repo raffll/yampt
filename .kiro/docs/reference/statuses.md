@@ -65,7 +65,7 @@ Assigned by user actions in yTranslator.
 |--------|---------|
 | `in_progress` | User started editing but hasn't finalized |
 | `model` | Translated by the CTranslate2 translation model |
-| `propagated` | Translation propagated: set on both the source entry and all target entries that share the same old_text |
+| `propagated` | Translation propagated: set on both the source entry and all target entries that share the same old_text (full rules in `architecture/design-decisions.md` → Propagation) |
 | `replaced` | Translation modified by Find/Replace |
 | `error` | Entry has a validation error |
 

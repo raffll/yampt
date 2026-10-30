@@ -204,20 +204,46 @@ The header text/color come from `view_tree_model_t::headerData` (DisplayRole for
 This only manifested with more than one plugin column, because a single plugin column is the stretched last section and happened to render, masking the issue.
 
 
-## Propagation Marks the Source Entry as `propagated` Too — By Design
+## Propagation (yTranslator)
 
-`dict_document_t::commit(row, new_text, intent)` sets the edited entry's status to `intent`, then calls `propagate(old_text, new_text)`. When propagation touches one or more sibling records (same `old_text`), the code deliberately overwrites the source entry's status with `propagated` as well:
+Propagation is how a single translation spreads to every other record that shares the same source text. It lives in `dict_document_t` (`yampt.translator/source/model/dict_document.cpp`) and is driven entirely by `commit()` and its helper `propagate()`. This section is the single source of truth for how it behaves — do not re-derive the rules from the code.
+
+### Entry point: `commit(row, new_text, intent)`
+
+1. Writes `new_text` and sets the edited (source) entry's status to `intent` (the status the caller asked for — e.g. `translated`, `in_progress`).
+2. Marks the source entry dirty and records it in `m_modified_records`.
+3. If `intent` is neither `model` nor `error`, calls `propagate(old_text, new_text)` to spread the text to sibling records.
+4. If propagation touched at least one sibling (`propagated_count > 0`), the source entry's status is overwritten with `propagated` too.
+
+`model` and `error` intents never propagate: a machine translation or an errored entry is not a user-finalized translation that should spread.
+
+### What `propagate(old_text, new_text)` does
+
+It walks every record in every chapter and marks a record as propagated only when ALL of these hold:
+
+- **Status is `untranslated` or `propagated`.** These are the two statuses propagation targets. Records with any other status (`translated`, `in_progress`, `model`, etc.) are left untouched — propagation never overwrites a record a user manually finalized. Targeting `propagated` as well is what lets a later edit of one occurrence re-spread to the rest of an already-propagated group.
+- **The record's `new_text` does not already equal `new_text`.** Already-matching records are skipped so they are not needlessly re-marked.
+- **The source text matches after edge-trimming.** Both the source `old_text` and each candidate's `old_text` are trimmed of leading and trailing spaces and tabs before comparison, so matching is whitespace-insensitive at the edges (interior whitespace still matters).
+- **The new text passes byte-limit validation for that record type.** A candidate whose `new_text` would be a `validation_level_t::error` for its `rec_type_t` is skipped — propagation never writes a value that would be invalid for a target record.
+
+Each record that passes gets `new_text` written, status set to `propagated`, is inserted into `m_modified_records`, and increments the returned count.
+
+### Source entry becomes `propagated` too — by design
+
+When propagation touches one or more siblings, `commit()` deliberately overwrites the source entry's status with `propagated` as well:
 
 ```cpp
 if (result.propagated_count > 0)
     entry.status = status_t::propagated;
 ```
 
-This is intentional, NOT a bug. When a translation propagates, the user wants the entire set of identical records — source included — marked `propagated` so they read as one consistent propagated group. The source is not exempt.
+This is intentional, NOT a bug. The user wants the entire set of identical records — source included — to read as one consistent propagated group. The source is not exempt.
 
-Do NOT "fix" this by preserving the source entry's `intent` status when propagation occurs. Do NOT report it as "propagation overwrites user intent on the source entry." The overwrite is the desired behavior.
+Do NOT "fix" this by preserving the source entry's `intent` status when propagation occurs. Do NOT report it as "propagation overwrites user intent on the source entry." The overwrite is the desired behavior. When `propagated_count == 0` (no siblings shared the `old_text`), the source keeps `intent` — the overwrite only happens when propagation actually occurred.
 
-Note: when `propagated_count == 0` (no siblings shared the `old_text`), the source keeps `intent` — the overwrite only happens when propagation actually occurred.
+### Re-propagation of an already-propagated group
+
+Because `propagate()` targets both `untranslated` and `propagated` records, it spreads on the FIRST translation of a group (all siblings are still `untranslated`) AND on a later edit of one occurrence. Once a group has been propagated, every member is `propagated`; editing one member re-runs `commit()` → `propagate()`, which now finds the `propagated` siblings and rewrites them with the new text (and keeps their status `propagated`). The edited occurrence becomes the source and the whole group reads one consistent value. Siblings the user manually finalized (`translated`, `in_progress`, etc.) are still left untouched.
 
 ## Leveled List Merge: Per-Occurrence Level Merge (Diverges From TES3Merge)
 
@@ -306,7 +332,7 @@ When reverting an entry to a historical text/status:
 - Call `dict_doc->set_dirty(true)` and `dict_doc->modified_records_insert(...)`
 - Do NOT call `dict_document_t::commit()` — it contains propagation logic
 
-`commit()` is for new user-initiated translations where propagation is intentional. Revert is the opposite: restoring old state without side effects.
+`commit()` is for new user-initiated translations where propagation is intentional (see the Propagation section above for exactly what it does). Revert is the opposite: restoring old state without side effects.
 
 ### Single Source of Undo
 

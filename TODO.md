@@ -2,7 +2,6 @@
 
 ## Medium
 
-- propagation is one-way: translating a text sets all duplicate occurrences to Propagated, but later editing one occurrence changes only that single record (to In Progress) and does not re-propagate the edit to the other duplicates — yEditor
 - advanced filters: locked only, excluded only — yEditor
 - EET dictionary import is incomplete: importing an EET dictionary converts to JSON but produces incomplete output; finish the EET-to-JSON import so the conversion is complete — yTranslator
 - PNAM etc should not be taken from last?
