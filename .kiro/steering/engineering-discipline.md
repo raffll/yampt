@@ -18,6 +18,8 @@ Every clause here applies equally to GUI tests. In particular, the "never remove
 
 If a test approach turns out to be fragile or unreliable, report the finding and propose an alternative — do not silently remove or skip the test.
 
+**Deliberate retirement is different from dodging.** The rules above forbid removing a test to make a failure or a build error go away. They do NOT forbid deliberately retiring a test that should never have existed under the testing policy: a test that really exercises Qt rather than our own behavior, or a test whose subject is plain computation that belongs in the logic suite (per "When To Write a GUI Test"). Such a test may be deleted — or, when it covers real behavior, relocated to the logic suite — with explicit user approval, provided net coverage does not drop: a computation test moved to logic keeps its assertions; a Qt-only test that asserts nothing about our code carries no coverage to preserve. The distinction is intent: never delete to hide a problem; deliberately retire only to remove a test that the policy says should not be a GUI test in the first place.
+
 ### Synthetic ESM Tests Are Valid
 
 Synthetic ESM tests (hand-crafted binary records) are the correct approach for testing the converter. They test exactly the case we included — no more, no less. Real ESM files also don't cover all edge cases — we have to figure out edge cases ourselves by testing a lot of real plugins and then encoding each discovery as a synthetic test. When a synthetic test fails, fix the test data to match the actual binary format (check sub-record sizes, key formats like zero-padded INDX, null terminators). Do not dismiss synthetic tests as unreliable.

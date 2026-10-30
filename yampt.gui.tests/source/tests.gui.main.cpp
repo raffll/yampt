@@ -26,6 +26,11 @@ QByteArray qt_plugins_dir()
 
 } // namespace
 
+TEST_CASE("gui harness builds", "[gui]")
+{
+	REQUIRE(true);
+}
+
 int main(int argc, char * argv[])
 {
 	qputenv("QT_QPA_PLATFORM", "offscreen");

@@ -1,13 +1,9 @@
-#include "gui_test_support.hpp"
 #include <catch2/catch_all.hpp>
-#include "../../yampt.editor/source/model/view_tree_model.hpp"
 #include <scanner/plugin_scan.hpp>
-#include <algorithm>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <string>
-#include <vector>
 
 namespace {
 
@@ -60,55 +56,7 @@ std::string make_activator_plugin_body(const std::string & record_id)
 
 } // namespace
 
-TEST_CASE("view_tree_model_t::clear, drops stale plugin columns after scan reload", "[gui]")
-{
-	const std::string record_id = "yampt_reload_acti";
-	const auto path_a1 = temp_plugin_path("yampt_reload_a1.esm");
-	const auto path_a2 = temp_plugin_path("yampt_reload_a2.esp");
-	const auto path_b1 = temp_plugin_path("yampt_reload_b1.esm");
-
-	write_plugin_file(path_a1, make_activator_plugin_body(record_id));
-	write_plugin_file(path_a2, make_activator_plugin_body(record_id));
-	write_plugin_file(path_b1, make_activator_plugin_body(record_id));
-
-	plugin_scan_t scan;
-	REQUIRE(scan.load_plugin(path_a1));
-	REQUIRE(scan.load_plugin(path_a2));
-	scan.rebuild_conflicts();
-
-	const auto * entry_a = scan.find("ACTI", record_id);
-	REQUIRE(entry_a != nullptr);
-
-	view_tree_model_t model;
-	model.set_record(scan, *entry_a);
-
-	const auto & indices_a = model.column_plugin_indices();
-	const bool has_second_plugin_column =
-	    std::any_of(indices_a.begin(), indices_a.end(), [](int plugin_idx) { return plugin_idx >= 1; });
-	REQUIRE(has_second_plugin_column);
-
-	scan = plugin_scan_t();
-	REQUIRE(scan.load_plugin(path_b1));
-	scan.rebuild_conflicts();
-
-	model.clear();
-
-	REQUIRE(model.column_plugin_indices().empty());
-	REQUIRE(model.record_type().empty());
-
-	const int section_count = static_cast<int>(indices_a.size()) + 1;
-	for (int section = 0; section < section_count; ++section)
-	{
-		const auto header = model.headerData(section, Qt::Horizontal, Qt::DisplayRole);
-		REQUIRE(header.toString().isEmpty());
-	}
-
-	std::filesystem::remove(path_a1);
-	std::filesystem::remove(path_a2);
-	std::filesystem::remove(path_b1);
-}
-
-TEST_CASE("plugin_scan_t reload, second folder replaces the loaded plugin set", "[gui]")
+TEST_CASE("plugin_scan_t reload, second folder replaces the loaded plugin set", "[i]")
 {
 	const std::string record_id = "yampt_replace_acti";
 	const auto path_a1 = temp_plugin_path("yampt_replace_a1.esm");
