@@ -48,6 +48,11 @@ public:
 		return m_hide_duplicates;
 	}
 
+	bool is_show_openmw_stubs() const
+	{
+		return m_show_openmw_stubs;
+	}
+
 	bool is_show_deleted_strikeout() const;
 	bool is_show_optional_placeholders() const;
 
@@ -89,6 +94,7 @@ public slots:
 	void on_advanced_filter();
 	void on_settings_changed();
 	void set_hide_duplicates(bool hide);
+	void set_show_openmw_stubs(bool show);
 	void apply_search(
 	    const std::string & query,
 	    bool search_in_id,
@@ -165,4 +171,5 @@ private:
 	nav_tree_model_t::filter_state_t m_advanced_filter;
 	nav_tree_model_t::filter_state_t m_search_filter;
 	bool m_hide_duplicates = false;
+	bool m_show_openmw_stubs = false;
 };

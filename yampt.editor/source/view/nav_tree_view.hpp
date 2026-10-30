@@ -25,6 +25,7 @@ public:
 	void set_filter(const nav_tree_model_t::filter_state_t & state);
 	void clear_filter();
 	void set_hide_duplicates(bool hide);
+	void set_hide_openmw_stubs(bool hide);
 	void set_show_deleted_strikeout(bool value);
 	void set_patch_plugins(const std::set<std::string> * patch);
 	void set_editable_columns(const editable_column_set_t * editable);

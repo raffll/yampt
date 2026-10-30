@@ -577,6 +577,12 @@ void plugin_workspace_view_t::set_hide_duplicates(bool hide)
 		m_preview->clear();
 }
 
+void plugin_workspace_view_t::set_show_openmw_stubs(bool show)
+{
+	m_show_openmw_stubs = show;
+	m_nav_view->set_hide_openmw_stubs(!show);
+}
+
 void plugin_workspace_view_t::set_preview_scroll_sync(bool enabled)
 {
 	if (m_preview)
@@ -842,6 +848,7 @@ void plugin_workspace_view_t::save_session_state()
 	settings.setValue("session/main_splitter", m_main_splitter->saveState());
 	settings.setValue("session/content_splitter", m_content_splitter->saveState());
 	settings.setValue("view/hide_duplicates", m_hide_duplicates);
+	settings.setValue("view/show_openmw_stubs", m_show_openmw_stubs);
 	settings.setValue("view/show_deleted_strikeout", m_record_view->model()->show_deleted_strikeout());
 	settings.setValue("view/show_optional_placeholders", m_record_view->model()->show_optional_placeholders());
 	settings.setValue("view/nav_header", m_nav_view->tree_widget()->header()->saveState());
@@ -866,12 +873,14 @@ void plugin_workspace_view_t::restore_session_state()
 
 	m_conflicts_only = false;
 	m_hide_duplicates = settings.value("view/hide_duplicates", false).toBool();
+	m_show_openmw_stubs = settings.value("view/show_openmw_stubs", false).toBool();
 
 	m_record_view->model()->set_show_deleted_strikeout(settings.value("view/show_deleted_strikeout", false).toBool());
 	m_nav_view->set_show_deleted_strikeout(m_record_view->model()->show_deleted_strikeout());
 	m_record_view->model()->set_show_optional_placeholders(
 	    settings.value("view/show_optional_placeholders", false).toBool());
 	m_nav_view->set_hide_duplicates(m_hide_duplicates);
+	m_nav_view->set_hide_openmw_stubs(!m_show_openmw_stubs);
 
 	auto nav_header_state = settings.value("view/nav_header").toByteArray();
 	if (!nav_header_state.isEmpty())

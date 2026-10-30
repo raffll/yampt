@@ -107,6 +107,12 @@ void nav_tree_model_t::set_hide_duplicates(bool hide)
 	emit dataChanged(index(0, 0, {}), index(rowCount({}) - 1, columnCount({}) - 1, {}));
 }
 
+void nav_tree_model_t::set_hide_openmw_stubs(bool hide)
+{
+	m_filter.set_hide_openmw_stubs(hide);
+	rebuild();
+}
+
 void nav_tree_model_t::set_show_deleted_strikeout(bool value)
 {
 	m_show_deleted_strikeout = value;
@@ -149,6 +155,9 @@ void nav_tree_model_t::build_tree()
 
 	for (int p = 0; p < static_cast<int>(m_scan.plugin_count()); ++p)
 	{
+		if (!m_filter.show_file_node(m_scan.plugin_filename(p)))
+			continue;
+
 		file_node_t file_node;
 		file_node.plugin_idx = p;
 

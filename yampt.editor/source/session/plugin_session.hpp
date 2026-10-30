@@ -77,6 +77,10 @@ private:
 	    const std::vector<std::string> & plugin_names,
 	    const mo2_resolve_context_t & context);
 	std::string resolve_single_mo2_plugin(const std::string & plugin_name, const mo2_resolve_context_t & context);
+	void append_real_openmw_file(
+	    std::vector<std::string> & paths,
+	    const std::string & stub_name,
+	    const mo2_resolve_context_t & context);
 	std::vector<std::string> resolve_openmw_content(
 	    const std::vector<std::string> & content_names,
 	    const std::vector<std::string> & data_dirs);

@@ -1,6 +1,7 @@
 #include "plugin_session.hpp"
 #include "../patcher/patch_builder.hpp"
 #include "merged_patch_name.hpp"
+#include <io/profile_reader.hpp>
 #include <algorithm>
 #include <QCoreApplication>
 #include <QDir>
@@ -608,16 +609,39 @@ std::vector<std::string> plugin_session_t::resolve_mo2_plugins(
 	for (const auto & name : plugin_names)
 	{
 		const auto & resolved = resolve_single_mo2_plugin(name, context);
-		if (!resolved.empty())
-			paths.push_back(resolved);
-		else
+		if (resolved.empty())
+		{
 			emit log_message("[warning] cannot find: " + name);
+			continue;
+		}
+
+		paths.push_back(resolved);
+		append_real_openmw_file(paths, name, context);
 	}
 
 	if (paths.empty())
 		emit log_message("[warning] no plugins resolved from MO2 profile");
 
 	return paths;
+}
+
+void plugin_session_t::append_real_openmw_file(
+    std::vector<std::string> & paths,
+    const std::string & stub_name,
+    const mo2_resolve_context_t & context)
+{
+	if (!profile_reader_t::is_openmw_stub_name(stub_name))
+		return;
+
+	const auto real_name = profile_reader_t::real_openmw_name_from_stub(stub_name);
+	const auto real_path = resolve_single_mo2_plugin(real_name, context);
+	if (real_path.empty())
+	{
+		emit log_message("[warning] openmw stub " + stub_name + ": real file not found, loading stub only");
+		return;
+	}
+
+	paths.push_back(real_path);
 }
 
 std::string plugin_session_t::resolve_single_mo2_plugin(

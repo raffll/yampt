@@ -14,6 +14,8 @@ Only one location is loaded at a time. When plugins are already loaded and you o
 
 When a merged patch is present, it is always loaded last, after every other plugin, no matter where MO2 or OpenMW places it in the sort order. This keeps its column at the far right of the record view so it always wins over the plugins it merges.
 
+Some mods that are made for OpenMW cannot be seen by Mod Organizer 2 directly, so their author ships a small empty placeholder plugin whose name carries a double extension, such as a file ending in `.omwaddon.esp` or `.omwscript.esp`. Mod Organizer 2 tracks the placeholder for load-order position while the real content lives in the matching `.omwaddon` or `.omwscript` file beside it. When you open a Mod Organizer 2 profile, the real file is now found and loaded automatically right after its placeholder, so its records are read instead of the empty stand-in. If the real file cannot be found next to the placeholder, a warning is written to the Log tab and only the placeholder is loaded. This happens for every such plugin regardless of the Show OpenMW Stubs setting described under the View menu, which only controls what the tree displays.
+
 The main window opens immediately, and a progress dialog shows how far the load has got while plugins are read into memory. The same dialog reappears at startup while the previous session is restored, so the window is visible right away instead of waiting for every plugin to load first.
 
 If a plugin's data cannot be read cleanly, loading stops at that point and an error is reported in the Log tab, rather than continuing and showing its records under the wrong type.
@@ -118,6 +120,7 @@ The View menu provides display options:
 - **Show Only One Column Per Plugin** — when a plugin defines the same record more than once, collapses those versions into a single column showing only that plugin's last (winning) version, instead of one column per occurrence.
 - **Strike Out Deleted Records** — renders deleted records and cell references with strikethrough text, making them visually distinct from active content.
 - **Show Optional Fields** — adds a row for each sub-record a record can contain but currently does not, so you can see the fields that are available to add. These placeholder rows have a white background with light grey text and are empty in every plugin column. Only single-occurrence sub-records are shown this way; repeating content such as inventory items or spell effects is not. The setting is remembered between sessions.
+- **Show OpenMW Stubs** — controls whether the empty double-extension placeholder plugins (those ending in `.omwaddon.esp` or `.omwscript.esp`) appear as rows in the navigation tree. It is off by default, so the placeholders are hidden while the real OpenMW files they stand in for stay visible. Turn it on to see the placeholders as well. This affects only what the tree shows; the real files are always loaded either way. The setting is remembered between sessions.
 
 ## Toolbar Search
 

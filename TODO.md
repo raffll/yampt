@@ -12,7 +12,6 @@
 ## Hard
 
 - Cross-workspace search window: search a phrase across all open dictionaries, results in a separate window with dictionary name column and highlighted match — yTranslator
-- MO2 mode: resolve Kezyma OpenMW Player stub plugins — a `.omwaddon.esp` / `.omwscript.esp` double-extension file is an empty placeholder MO2 uses to put the real `.omwaddon`/`.omwscript` into the load order; yEditor loads the empty stub instead of the real file. In MO2 mode, detect the double extension and load the real file (strip the trailing `.esp`). Only affects the MO2 loading path — loading the OpenMW config directly already reads the real `.omwaddon`/`.omwscript` files correctly. Same `.esp`-suffix trick applies to other MO2-invisible plugins (e.g. deltaplugin). — yEditor
 - value changed on locked field doesn't survive merged patch — yEditor
 
 ## Hard to Fix

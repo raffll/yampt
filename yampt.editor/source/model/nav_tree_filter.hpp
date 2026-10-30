@@ -34,18 +34,22 @@ public:
 	void set_filter(const filter_state_t & state);
 	void clear();
 	void set_hide_duplicates(bool hide);
+	void set_hide_openmw_stubs(bool hide);
 	void set_patch_plugins(const std::set<std::string> * patch);
 
 	bool passes(const conflict_entry_t & entry, int plugin_idx) const;
 	bool passes_lua_conflict(const handler_conflict_t & conflict) const;
 	bool has_active_filter() const;
 	bool hide_duplicates() const;
+	bool hide_openmw_stubs() const;
+	bool show_file_node(const std::string & plugin_filename) const;
 	const std::set<std::string> * patch_plugins() const;
 
 private:
 	filter_state_t m_filter;
 	bool m_has_filter = false;
 	bool m_hide_duplicates = false;
+	bool m_hide_openmw_stubs = false;
 	const std::set<std::string> * m_patch_plugins = nullptr;
 
 	static bool contains_case_insensitive(const std::string & haystack, const std::string & needle);

@@ -180,6 +180,25 @@ bool passes_single_dimension_deleted(const conflict_entry_t & entry, const nav_t
 
 } // namespace
 
+TEST_CASE("nav_tree_filter_t::show_file_node, hides stubs only when toggle on", "[u]")
+{
+	nav_tree_filter_t filter;
+
+	SECTION("hiding off shows everything")
+	{
+		filter.set_hide_openmw_stubs(false);
+		REQUIRE(filter.show_file_node("SomeMod.omwaddon.esp"));
+		REQUIRE(filter.show_file_node("SomeMod.esp"));
+	}
+
+	SECTION("hiding on hides stubs but keeps real plugins")
+	{
+		filter.set_hide_openmw_stubs(true);
+		REQUIRE_FALSE(filter.show_file_node("SomeMod.omwaddon.esp"));
+		REQUIRE(filter.show_file_node("SomeMod.esp"));
+	}
+}
+
 TEST_CASE("nav_tree_filter_t::passes, AND-composition", "[u][pbt]")
 {
 	rc::prop(

@@ -30,6 +30,7 @@ public:
 	void set_filter(const filter_state_t & state);
 	void clear_filter();
 	void set_hide_duplicates(bool hide);
+	void set_hide_openmw_stubs(bool hide);
 	void set_show_deleted_strikeout(bool value);
 	void set_display_codepage(codepage_t codepage);
 

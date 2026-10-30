@@ -1,4 +1,5 @@
 #include "nav_tree_filter.hpp"
+#include <io/profile_reader.hpp>
 #include <utility/string_utils.hpp>
 #include <algorithm>
 #include <cctype>
@@ -57,6 +58,11 @@ void nav_tree_filter_t::set_hide_duplicates(bool hide)
 	m_hide_duplicates = hide;
 }
 
+void nav_tree_filter_t::set_hide_openmw_stubs(bool hide)
+{
+	m_hide_openmw_stubs = hide;
+}
+
 void nav_tree_filter_t::set_patch_plugins(const std::set<std::string> * patch)
 {
 	m_patch_plugins = patch;
@@ -70,6 +76,19 @@ bool nav_tree_filter_t::has_active_filter() const
 bool nav_tree_filter_t::hide_duplicates() const
 {
 	return m_hide_duplicates;
+}
+
+bool nav_tree_filter_t::hide_openmw_stubs() const
+{
+	return m_hide_openmw_stubs;
+}
+
+bool nav_tree_filter_t::show_file_node(const std::string & plugin_filename) const
+{
+	if (!m_hide_openmw_stubs)
+		return true;
+
+	return !profile_reader_t::is_openmw_stub_name(plugin_filename);
 }
 
 const std::set<std::string> * nav_tree_filter_t::patch_plugins() const

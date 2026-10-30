@@ -7,9 +7,11 @@
 - [FIX] Selecting a record now shows the Translation box scrolled to the top of the text, matching the Original box, instead of jumping to the end; long translations now start at the beginning when you select the entry
 
 ### yEditor
+- [NEW] A Show OpenMW Stubs item in the View menu hides or shows the double-extension OpenMW stub placeholder plugins in the navigation tree. It is off by default, so the placeholders stay out of the way while the real files they stand in for remain visible, and the choice is remembered between sessions. The toggle only changes what is shown; it never changes what is loaded
 - [FIX] Editing a leveled list after a merged patch has been created no longer corrupts the plugin. Adding or removing an item now keeps the list's item count correct, so OpenMW and the Construction Set can read the file again instead of reporting it as unreadable
 - [FIX] Leveled lists and containers that hold the same item more than once now show every copy as its own row, so the number of rows matches the list's real contents instead of collapsing the repeats into a single entry
 - [FIX] Opening a plugin or folder from a different location while one is already loaded no longer closes the editor. The currently loaded folder is now unloaded first and the new selection is loaded in its place, instead of leaving stale records on screen that pointed at plugins no longer present. Loading stays single-folder: opening a new location replaces what was loaded rather than watching several folders at once
+- [FIX] When loading a Mod Organizer 2 profile, a double-extension OpenMW stub (such as a `.omwaddon.esp` or `.omwscript.esp` placeholder) now also loads the real `.omwaddon` or `.omwscript` file right after it, so its records are seen instead of only the empty placeholder. If the real file cannot be found alongside the stub, a warning is logged and only the placeholder is loaded
 
 ## [0.1264] - 2026-10-13
 
