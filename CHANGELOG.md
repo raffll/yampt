@@ -5,6 +5,7 @@
 ### yTranslator
 - [FIX] Editing one occurrence of an already-propagated translation now spreads the new text to all its duplicate occurrences again, keeping the whole group in sync. Previously only the single edited entry changed and the other duplicates kept the old text. Entries you manually finalized with another status (Translated, In Progress, Generated, and so on) are still left unchanged
 - [FIX] Selecting a record now shows the Translation box scrolled to the top of the text, matching the Original box, instead of jumping to the end; long translations now start at the beginning when you select the entry
+- [FIX] Importing a translation file now brings in weapon names and stores script message-box strings under the correct entries, recovering translations that were previously dropped or stored where they could not be matched
 
 ### yEditor
 - [NEW] A Show OpenMW Stubs item in the View menu hides or shows the double-extension OpenMW stub placeholder plugins in the navigation tree. It is off by default, so the placeholders stay out of the way while the real files they stand in for remain visible, and the choice is remembered between sessions. The toggle only changes what is shown; it never changes what is loaded
