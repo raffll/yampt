@@ -1,4 +1,6 @@
 #include "sidebar_controller.hpp"
+#include "../dialog/eet_plugin_dialog.hpp"
+#include "../editor/operation_executor.hpp"
 #include "../model/dict_document.hpp"
 #include "../model/eet_document.hpp"
 #include "../model/loc_document.hpp"
@@ -8,6 +10,7 @@
 #include "../view/log_view.hpp"
 #include "../view/sidebar_view.hpp"
 #include <creator/loc_generator.hpp>
+#include <io/eet_filename.hpp>
 #include <utility/app_logger.hpp>
 #include <utility/language_config.hpp>
 #include <utility/string_utils.hpp>
@@ -336,6 +339,34 @@ void sidebar_controller_t::on_export_eet_requested(const std::string & path)
 	const auto summary = "exported " + std::to_string(eet_doc->converted_count()) + " entries, skipped " +
 	                     std::to_string(eet_doc->skipped_count()) + " -> \"" + output_path + "\"\r\n";
 	m_deps.log_view.append_log("export eet", summary);
+
+	scan_workspace();
+}
+
+void sidebar_controller_t::on_import_eet_requested(const std::string & path)
+{
+	const auto parts = eet_filename::parse(path);
+	const auto plugin_name = parts.has_value() ? parts->name : std::string {};
+
+	eet_plugin_dialog_t dialog(m_deps.file_list, plugin_name, m_deps.parent_widget);
+	if (dialog.exec() != QDialog::Accepted)
+		return;
+
+	const auto plugin_path = dialog.selected_plugin_path();
+	if (!plugin_path.has_value())
+		return;
+
+	const auto sep = path.find_last_of("/\\");
+	const auto output_dir = sep != std::string::npos ? path.substr(0, sep) : ".";
+
+	operation_executor_t executor;
+	executor.set_output_dir(output_dir);
+	const auto result = executor.import_eet_with_plugin(path, *plugin_path, m_deps.session.codepage());
+
+	m_deps.log_view.append_log("import eet", result.log_text);
+
+	if (!result.success)
+		return;
 
 	scan_workspace();
 }

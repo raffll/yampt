@@ -177,6 +177,7 @@
     <ClCompile Include="source\creator\creator_single.cpp" />
     <ClCompile Include="source\creator\creator_base.cpp" />
     <ClCompile Include="source\creator\creator_ordered.cpp" />
+    <ClCompile Include="source\creator\eet_dict_builder.cpp" />
     <ClCompile Include="source\creator\inflection.cpp" />
     <ClCompile Include="source\creator\loc_generator.cpp" />
     <ClCompile Include="source\creator\phrase_form_builder.cpp" />
@@ -197,6 +198,7 @@
     <ClCompile Include="source\io\dict_reader.cpp" />
     <ClCompile Include="source\io\dict_writer.cpp" />
     <ClCompile Include="source\io\eet_converter.cpp" />
+    <ClCompile Include="source\io\eet_filename.cpp" />
     <ClCompile Include="source\io\eet_reader.cpp" />
     <ClCompile Include="source\io\esm_reader.cpp" />
     <ClCompile Include="source\io\binary_file_io.cpp" />
@@ -251,6 +253,7 @@
     <ClInclude Include="source\creator\creator_base.hpp" />
     <ClInclude Include="source\creator\creator_ordered.hpp" />
     <ClInclude Include="source\creator\inflection.hpp" />
+    <ClInclude Include="source\creator\eet_dict_builder.hpp" />
     <ClInclude Include="source\creator\loc_generator.hpp" />
     <ClInclude Include="source\creator\phrase_form_builder.hpp" />
     <ClInclude Include="source\creator\text_match_index.hpp" />
@@ -271,6 +274,7 @@
     <ClInclude Include="source\io\dict_reader.hpp" />
     <ClInclude Include="source\io\dict_writer.hpp" />
     <ClInclude Include="source\io\eet_converter.hpp" />
+    <ClInclude Include="source\io\eet_filename.hpp" />
     <ClInclude Include="source\io\eet_reader.hpp" />
     <ClInclude Include="source\io\esm_reader.hpp" />
     <ClInclude Include="source\io\binary_file_io.hpp" />

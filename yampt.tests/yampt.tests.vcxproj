@@ -232,6 +232,7 @@
     <ClCompile Include="source\tests.script_parser_roundtrip.cpp" />
     <ClCompile Include="source\tests.script_parser_unquoted.cpp" />
     <ClCompile Include="source\tests.eet_converter.cpp" />
+    <ClCompile Include="source\tests.eet_import.cpp" />
     <ClCompile Include="source\tests.glossary_hyperlinks.cpp" />
     <ClCompile Include="source\tests.edit_history.cpp" />
     <ClCompile Include="source\tests.keyword_trie.cpp" />

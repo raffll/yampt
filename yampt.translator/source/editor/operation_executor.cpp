@@ -1,8 +1,11 @@
 #include "operation_executor.hpp"
 #include <converter/esm_converter.hpp>
 #include <creator/dict_creator.hpp>
+#include <creator/eet_dict_builder.hpp>
 #include <io/binary_file_io.hpp>
 #include <io/dict_writer.hpp>
+#include <io/eet_converter.hpp>
+#include <io/eet_reader.hpp>
 #include <merger/dict_merger.hpp>
 #include <utility/app_logger.hpp>
 #include <algorithm>
@@ -120,6 +123,33 @@ operation_executor_t::result_t operation_executor_t::make_base(
 
 	const auto output_path = make_output_path_from_name(output_name, "json");
 	dict_writer_t::write(creator.get_dict(), output_path);
+
+	return { !app_logger_t::has_error(), app_logger_t::get_log(), output_path };
+}
+
+operation_executor_t::result_t operation_executor_t::import_eet_with_plugin(
+    const std::string & eet_path,
+    const std::string & plugin_path,
+    codepage_t codepage)
+{
+	app_logger_t::reset_log();
+
+	dict_creator_t creator(plugin_path);
+
+	if (app_logger_t::has_error())
+		return { false, app_logger_t::get_log(), "" };
+
+	eet_reader_t reader;
+	if (!reader.load(eet_path))
+		return { false, app_logger_t::get_log(), "" };
+
+	const eet_converter_t converter(reader.entries(), codepage);
+	const auto filled_dict = eet_dict_builder_t::build(creator.get_dict(), converter.get_dict());
+
+	const auto eet_info = QFileInfo(QString::fromStdString(eet_path));
+	const auto base_name = eet_info.completeBaseName().toStdString();
+	const auto output_path = make_output_path_from_name(base_name, "json");
+	dict_writer_t::write(filled_dict, output_path);
 
 	return { !app_logger_t::has_error(), app_logger_t::get_log(), output_path };
 }

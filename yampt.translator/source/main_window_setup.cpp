@@ -612,6 +612,12 @@ void main_window_t::connect_sidebar_signals()
 
 	connect(
 	    m_sidebar,
+	    &sidebar_view_t::import_eet_requested,
+	    this,
+	    [this](const std::string & path) { m_sidebar_controller->on_import_eet_requested(path); });
+
+	connect(
+	    m_sidebar,
 	    &sidebar_view_t::export_eet_requested,
 	    this,
 	    [this](const std::string & path) { m_sidebar_controller->on_export_eet_requested(path); });

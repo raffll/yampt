@@ -61,7 +61,7 @@ Qt6 GUI for interactive plugin translation.
 
 ### Workflows
 - Lua l10n workflow: edit YAML localization files with auto-pairing and scaffold generation
-- EET file import: convert ESP-ESM Translator dictionaries to JSON
+- EET file import: build a complete, applicable dictionary from an ESP-ESM Translator file by matching it against a chosen source plugin, or export it as a plain reference pool
 - Generate localization files (.cel, .mrk, .top) from dictionary
 - Hyperlink insertion during plugin conversion
 - Apply Topic Tags: wrap dialogue topics — and their inflected forms — in the translated text of dialogue responses so they show as clickable links in-game

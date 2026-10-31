@@ -91,7 +91,15 @@ Each replacement is recorded individually in the edit history. To undo a replace
 
 ### EET Import
 
-Place an EET file (produced by ESP-ESM Translator) in the workspace folder. It appears in the sidebar with an orange [EET] tag. Right-click the file and select Export as Dictionary to convert it to a JSON dictionary. The exported file is saved alongside the original EET file and becomes available in the sidebar immediately. This is a one-way import — the EET file itself is not editable within yTranslator.
+Place an EET file (produced by ESP-ESM Translator) in the workspace folder. It appears in the sidebar with an orange [EET] tag. Right-clicking it offers two ways to turn it into a dictionary.
+
+Import Against Source Plugin is the one to use when you want a dictionary you can actually apply to a plugin. An EET file on its own records only the original and translated text; it does not carry the structure yTranslator needs to match a translation back to the right place in a plugin, which is why a plain conversion can only recover a limited part of the file. Choosing this action asks you for the plugin the translation was made for. yTranslator reads that plugin to learn the correct structure of every record and then fills in each entry's translation from the EET by matching it on its original text. The result is a complete dictionary in which dialogue responses, dialogue choices, and place names come through alongside item, spell, and other object names.
+
+Because the EET file names only the game and not the plugin, yTranslator tries to find the matching plugin for you by reading the plugin name out of the file name, and pre-selects it in the plugin list when it finds a match. When it cannot, you pick the plugin by hand from the list. If a translation's original text appears in more than one place in the plugin with no single correct choice, that entry is marked Ambiguous rather than guessed, so you can resolve it yourself. Cancelling the plugin selection aborts the import and changes nothing.
+
+Export as Reference Pool performs the older plain conversion. It produces a dictionary that is useful for looking up translations but cannot be applied to a plugin, because it lacks the plugin-derived structure. Use it only when you want the raw text pairs rather than an applicable dictionary.
+
+In both cases the generated dictionary is saved alongside the original EET file and becomes available in the sidebar immediately. This is a one-way import — the EET file itself is not editable within yTranslator.
 
 ## Editing
 

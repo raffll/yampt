@@ -304,13 +304,17 @@ void sidebar_view_t::show_loc_context_menu(const std::string & path, const QPoin
 void sidebar_view_t::show_eet_context_menu(const std::string & path, const QPoint & pos)
 {
 	QMenu menu(this);
-	auto * export_action = menu.addAction(tr("Export as Dictionary"));
-	export_action->setToolTip(tr("Convert EET file to JSON dictionary"));
+	auto * import_action = menu.addAction(tr("Import Against Source Plugin…"));
+	import_action->setToolTip(tr("Build a complete applicable dictionary by matching a chosen plugin"));
+	auto * export_action = menu.addAction(tr("Export as Reference Pool…"));
+	export_action->setToolTip(tr("Export EET as a non-applicable reference dictionary"));
 	menu.addSeparator();
 	auto * delete_action = menu.addAction(tr("Delete"));
 
 	auto * selected = menu.exec(m_tree->viewport()->mapToGlobal(pos));
-	if (selected == export_action)
+	if (selected == import_action)
+		emit import_eet_requested(path);
+	else if (selected == export_action)
 		emit export_eet_requested(path);
 	else if (selected == delete_action)
 		emit delete_requested(path);
