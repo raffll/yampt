@@ -13,6 +13,7 @@ enum class sub_rule_flag_t : unsigned
 	skip_emit = 1 << 5,
 	merge_boundary = 1 << 6,
 	ignore_conflict = 1 << 7,
+	skip_merge = 1 << 8,
 };
 
 inline constexpr sub_rule_flag_t operator|(sub_rule_flag_t left, sub_rule_flag_t right)

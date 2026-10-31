@@ -104,6 +104,11 @@ static constexpr sub_record_rule_t race_sub_rules[] = {
 	{ "RADT", 140, element_wise_merge },
 };
 
+static constexpr sub_record_rule_t info_sub_rules[] = {
+	{ "PNAM", 0, skip_merge },
+	{ "NNAM", 0, skip_merge },
+};
+
 static constexpr sub_record_rule_t generic_sub_rules[] = {
 	{ "AIDT", 12, element_wise_merge },
 };
@@ -189,7 +194,11 @@ static constexpr record_behavior_t behavior_table[] = {
 	{ .record_type = "PGRD", .merge_excluded = true },
 	{ .record_type = "REGN" },
 	{ .record_type = "DIAL", .decode_mode = decode_mode_t::dial },
-	{ .record_type = "INFO", .decode_mode = decode_mode_t::info, .record_id_sub_type = "INAM" },
+	{ .record_type = "INFO",
+	  .decode_mode = decode_mode_t::info,
+	  .sub_rules = info_sub_rules,
+	  .sub_rule_count = 2,
+	  .record_id_sub_type = "INAM" },
 };
 
 static constexpr record_behavior_t generic_behavior = { .record_type = "*",

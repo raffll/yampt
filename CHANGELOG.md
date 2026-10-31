@@ -14,6 +14,7 @@
 - [FIX] Leveled lists and containers that hold the same item more than once now show every copy as its own row, so the number of rows matches the list's real contents instead of collapsing the repeats into a single entry
 - [FIX] Opening a plugin or folder from a different location while one is already loaded no longer closes the editor. The currently loaded folder is now unloaded first and the new selection is loaded in its place, instead of leaving stale records on screen that pointed at plugins no longer present. Loading stays single-folder: opening a new location replaces what was loaded rather than watching several folders at once
 - [FIX] When loading a Mod Organizer 2 profile, a double-extension OpenMW stub (such as a `.omwaddon.esp` or `.omwscript.esp` placeholder) now also loads the real `.omwaddon` or `.omwscript` file right after it, so its records are seen instead of only the empty placeholder. If the real file cannot be found alongside the stub, a warning is logged and only the placeholder is loaded
+- [FIX] The merged patch no longer rewrites a dialogue response's previous and next links from a lower-priority plugin. These links set the order dialogue responses appear in; they are now carried through unchanged from the winning plugin instead of being merged field-by-field, so dialogue ordering stays correct in-game
 
 ## [0.1264] - 2026-10-13
 

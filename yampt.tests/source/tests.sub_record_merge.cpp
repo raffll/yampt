@@ -2817,3 +2817,118 @@ TEST_CASE("sub_record_merge_t::merge, CELL FRMR same low index different resolve
 
 	REQUIRE_FALSE(result.changed);
 }
+
+static std::string read_sub_string(const std::string & record, const std::string & sub_type)
+{
+	const auto pos = record.find(sub_type);
+	REQUIRE(pos != std::string::npos);
+
+	uint32_t size_val = 0;
+	std::memcpy(&size_val, record.data() + pos + 4, 4);
+	const auto data = record.substr(pos + 8, size_val);
+	const auto terminator = data.find('\0');
+	if (terminator == std::string::npos)
+		return data;
+
+	return data.substr(0, terminator);
+}
+
+static std::string make_info_version(
+    const std::string & inam,
+    const std::string & pnam,
+    const std::string & nnam,
+    const std::string & response)
+{
+	return make_record(
+	    "INFO",
+	    make_sub("INAM", make_string(inam)) + make_sub("PNAM", make_string(pnam)) +
+	        make_sub("NNAM", make_string(nnam)) + make_sub("NAME", make_string(response)));
+}
+
+TEST_CASE("sub_record_merge_t::merge, INFO PNAM/NNAM take winner value not intermediate", "[u]")
+{
+	auto first = make_info_version("info_id", "A", "C", "Hello");
+	auto inter = make_info_version("info_id", "X", "Y", "Hello");
+	auto winner = make_info_version("info_id", "A", "C", "Hello");
+
+	merge_input_t input;
+	input.rec_type = "INFO";
+	input.record_id = "info_id";
+	input.version_contents = { first, inter, winner };
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(read_sub_string(result.content, "PNAM") == "A");
+	REQUIRE(read_sub_string(result.content, "NNAM") == "C");
+}
+
+TEST_CASE("sub_record_merge_t::merge, INFO winner PNAM/NNAM change is kept over intermediate", "[u]")
+{
+	auto first = make_info_version("info_id", "A", "C", "Hello");
+	auto inter = make_info_version("info_id", "X", "Y", "Hello");
+	auto winner = make_info_version("info_id", "P", "Q", "Hello");
+
+	merge_input_t input;
+	input.rec_type = "INFO";
+	input.record_id = "info_id";
+	input.version_contents = { first, inter, winner };
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(read_sub_string(result.content, "PNAM") == "P");
+	REQUIRE(read_sub_string(result.content, "NNAM") == "Q");
+}
+
+TEST_CASE("sub_record_merge_t::merge, INFO PNAM/NNAM remain present after merge", "[u]")
+{
+	auto first = make_info_version("info_id", "A", "C", "Hello");
+	auto inter = make_info_version("info_id", "A", "C", "Changed");
+	auto winner = make_info_version("info_id", "A", "C", "Hello");
+
+	merge_input_t input;
+	input.rec_type = "INFO";
+	input.record_id = "info_id";
+	input.version_contents = { first, inter, winner };
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(count_sub_records_of_type(result.content, "PNAM") == 1);
+	REQUIRE(count_sub_records_of_type(result.content, "NNAM") == 1);
+	REQUIRE(read_sub_string(result.content, "PNAM") == "A");
+	REQUIRE(read_sub_string(result.content, "NNAM") == "C");
+}
+
+TEST_CASE("sub_record_merge_t::merge, INFO non-link sub-record still merges normally", "[u]")
+{
+	auto first = make_info_version("info_id", "A", "C", "Hello");
+	auto inter = make_info_version("info_id", "A", "C", "InterResponse");
+	auto winner = make_info_version("info_id", "A", "C", "Hello");
+
+	merge_input_t input;
+	input.rec_type = "INFO";
+	input.record_id = "info_id";
+	input.version_contents = { first, inter, winner };
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(read_sub_string(result.content, "NAME") == "InterResponse");
+}
+
+TEST_CASE("sub_record_merge_t::merge, INFO PNAM/NNAM winner value survives 4-version merge", "[u]")
+{
+	auto first = make_info_version("info_id", "A", "C", "Hello");
+	auto inter1 = make_info_version("info_id", "X", "Y", "Hello");
+	auto inter2 = make_info_version("info_id", "M", "N", "Hello");
+	auto winner = make_info_version("info_id", "A", "C", "Hello");
+
+	merge_input_t input;
+	input.rec_type = "INFO";
+	input.record_id = "info_id";
+	input.version_contents = { first, inter1, inter2, winner };
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(read_sub_string(result.content, "PNAM") == "A");
+	REQUIRE(read_sub_string(result.content, "NNAM") == "C");
+}

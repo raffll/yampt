@@ -607,6 +607,11 @@ void sub_record_merge_t::apply_intermediate(
 {
 	for (size_t i = 0; i < intermediate.size(); ++i)
 	{
+		const auto * behavior = find_record_behavior(rec_type);
+		const auto * rule = find_sub_record_rule(behavior, intermediate[i].type, intermediate[i].data.size());
+		if (rule && has_flag(rule->flags, sub_rule_flag_t::skip_merge))
+			continue;
+
 		if (is_enam_record_type(rec_type) && intermediate[i].type == "ENAM")
 			continue;
 
