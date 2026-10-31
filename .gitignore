@@ -32,3 +32,7 @@ dictionaries/*.dic
 /tests
 .agents/
 /.worktrees
+
+# Local, machine-specific Kiro permission settings (grants blanket allow; never commit)
+/.kiro/settings/
+/kiro-settings-allow-all.json
