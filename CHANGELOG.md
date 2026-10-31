@@ -17,6 +17,9 @@
 - [FIX] When loading a Mod Organizer 2 profile, a double-extension OpenMW stub (such as a `.omwaddon.esp` or `.omwscript.esp` placeholder) now also loads the real `.omwaddon` or `.omwscript` file right after it, so its records are seen instead of only the empty placeholder. If the real file cannot be found alongside the stub, a warning is logged and only the placeholder is loaded
 - [FIX] The merged patch no longer rewrites a dialogue response's previous and next links from a lower-priority plugin. These links set the order dialogue responses appear in; they are now carried through unchanged from the winning plugin instead of being merged field-by-field, so dialogue ordering stays correct in-game
 
+### Both Apps
+- [FIX] The character-level difference highlight now lines up correctly on text with accented or non-Latin characters. Previously, when a value contained letters such as Polish ł or ę, Cyrillic letters, or punctuation like an en-dash, the highlight marking what changed could be shifted by a couple of characters; it now falls exactly on the characters that differ
+
 ## [0.1264] - 2026-10-13
 
 ### yTranslator

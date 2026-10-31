@@ -1,10 +1,15 @@
 #include "utility/char_diff.hpp"
+#include "utility/string_utils.hpp"
 #include <algorithm>
 
-std::vector<std::vector<int>> build_lcs_matrix(std::string_view old_text, std::string_view new_text)
+namespace {
+
+std::vector<diff_segment_t> build_lcs_matrix_over_units(
+    const std::vector<std::string> & old_units,
+    const std::vector<std::string> & new_units)
 {
-	const auto old_size = old_text.size();
-	const auto new_size = new_text.size();
+	const auto old_size = old_units.size();
+	const auto new_size = new_units.size();
 
 	std::vector<std::vector<int>> matrix(old_size + 1, std::vector<int>(new_size + 1, 0));
 
@@ -12,18 +17,37 @@ std::vector<std::vector<int>> build_lcs_matrix(std::string_view old_text, std::s
 	{
 		for (size_t col = 1; col <= new_size; ++col)
 		{
-			if (old_text[row - 1] == new_text[col - 1])
+			if (old_units[row - 1] == new_units[col - 1])
 				matrix[row][col] = matrix[row - 1][col - 1] + 1;
 			else
 				matrix[row][col] = std::max(matrix[row - 1][col], matrix[row][col - 1]);
 		}
 	}
 
-	return matrix;
-}
+	std::vector<diff_segment_t> reversed;
+	auto row = old_size;
+	auto col = new_size;
 
-static std::vector<diff_segment_t> collapse_segments(std::vector<diff_segment_t> & reversed)
-{
+	while (row > 0 || col > 0)
+	{
+		if (row > 0 && col > 0 && old_units[row - 1] == new_units[col - 1])
+		{
+			reversed.push_back({ diff_op_t::unchanged, old_units[row - 1] });
+			--row;
+			--col;
+		}
+		else if (col > 0 && (row == 0 || matrix[row][col - 1] >= matrix[row - 1][col]))
+		{
+			reversed.push_back({ diff_op_t::inserted, new_units[col - 1] });
+			--col;
+		}
+		else
+		{
+			reversed.push_back({ diff_op_t::deleted, old_units[row - 1] });
+			--row;
+		}
+	}
+
 	std::vector<diff_segment_t> result;
 	result.reserve(reversed.size());
 
@@ -38,37 +62,7 @@ static std::vector<diff_segment_t> collapse_segments(std::vector<diff_segment_t>
 	return result;
 }
 
-std::vector<diff_segment_t> backtrack_diff(
-    const std::vector<std::vector<int>> & matrix,
-    std::string_view old_text,
-    std::string_view new_text)
-{
-	std::vector<diff_segment_t> reversed;
-	auto row = old_text.size();
-	auto col = new_text.size();
-
-	while (row > 0 || col > 0)
-	{
-		if (row > 0 && col > 0 && old_text[row - 1] == new_text[col - 1])
-		{
-			reversed.push_back({ diff_op_t::unchanged, std::string(1, old_text[row - 1]) });
-			--row;
-			--col;
-		}
-		else if (col > 0 && (row == 0 || matrix[row][col - 1] >= matrix[row - 1][col]))
-		{
-			reversed.push_back({ diff_op_t::inserted, std::string(1, new_text[col - 1]) });
-			--col;
-		}
-		else
-		{
-			reversed.push_back({ diff_op_t::deleted, std::string(1, old_text[row - 1]) });
-			--row;
-		}
-	}
-
-	return collapse_segments(reversed);
-}
+} // namespace
 
 std::vector<diff_segment_t> compute_char_diff(std::string_view old_text, std::string_view new_text)
 {
@@ -81,6 +75,8 @@ std::vector<diff_segment_t> compute_char_diff(std::string_view old_text, std::st
 	if (new_text.empty())
 		return { { diff_op_t::deleted, std::string(old_text) } };
 
-	const auto & matrix = build_lcs_matrix(old_text, new_text);
-	return backtrack_diff(matrix, old_text, new_text);
+	const auto old_units = string_utils::split_utf8_characters(old_text);
+	const auto new_units = string_utils::split_utf8_characters(new_text);
+
+	return build_lcs_matrix_over_units(old_units, new_units);
 }

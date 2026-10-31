@@ -133,6 +133,40 @@ TEST_CASE("string_utils::utf8_byte_to_char_offset, multi-byte chars", "[u]")
 	REQUIRE(string_utils::utf8_byte_to_char_offset(polish, 6) == 3);
 }
 
+TEST_CASE("string_utils::split_utf8_characters, ascii only", "[u]")
+{
+	const auto characters = string_utils::split_utf8_characters("hello");
+	REQUIRE(characters.size() == 5);
+	REQUIRE(characters[0] == "h");
+	REQUIRE(characters[4] == "o");
+}
+
+TEST_CASE("string_utils::split_utf8_characters, multi-byte chars", "[u]")
+{
+	const std::string polish = "\xC4\x85\xC4\x87\xC4\x99";
+	const auto characters = string_utils::split_utf8_characters(polish);
+	REQUIRE(characters.size() == 3);
+	REQUIRE(characters[0] == "\xC4\x85");
+	REQUIRE(characters[1] == "\xC4\x87");
+	REQUIRE(characters[2] == "\xC4\x99");
+}
+
+TEST_CASE("string_utils::split_utf8_characters, three byte character", "[u]")
+{
+	const std::string en_dash = "a\xE2\x80\x93""b";
+	const auto characters = string_utils::split_utf8_characters(en_dash);
+	REQUIRE(characters.size() == 3);
+	REQUIRE(characters[0] == "a");
+	REQUIRE(characters[1] == "\xE2\x80\x93");
+	REQUIRE(characters[2] == "b");
+}
+
+TEST_CASE("string_utils::split_utf8_characters, empty input", "[u]")
+{
+	const auto characters = string_utils::split_utf8_characters("");
+	REQUIRE(characters.empty());
+}
+
 TEST_CASE("string_utils::replace_non_printable_with_dot, mixed content", "[u]")
 {
 	REQUIRE(string_utils::replace_non_printable_with_dot("hello") == "hello");

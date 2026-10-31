@@ -6,6 +6,7 @@
 #include <set>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace string_utils {
 
@@ -134,6 +135,37 @@ inline int utf8_byte_to_char_offset(const std::string & utf8_text, int byte_offs
 	}
 
 	return char_count;
+}
+
+inline std::vector<std::string> split_utf8_characters(std::string_view utf8_text)
+{
+	std::vector<std::string> characters;
+	const auto * bytes = reinterpret_cast<const unsigned char *>(utf8_text.data());
+	const auto total = utf8_text.size();
+	std::size_t byte_index = 0;
+
+	while (byte_index < total)
+	{
+		const unsigned char lead = bytes[byte_index];
+		std::size_t width = 1;
+		if (lead >= 0x80)
+		{
+			if ((lead & 0xE0) == 0xC0)
+				width = 2;
+			else if ((lead & 0xF0) == 0xE0)
+				width = 3;
+			else if ((lead & 0xF8) == 0xF0)
+				width = 4;
+		}
+
+		if (byte_index + width > total)
+			width = total - byte_index;
+
+		characters.emplace_back(utf8_text.substr(byte_index, width));
+		byte_index += width;
+	}
+
+	return characters;
 }
 
 inline bool case_insensitive_equal(std::string_view lhs, std::string_view rhs)

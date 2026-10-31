@@ -1,6 +1,7 @@
 #include <catch2/catch_all.hpp>
 #include <rapidcheck/catch.h>
 #include <utility/char_diff.hpp>
+#include <utility/string_utils.hpp>
 #include <rapidcheck.h>
 #include <string>
 
@@ -127,6 +128,121 @@ std::vector<highlight_range_t> compute_changed_highlights(
 }
 
 } // namespace
+
+namespace {
+
+bool is_valid_utf8(const std::string & text)
+{
+	const auto * bytes = reinterpret_cast<const unsigned char *>(text.data());
+	const auto total = text.size();
+	std::size_t index = 0;
+
+	while (index < total)
+	{
+		const unsigned char lead = bytes[index];
+		std::size_t width = 0;
+		if (lead < 0x80)
+			width = 1;
+		else if ((lead & 0xE0) == 0xC0)
+			width = 2;
+		else if ((lead & 0xF0) == 0xE0)
+			width = 3;
+		else if ((lead & 0xF8) == 0xF0)
+			width = 4;
+		else
+			return false;
+
+		if (index + width > total)
+			return false;
+
+		for (std::size_t continuation = 1; continuation < width; ++continuation)
+		{
+			if ((bytes[index + continuation] & 0xC0) != 0x80)
+				return false;
+		}
+
+		index += width;
+	}
+
+	return true;
+}
+
+int unchanged_prefix_character_count(const std::vector<diff_segment_t> & segments)
+{
+	if (segments.empty() || segments.front().operation != diff_op_t::unchanged)
+		return 0;
+
+	return static_cast<int>(string_utils::split_utf8_characters(segments.front().text).size());
+}
+
+} // namespace
+
+TEST_CASE("char_diff::compute_char_diff, polish accented change keeps whole characters", "[u]")
+{
+	const std::string old_text = "Zakl\xC4\x99ta";
+	const std::string new_text = "Zak\xC5\x82\xC4\x99ta";
+
+	const auto segments = compute_char_diff(old_text, new_text);
+
+	for (const auto & segment : segments)
+		REQUIRE(is_valid_utf8(segment.text));
+
+	REQUIRE(unchanged_prefix_character_count(segments) == 3);
+
+	int changed_characters = 0;
+	for (const auto & segment : segments)
+	{
+		if (segment.operation == diff_op_t::inserted || segment.operation == diff_op_t::deleted)
+			changed_characters += static_cast<int>(string_utils::split_utf8_characters(segment.text).size());
+	}
+
+	REQUIRE(changed_characters == 2);
+}
+
+TEST_CASE("char_diff::compute_char_diff, cyrillic single letter change", "[u]")
+{
+	const std::string old_text = "\xD0\x91\xD0\xB0\xD0\xBB\xD0\xBC\xD0\xBE\xD1\x80\xD0\xB0";
+	const std::string new_text = "\xD0\x91\xD0\xB0\xD0\xBB\xD0\xBC\xD0\xB0\xD1\x80\xD0\xB0";
+
+	const auto segments = compute_char_diff(old_text, new_text);
+
+	for (const auto & segment : segments)
+		REQUIRE(is_valid_utf8(segment.text));
+
+	int inserted_characters = 0;
+	int deleted_characters = 0;
+	for (const auto & segment : segments)
+	{
+		if (segment.operation == diff_op_t::inserted)
+			inserted_characters += static_cast<int>(string_utils::split_utf8_characters(segment.text).size());
+
+		if (segment.operation == diff_op_t::deleted)
+			deleted_characters += static_cast<int>(string_utils::split_utf8_characters(segment.text).size());
+	}
+
+	REQUIRE(inserted_characters == 1);
+	REQUIRE(deleted_characters == 1);
+}
+
+TEST_CASE("char_diff::compute_char_diff, three byte en-dash segments as one unit", "[u]")
+{
+	const std::string old_text = "ab\xE2\x80\x93""cd";
+	const std::string new_text = "ab\xE2\x80\x93""ce";
+
+	const auto segments = compute_char_diff(old_text, new_text);
+
+	for (const auto & segment : segments)
+		REQUIRE(is_valid_utf8(segment.text));
+
+	bool en_dash_survives_whole = false;
+	for (const auto & segment : segments)
+	{
+		if (segment.operation == diff_op_t::unchanged && segment.text.find("\xE2\x80\x93") != std::string::npos)
+			en_dash_survives_whole = true;
+	}
+
+	REQUIRE(en_dash_survives_whole);
+}
 
 TEST_CASE("char_diff::compute_changed_highlights, identical texts produce no highlights", "[u]")
 {

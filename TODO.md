@@ -13,6 +13,5 @@
 
 ## Hard to Fix
 
-- editor diff off by couple characters
 - NPDT 12 vs 52 merged patch
 
