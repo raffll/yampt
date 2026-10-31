@@ -126,6 +126,11 @@ void nav_tree_view_t::clear_filter()
 	m_model->clear_filter();
 }
 
+void nav_tree_view_t::set_merge_excludes(const std::string & serialized)
+{
+	m_model->set_merge_excludes(serialized);
+}
+
 void nav_tree_view_t::set_hide_duplicates(bool hide)
 {
 	m_model->set_hide_duplicates(hide);

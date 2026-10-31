@@ -602,6 +602,8 @@ void plugin_workspace_view_t::on_advanced_filter()
 	dlg_state.filter_by_type = m_advanced_filter.filter_by_type;
 	dlg_state.type_set = m_advanced_filter.type_set;
 	dlg_state.filter_deleted = m_advanced_filter.filter_deleted;
+	dlg_state.filter_locked_only = m_advanced_filter.filter_locked_only;
+	dlg_state.filter_excluded_only = m_advanced_filter.filter_excluded_only;
 	dlg_state.filter_lua_severity = m_advanced_filter.filter_lua_severity;
 	dlg_state.lua_severity_set = m_advanced_filter.lua_severity_set;
 	dlg_state.filter_lua_interface = m_advanced_filter.filter_lua_interface;
@@ -620,6 +622,8 @@ void plugin_workspace_view_t::on_advanced_filter()
 	m_advanced_filter.filter_by_type = result.filter_by_type;
 	m_advanced_filter.type_set = result.type_set;
 	m_advanced_filter.filter_deleted = result.filter_deleted;
+	m_advanced_filter.filter_locked_only = result.filter_locked_only;
+	m_advanced_filter.filter_excluded_only = result.filter_excluded_only;
 	m_advanced_filter.filter_lua_severity = result.filter_lua_severity;
 	m_advanced_filter.lua_severity_set = result.lua_severity_set;
 	m_advanced_filter.filter_lua_interface = result.filter_lua_interface;
@@ -1046,6 +1050,8 @@ nav_tree_model_t::filter_state_t plugin_workspace_view_t::build_effective_filter
 void plugin_workspace_view_t::apply_effective_filter()
 {
 	const auto state = build_effective_filter();
+
+	m_nav_view->set_merge_excludes(m_settings.merge_excludes());
 
 	if (state == nav_tree_model_t::filter_state_t {})
 		m_nav_view->clear_filter();

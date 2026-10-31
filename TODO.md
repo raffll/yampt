@@ -2,7 +2,6 @@
 
 ## Medium
 
-- advanced filters: locked only, excluded only — yEditor
 - EET dictionary import is incomplete: importing an EET dictionary converts to JSON but produces incomplete output; finish the EET-to-JSON import so the conversion is complete — yTranslator
 - PNAM etc should not be taken from last?
 - colors blend together / hard to distinguish — adjust the palette so states are easier to tell apart (user reported with screenshot) — yTranslator

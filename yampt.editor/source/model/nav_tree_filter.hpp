@@ -2,12 +2,17 @@
 
 #include <scanner/conflict_detector.hpp>
 #include <scanner/plugin_scan.hpp>
+#include <functional>
 #include <set>
 #include <string>
 
 class nav_tree_filter_t
 {
 public:
+	using record_predicate_t = std::function<bool(const std::string & rec_type, const std::string & record_id)>;
+	using locked_predicate_t =
+	    std::function<bool(const std::string & rec_type, const std::string & record_id, int plugin_idx)>;
+
 	struct filter_state_t
 	{
 		bool filter_conflict_all = false;
@@ -23,6 +28,8 @@ public:
 		bool search_case_sensitive = false;
 		bool search_regex = false;
 		bool filter_deleted = false;
+		bool filter_locked_only = false;
+		bool filter_excluded_only = false;
 		bool filter_lua_severity = false;
 		std::set<conflict_severity_t> lua_severity_set;
 		bool filter_lua_interface = false;
@@ -36,6 +43,8 @@ public:
 	void set_hide_duplicates(bool hide);
 	void set_hide_openmw_stubs(bool hide);
 	void set_patch_plugins(const std::set<std::string> * patch);
+	void set_locked_resolver(locked_predicate_t resolver);
+	void set_excluded_resolver(record_predicate_t resolver);
 
 	bool passes(const conflict_entry_t & entry, int plugin_idx) const;
 	bool passes_lua_conflict(const handler_conflict_t & conflict) const;
@@ -51,6 +60,8 @@ private:
 	bool m_hide_duplicates = false;
 	bool m_hide_openmw_stubs = false;
 	const std::set<std::string> * m_patch_plugins = nullptr;
+	locked_predicate_t m_locked_resolver;
+	record_predicate_t m_excluded_resolver;
 
 	static bool contains_case_insensitive(const std::string & haystack, const std::string & needle);
 	static bool has_version_status(const conflict_entry_t & entry, int plugin_idx, conflict_this_t status);

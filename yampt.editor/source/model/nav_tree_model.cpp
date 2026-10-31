@@ -74,6 +74,28 @@ nav_tree_model_t::nav_tree_model_t(plugin_scan_t & scan, QObject * parent)
     , m_scan(scan)
 {
 	m_appearance.set_scan(&m_scan);
+	install_filter_resolvers();
+}
+
+void nav_tree_model_t::install_filter_resolvers()
+{
+	m_filter.set_locked_resolver(
+	    [this](const std::string & rec_type, const std::string & record_id, int plugin_idx)
+	{
+		const bool is_merged_patch_active =
+		    m_scan.is_active_plugin(plugin_idx) && m_scan.plugin_filename(plugin_idx) == merged_patch::filename;
+
+		return is_merged_patch_active && has_whole_record_lock(rec_type, record_id);
+	});
+
+	m_filter.set_excluded_resolver(
+	    [this](const std::string & rec_type, const std::string & record_id)
+	{ return m_record_exclusions.is_record_excluded(rec_type, record_id); });
+}
+
+void nav_tree_model_t::set_merge_excludes(const std::string & serialized)
+{
+	m_record_exclusions.set_rules(merge_exclusions_t::parse(serialized));
 }
 
 void nav_tree_model_t::rebuild()

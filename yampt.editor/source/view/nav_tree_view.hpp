@@ -24,6 +24,7 @@ public:
 	void notify_plugin_changed(int plugin_idx);
 	void set_filter(const nav_tree_model_t::filter_state_t & state);
 	void clear_filter();
+	void set_merge_excludes(const std::string & serialized);
 	void set_hide_duplicates(bool hide);
 	void set_hide_openmw_stubs(bool hide);
 	void set_show_deleted_strikeout(bool value);

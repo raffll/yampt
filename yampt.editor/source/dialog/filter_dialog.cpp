@@ -45,7 +45,11 @@ filter_dialog_t::filter_dialog_t(const std::vector<std::string> & available_type
 	auto * grp_special = new QGroupBox(tr("Special"), this);
 	auto * special_layout = new QVBoxLayout(grp_special);
 	m_chk_deleted = new QCheckBox(tr("Deleted Only"), grp_special);
+	m_chk_locked_only = new QCheckBox(tr("Locked Only"), grp_special);
+	m_chk_excluded_only = new QCheckBox(tr("Excluded Only"), grp_special);
 	special_layout->addWidget(m_chk_deleted);
+	special_layout->addWidget(m_chk_locked_only);
+	special_layout->addWidget(m_chk_excluded_only);
 	left_column->addWidget(grp_special);
 
 	left_column->addStretch();
@@ -145,6 +149,8 @@ filter_dialog_t::filter_state_t filter_dialog_t::state() const
 	s.filter_by_type = !s.type_set.empty() && static_cast<int>(s.type_set.size()) < m_lst_types->count();
 
 	s.filter_deleted = m_chk_deleted->isChecked();
+	s.filter_locked_only = m_chk_locked_only->isChecked();
+	s.filter_excluded_only = m_chk_excluded_only->isChecked();
 
 	s.lua_severity_set = read_lua_severity_state();
 	s.filter_lua_severity = !s.lua_severity_set.empty() && s.lua_severity_set.size() < 3;
@@ -177,6 +183,8 @@ void filter_dialog_t::set_state(const filter_state_t & state)
 	}
 
 	m_chk_deleted->setChecked(state.filter_deleted);
+	m_chk_locked_only->setChecked(state.filter_locked_only);
+	m_chk_excluded_only->setChecked(state.filter_excluded_only);
 
 	apply_lua_severity_state(state.lua_severity_set);
 	apply_lua_interface_state(state.lua_interface_set);

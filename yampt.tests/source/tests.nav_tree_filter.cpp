@@ -3,6 +3,9 @@
 #include <rapidcheck/catch.h>
 #include <scanner/plugin_scan.hpp>
 #include <rapidcheck.h>
+#include <set>
+#include <string>
+#include <utility>
 
 namespace rc {
 
@@ -112,7 +115,59 @@ nav_tree_filter_t::filter_state_t make_random_filter(const conflict_entry_t & en
 
 	state.filter_deleted = *rc::gen::arbitrary<bool>();
 
+	state.filter_locked_only = *rc::gen::arbitrary<bool>();
+	state.filter_excluded_only = *rc::gen::arbitrary<bool>();
+
 	return state;
+}
+
+std::set<std::pair<std::string, std::string>> locked_identity_set()
+{
+	return {
+		{ std::string("NPC_"), std::string("locked_npc") },
+		{ std::string("ARMO"), std::string("locked_armor") },
+	};
+}
+
+std::set<std::pair<std::string, std::string>> excluded_identity_set()
+{
+	return {
+		{ std::string("NPC_"), std::string("locked_npc") },
+		{ std::string("WEAP"), std::string("excluded_weapon") },
+	};
+}
+
+nav_tree_filter_t::locked_predicate_t make_locked_resolver()
+{
+	const auto locked = locked_identity_set();
+	return [locked](const std::string & rec_type, const std::string & record_id, int) -> bool
+	{
+		return locked.count({ rec_type, record_id }) > 0;
+	};
+}
+
+nav_tree_filter_t::record_predicate_t make_excluded_resolver()
+{
+	const auto excluded = excluded_identity_set();
+	return [excluded](const std::string & rec_type, const std::string & record_id) -> bool
+	{
+		return excluded.count({ rec_type, record_id }) > 0;
+	};
+}
+
+conflict_entry_t make_entry(const std::string & rec_type, const std::string & record_id)
+{
+	conflict_entry_t entry;
+	entry.rec_type = rec_type;
+	entry.record_id = record_id;
+
+	record_version_t version;
+	version.plugin_idx = 0;
+	version.record_index = 0;
+	version.status = conflict_this_t::conflict_wins;
+	entry.versions.push_back(version);
+
+	return entry;
 }
 
 bool passes_single_dimension_conflict_all(
@@ -178,6 +233,28 @@ bool passes_single_dimension_deleted(const conflict_entry_t & entry, const nav_t
 	return filter.passes(entry, 0);
 }
 
+bool passes_single_dimension_locked(const conflict_entry_t & entry, const nav_tree_filter_t::filter_state_t & full)
+{
+	nav_tree_filter_t filter;
+	nav_tree_filter_t::filter_state_t single;
+	single.filter_locked_only = full.filter_locked_only;
+	filter.set_locked_resolver(make_locked_resolver());
+	filter.set_excluded_resolver(make_excluded_resolver());
+	filter.set_filter(single);
+	return filter.passes(entry, 0);
+}
+
+bool passes_single_dimension_excluded(const conflict_entry_t & entry, const nav_tree_filter_t::filter_state_t & full)
+{
+	nav_tree_filter_t filter;
+	nav_tree_filter_t::filter_state_t single;
+	single.filter_excluded_only = full.filter_excluded_only;
+	filter.set_locked_resolver(make_locked_resolver());
+	filter.set_excluded_resolver(make_excluded_resolver());
+	filter.set_filter(single);
+	return filter.passes(entry, 0);
+}
+
 } // namespace
 
 TEST_CASE("nav_tree_filter_t::show_file_node, hides stubs only when toggle on", "[u]")
@@ -209,6 +286,8 @@ TEST_CASE("nav_tree_filter_t::passes, AND-composition", "[u][pbt]")
 		const auto filter_state = make_random_filter(entry);
 
 		nav_tree_filter_t combined;
+		combined.set_locked_resolver(make_locked_resolver());
+		combined.set_excluded_resolver(make_excluded_resolver());
 		combined.set_filter(filter_state);
 		const auto combined_result = combined.passes(entry, 0);
 
@@ -216,8 +295,83 @@ TEST_CASE("nav_tree_filter_t::passes, AND-composition", "[u][pbt]")
 		    passes_single_dimension_conflict_all(entry, filter_state) &&
 		    passes_single_dimension_conflict_this(entry, filter_state) &&
 		    passes_single_dimension_type(entry, filter_state) && passes_single_dimension_id(entry, filter_state) &&
-		    passes_single_dimension_name(entry, filter_state) && passes_single_dimension_deleted(entry, filter_state);
+		    passes_single_dimension_name(entry, filter_state) &&
+		    passes_single_dimension_deleted(entry, filter_state) &&
+		    passes_single_dimension_locked(entry, filter_state) &&
+		    passes_single_dimension_excluded(entry, filter_state);
 
 		RC_ASSERT(combined_result == expected);
 	});
+}
+
+TEST_CASE("nav_tree_filter_t::passes, locked-only and excluded-only restrictions", "[u]")
+{
+	const auto locked_npc = make_entry("NPC_", "locked_npc");
+	const auto unlocked_npc = make_entry("NPC_", "plain_npc");
+	const auto excluded_weapon = make_entry("WEAP", "excluded_weapon");
+	const auto plain_book = make_entry("BOOK", "plain_book");
+
+	SECTION("locked-only keeps only locked records, hides unlocked")
+	{
+		nav_tree_filter_t filter;
+		filter.set_locked_resolver(make_locked_resolver());
+		filter.set_excluded_resolver(make_excluded_resolver());
+
+		nav_tree_filter_t::filter_state_t state;
+		state.filter_locked_only = true;
+		filter.set_filter(state);
+
+		REQUIRE(filter.passes(locked_npc, 0));
+		REQUIRE_FALSE(filter.passes(unlocked_npc, 0));
+		REQUIRE_FALSE(filter.passes(excluded_weapon, 0));
+		REQUIRE_FALSE(filter.passes(plain_book, 0));
+	}
+
+	SECTION("excluded-only keeps only excluded records, hides non-excluded")
+	{
+		nav_tree_filter_t filter;
+		filter.set_locked_resolver(make_locked_resolver());
+		filter.set_excluded_resolver(make_excluded_resolver());
+
+		nav_tree_filter_t::filter_state_t state;
+		state.filter_excluded_only = true;
+		filter.set_filter(state);
+
+		REQUIRE(filter.passes(excluded_weapon, 0));
+		REQUIRE(filter.passes(locked_npc, 0));
+		REQUIRE_FALSE(filter.passes(unlocked_npc, 0));
+		REQUIRE_FALSE(filter.passes(plain_book, 0));
+	}
+
+	SECTION("both on keeps only records that are BOTH locked AND excluded")
+	{
+		nav_tree_filter_t filter;
+		filter.set_locked_resolver(make_locked_resolver());
+		filter.set_excluded_resolver(make_excluded_resolver());
+
+		nav_tree_filter_t::filter_state_t state;
+		state.filter_locked_only = true;
+		state.filter_excluded_only = true;
+		filter.set_filter(state);
+
+		REQUIRE(filter.passes(locked_npc, 0));
+		REQUIRE_FALSE(filter.passes(excluded_weapon, 0));
+		REQUIRE_FALSE(filter.passes(unlocked_npc, 0));
+		REQUIRE_FALSE(filter.passes(plain_book, 0));
+	}
+
+	SECTION("both off is a no-op regardless of locked/excluded state")
+	{
+		nav_tree_filter_t filter;
+		filter.set_locked_resolver(make_locked_resolver());
+		filter.set_excluded_resolver(make_excluded_resolver());
+
+		nav_tree_filter_t::filter_state_t state;
+		filter.set_filter(state);
+
+		REQUIRE(filter.passes(locked_npc, 0));
+		REQUIRE(filter.passes(unlocked_npc, 0));
+		REQUIRE(filter.passes(excluded_weapon, 0));
+		REQUIRE(filter.passes(plain_book, 0));
+	}
 }
