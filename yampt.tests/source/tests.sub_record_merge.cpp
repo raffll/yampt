@@ -1207,6 +1207,66 @@ TEST_CASE("sub_record_merge_t::merge, NPDT 52-byte intermediate wins over unchan
 	REQUIRE(read_npdt_gold(result.content, npdt_52_gold_offset) == 500);
 }
 
+TEST_CASE("sub_record_merge_t::merge, NPDT 12 winner keeps FLAG autocalc bit cleared by plugin", "[u]")
+{
+	std::string npdt_master(52, '\0');
+	npdt_master[npdt_52_gold_offset] = 100;
+
+	std::string npdt_inter(12, '\0');
+	npdt_inter[npdt_12_gold_offset] = 40;
+
+	std::string npdt_winner(52, '\0');
+	npdt_winner[npdt_52_gold_offset] = 100;
+
+	auto subs_master = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_master) + make_npc_flag_sub(npc_flag_autocalc);
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_inter) + make_npc_flag_sub(0);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_winner) + make_npc_flag_sub(npc_flag_autocalc);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_master),
+		make_record("NPC_", subs_inter),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(npdt_size(result.content) == 12);
+	REQUIRE(read_npc_flag_sub(result.content) == 0);
+}
+
+TEST_CASE("sub_record_merge_t::merge, NPDT 52 winner keeps FLAG autocalc bit set by plugin", "[u]")
+{
+	std::string npdt_master(12, '\0');
+	npdt_master[npdt_12_gold_offset] = 30;
+
+	std::string npdt_inter(52, '\0');
+	npdt_inter[npdt_52_gold_offset] = 200;
+
+	std::string npdt_winner(12, '\0');
+	npdt_winner[npdt_12_gold_offset] = 30;
+
+	auto subs_master = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_master) + make_npc_flag_sub(0);
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_inter) + make_npc_flag_sub(npc_flag_autocalc);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_winner) + make_npc_flag_sub(0);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_master),
+		make_record("NPC_", subs_inter),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(npdt_size(result.content) == 52);
+	REQUIRE(read_npc_flag_sub(result.content) == npc_flag_autocalc);
+}
+
 TEST_CASE("sub_record_merge_t::merge, ENAM per-byte merge", "[u]")
 {
 	auto enam_first = make_enam(79, 0, 0, 10, 2, 40);
