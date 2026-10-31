@@ -801,6 +801,173 @@ TEST_CASE("plugin_scan_t::rebuild_conflicts, bad record index is skipped and oth
 	REQUIRE(entry->conflict_all > conflict_all_t::only_one);
 }
 
+static merge_lock_t make_whole_record_lock(
+    const std::string & rec_type,
+    const std::string & record_id,
+    const std::string & frozen_content)
+{
+	merge_lock_t lock;
+	lock.rec_type = rec_type;
+	lock.record_id = record_id;
+	lock.scope = lock_scope_t::whole_record;
+	lock.frozen_content = frozen_content;
+	return lock;
+}
+
+static std::string simulate_whole_record_restamp(plugin_scan_t & scan, const merge_lock_t & lock)
+{
+	scan.copy_record_to_active_raw(lock.rec_type, lock.record_id, lock.frozen_content);
+	const auto * restamped = scan.find_active_content(lock.rec_type, lock.record_id);
+	return restamped == nullptr ? std::string {} : *restamped;
+}
+
+static const merge_lock_t * find_lock(
+    const plugin_scan_t & scan,
+    const std::string & rec_type,
+    const std::string & record_id)
+{
+	for (const auto & lock : scan.active_locks())
+	{
+		if (lock.rec_type == rec_type && lock.record_id == record_id)
+			return &lock;
+	}
+
+	return nullptr;
+}
+
+TEST_CASE("plugin_scan_t::resync_locks_to_active, whole_record lock then edit survives merge re-stamp", "[u]")
+{
+	plugin_scan_t scan;
+	scan.set_active_plugin("Merged Patch.esp");
+
+	const auto record_a = make_weap_record("iron_helm", "Iron Helm");
+	const auto record_b = make_weap_record("iron_helm", "Steel Helm");
+
+	scan.copy_record_to_active_raw("WEAP", "iron_helm", record_a);
+	scan.add_active_lock(make_whole_record_lock("WEAP", "iron_helm", record_a));
+
+	scan.copy_record_to_active_raw("WEAP", "iron_helm", record_b);
+	scan.resync_locks_to_active("WEAP", "iron_helm");
+
+	const auto * lock = find_lock(scan, "WEAP", "iron_helm");
+	REQUIRE(lock != nullptr);
+	REQUIRE(lock->frozen_content == record_b);
+
+	REQUIRE(simulate_whole_record_restamp(scan, *lock) == record_b);
+}
+
+TEST_CASE("plugin_scan_t::resync_locks_to_active, sub_record lock then edit refreshes frozen content", "[u]")
+{
+	plugin_scan_t scan;
+	scan.set_active_plugin("Merged Patch.esp");
+
+	const auto record_a = make_weap_record("steel_helm", "Steel Helm");
+	const auto record_b = make_weap_record("steel_helm", "Glass Helm");
+
+	scan.copy_record_to_active_raw("WEAP", "steel_helm", record_a);
+
+	merge_lock_t lock;
+	lock.rec_type = "WEAP";
+	lock.record_id = "steel_helm";
+	lock.scope = lock_scope_t::sub_record;
+	lock.sub_type = "FNAM";
+	lock.frozen_content = record_a;
+	scan.add_active_lock(lock);
+
+	scan.copy_record_to_active_raw("WEAP", "steel_helm", record_b);
+	scan.resync_locks_to_active("WEAP", "steel_helm");
+
+	const auto * stored = find_lock(scan, "WEAP", "steel_helm");
+	REQUIRE(stored != nullptr);
+	REQUIRE(stored->frozen_content == record_b);
+	REQUIRE(find_sub_record(stored->frozen_content, "FNAM") == find_sub_record(record_b, "FNAM"));
+}
+
+TEST_CASE("plugin_scan_t::resync_locks_to_active, group lock recomputes members from edited content", "[u]")
+{
+	plugin_scan_t scan;
+	scan.set_active_plugin("Merged Patch.esp");
+
+	const auto record_a = make_weap_record("glass_helm", "Glass Helm");
+	const auto record_b = make_weap_record("glass_helm", "Ebony Helm");
+
+	scan.copy_record_to_active_raw("WEAP", "glass_helm", record_a);
+
+	merge_lock_t lock;
+	lock.rec_type = "WEAP";
+	lock.record_id = "glass_helm";
+	lock.scope = lock_scope_t::group;
+	lock.group_start = 0;
+	lock.group_end = 2;
+	lock.frozen_content = record_a;
+	lock.group_members = sub_record_merge_t::group_members_in_range(record_a, 0, 2);
+	scan.add_active_lock(lock);
+
+	scan.copy_record_to_active_raw("WEAP", "glass_helm", record_b);
+	scan.resync_locks_to_active("WEAP", "glass_helm");
+
+	const auto * stored = find_lock(scan, "WEAP", "glass_helm");
+	REQUIRE(stored != nullptr);
+	REQUIRE(stored->frozen_content == record_b);
+	REQUIRE(stored->group_members == sub_record_merge_t::group_members_in_range(record_b, 0, 2));
+}
+
+TEST_CASE("plugin_scan_t::resync_locks_to_active, edit then lock stays at edited value and is idempotent", "[u]")
+{
+	plugin_scan_t scan;
+	scan.set_active_plugin("Merged Patch.esp");
+
+	const auto record_a = make_weap_record("dwemer_helm", "Dwemer Helm");
+	const auto record_b = make_weap_record("dwemer_helm", "Daedric Helm");
+
+	scan.copy_record_to_active_raw("WEAP", "dwemer_helm", record_a);
+	scan.copy_record_to_active_raw("WEAP", "dwemer_helm", record_b);
+	scan.add_active_lock(make_whole_record_lock("WEAP", "dwemer_helm", record_b));
+
+	const auto * before = find_lock(scan, "WEAP", "dwemer_helm");
+	REQUIRE(before != nullptr);
+	REQUIRE(before->frozen_content == record_b);
+
+	scan.resync_locks_to_active("WEAP", "dwemer_helm");
+
+	const auto * after = find_lock(scan, "WEAP", "dwemer_helm");
+	REQUIRE(after != nullptr);
+	REQUIRE(after->frozen_content == record_b);
+}
+
+TEST_CASE("plugin_scan_t::resync_locks_to_active, unlocked record is left untouched", "[u]")
+{
+	plugin_scan_t scan;
+	scan.set_active_plugin("Merged Patch.esp");
+
+	const auto record_a = make_weap_record("bonemold_helm", "Bonemold Helm");
+	scan.copy_record_to_active_raw("WEAP", "bonemold_helm", record_a);
+
+	const auto before = *scan.find_active_content("WEAP", "bonemold_helm");
+
+	scan.resync_locks_to_active("WEAP", "bonemold_helm");
+
+	REQUIRE(scan.active_locks().empty());
+	REQUIRE(*scan.find_active_content("WEAP", "bonemold_helm") == before);
+}
+
+TEST_CASE("plugin_scan_t::resync_locks_to_active, lock with unchanged value keeps frozen content", "[u]")
+{
+	plugin_scan_t scan;
+	scan.set_active_plugin("Merged Patch.esp");
+
+	const auto record_a = make_weap_record("chitin_helm", "Chitin Helm");
+	scan.copy_record_to_active_raw("WEAP", "chitin_helm", record_a);
+	scan.add_active_lock(make_whole_record_lock("WEAP", "chitin_helm", record_a));
+
+	scan.resync_locks_to_active("WEAP", "chitin_helm");
+
+	const auto * lock = find_lock(scan, "WEAP", "chitin_helm");
+	REQUIRE(lock != nullptr);
+	REQUIRE(lock->frozen_content == record_a);
+	REQUIRE(simulate_whole_record_restamp(scan, *lock) == record_a);
+}
+
 TEST_CASE("plugin_scan_t::missing_masters, all present returns empty", "[u]")
 {
 	const std::vector<std::string> declared = { "Morrowind.esm", "Tribunal.esm" };

@@ -3,6 +3,7 @@
 #include "../decoder/sub_record_iter.hpp"
 #include "../decoder/sub_record_schema.hpp"
 #include "../decoder/view_tree_format.hpp"
+#include "sub_record_merge.hpp"
 #include "../utility/app_logger.hpp"
 #include "../utility/string_utils.hpp"
 #include "record_conflict.hpp"
@@ -765,6 +766,25 @@ const std::string * plugin_scan_t::find_active_content(const std::string & rec_t
     const
 {
 	return m_active_store.find_content(rec_type, record_id);
+}
+
+void plugin_scan_t::resync_locks_to_active(const std::string & rec_type, const std::string & record_id)
+{
+	const auto * active_content = find_active_content(rec_type, record_id);
+	if (active_content == nullptr)
+		return;
+
+	for (auto & lock : m_merge_locks)
+	{
+		if (lock.rec_type != rec_type || lock.record_id != record_id)
+			continue;
+
+		lock.frozen_content = *active_content;
+
+		if (lock.scope == lock_scope_t::group)
+			lock.group_members =
+			    sub_record_merge_t::group_members_in_range(lock.frozen_content, lock.group_start, lock.group_end);
+	}
 }
 
 void plugin_scan_t::remove_from_active(const std::string & type, const std::string & id)

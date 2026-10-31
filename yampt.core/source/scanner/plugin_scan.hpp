@@ -83,6 +83,7 @@ public:
 	const std::vector<merge_lock_t> & active_locks() const;
 	void set_active_locks(const std::vector<merge_lock_t> & locks);
 	const std::string * find_active_content(const std::string & rec_type, const std::string & record_id) const;
+	void resync_locks_to_active(const std::string & rec_type, const std::string & record_id);
 	std::string read_record_content(int plugin_idx, size_t record_index);
 	void remove_from_active(const std::string & type, const std::string & id);
 	void recompute_single_conflict(const std::string & rec_type, const std::string & record_id);

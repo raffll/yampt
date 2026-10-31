@@ -11,7 +11,6 @@
 ## Hard
 
 - Cross-workspace search window: search a phrase across all open dictionaries, results in a separate window with dictionary name column and highlighted match — yTranslator
-- value changed on locked field doesn't survive merged patch — yEditor
 
 ## Hard to Fix
 
