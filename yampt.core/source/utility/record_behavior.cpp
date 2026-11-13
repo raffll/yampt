@@ -272,6 +272,17 @@ decode_mode_t decode_mode_for(const std::string & record_type)
 	return find_record_behavior(record_type)->decode_mode;
 }
 
+const char * record_type_for_decode_mode(decode_mode_t decode_mode)
+{
+	for (const auto & entry : behavior_table)
+	{
+		if (entry.decode_mode == decode_mode)
+			return entry.record_type;
+	}
+
+	return nullptr;
+}
+
 const char * leveled_item_sub_type_for(const std::string & record_type)
 {
 	return find_record_behavior(record_type)->leveled_item_sub_type;

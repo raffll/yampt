@@ -27,6 +27,8 @@ public:
 		return m_ctx.dict;
 	}
 
+	std::set<std::string> referenced_place_values() const;
+
 	static bool differs_only_in_numbers_or_punct(const std::string & a, const std::string & b)
 	{
 		return creator_helpers::differs_only_in_numbers_or_punct(a, b);

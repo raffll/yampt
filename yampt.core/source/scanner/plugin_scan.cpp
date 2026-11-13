@@ -768,11 +768,13 @@ const std::string * plugin_scan_t::find_active_content(const std::string & rec_t
 	return m_active_store.find_content(rec_type, record_id);
 }
 
-void plugin_scan_t::resync_locks_to_active(const std::string & rec_type, const std::string & record_id)
+bool plugin_scan_t::resync_locks_to_active(const std::string & rec_type, const std::string & record_id)
 {
 	const auto * active_content = find_active_content(rec_type, record_id);
 	if (active_content == nullptr)
-		return;
+		return false;
+
+	bool any_lock_resynced = false;
 
 	for (auto & lock : m_merge_locks)
 	{
@@ -780,11 +782,14 @@ void plugin_scan_t::resync_locks_to_active(const std::string & rec_type, const s
 			continue;
 
 		lock.frozen_content = *active_content;
+		any_lock_resynced = true;
 
 		if (lock.scope == lock_scope_t::group)
 			lock.group_members =
 			    sub_record_merge_t::group_members_in_range(lock.frozen_content, lock.group_start, lock.group_end);
 	}
+
+	return any_lock_resynced;
 }
 
 void plugin_scan_t::remove_from_active(const std::string & type, const std::string & id)

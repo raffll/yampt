@@ -605,69 +605,34 @@ std::vector<std::string> plugin_session_t::resolve_mo2_plugins(
     const std::vector<std::string> & plugin_names,
     const mo2_resolve_context_t & context)
 {
+	const auto file_exists = [](const std::string & path) { return QFile::exists(QString::fromStdString(path)); };
+
 	std::vector<std::string> paths;
 	for (const auto & name : plugin_names)
 	{
-		const auto & resolved = resolve_single_mo2_plugin(name, context);
+		const auto resolved = profile_reader_t::resolve_mo2_plugin_with_stub(
+		    name,
+		    context.overwrite_path.toStdString(),
+		    context.enabled_mods,
+		    context.mods_path.toStdString(),
+		    context.game_data_path.toStdString(),
+		    file_exists);
 		if (resolved.empty())
 		{
 			emit log_message("[warning] cannot find: " + name);
 			continue;
 		}
 
-		paths.push_back(resolved);
-		append_real_openmw_file(paths, name, context);
+		if (profile_reader_t::is_openmw_stub_name(name) && resolved.size() == 1)
+			emit log_message("[warning] openmw stub " + name + ": real file not found, loading stub only");
+
+		paths.insert(paths.end(), resolved.begin(), resolved.end());
 	}
 
 	if (paths.empty())
 		emit log_message("[warning] no plugins resolved from MO2 profile");
 
 	return paths;
-}
-
-void plugin_session_t::append_real_openmw_file(
-    std::vector<std::string> & paths,
-    const std::string & stub_name,
-    const mo2_resolve_context_t & context)
-{
-	if (!profile_reader_t::is_openmw_stub_name(stub_name))
-		return;
-
-	const auto real_name = profile_reader_t::real_openmw_name_from_stub(stub_name);
-	const auto real_path = resolve_single_mo2_plugin(real_name, context);
-	if (real_path.empty())
-	{
-		emit log_message("[warning] openmw stub " + stub_name + ": real file not found, loading stub only");
-		return;
-	}
-
-	paths.push_back(real_path);
-}
-
-std::string plugin_session_t::resolve_single_mo2_plugin(
-    const std::string & plugin_name,
-    const mo2_resolve_context_t & context)
-{
-	if (!context.overwrite_path.isEmpty())
-	{
-		const auto overwrite_candidate = context.overwrite_path + "/" + QString::fromStdString(plugin_name);
-		if (QFile::exists(overwrite_candidate))
-			return overwrite_candidate.toStdString();
-	}
-
-	for (const auto & mod_name : context.enabled_mods)
-	{
-		const auto candidate =
-		    context.mods_path + "/" + QString::fromStdString(mod_name) + "/" + QString::fromStdString(plugin_name);
-		if (QFile::exists(candidate))
-			return candidate.toStdString();
-	}
-
-	const auto game_file = context.game_data_path + "/" + QString::fromStdString(plugin_name);
-	if (QFile::exists(game_file))
-		return game_file.toStdString();
-
-	return {};
 }
 
 std::vector<std::string> plugin_session_t::parse_openmw_cfg(const QString & cfg_path)

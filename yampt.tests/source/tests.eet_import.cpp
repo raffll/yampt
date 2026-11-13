@@ -1,6 +1,7 @@
 #include <catch2/catch_all.hpp>
 #include <creator/eet_dict_builder.hpp>
 #include <io/eet_filename.hpp>
+#include <utility/app_logger.hpp>
 #include <utility/domain_types.hpp>
 
 namespace {
@@ -17,6 +18,11 @@ record_entry_t make_entry(
 	entry.new_text = new_text;
 	entry.status = status;
 	return entry;
+}
+
+dict_t build_result(const dict_t & native, const dict_t & pool, const std::set<std::string> & places = {})
+{
+	return eet_dict_builder::build({ native, pool, places });
 }
 
 } // namespace
@@ -68,7 +74,7 @@ TEST_CASE("eet_dict_builder_t::build, INFO entry filled by old_text match when u
 	auto pool = domain_types::initialize_dict();
 	pool.at(rec_type_t::info).insert(make_entry("12345", "Hello.", "Witaj.", status_t::translated));
 
-	const auto result = eet_dict_builder_t::build(native, pool);
+	const auto result = build_result(native, pool);
 
 	const auto * record = result.at(rec_type_t::info).find("T^Topic^InfoId");
 	REQUIRE(record != nullptr);
@@ -85,7 +91,7 @@ TEST_CASE("eet_dict_builder_t::build, INFO duplicate orig under two contexts yie
 	pool.at(rec_type_t::info).insert(make_entry("12345", "Hello.", "Witaj.", status_t::translated));
 	pool.at(rec_type_t::info).insert(make_entry("67890", "Hello.", "Czesc.", status_t::translated));
 
-	const auto result = eet_dict_builder_t::build(native, pool);
+	const auto result = build_result(native, pool);
 
 	const auto * record = result.at(rec_type_t::info).find("T^Topic^InfoId");
 	REQUIRE(record != nullptr);
@@ -100,7 +106,7 @@ TEST_CASE("eet_dict_builder_t::build, no pool match leaves native entry untransl
 	auto pool = domain_types::initialize_dict();
 	pool.at(rec_type_t::info).insert(make_entry("12345", "Goodbye.", "Zegnaj.", status_t::translated));
 
-	const auto result = eet_dict_builder_t::build(native, pool);
+	const auto result = build_result(native, pool);
 
 	const auto * record = result.at(rec_type_t::info).find("T^Topic^InfoId");
 	REQUIRE(record != nullptr);
@@ -117,7 +123,7 @@ TEST_CASE("eet_dict_builder_t::build, BNAM per-message filled by old_text match"
 	auto pool = domain_types::initialize_dict();
 	pool.at(rec_type_t::bnam).insert(make_entry("Sell.", "Sell.", "Sprzedaj.", status_t::translated));
 
-	const auto result = eet_dict_builder_t::build(native, pool);
+	const auto result = build_result(native, pool);
 
 	const auto * record = result.at(rec_type_t::bnam).find("T^Topic^InfoId^Sell.");
 	REQUIRE(record != nullptr);
@@ -134,7 +140,7 @@ TEST_CASE("eet_dict_builder_t::build, FNAM filled by exact id match", "[eet_impo
 	auto pool = domain_types::initialize_dict();
 	pool.at(rec_type_t::fnam).insert(make_entry("steel dagger", "Steel Dagger", "Stahldolch", status_t::translated));
 
-	const auto result = eet_dict_builder_t::build(native, pool);
+	const auto result = build_result(native, pool);
 
 	const auto * record = result.at(rec_type_t::fnam).find("steel dagger");
 	REQUIRE(record != nullptr);
@@ -149,12 +155,40 @@ TEST_CASE("eet_dict_builder_t::build, ANAM/SCVR place value absent from native C
 	auto pool = domain_types::initialize_dict();
 	pool.at(rec_type_t::cell).insert(make_entry("Balmora", "Balmora", "Balmora PL", status_t::translated));
 
-	const auto result = eet_dict_builder_t::build(native, pool);
+	const auto result = build_result(native, pool, { "Balmora" });
 
 	const auto * record = result.at(rec_type_t::cell).find("Balmora");
 	REQUIRE(record != nullptr);
 	REQUIRE(record->new_text == "Balmora PL");
 	REQUIRE(record->status == status_t::translated);
+}
+
+TEST_CASE("eet_dict_builder_t::build, pool CELL not referenced by the plugin is not inserted", "[eet_import]")
+{
+	auto native = domain_types::initialize_dict();
+
+	auto pool = domain_types::initialize_dict();
+	pool.at(rec_type_t::cell).insert(make_entry("Balmora", "Balmora", "Balmora PL", status_t::translated));
+	pool.at(rec_type_t::cell).insert(make_entry("Vivec", "Vivec", "Vivec PL", status_t::translated));
+
+	const auto result = build_result(native, pool, { "Balmora" });
+
+	REQUIRE(result.at(rec_type_t::cell).find("Balmora") != nullptr);
+	REQUIRE(result.at(rec_type_t::cell).find("Vivec") == nullptr);
+	REQUIRE(result.at(rec_type_t::cell).size() == 1);
+}
+
+TEST_CASE("eet_dict_builder_t::build, native dict without CELL chapter logs an error", "[eet_import]")
+{
+	dict_t native;
+
+	auto pool = domain_types::initialize_dict();
+	pool.at(rec_type_t::cell).insert(make_entry("Balmora", "Balmora", "Balmora PL", status_t::translated));
+
+	app_logger_t::reset_log();
+	REQUIRE_NOTHROW(build_result(native, pool, { "Balmora" }));
+	REQUIRE(app_logger_t::has_error());
+	app_logger_t::reset_log();
 }
 
 TEST_CASE("eet_dict_builder_t::build, existing native CELL entry is filled not duplicated", "[eet_import]")
@@ -165,7 +199,7 @@ TEST_CASE("eet_dict_builder_t::build, existing native CELL entry is filled not d
 	auto pool = domain_types::initialize_dict();
 	pool.at(rec_type_t::cell).insert(make_entry("Balmora", "Balmora", "Balmora PL", status_t::translated));
 
-	const auto result = eet_dict_builder_t::build(native, pool);
+	const auto result = build_result(native, pool);
 
 	REQUIRE(result.at(rec_type_t::cell).size() == 1);
 	const auto * record = result.at(rec_type_t::cell).find("Balmora");

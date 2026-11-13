@@ -1,6 +1,7 @@
 #include "eet_converter.hpp"
 #include "../utility/app_logger.hpp"
 #include "codepage.hpp"
+#include <cstdio>
 
 eet_converter_t::eet_converter_t(const std::vector<eet_reader_t::eet_entry_t> & entries, codepage_t codepage)
 {
@@ -15,7 +16,7 @@ eet_converter_t::eet_converter_t(const std::vector<eet_reader_t::eet_entry_t> & 
 			continue;
 		}
 
-		const auto status = map_status(entry.status_byte);
+		const auto status = map_status(entry);
 		const auto & key_text = build_key_text(entry, yampt_type);
 
 		record_entry_t record;
@@ -98,15 +99,19 @@ rec_type_t eet_converter_t::map_type(const std::string & rec_type, const std::st
 	return rec_type_t::unknown;
 }
 
-status_t eet_converter_t::map_status(uint8_t status_byte) const
+status_t eet_converter_t::map_status(const eet_reader_t::eet_entry_t & entry) const
 {
-	if (status_byte == 0x63)
+	if (entry.status_byte == 0x63)
 		return status_t::translated;
 
-	if (status_byte == 0xFF)
-		return status_t::untranslated;
+	if (entry.status_byte != 0xFF)
+	{
+		char hex_text[8];
+		std::snprintf(hex_text, sizeof(hex_text), "0x%02X", static_cast<unsigned>(entry.status_byte));
+		app_logger_t::add_log(
+		    std::string("[warning] unknown eet status byte ") + hex_text + " for entry " + entry.key_text + "\r\n");
+	}
 
-	// out-of-sample byte: deliberate map to untranslated, not a generic fallback
 	return status_t::untranslated;
 }
 

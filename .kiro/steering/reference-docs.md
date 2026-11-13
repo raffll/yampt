@@ -28,6 +28,7 @@ NOT auto-loaded. Consult the relevant doc before working in its area.
 | Web translation providers (JSON configs, template vars, system prompt) | `.kiro/docs/reference/translation-providers.md` |
 | Building CTranslate2, downloading/fine-tuning models | `.kiro/docs/reference/translation-engine-build.md` |
 | Known limitations, accepted/grandfathered debt, migration debt (do not re-report) | `.kiro/docs/reference/known-issues.md` |
+| Real-world test corpus (MO2 install, 1148 plugins, 876-plugin profile), its catalog, and the test/automation scripts | `.kiro/docs/reference/test-corpus.md` |
 
 Known limitations, grandfathered style debt, and migration debt that must NOT be
 re-reported in audits live in `.kiro/docs/reference/known-issues.md`. Actionable

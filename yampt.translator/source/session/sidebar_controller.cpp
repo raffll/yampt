@@ -108,8 +108,8 @@ void sidebar_controller_t::on_unload_requested(const std::string & path)
 
 void sidebar_controller_t::on_delete_requested(const std::string & path)
 {
-	const auto sep = path.find_last_of("/\\");
-	const auto filename = sep != std::string::npos ? path.substr(sep + 1) : path;
+	const auto separator_index = path.find_last_of("/\\");
+	const auto filename = separator_index != std::string::npos ? path.substr(separator_index + 1) : path;
 
 	auto answer = QMessageBox::question(
 	    m_deps.parent_widget,
@@ -271,8 +271,8 @@ void sidebar_controller_t::on_remove_folder_requested(const std::string & root_p
 
 void sidebar_controller_t::on_delete_folder_requested(const std::string & folder_path)
 {
-	const auto sep = folder_path.find_last_of("/\\");
-	const auto folder_name = sep != std::string::npos ? folder_path.substr(sep + 1) : folder_path;
+	const auto separator_index = folder_path.find_last_of("/\\");
+	const auto folder_name = separator_index != std::string::npos ? folder_path.substr(separator_index + 1) : folder_path;
 
 	auto answer = QMessageBox::question(
 	    m_deps.parent_widget,
@@ -356,8 +356,8 @@ void sidebar_controller_t::on_import_eet_requested(const std::string & path)
 	if (!plugin_path.has_value())
 		return;
 
-	const auto sep = path.find_last_of("/\\");
-	const auto output_dir = sep != std::string::npos ? path.substr(0, sep) : ".";
+	const auto separator_index = path.find_last_of("/\\");
+	const auto output_dir = separator_index != std::string::npos ? path.substr(0, separator_index) : ".";
 
 	operation_executor_t executor;
 	executor.set_output_dir(output_dir);
@@ -383,8 +383,8 @@ void sidebar_controller_t::on_generate_loc_requested(const std::string & path)
 
 	const auto & dict = dict_doc->data();
 	const auto esm_name = loc_generator::derive_esm_name(path);
-	const auto sep = path.find_last_of("/\\");
-	const auto output_dir = sep != std::string::npos ? path.substr(0, sep) : ".";
+	const auto separator_index = path.find_last_of("/\\");
+	const auto output_dir = separator_index != std::string::npos ? path.substr(0, separator_index) : ".";
 	const auto codepage = m_deps.session.codepage();
 
 	std::string hunspell_aff;

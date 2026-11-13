@@ -322,3 +322,41 @@ TEST_CASE("eet_converter_t::map_status, 0x63 translated and 0xFF untranslated", 
 	REQUIRE(untranslated_record != nullptr);
 	REQUIRE(untranslated_record->status == status_t::untranslated);
 }
+
+TEST_CASE("eet_converter_t::map_status, unknown byte warns and maps to untranslated", "[u]")
+{
+	eet_reader_t::eet_entry_t unknown_entry;
+	unknown_entry.rec_type = "WEAP";
+	unknown_entry.sub_type = "FNAM";
+	unknown_entry.key_text = "glass dagger";
+	unknown_entry.orig = "Glass Dagger";
+	unknown_entry.trans = "Glasdolch";
+	unknown_entry.status_byte = 0x42;
+
+	app_logger_t::reset_log();
+	eet_converter_t converter({ unknown_entry }, codepage_t::windows_1252);
+
+	const auto & chapter = converter.get_dict().at(rec_type_t::fnam);
+	const auto * record = chapter.find("glass dagger");
+	REQUIRE(record != nullptr);
+	REQUIRE(record->status == status_t::untranslated);
+
+	const auto & log = app_logger_t::get_log();
+	REQUIRE(log.find("[warning] unknown eet status byte 0x42 for entry glass dagger") != std::string::npos);
+}
+
+TEST_CASE("eet_converter_t::map_status, known bytes do not warn", "[u]")
+{
+	eet_reader_t::eet_entry_t known_entry;
+	known_entry.rec_type = "WEAP";
+	known_entry.sub_type = "FNAM";
+	known_entry.key_text = "glass dagger";
+	known_entry.orig = "Glass Dagger";
+	known_entry.trans = "Glasdolch";
+	known_entry.status_byte = 0xFF;
+
+	app_logger_t::reset_log();
+	eet_converter_t converter({ known_entry }, codepage_t::windows_1252);
+
+	REQUIRE(app_logger_t::get_log().find("[warning]") == std::string::npos);
+}

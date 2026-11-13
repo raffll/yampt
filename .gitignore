@@ -36,3 +36,6 @@ dictionaries/*.dic
 # Local, machine-specific Kiro permission settings (grants blanket allow; never commit)
 /.kiro/settings/
 /kiro-settings-allow-all.json
+
+# Python bytecode from scripts/
+__pycache__/

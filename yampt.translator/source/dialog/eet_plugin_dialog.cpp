@@ -30,11 +30,11 @@ eet_plugin_dialog_t::eet_plugin_dialog_t(
 	    tr("Select the plugin this translation file was made for:"),
 	    this));
 
-	auto * tree = new QTreeWidget(this);
-	tree->setHeaderHidden(true);
-	tree->setRootIsDecorated(true);
-	tree->setIndentation(16);
-	layout->addWidget(tree);
+	m_plugin_tree = new QTreeWidget(this);
+	m_plugin_tree->setHeaderHidden(true);
+	m_plugin_tree->setRootIsDecorated(true);
+	m_plugin_tree->setIndentation(16);
+	layout->addWidget(m_plugin_tree);
 
 	populate_plugin_tree(plugin_name);
 
@@ -47,12 +47,12 @@ eet_plugin_dialog_t::eet_plugin_dialog_t(
 	connect(buttons, &QDialogButtonBox::accepted, this, &QDialog::accept);
 	connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
 	connect(
-	    tree,
+	    m_plugin_tree,
 	    &QTreeWidget::itemDoubleClicked,
 	    this,
-	    [this](QTreeWidgetItem * item, int)
+	    [this](QTreeWidgetItem * clicked_item, int)
 	{
-		if (item && (item->flags() & Qt::ItemIsSelectable))
+		if (clicked_item && (clicked_item->flags() & Qt::ItemIsSelectable))
 			accept();
 	});
 
@@ -60,9 +60,9 @@ eet_plugin_dialog_t::eet_plugin_dialog_t(
 	    this,
 	    &QDialog::accepted,
 	    this,
-	    [this, tree]()
+	    [this]()
 	{
-		auto * selected_item = tree->currentItem();
+		auto * selected_item = m_plugin_tree->currentItem();
 		if (!selected_item || !(selected_item->flags() & Qt::ItemIsSelectable))
 			return;
 
@@ -77,8 +77,6 @@ std::optional<std::string> eet_plugin_dialog_t::selected_plugin_path() const
 
 void eet_plugin_dialog_t::populate_plugin_tree(const std::string & plugin_name)
 {
-	auto * tree = findChild<QTreeWidget *>();
-
 	const auto name_lower = string_utils::to_lower(plugin_name);
 
 	struct plugin_item_t
@@ -134,7 +132,7 @@ void eet_plugin_dialog_t::populate_plugin_tree(const std::string & plugin_name)
 	{
 		const auto root_label = derive_root_label(root_path);
 
-		auto * root_node = new QTreeWidgetItem(tree);
+		auto * root_node = new QTreeWidgetItem(m_plugin_tree);
 		root_node->setText(0, QString::fromStdString(root_label));
 		root_node->setFlags(Qt::ItemIsEnabled);
 		QFont bold = root_node->font(0);
@@ -145,17 +143,17 @@ void eet_plugin_dialog_t::populate_plugin_tree(const std::string & plugin_name)
 		{
 			for (auto * plugin : items)
 			{
-				auto * item = new QTreeWidgetItem(parent);
-				item->setText(0, QString::fromStdString(plugin->display));
-				item->setData(0, Qt::UserRole, QString::fromStdString(plugin->path));
-				item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-				item->setForeground(0, QColor(100, 180, 100));
+				auto * plugin_node = new QTreeWidgetItem(parent);
+				plugin_node->setText(0, QString::fromStdString(plugin->display));
+				plugin_node->setData(0, Qt::UserRole, QString::fromStdString(plugin->path));
+				plugin_node->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+				plugin_node->setForeground(0, QColor(100, 180, 100));
 
-				file_path_parts_t parts;
-				parts.set_name(plugin->filename);
+				file_path_parts_t path_parts;
+				path_parts.set_name(plugin->filename);
 
-				if (string_utils::to_lower(parts.name) == name_lower && !best_match_item)
-					best_match_item = item;
+				if (string_utils::to_lower(path_parts.name) == name_lower && !best_match_item)
+					best_match_item = plugin_node;
 			}
 		};
 
@@ -175,5 +173,5 @@ void eet_plugin_dialog_t::populate_plugin_tree(const std::string & plugin_name)
 	}
 
 	if (best_match_item)
-		tree->setCurrentItem(best_match_item);
+		m_plugin_tree->setCurrentItem(best_match_item);
 }

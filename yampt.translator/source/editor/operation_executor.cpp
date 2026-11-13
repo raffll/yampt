@@ -144,7 +144,9 @@ operation_executor_t::result_t operation_executor_t::import_eet_with_plugin(
 		return { false, app_logger_t::get_log(), "" };
 
 	const eet_converter_t converter(reader.entries(), codepage);
-	const auto filled_dict = eet_dict_builder_t::build(creator.get_dict(), converter.get_dict());
+	const auto referenced_places = creator.referenced_place_values();
+	const auto filled_dict =
+	    eet_dict_builder::build({ creator.get_dict(), converter.get_dict(), referenced_places });
 
 	const auto eet_info = QFileInfo(QString::fromStdString(eet_path));
 	const auto base_name = eet_info.completeBaseName().toStdString();

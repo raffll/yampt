@@ -26,7 +26,7 @@ public:
 
 private:
 	rec_type_t map_type(const std::string & rec_type, const std::string & sub_type) const;
-	status_t map_status(uint8_t status_byte) const;
+	status_t map_status(const eet_reader_t::eet_entry_t & entry) const;
 	std::string build_key_text(const eet_reader_t::eet_entry_t & entry, rec_type_t yampt_type) const;
 
 	dict_t m_dict;

@@ -161,6 +161,46 @@ TEST_CASE("string_utils::split_utf8_characters, three byte character", "[u]")
 	REQUIRE(characters[2] == "b");
 }
 
+static std::string join_units(const std::vector<std::string> & units)
+{
+	std::string joined;
+	for (const auto & unit : units)
+		joined += unit;
+
+	return joined;
+}
+
+TEST_CASE("string_utils::split_utf8_characters, lone continuation byte", "[u]")
+{
+	const std::string input = "a\x80""b";
+	const auto characters = string_utils::split_utf8_characters(input);
+
+	REQUIRE(characters.size() == 3);
+	REQUIRE(characters[1] == "\x80");
+	REQUIRE(join_units(characters) == input);
+}
+
+TEST_CASE("string_utils::split_utf8_characters, truncated multibyte tail", "[u]")
+{
+	const std::string input = "ab\xE2\x80";
+	const auto characters = string_utils::split_utf8_characters(input);
+
+	REQUIRE(characters.size() == 3);
+	REQUIRE(characters[2] == "\xE2\x80");
+	REQUIRE(join_units(characters) == input);
+}
+
+TEST_CASE("string_utils::split_utf8_characters, lead byte 0xF8 and above", "[u]")
+{
+	const std::string input = "a\xF8\xFF""b";
+	const auto characters = string_utils::split_utf8_characters(input);
+
+	REQUIRE(characters.size() == 4);
+	REQUIRE(characters[1] == "\xF8");
+	REQUIRE(characters[2] == "\xFF");
+	REQUIRE(join_units(characters) == input);
+}
+
 TEST_CASE("string_utils::split_utf8_characters, empty input", "[u]")
 {
 	const auto characters = string_utils::split_utf8_characters("");

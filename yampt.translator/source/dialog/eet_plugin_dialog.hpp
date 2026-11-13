@@ -5,6 +5,8 @@
 #include <string>
 #include <QDialog>
 
+class QTreeWidget;
+
 class eet_plugin_dialog_t : public QDialog
 {
 	Q_OBJECT
@@ -20,6 +22,7 @@ public:
 private:
 	void populate_plugin_tree(const std::string & plugin_name);
 
+	QTreeWidget * m_plugin_tree = nullptr;
 	const file_list_t & m_file_list;
 	std::optional<std::string> m_selected_plugin_path;
 };

@@ -4,6 +4,7 @@
 #include "../session/plugin_session.hpp"
 #include "../view/nav_tree_view.hpp"
 #include "../view/record_view.hpp"
+#include "save_routing.hpp"
 #include <scanner/auto_merge.hpp>
 #include <scanner/merge_patch_ops.hpp>
 #include <scanner/sub_record_merge.hpp>
@@ -921,22 +922,36 @@ bool merge_controller_t::save_active_to_file(
 
 bool merge_controller_t::is_editor_created_plugin(const std::string & filename) const
 {
-	return filename == merged_patch::filename || m_session.created_plugins().count(filename) != 0;
+	return save_routing::decide_save_path(filename, m_session.created_plugins()) ==
+	       save_routing::save_path_t::created_plugin;
 }
 
 void merge_controller_t::fill_patch_builder_from_active()
 {
-	const auto & scan = m_session.scan();
 	auto & builder = m_session.patch_builder();
+	const auto arranged = dialogue_arranger::arrange_active(m_session.scan());
 
 	builder.clear();
-	for (size_t i = 0; i < scan.active_record_count(); ++i)
+	for (const auto & record : arranged.records)
 	{
-		if (scan.active_record_type(i) == "TES3")
+		if (record.rec_type == "TES3")
 			continue;
 
-		builder.add_record_raw(scan.active_record_type(i), scan.active_record_id(i), scan.active_record_content(i));
+		builder.add_record_raw(record.rec_type, record.record_id, record.content);
 	}
+
+	log_dialogue_arrangement(arranged);
+}
+
+void merge_controller_t::log_dialogue_arrangement(const dialogue_arranger::arrange_result_t & arranged)
+{
+	if (!arranged.inserted_topics.empty())
+		m_log(
+		    "[info] dialogue: added " + std::to_string(arranged.inserted_topics.size()) +
+		    " parent topics from the winning plugins");
+
+	for (const auto & topic : arranged.missing_topics)
+		m_log("[error] dialogue topic \"" + topic + "\" not found; its responses are written without a topic");
 }
 
 void merge_controller_t::note_copy_source(int plugin_idx)
@@ -958,15 +973,22 @@ std::vector<patch_builder_t::master_entry_t> merge_controller_t::collect_copy_so
 	if (it_sources == m_copy_sources.end())
 		return masters;
 
+	std::vector<std::string> plugin_filenames;
 	for (int i = 0; i < static_cast<int>(scan.plugin_count()); ++i)
-	{
-		if (scan.is_active_plugin(i) || it_sources->second.count(scan.plugin_filename(i)) == 0)
-			continue;
+		plugin_filenames.push_back(scan.plugin_filename(i));
 
-		masters.push_back(master_entry_for_plugin(i));
-	}
+	const save_routing::master_selection_input_t selection { plugin_filenames,
+		                                                     it_sources->second,
+		                                                     scan.active_plugin_index() };
+	for (const int plugin_idx : save_routing::select_copy_source_indices(selection))
+		masters.push_back(master_entry_for_plugin(plugin_idx));
 
 	return masters;
+}
+
+void merge_controller_t::clear_copy_sources()
+{
+	m_copy_sources.clear();
 }
 
 bool merge_controller_t::save_loaded_plugin_to_file(const std::string & output_path)
@@ -1174,6 +1196,11 @@ std::string merge_controller_t::merged_patch_locks_path() const
 
 	const auto locks_name = std::string(merged_patch::filename) + std::string(merged_patch::locks_suffix);
 	return QDir(QString::fromStdString(output_dir)).filePath(QString::fromStdString(locks_name)).toStdString();
+}
+
+void merge_controller_t::persist_active_locks()
+{
+	save_merged_patch_locks();
 }
 
 void merge_controller_t::save_merged_patch_locks() const

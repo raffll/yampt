@@ -4,6 +4,8 @@ Bugs take precedence over features — always fix what is broken before adding a
 
 ## Bugs
 
+- Lua scan counts `.omwscripts` files that are not in the load order: OpenMW only loads omwscripts listed as content files, but `lua_scanner_t::scan` (lua_scanner.cpp) parses every `.omwscripts` at each data-folder root, so a disabled script file can still produce Lua conflicts. Pass the load order in and skip files not in it — yEditor
+
 ## Features
 
 - let the user customize the colors in settings (bigger task than just adjusting defaults) — yTranslator

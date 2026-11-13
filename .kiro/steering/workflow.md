@@ -64,3 +64,9 @@ Source code of other Morrowind modding tools is available at `c:\OMEN\Morrowind\
 - `sources/tes3cmd/` — tes3cmd (Perl). Command-line plugin manipulation tool.
 
 Use these as reference when implementing similar functionality (merge algorithms, conflict detection, record parsing). Read them to understand how existing tools solve the same problems.
+
+## Scripts
+
+Write helper and automation scripts in Python, not PowerShell. Python scripts are portable, easier to read, and can write their own result files instead of relying on console output. Use PowerShell only for one-line shell commands (git, MSBuild invocation, process control) where a script would be overkill. Run Python with the `py` launcher.
+
+Every reusable script goes in the repository's `scripts/` folder, never in `%TEMP%` or ad hoc locations. If you write a script you are likely to run again (build-and-test runs, UI driving, corpus cataloging, data inspection), save it under `scripts/` with a usage docstring at the top. Only throwaway one-shot launchers may live in `%TEMP%`, and they should just call a script in `scripts/`.

@@ -178,6 +178,7 @@
     <ClCompile Include="source\creator\creator_base.cpp" />
     <ClCompile Include="source\creator\creator_ordered.cpp" />
     <ClCompile Include="source\creator\eet_dict_builder.cpp" />
+    <ClCompile Include="source\creator\info_place_values.cpp" />
     <ClCompile Include="source\creator\inflection.cpp" />
     <ClCompile Include="source\creator\loc_generator.cpp" />
     <ClCompile Include="source\creator\phrase_form_builder.cpp" />
@@ -225,6 +226,7 @@
     <ClCompile Include="source\scanner\merge_patch_store.cpp" />
     <ClCompile Include="source\scanner\sub_record_merge.cpp" />
     <ClCompile Include="source\scanner\leveled_list_merge.cpp" />
+    <ClCompile Include="source\scanner\dialogue_arranger.cpp" />
     <ClCompile Include="source\scanner\summon_fixer.cpp" />
     <ClCompile Include="source\scanner\omwscripts_parser.cpp" />
     <ClCompile Include="source\scanner\handler_parser.cpp" />
@@ -254,6 +256,7 @@
     <ClInclude Include="source\creator\creator_ordered.hpp" />
     <ClInclude Include="source\creator\inflection.hpp" />
     <ClInclude Include="source\creator\eet_dict_builder.hpp" />
+    <ClInclude Include="source\creator\info_place_values.hpp" />
     <ClInclude Include="source\creator\loc_generator.hpp" />
     <ClInclude Include="source\creator\phrase_form_builder.hpp" />
     <ClInclude Include="source\creator\text_match_index.hpp" />
@@ -302,6 +305,7 @@
 
     <ClInclude Include="source\scanner\sub_record_merge.hpp" />
     <ClInclude Include="source\scanner\leveled_list_merge.hpp" />
+    <ClInclude Include="source\scanner\dialogue_arranger.hpp" />
     <ClInclude Include="source\scanner\summon_fixer.hpp" />
     <ClInclude Include="source\scanner\omwscripts_parser.hpp" />
     <ClInclude Include="source\scanner\handler_parser.hpp" />

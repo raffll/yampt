@@ -138,6 +138,7 @@ void plugin_workspace_view_t::setup_connections()
 		if (m_lua_scan_worker->isRunning())
 			m_lua_scan_worker->cancel_scan();
 
+		m_merge_controller->clear_copy_sources();
 		m_lua_view->clear();
 		m_record_view->clear();
 		m_nav_view->rebuild();
@@ -172,6 +173,12 @@ void plugin_workspace_view_t::setup_connections()
 		refresh_all_views();
 		m_merge_controller->save_active_plugin();
 	});
+
+	connect(
+	    m_edit_controller,
+	    &field_edit_controller_t::locks_resynced,
+	    this,
+	    [this]() { m_merge_controller->persist_active_locks(); });
 
 	connect(m_preview, &preview_view_t::edit_committed, this, [this]() { refresh_all_views(); });
 }
@@ -356,6 +363,7 @@ void plugin_workspace_view_t::on_settings_changed()
 	const auto codepage = static_cast<codepage_t>(m_settings.display_codepage());
 	m_record_view->model()->set_display_codepage(codepage);
 	m_nav_view->set_display_codepage(codepage);
+	m_nav_view->set_merge_excludes(m_settings.merge_excludes());
 
 	if (m_session->scan().plugin_count() > 0)
 		refresh_all_views();

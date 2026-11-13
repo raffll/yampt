@@ -129,8 +129,12 @@ edit_result_t field_edit_controller_t::commit_to_merge(
 
 	m_session.scan().copy_record_to_active_raw(rec_type, record_id, patched_content);
 
-	m_session.scan().resync_locks_to_active(rec_type, record_id);
+	const bool locks_changed = m_session.scan().resync_locks_to_active(rec_type, record_id);
 	m_session.scan().recompute_single_conflict(rec_type, record_id);
+
+	if (locks_changed)
+		emit locks_resynced();
+
 	emit record_modified();
 	return { true, {} };
 }
