@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -48,6 +49,18 @@ public:
 	    const std::string & author,
 	    const std::string & description,
 	    const std::vector<master_entry_t> & masters);
+
+	struct header_update_t
+	{
+		size_t record_count = 0;
+		std::vector<master_entry_t> extra_masters;
+	};
+
+	bool save_with_header(const std::string & output_path, const std::string & header_content);
+
+	static std::optional<std::string> update_tes3_header(
+	    const std::string & original_header,
+	    const header_update_t & update);
 
 	static std::string build_tes3_header(
 	    const std::string & author,

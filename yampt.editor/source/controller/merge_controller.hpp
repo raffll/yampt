@@ -6,6 +6,7 @@
 #include <scanner/merge_patch_ops.hpp>
 #include <scanner/merge_patch_store.hpp>
 #include <functional>
+#include <map>
 #include <set>
 #include <string>
 
@@ -106,6 +107,12 @@ private:
 	    const std::string & output_path,
 	    const std::string & author,
 	    const std::string & description);
+	bool save_loaded_plugin_to_file(const std::string & output_path);
+	bool is_editor_created_plugin(const std::string & filename) const;
+	void fill_patch_builder_from_active();
+	void note_copy_source(int plugin_idx);
+	std::vector<patch_builder_t::master_entry_t> collect_copy_source_masters() const;
+	patch_builder_t::master_entry_t master_entry_for_plugin(int plugin_idx) const;
 	void refresh_after_active_edit(const std::string & rec_type, const std::string & record_id);
 	void relock_after_edit(const std::string & rec_type, const std::string & record_id);
 	std::string finalize_record_content(const std::string & rec_type, const std::string & content) const;
@@ -133,4 +140,5 @@ private:
 	lock_changed_fn_t m_lock_changed;
 	progress_fn_t m_progress;
 	phase_fn_t m_phase;
+	std::map<std::string, std::set<std::string>> m_copy_sources;
 };

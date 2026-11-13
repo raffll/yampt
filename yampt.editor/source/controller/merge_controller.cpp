@@ -11,6 +11,7 @@
 #include <utility/record_behavior.hpp>
 #include <filesystem>
 #include <set>
+#include <string_view>
 #include <settings_store.hpp>
 #include <QCoreApplication>
 #include <QDir>
@@ -18,6 +19,8 @@
 #include <QFileInfo>
 #include <QMessageBox>
 #include <QSettings>
+
+static constexpr std::string_view loaded_tes3_record_id = "";
 
 merge_controller_t::merge_controller_t(
     plugin_session_t & session,
@@ -266,6 +269,7 @@ void merge_controller_t::copy_whole_record(int plugin_idx, const std::string & r
 	}
 
 	m_log("[info] copied record to active plugin (" + rec_type + ":" + record_id + ")");
+	note_copy_source(plugin_idx);
 	refresh_after_active_edit(rec_type, record_id);
 	save_active_plugin();
 }
@@ -334,6 +338,7 @@ void merge_controller_t::copy_cell_record(
 	const auto result = sub_record_merge_t::reconstruct_record(source_content, output);
 	m_session.scan().copy_record_to_active_raw(rec_type, record_id, result);
 	m_log("[info] copied CELL record to active plugin (" + record_id + ")");
+	note_copy_source(plugin_idx);
 
 	refresh_after_active_edit(rec_type, record_id);
 	save_active_plugin();
@@ -375,6 +380,7 @@ void merge_controller_t::copy_sub_record(
 	m_log(
 	    "[info] copied " + sub_type + " from " + m_session.scan().plugin_filename(plugin_idx) + " to active plugin (" +
 	    rec_type + ":" + record_id + ")");
+	note_copy_source(plugin_idx);
 
 	refresh_after_active_edit(rec_type, record_id);
 	save_active_plugin();
@@ -446,6 +452,7 @@ void merge_controller_t::copy_group(
 	m_log(
 	    "[info] copied group \"" + group_row.label + "\" from " + m_session.scan().plugin_filename(plugin_idx) +
 	    " to active plugin (" + rec_type + ":" + record_id + ")");
+	note_copy_source(plugin_idx);
 
 	refresh_after_active_edit(rec_type, record_id);
 	save_active_plugin();
@@ -490,6 +497,7 @@ void merge_controller_t::copy_field(
 	m_log(
 	    "[info] copied field " + result.description + " of " + sub_type + " from " +
 	    m_session.scan().plugin_filename(plugin_idx) + " to active plugin (" + rec_type + ":" + record_id + ")");
+	note_copy_source(plugin_idx);
 
 	refresh_after_active_edit(rec_type, record_id);
 	save_active_plugin();
@@ -526,6 +534,7 @@ void merge_controller_t::copy_bit(const copy_bit_params_t & params)
 	    "[info] copied bit " + result.description + " of " + params.bit.sub_type + " from " +
 	    m_session.scan().plugin_filename(params.plugin_idx) + " to active plugin (" + params.rec_type + ":" +
 	    params.record_id + ")");
+	note_copy_source(params.plugin_idx);
 
 	refresh_after_active_edit(params.rec_type, params.record_id);
 	save_active_plugin();
@@ -865,7 +874,9 @@ void merge_controller_t::save_active_plugin()
 	const auto output_filename = std::filesystem::path(output_path).filename().string();
 	const std::string description =
 	    output_filename == merged_patch::filename ? "Auto-generated merged patch" : "Created with yEditor";
-	const bool saved = save_active_to_file(output_path, "yEditor", description);
+	const bool saved = is_editor_created_plugin(output_filename)
+	                       ? save_active_to_file(output_path, "yEditor", description)
+	                       : save_loaded_plugin_to_file(output_path);
 	if (saved)
 		m_log(
 		    "[info] saved " + output_path + " (" + std::to_string(m_session.scan().active_record_count()) +
@@ -885,14 +896,7 @@ bool merge_controller_t::save_active_to_file(
 	if (!scan.has_active())
 		return false;
 
-	builder.clear();
-	for (size_t i = 0; i < scan.active_record_count(); ++i)
-	{
-		if (scan.active_record_type(i) == "TES3")
-			continue;
-
-		builder.add_record_raw(scan.active_record_type(i), scan.active_record_id(i), scan.active_record_content(i));
-	}
+	fill_patch_builder_from_active();
 
 	const auto contributing = collect_contributing_plugins();
 	const auto masters = build_master_list(contributing);
@@ -906,6 +910,98 @@ bool merge_controller_t::save_active_to_file(
 
 	const bool saved = builder.save(output_path, author, description, masters);
 
+	if (saved && tes3_is_new)
+	{
+		scan.recompute_single_conflict("TES3", merge_filename);
+		m_nav_view.rebuild_preserving_state();
+	}
+
+	return saved;
+}
+
+bool merge_controller_t::is_editor_created_plugin(const std::string & filename) const
+{
+	return filename == merged_patch::filename || m_session.created_plugins().count(filename) != 0;
+}
+
+void merge_controller_t::fill_patch_builder_from_active()
+{
+	const auto & scan = m_session.scan();
+	auto & builder = m_session.patch_builder();
+
+	builder.clear();
+	for (size_t i = 0; i < scan.active_record_count(); ++i)
+	{
+		if (scan.active_record_type(i) == "TES3")
+			continue;
+
+		builder.add_record_raw(scan.active_record_type(i), scan.active_record_id(i), scan.active_record_content(i));
+	}
+}
+
+void merge_controller_t::note_copy_source(int plugin_idx)
+{
+	const auto & scan = m_session.scan();
+	if (!scan.has_active() || scan.is_active_plugin(plugin_idx))
+		return;
+
+	const auto & active_filename = scan.plugin_filename(scan.active_plugin_index());
+	m_copy_sources[active_filename].insert(scan.plugin_filename(plugin_idx));
+}
+
+std::vector<patch_builder_t::master_entry_t> merge_controller_t::collect_copy_source_masters() const
+{
+	const auto & scan = m_session.scan();
+	std::vector<patch_builder_t::master_entry_t> masters;
+
+	const auto it_sources = m_copy_sources.find(scan.plugin_filename(scan.active_plugin_index()));
+	if (it_sources == m_copy_sources.end())
+		return masters;
+
+	for (int i = 0; i < static_cast<int>(scan.plugin_count()); ++i)
+	{
+		if (scan.is_active_plugin(i) || it_sources->second.count(scan.plugin_filename(i)) == 0)
+			continue;
+
+		masters.push_back(master_entry_for_plugin(i));
+	}
+
+	return masters;
+}
+
+bool merge_controller_t::save_loaded_plugin_to_file(const std::string & output_path)
+{
+	auto & scan = m_session.scan();
+	if (!scan.has_active())
+		return false;
+
+	const auto * original_ptr = scan.find_active_content("TES3", std::string(loaded_tes3_record_id));
+	if (original_ptr == nullptr)
+	{
+		m_log("[error] cannot save " + output_path + ": the original plugin header was not found");
+		return false;
+	}
+
+	const std::string original_header = *original_ptr;
+	fill_patch_builder_from_active();
+
+	auto & builder = m_session.patch_builder();
+	patch_builder_t::header_update_t update;
+	update.record_count = builder.record_count();
+	update.extra_masters = collect_copy_source_masters();
+
+	const auto header_content = patch_builder_t::update_tes3_header(original_header, update);
+	if (!header_content)
+	{
+		m_log("[error] cannot save " + output_path + ": the original plugin header could not be parsed");
+		return false;
+	}
+
+	const auto merge_filename = std::filesystem::path(output_path).filename().string();
+	const bool tes3_is_new = (scan.find_active_content("TES3", merge_filename) == nullptr);
+	scan.copy_record_to_active_raw("TES3", merge_filename, *header_content);
+
+	const bool saved = builder.save_with_header(output_path, *header_content);
 	if (saved && tes3_is_new)
 	{
 		scan.recompute_single_conflict("TES3", merge_filename);
@@ -959,22 +1055,29 @@ std::vector<patch_builder_t::master_entry_t> merge_controller_t::build_master_li
 		if (contributing.find(i) == contributing.end())
 			continue;
 
-		patch_builder_t::master_entry_t master;
-		master.filename = scan.plugin_filename(i);
-
-		try
-		{
-			master.file_size = std::filesystem::file_size(scan.plugin_path(i));
-		}
-		catch (...)
-		{
-			master.file_size = 0;
-		}
-
-		masters.push_back(std::move(master));
+		masters.push_back(master_entry_for_plugin(i));
 	}
 
 	return masters;
+}
+
+patch_builder_t::master_entry_t merge_controller_t::master_entry_for_plugin(int plugin_idx) const
+{
+	const auto & scan = m_session.scan();
+
+	patch_builder_t::master_entry_t master;
+	master.filename = scan.plugin_filename(plugin_idx);
+
+	try
+	{
+		master.file_size = std::filesystem::file_size(scan.plugin_path(plugin_idx));
+	}
+	catch (...)
+	{
+		master.file_size = 0;
+	}
+
+	return master;
 }
 
 std::string merge_controller_t::finalize_record_content(

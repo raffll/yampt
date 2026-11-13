@@ -4,6 +4,7 @@
 #include "../utility/string_utils.hpp"
 #include <cstring>
 #include <filesystem>
+#include <set>
 
 static constexpr size_t hedr_version_offset = 0;
 static constexpr size_t hedr_version_size = 4;
@@ -152,6 +153,85 @@ std::string header_repair_t::update_master_sizes(
 		const auto actual_size = static_cast<uint64_t>(file_size);
 		write_uint64(result, pair.data_location.data_offset, actual_size);
 	}
+
+	return result;
+}
+
+static constexpr size_t hedr_min_size = 300;
+static constexpr size_t hedr_record_count_offset = 296;
+static constexpr size_t record_size_field_offset = 4;
+static constexpr size_t record_size_field_length = 4;
+
+std::optional<std::string> header_repair_t::update_record_count(
+    const std::string & header_content,
+    size_t record_count)
+{
+	const auto hedr = find_first_sub_record(header_content, "HEDR");
+	if (!hedr.found || hedr.data_size < hedr_min_size)
+		return std::nullopt;
+
+	auto result = header_content;
+	const auto count = static_cast<uint32_t>(record_count);
+	std::memcpy(result.data() + hedr.data_offset + hedr_record_count_offset, &count, sizeof(count));
+	return result;
+}
+
+static size_t master_insert_position(const std::string & content, const sub_record_location_t & hedr)
+{
+	const auto pairs = find_mast_data_pairs(content);
+	if (pairs.empty())
+		return hedr.data_offset + hedr.data_size;
+
+	const auto & last = pairs.back();
+	if (last.data_location.found)
+		return last.data_location.data_offset + last.data_location.data_size;
+
+	return last.mast_location.data_offset + last.mast_location.data_size;
+}
+
+static std::string build_master_sub_records(
+    const std::string & content,
+    const std::vector<header_master_t> & masters)
+{
+	std::set<std::string> known_names;
+	for (const auto & pair : find_mast_data_pairs(content))
+		known_names.insert(string_utils::to_lower(pair.master_name));
+
+	std::string added;
+	for (const auto & master : masters)
+	{
+		if (!known_names.insert(string_utils::to_lower(master.filename)).second)
+			continue;
+
+		const auto name_with_null = master.filename + '\0';
+		added += "MAST" + domain_types::convert_uint_to_string_byte_array(name_with_null.size()) + name_with_null;
+
+		std::string size_data(master_data_size, '\0');
+		std::memcpy(size_data.data(), &master.file_size, master_data_size);
+		added += "DATA" + domain_types::convert_uint_to_string_byte_array(master_data_size) + size_data;
+	}
+
+	return added;
+}
+
+std::optional<std::string> header_repair_t::append_missing_masters(
+    const std::string & header_content,
+    const std::vector<header_master_t> & masters)
+{
+	const auto hedr = find_first_sub_record(header_content, "HEDR");
+	if (header_content.size() < record_header_size || header_content.compare(0, 4, "TES3") != 0 || !hedr.found)
+		return std::nullopt;
+
+	const auto added = build_master_sub_records(header_content, masters);
+	if (added.empty())
+		return header_content;
+
+	auto result = header_content;
+	result.insert(master_insert_position(header_content, hedr), added);
+	result.replace(
+	    record_size_field_offset,
+	    record_size_field_length,
+	    domain_types::convert_uint_to_string_byte_array(result.size() - record_header_size));
 
 	return result;
 }

@@ -83,6 +83,7 @@
     <ClCompile Include="source\tests.highlight_applier.cpp" />
     <ClCompile Include="source\tests.patch_builder.cpp" />
     <ClCompile Include="source\tests.patch_builder_header.cpp" />
+    <ClCompile Include="source\tests.tes3_header_preserve.cpp" />
     <ClCompile Include="source\tests.plugin_session.cpp" />
     <ClCompile Include="source\tests.plugin_save_path.cpp" />
     <ClCompile Include="source\tests.settings_store.cpp" />
