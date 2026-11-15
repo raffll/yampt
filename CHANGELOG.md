@@ -1,6 +1,6 @@
 # Changelog
 
-## [XXX]
+## [0.1303] - 2026-11-15
 
 ### yTranslator
 - [NEW] Importing a translation file against a source plugin. Right-click an EET file and choose Import Against Source Plugin to build a complete, applicable dictionary: yTranslator reads the plugin for the correct record structure and fills in the translations from the file, matching them up by their original text. Dialogue responses, dialogue choices, and place names now import alongside item and spell names, instead of only item names coming through. The app offers the matching plugin automatically by reading the file name, and lets you pick one by hand when it cannot find it; cancelling the picker aborts the import
