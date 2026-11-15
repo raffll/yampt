@@ -3,6 +3,7 @@
 #include "../dialog/plugin_select_dialog.hpp"
 #include "../model/filter_composer.hpp"
 #include "../session/lua_scan_worker.hpp"
+#include "../session/plugin_session.hpp"
 #include "count_label_format.hpp"
 #include "editor_delegates.hpp"
 #include <scanner/batch_cleaner.hpp>
@@ -209,24 +210,7 @@ void plugin_workspace_view_t::on_load_data_files()
 	if (dir.isEmpty())
 		return;
 
-	QDir data_dir(dir);
-	auto file_list = data_dir.entryInfoList({ "*.esm", "*.esp" }, QDir::Files, QDir::Time | QDir::Reversed);
-
-	std::vector<std::string> esms;
-	std::vector<std::string> esps;
-
-	for (const auto & fi : file_list)
-	{
-		auto path = fi.absoluteFilePath().toStdString();
-		if (fi.suffix().toLower() == "esm")
-			esms.push_back(path);
-		else
-			esps.push_back(path);
-	}
-
-	std::vector<std::string> paths;
-	paths.insert(paths.end(), esms.begin(), esms.end());
-	paths.insert(paths.end(), esps.begin(), esps.end());
+	const auto paths = plugin_session_t::list_folder_plugins(dir.toStdString());
 
 	if (paths.empty())
 	{

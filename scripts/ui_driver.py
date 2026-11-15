@@ -36,16 +36,47 @@ def write_result(path, payload):
         json.dump(payload, handle, indent=2, ensure_ascii=False)
 
 
+driven_process_names = {"yeditor.exe", "ytranslator.exe"}
+process_query_limited_information = 0x1000
+
+
+def process_image_name(process_id):
+    import ctypes
+    from ctypes import wintypes
+    kernel32 = ctypes.windll.kernel32
+    handle = kernel32.OpenProcess(process_query_limited_information, False, process_id)
+    if not handle:
+        return ""
+    try:
+        buffer = ctypes.create_unicode_buffer(1024)
+        size = wintypes.DWORD(len(buffer))
+        if not kernel32.QueryFullProcessImageNameW(handle, 0, buffer, ctypes.byref(size)):
+            return ""
+        return os.path.basename(buffer.value).lower()
+    finally:
+        kernel32.CloseHandle(handle)
+
+
+def is_driven_app_window(window):
+    """Only yEditor/yTranslator windows (and the native dialogs they own) are targets,
+    so a title regex can never match the IDE or another program by accident."""
+    return process_image_name(window.element_info.process_id) in driven_process_names
+
+
 def find_window(title_regex, timeout_seconds=15):
     deadline = time.time() + timeout_seconds
     import re
     pattern = re.compile(title_regex)
     while time.time() < deadline:
         for window in Desktop(backend="uia").windows(title_re=title_regex, visible_only=True):
-            return window
+            if is_driven_app_window(window):
+                return window
         # Modal dialogs (e.g. the native folder picker) are owned windows that UIA
         # exposes as children of their parent window, not as top-level windows.
+        # Only look inside the apps we drive, never inside the IDE or other programs.
         for top in Desktop(backend="uia").windows(visible_only=True):
+            if not is_driven_app_window(top):
+                continue
             try:
                 for child in top.children():
                     if child.element_info.control_type == "Window" and pattern.search(child.element_info.name or ""):
@@ -97,12 +128,29 @@ def command_shot(arguments):
     return {"saved": arguments.extra, "size": list(image.size)}
 
 
+def title_criteria(label):
+    """Exact title, or a regex when the label starts with 're:' (for titles with icons/emoji)."""
+    if label.startswith("re:"):
+        return {"title_re": label[3:]}
+    return {"title": label}
+
+
+def find_descendants(window, criteria):
+    title_pattern = criteria.pop("title_re", None)
+    matches = window.descendants(**criteria)
+    if title_pattern is None:
+        return matches
+    import re
+    compiled = re.compile(title_pattern)
+    return [element for element in matches if compiled.search(element.element_info.name or "")]
+
+
 def command_click(arguments):
     window = find_window(arguments.target)
-    criteria = {"title": arguments.extra}
+    criteria = title_criteria(arguments.extra)
     if arguments.type:
         criteria["control_type"] = arguments.type
-    matches = window.descendants(**criteria)
+    matches = find_descendants(window, criteria)
     if not matches:
         raise RuntimeError(f"no control titled '{arguments.extra}' (type={arguments.type})")
     control = matches[0]
@@ -111,7 +159,14 @@ def command_click(arguments):
     selectable_types = ("TabItem", "ListItem", "TreeItem")
     invokable_types = ("Button", "MenuItem", "SplitButton")
     control_type = control.element_info.control_type
-    if control_type in selectable_types and hasattr(control, "select"):
+    if getattr(arguments, "mouse", False):
+        # A real click (optionally offset right of the label, e.g. into a value column)
+        # fires Qt's clicked/currentChanged signals that a UIA selection does not.
+        rect = control.element_info.rectangle
+        offset_x = int(getattr(arguments, "offset_x", 0) or 0)
+        control.click_input(coords=(rect.width() // 2 + offset_x, rect.height() // 2))
+        method = "mouse_click_forced"
+    elif control_type in selectable_types and hasattr(control, "select"):
         control.select()
         method = "uia_select"
     elif control_type in invokable_types:
@@ -119,8 +174,13 @@ def command_click(arguments):
             control.invoke()
             method = "uia_invoke"
         except Exception:
-            control.click_input()
-            method = "mouse_click"
+            # Invoking a button that closes its modal dialog makes UIA raise a COM error
+            # although the click took effect; only fall back to the mouse if it is still there.
+            try:
+                control.click_input()
+                method = "mouse_click"
+            except Exception:
+                return {"clicked": arguments.extra, "method": "uia_invoke_closed_window"}
     elif control_type == "CheckBox":
         control.toggle()
         method = "uia_toggle"
@@ -128,9 +188,13 @@ def command_click(arguments):
         control.click_input()
         method = "mouse_click"
     time.sleep(0.6)
-    report = {"clicked": describe(control), "method": method}
-    if hasattr(control, "is_selected"):
-        report["selected_after"] = bool(control.is_selected())
+    try:
+        report = {"clicked": describe(control), "method": method}
+        if hasattr(control, "is_selected"):
+            report["selected_after"] = bool(control.is_selected())
+    except Exception:
+        # The control's window closed as a result of the click (e.g. a dialog's OK button).
+        report = {"clicked": arguments.extra, "method": method, "window_closed": True}
     return report
 
 
@@ -141,6 +205,8 @@ def normalize_label(label):
 def visible_menu_items():
     items = []
     for top in Desktop(backend="uia").windows(visible_only=True):
+        if not is_driven_app_window(top):
+            continue
         try:
             items.extend(top.descendants(control_type="MenuItem"))
         except Exception:
@@ -180,6 +246,47 @@ def command_popup_items(arguments):
         click_menu_item(arguments.extra, scope=window)
         time.sleep(0.8)
     return {"items": [item.element_info.name for item in visible_menu_items() if item.element_info.name]}
+
+
+def command_rclick(arguments):
+    """Right-click a control by exact title (extra), optionally filtered by --type, to open its context menu."""
+    window = find_window(arguments.target)
+    criteria = title_criteria(arguments.extra)
+    if arguments.type:
+        criteria["control_type"] = arguments.type
+    matches = find_descendants(window, criteria)
+    if not matches:
+        raise RuntimeError(f"no control titled '{arguments.extra}' (type={arguments.type})")
+    window.set_focus()
+    time.sleep(0.3)
+    matches[0].click_input(button="right")
+    time.sleep(0.8)
+    return {"right_clicked": describe(matches[0])}
+
+
+def command_click_xy(arguments):
+    """Mouse-click a point given as 'x,y' in window coordinates (as in a 'shot' image) for unnamed widgets."""
+    window = find_window(arguments.target)
+    window.set_focus()
+    point_x, point_y = (int(value) for value in arguments.extra.split(","))
+    window.click_input(coords=(point_x, point_y))
+    time.sleep(0.5)
+    return {"clicked_at": [point_x, point_y]}
+
+
+def command_rclick_xy(arguments):
+    """Right-click a point 'x,y' in window coordinates, e.g. a record-view cell, to open its context menu."""
+    window = find_window(arguments.target)
+    window.set_focus()
+    point_x, point_y = (int(value) for value in arguments.extra.split(","))
+    window.click_input(button="right", coords=(point_x, point_y))
+    time.sleep(0.8)
+    return {"right_clicked_at": [point_x, point_y]}
+
+
+def command_popup_click(arguments):
+    """Click an item in an already open popup/context menu by its label (extra)."""
+    return {"clicked": click_menu_item(arguments.extra)}
 
 
 def command_dialog_path(arguments):
@@ -300,7 +407,8 @@ def command_run(arguments):
     for index, step in enumerate(steps):
         step_arguments = argparse.Namespace(
             command=step["cmd"], target=step.get("target"), extra=step.get("extra"),
-            depth=step.get("depth", 4), wait=step.get("wait", 4.0), type=step.get("type"), out=None)
+            depth=step.get("depth", 4), wait=step.get("wait", 4.0), type=step.get("type"), out=None,
+            mouse=step.get("mouse", False), offset_x=step.get("offset_x", 0))
         try:
             outcome = {"ok": True, "result": commands[step["cmd"]](step_arguments)}
         except Exception as error:
@@ -316,6 +424,10 @@ commands = {
     "windows": command_windows,
     "wait_text": command_wait_text,
     "popup_items": command_popup_items,
+    "popup_click": command_popup_click,
+    "rclick": command_rclick,
+    "click_xy": command_click_xy,
+    "rclick_xy": command_rclick_xy,
     "dialog_path": command_dialog_path,
     "wait": command_wait,
     "texts": command_texts,

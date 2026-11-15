@@ -25,6 +25,7 @@ public:
 		mo2_profile
 	};
 
+	static std::vector<std::string> list_folder_plugins(const std::string & folder_path);
 	void load_from_folder(const std::vector<std::string> & paths, const std::string & base_path);
 	void load_from_mo2_profile(const QString & profile_dir);
 	void load_from_openmw_cfg(const QString & cfg_path);

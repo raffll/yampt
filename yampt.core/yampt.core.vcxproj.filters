@@ -41,6 +41,7 @@
     <ClCompile Include="source\utility\keyword_trie.cpp" />
     <ClCompile Include="source\utility\record_behavior.cpp" />
     <ClCompile Include="source\io\profile_reader.cpp" />
+    <ClCompile Include="source\io\folder_plugin_order.cpp" />
     <ClCompile Include="source\scanner\sub_record_merge.cpp" />
     <ClCompile Include="source\scanner\leveled_list_merge.cpp" />
     <ClCompile Include="source\scanner\dialogue_arranger.cpp" />
@@ -140,6 +141,7 @@
     <ClInclude Include="source\decoder\view_tree_format.hpp" />
     <ClInclude Include="source\decoder\scvr_condition.hpp" />
     <ClInclude Include="source\io\profile_reader.hpp" />
+    <ClInclude Include="source\io\folder_plugin_order.hpp" />
     <ClInclude Include="source\utility\theme_enums.hpp" />
     <ClInclude Include="source\utility\color_palette.hpp" />
     <ClInclude Include="source\scanner\fog_fixer.hpp" />

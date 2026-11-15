@@ -53,6 +53,8 @@ def main():
         with open(arguments.out, "w", encoding="utf-8") as handle:
             handle.write(text)
     else:
+        # UI labels contain emoji the Windows console codepage cannot encode.
+        sys.stdout.reconfigure(errors="replace")
         sys.stdout.write(text)
     return 0
 

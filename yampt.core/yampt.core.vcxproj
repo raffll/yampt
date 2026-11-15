@@ -205,6 +205,7 @@
     <ClCompile Include="source\io\binary_file_io.cpp" />
     <ClCompile Include="source\io\file_list.cpp" />
     <ClCompile Include="source\io\profile_reader.cpp" />
+    <ClCompile Include="source\io\folder_plugin_order.cpp" />
     <ClCompile Include="source\io\loc_file_reader.cpp" />
     <ClCompile Include="source\io\loc_file_writer.cpp" />
     <ClCompile Include="source\io\yaml_l10n_reader.cpp" />
@@ -287,6 +288,7 @@
     <ClInclude Include="source\io\loc_file_writer.hpp" />
     <ClInclude Include="source\io\loc_types.hpp" />
     <ClInclude Include="source\io\profile_reader.hpp" />
+    <ClInclude Include="source\io\folder_plugin_order.hpp" />
     <ClInclude Include="source\io\yaml_scalar.hpp" />
     <ClInclude Include="source\merger\dict_merger.hpp" />
     <ClInclude Include="source\scanner\cell_name_fixer.hpp" />

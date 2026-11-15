@@ -1,6 +1,7 @@
 #include "plugin_session.hpp"
 #include "../patcher/patch_builder.hpp"
 #include "merged_patch_name.hpp"
+#include <io/folder_plugin_order.hpp>
 #include <io/profile_reader.hpp>
 #include <algorithm>
 #include <QCoreApplication>
@@ -252,24 +253,22 @@ void plugin_session_t::restore_active_plugin(const std::string & active_path)
 	}
 }
 
+std::vector<std::string> plugin_session_t::list_folder_plugins(const std::string & folder_path)
+{
+	const QDir data_dir(QString::fromStdString(folder_path));
+	const auto file_list = data_dir.entryInfoList({ "*.esm", "*.esp" }, QDir::Files, QDir::Time | QDir::Reversed);
+
+	std::vector<std::string> plugin_paths;
+	for (const auto & file_info : file_list)
+		plugin_paths.push_back(file_info.absoluteFilePath().toStdString());
+
+	const auto file_exists = [](const std::string & path) { return QFile::exists(QString::fromStdString(path)); };
+	return folder_plugin_order::order_folder_plugins({ plugin_paths, file_exists });
+}
+
 void plugin_session_t::restore_folder_session()
 {
-	QDir data_dir(QString::fromStdString(m_load_base_path));
-	auto file_list = data_dir.entryInfoList({ "*.esm", "*.esp" }, QDir::Files, QDir::Time | QDir::Reversed);
-
-	std::vector<std::string> esms;
-	std::vector<std::string> esps;
-	for (const auto & file_info : file_list)
-	{
-		if (file_info.suffix().toLower() == "esm")
-			esms.push_back(file_info.absoluteFilePath().toStdString());
-		else
-			esps.push_back(file_info.absoluteFilePath().toStdString());
-	}
-
-	std::vector<std::string> paths;
-	paths.insert(paths.end(), esms.begin(), esms.end());
-	paths.insert(paths.end(), esps.begin(), esps.end());
+	const auto paths = list_folder_plugins(m_load_base_path);
 
 	if (paths.empty())
 		return;
