@@ -77,6 +77,8 @@ public:
 	static std::string serialize_sub_record(const sub_record_entry_t & entry);
 	static std::string reconstruct_record(const std::string & winner_content, const sub_record_sequence_t & output);
 
+	static std::string recompute_leveled_indx(const std::string & rec_type, const std::string & content);
+
 	static std::string filter_sub_records_by_rules(
 	    const std::string & rec_type,
 	    const std::string & content,
@@ -202,10 +204,4 @@ private:
 
 	static void merge_winner_armor_groups(const armor_merge_context_t & context);
 	static void collect_intermediate_armor_additions(const armor_merge_context_t & context);
-};
-
-class leveled_list_merge_t
-{
-public:
-	static merge_result_t merge(const merge_input_t & input);
 };

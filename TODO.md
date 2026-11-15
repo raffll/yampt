@@ -1,19 +1,19 @@
 # TODO
 
-## Medium
+Bugs take precedence over features — always fix what is broken before adding anything new.
 
-- advanced filters: locked only, excluded only — yEditor
-- PNAM etc should not be taken from last?
-- colors blend together / hard to distinguish — adjust the palette so states are easier to tell apart (user reported with screenshot) — yTranslator
+## Bugs
+- Exclude Record menu may revert after Advanced Filters (unconfirmed): after Exclude Record from Merged Patch, the record's context menu offers Include Record, but after confirming Advanced Filters it offers Exclude Record again, while the rule stays in the ini and Excluded Only still matches. Seen only through the UI driver (scripts/e2e/run_suite.py --only exclude_record_toggle); confirm by hand first. Menu state comes from view_context_menu.cpp add_exclude_record_action reading settings_store merge_excludes() — yEditor
+
+- Lua scan counts `.omwscripts` files that are not in the load order: OpenMW only loads omwscripts listed as content files, but `lua_scanner_t::scan` (lua_scanner.cpp) parses every `.omwscripts` at each data-folder root, so a disabled script file can still produce Lua conflicts. Pass the load order in and skip files not in it — yEditor
+
+## Features
+- Testability: state dump for automated checks — `--dump-state <file.json>` (or a debug hotkey) writes the navigation tree, active plugin, locks, exclusion rules and filter state as JSON, so end-to-end checks read exact state instead of the screen — yEditor
+- Testability: headless yampt CLI commands for yEditor operations — create a merged patch from a folder or MO2 profile and edit a field in a plugin without the GUI, so merge regressions (e.g. the 963-plugin POTI check) run with no UI driving — CLI
+- Testability: automation command channel — `--run steps.json` (or a local socket) that calls the controllers directly (open folder, set active, edit field, lock, create merged patch), implemented as its own controller rather than in the main window; UI driving would then only be needed for menu/widget wiring — yEditor
+- Decide whether the Locked Only filter should also match records that have only field, sub-record, or bit locks; it currently matches whole-record locks only (nav_tree_model.cpp has_whole_record_lock) — yEditor
+
 - let the user customize the colors in settings (bigger task than just adjusting defaults) — yTranslator
-
-## Hard
-
+- colors blend together / hard to distinguish — adjust the palette so states are easier to tell apart (user reported with screenshot) — yTranslator
 - Cross-workspace search window: search a phrase across all open dictionaries, results in a separate window with dictionary name column and highlighted match — yTranslator
-- MO2 mode: resolve Kezyma OpenMW Player stub plugins — a `.omwaddon.esp` / `.omwscript.esp` double-extension file is an empty placeholder MO2 uses to put the real `.omwaddon`/`.omwscript` into the load order; yEditor loads the empty stub instead of the real file. In MO2 mode, detect the double extension and load the real file (strip the trailing `.esp`). — yEditor
-- value changed on locked field doesn't survive merged patch — yEditor
-
-## Hard to Fix
-
-- editor diff off by couple characters
-- NPDT 12 vs 52 merged patch
+- unify validation feedback across apps: yTranslator informs (three-tier, own validator) while yEditor blocks (binary, validator in yampt.core) — contradicts Consistent Across Apps; needs a design decision (shared validation core, unified message wording, deliberate block-vs-inform per app) before implementing

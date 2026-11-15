@@ -37,6 +37,7 @@ public:
 
 signals:
 	void record_modified();
+	void locks_resynced();
 
 private:
 	edit_result_t commit_to_merge(const field_edit_request_t & request, const std::string & patched_content);

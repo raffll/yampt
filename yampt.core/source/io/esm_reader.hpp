@@ -22,17 +22,17 @@ public:
 	void set_value(const std::string & sub_id);
 	void set_next_value(const std::string & sub_id);
 
-	const auto & is_loaded()
+	const auto & is_loaded() const
 	{
 		return m_loaded;
 	}
 
-	const auto & get_name()
+	const auto & get_name() const
 	{
 		return m_name;
 	}
 
-	const auto & get_time()
+	const auto & get_time() const
 	{
 		return m_time;
 	}
@@ -42,7 +42,7 @@ public:
 		return m_records;
 	}
 
-	const auto & get_record()
+	const auto & get_record() const
 	{
 		return *ptr_record;
 	}
@@ -52,7 +52,7 @@ public:
 		return m_records.at(index).content;
 	}
 
-	size_t get_modified_count();
+	size_t get_modified_count() const;
 
 	struct sub_record_t
 	{
@@ -65,12 +65,12 @@ public:
 		bool exist = false;
 	};
 
-	const auto & get_key()
+	const auto & get_key() const
 	{
 		return m_key;
 	}
 
-	const auto & get_value()
+	const auto & get_value() const
 	{
 		return m_value;
 	}

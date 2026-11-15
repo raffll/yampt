@@ -11,11 +11,12 @@ Qt6 GUI for viewing, comparing, and patching plugins. Similar to TES5Edit/xEdit.
 [list]
 [*][b]Load and compare any number of plugins simultaneously — no hardcoded limits[/b]
 [*]Load plugins from folder, Mod Organizer 2 profiles, or OpenMW cfg
+[*]OpenMW content behind .omwaddon.esp / .omwscript.esp placeholder plugins is loaded too; the placeholders are hidden in the tree unless Show OpenMW Stubs is on
 [*]Navigation tree with xEdit-style conflict coloring inherited up to file level
 [*][b]Lua handler tab: scans OpenMW Lua scripts and highlights conflicting handler registrations[/b]
 [*][b]Record comparison with decoded fields aligned by content identity across plugins[/b]
 [*]Side-by-side text comparison panel
-[*]Composable filters: Conflicts Only, search by ID/name, and advanced criteria combine as AND
+[*]Composable filters: Conflicts Only, search by ID/name, and advanced criteria, including Locked Only and Excluded Only, combine as AND
 [/list]
 
 [b]Editing[/b]
@@ -84,7 +85,7 @@ Qt6 GUI for interactive plugin translation.
 
 [list]
 [*][b]Lua l10n workflow: edit YAML localization files with auto-pairing and scaffold generation[/b]
-[*][b]EET file import: convert ESP-ESM Translator dictionaries to JSON[/b]
+[*][b]EET file import: build a complete, applicable dictionary from an ESP-ESM Translator file by matching it against a chosen source plugin, or export it as a plain reference pool[/b]
 [*][b]Generate localization files (.cel, .mrk, .top) from dictionary[/b]
 [*][b]Hyperlink insertion during plugin conversion[/b]
 [*][b]Apply Topic Tags: wrap dialogue topics — and their inflected forms — in the translated text of dialogue responses so they show as clickable links in-game[/b]
@@ -119,6 +120,7 @@ Batch tool for automated dictionary and conversion workflows.
 [*]Cross-platform: Windows and Linux
 [*]Dark mode
 [*]Session persistence: remembers window state between runs
+[*]Log file: everything in the Log tab is also written to yEditor.log / yTranslator.log in %TEMP%; start with --console to see it live or --debug for extra diagnostics
 [/list]
 
 [size=4][b]Changelog[/b][/size]

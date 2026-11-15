@@ -228,6 +228,85 @@ TEST_CASE("profile_reader_t::resolve_mo2_plugin, returns empty when not found", 
 	REQUIRE(result.empty());
 }
 
+TEST_CASE("profile_reader_t::is_openmw_stub_name, recognises double-extension stubs", "[u]")
+{
+	REQUIRE(profile_reader_t::is_openmw_stub_name("SomeMod.omwaddon.esp"));
+	REQUIRE(profile_reader_t::is_openmw_stub_name("SomeMod.OMWSCRIPT.ESP"));
+	REQUIRE(profile_reader_t::is_openmw_stub_name("a.omwscript.esp"));
+
+	REQUIRE_FALSE(profile_reader_t::is_openmw_stub_name("SomeMod.esp"));
+	REQUIRE_FALSE(profile_reader_t::is_openmw_stub_name("SomeMod.omwaddon"));
+	REQUIRE_FALSE(profile_reader_t::is_openmw_stub_name("SomeMod.esp.omwaddon"));
+	REQUIRE_FALSE(profile_reader_t::is_openmw_stub_name(""));
+}
+
+TEST_CASE("profile_reader_t::real_openmw_name_from_stub, strips trailing esp", "[u]")
+{
+	REQUIRE(profile_reader_t::real_openmw_name_from_stub("SomeMod.omwaddon.esp") == "SomeMod.omwaddon");
+	REQUIRE(profile_reader_t::real_openmw_name_from_stub("X.omwscript.esp") == "X.omwscript");
+
+	REQUIRE(profile_reader_t::real_openmw_name_from_stub("SomeMod.esp").empty());
+	REQUIRE(profile_reader_t::real_openmw_name_from_stub("SomeMod.omwaddon").empty());
+	REQUIRE(profile_reader_t::real_openmw_name_from_stub("").empty());
+}
+
+TEST_CASE("profile_reader_t::resolve_mo2_plugin_with_stub, stub yields stub then real", "[u]")
+{
+	std::set<std::string> existing = {
+		"/mods/ModA/SomeMod.omwaddon.esp",
+		"/mods/ModA/SomeMod.omwaddon",
+	};
+
+	auto file_exists = [&](const std::string & path) { return existing.count(path) > 0; };
+
+	const auto result = profile_reader_t::resolve_mo2_plugin_with_stub(
+	    "SomeMod.omwaddon.esp", "/overwrite", { "ModA" }, "/mods", "/game/Data Files", file_exists);
+
+	REQUIRE(result.size() == 2);
+	REQUIRE(result[0] == "/mods/ModA/SomeMod.omwaddon.esp");
+	REQUIRE(result[1] == "/mods/ModA/SomeMod.omwaddon");
+}
+
+TEST_CASE("profile_reader_t::resolve_mo2_plugin_with_stub, missing real yields stub only", "[u]")
+{
+	std::set<std::string> existing = {
+		"/mods/ModA/SomeMod.omwaddon.esp",
+	};
+
+	auto file_exists = [&](const std::string & path) { return existing.count(path) > 0; };
+
+	const auto result = profile_reader_t::resolve_mo2_plugin_with_stub(
+	    "SomeMod.omwaddon.esp", "/overwrite", { "ModA" }, "/mods", "/game/Data Files", file_exists);
+
+	REQUIRE(result.size() == 1);
+	REQUIRE(result[0] == "/mods/ModA/SomeMod.omwaddon.esp");
+}
+
+TEST_CASE("profile_reader_t::resolve_mo2_plugin_with_stub, non-stub yields single path", "[u]")
+{
+	std::set<std::string> existing = {
+		"/mods/ModA/plugin.esp",
+	};
+
+	auto file_exists = [&](const std::string & path) { return existing.count(path) > 0; };
+
+	const auto result = profile_reader_t::resolve_mo2_plugin_with_stub(
+	    "plugin.esp", "/overwrite", { "ModA" }, "/mods", "/game/Data Files", file_exists);
+
+	REQUIRE(result.size() == 1);
+	REQUIRE(result[0] == "/mods/ModA/plugin.esp");
+}
+
+TEST_CASE("profile_reader_t::resolve_mo2_plugin_with_stub, unresolved stub yields nothing", "[u]")
+{
+	auto file_exists = [](const std::string &) { return false; };
+
+	const auto result = profile_reader_t::resolve_mo2_plugin_with_stub(
+	    "SomeMod.omwaddon.esp", "/overwrite", { "ModA" }, "/mods", "/game/Data Files", file_exists);
+
+	REQUIRE(result.empty());
+}
+
 TEST_CASE("profile_reader_t::resolve_merge_output_path, folder mode", "[u]")
 {
 	const auto result =

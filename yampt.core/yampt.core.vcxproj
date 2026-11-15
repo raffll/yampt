@@ -177,6 +177,8 @@
     <ClCompile Include="source\creator\creator_single.cpp" />
     <ClCompile Include="source\creator\creator_base.cpp" />
     <ClCompile Include="source\creator\creator_ordered.cpp" />
+    <ClCompile Include="source\creator\eet_dict_builder.cpp" />
+    <ClCompile Include="source\creator\info_place_values.cpp" />
     <ClCompile Include="source\creator\inflection.cpp" />
     <ClCompile Include="source\creator\loc_generator.cpp" />
     <ClCompile Include="source\creator\phrase_form_builder.cpp" />
@@ -197,11 +199,13 @@
     <ClCompile Include="source\io\dict_reader.cpp" />
     <ClCompile Include="source\io\dict_writer.cpp" />
     <ClCompile Include="source\io\eet_converter.cpp" />
+    <ClCompile Include="source\io\eet_filename.cpp" />
     <ClCompile Include="source\io\eet_reader.cpp" />
     <ClCompile Include="source\io\esm_reader.cpp" />
     <ClCompile Include="source\io\binary_file_io.cpp" />
     <ClCompile Include="source\io\file_list.cpp" />
     <ClCompile Include="source\io\profile_reader.cpp" />
+    <ClCompile Include="source\io\folder_plugin_order.cpp" />
     <ClCompile Include="source\io\loc_file_reader.cpp" />
     <ClCompile Include="source\io\loc_file_writer.cpp" />
     <ClCompile Include="source\io\yaml_l10n_reader.cpp" />
@@ -219,8 +223,11 @@
     <ClCompile Include="source\scanner\merge_patch_ops.cpp" />
     <ClCompile Include="source\scanner\plugin_index.cpp" />
     <ClCompile Include="source\scanner\plugin_scan.cpp" />
+    <ClCompile Include="source\scanner\tree_source.cpp" />
     <ClCompile Include="source\scanner\merge_patch_store.cpp" />
     <ClCompile Include="source\scanner\sub_record_merge.cpp" />
+    <ClCompile Include="source\scanner\leveled_list_merge.cpp" />
+    <ClCompile Include="source\scanner\dialogue_arranger.cpp" />
     <ClCompile Include="source\scanner\summon_fixer.cpp" />
     <ClCompile Include="source\scanner\omwscripts_parser.cpp" />
     <ClCompile Include="source\scanner\handler_parser.cpp" />
@@ -249,6 +256,8 @@
     <ClInclude Include="source\creator\creator_base.hpp" />
     <ClInclude Include="source\creator\creator_ordered.hpp" />
     <ClInclude Include="source\creator\inflection.hpp" />
+    <ClInclude Include="source\creator\eet_dict_builder.hpp" />
+    <ClInclude Include="source\creator\info_place_values.hpp" />
     <ClInclude Include="source\creator\loc_generator.hpp" />
     <ClInclude Include="source\creator\phrase_form_builder.hpp" />
     <ClInclude Include="source\creator\text_match_index.hpp" />
@@ -269,6 +278,7 @@
     <ClInclude Include="source\io\dict_reader.hpp" />
     <ClInclude Include="source\io\dict_writer.hpp" />
     <ClInclude Include="source\io\eet_converter.hpp" />
+    <ClInclude Include="source\io\eet_filename.hpp" />
     <ClInclude Include="source\io\eet_reader.hpp" />
     <ClInclude Include="source\io\esm_reader.hpp" />
     <ClInclude Include="source\io\binary_file_io.hpp" />
@@ -278,6 +288,7 @@
     <ClInclude Include="source\io\loc_file_writer.hpp" />
     <ClInclude Include="source\io\loc_types.hpp" />
     <ClInclude Include="source\io\profile_reader.hpp" />
+    <ClInclude Include="source\io\folder_plugin_order.hpp" />
     <ClInclude Include="source\io\yaml_scalar.hpp" />
     <ClInclude Include="source\merger\dict_merger.hpp" />
     <ClInclude Include="source\scanner\cell_name_fixer.hpp" />
@@ -295,6 +306,8 @@
     <ClInclude Include="source\scanner\merge_patch_store.hpp" />
 
     <ClInclude Include="source\scanner\sub_record_merge.hpp" />
+    <ClInclude Include="source\scanner\leveled_list_merge.hpp" />
+    <ClInclude Include="source\scanner\dialogue_arranger.hpp" />
     <ClInclude Include="source\scanner\summon_fixer.hpp" />
     <ClInclude Include="source\scanner\omwscripts_parser.hpp" />
     <ClInclude Include="source\scanner\handler_parser.hpp" />
@@ -314,6 +327,9 @@
     <ClInclude Include="source\utility\domain_types.hpp" />
     <ClInclude Include="source\utility\app_logger.hpp" />
     <ClInclude Include="source\utility\language_config.hpp" />
+    <ClInclude Include="source\utility\plugin_icon_glyphs.hpp" />
+    <ClInclude Include="source\utility\plugin_icon_tiers.hpp" />
+    <ClInclude Include="source\scanner\tree_source.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

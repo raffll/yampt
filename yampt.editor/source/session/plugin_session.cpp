@@ -1,6 +1,8 @@
 #include "plugin_session.hpp"
 #include "../patcher/patch_builder.hpp"
 #include "merged_patch_name.hpp"
+#include <io/folder_plugin_order.hpp>
+#include <io/profile_reader.hpp>
 #include <algorithm>
 #include <QCoreApplication>
 #include <QDir>
@@ -16,8 +18,17 @@ plugin_session_t::plugin_session_t(QObject * parent)
 
 plugin_session_t::~plugin_session_t() = default;
 
+void plugin_session_t::unload_if_loaded()
+{
+	if (m_load_source == load_source_t::none)
+		return;
+
+	unload_all();
+}
+
 void plugin_session_t::load_from_folder(const std::vector<std::string> & paths, const std::string & base_path)
 {
+	unload_if_loaded();
 	m_load_base_path = base_path;
 	m_load_source = load_source_t::folder;
 	m_lua_data_paths = { base_path };
@@ -31,6 +42,7 @@ void plugin_session_t::load_from_mo2_profile(const QString & profile_dir)
 	if (paths.empty())
 		return;
 
+	unload_if_loaded();
 	m_load_base_path = profile_dir.toStdString();
 	m_load_source = load_source_t::mo2_profile;
 	build_lua_paths_for_mo2(profile_dir);
@@ -43,6 +55,7 @@ void plugin_session_t::load_from_openmw_cfg(const QString & cfg_path)
 	if (paths.empty())
 		return;
 
+	unload_if_loaded();
 	const auto cfg_dir = QFileInfo(cfg_path).absolutePath();
 	m_load_base_path = cfg_dir.toStdString();
 	m_load_source = load_source_t::openmw_cfg;
@@ -240,24 +253,22 @@ void plugin_session_t::restore_active_plugin(const std::string & active_path)
 	}
 }
 
+std::vector<std::string> plugin_session_t::list_folder_plugins(const std::string & folder_path)
+{
+	const QDir data_dir(QString::fromStdString(folder_path));
+	const auto file_list = data_dir.entryInfoList({ "*.esm", "*.esp" }, QDir::Files, QDir::Time | QDir::Reversed);
+
+	std::vector<std::string> plugin_paths;
+	for (const auto & file_info : file_list)
+		plugin_paths.push_back(file_info.absoluteFilePath().toStdString());
+
+	const auto file_exists = [](const std::string & path) { return QFile::exists(QString::fromStdString(path)); };
+	return folder_plugin_order::order_folder_plugins({ plugin_paths, file_exists });
+}
+
 void plugin_session_t::restore_folder_session()
 {
-	QDir data_dir(QString::fromStdString(m_load_base_path));
-	auto file_list = data_dir.entryInfoList({ "*.esm", "*.esp" }, QDir::Files, QDir::Time | QDir::Reversed);
-
-	std::vector<std::string> esms;
-	std::vector<std::string> esps;
-	for (const auto & file_info : file_list)
-	{
-		if (file_info.suffix().toLower() == "esm")
-			esms.push_back(file_info.absoluteFilePath().toStdString());
-		else
-			esps.push_back(file_info.absoluteFilePath().toStdString());
-	}
-
-	std::vector<std::string> paths;
-	paths.insert(paths.end(), esms.begin(), esms.end());
-	paths.insert(paths.end(), esps.begin(), esps.end());
+	const auto paths = list_folder_plugins(m_load_base_path);
 
 	if (paths.empty())
 		return;
@@ -593,46 +604,34 @@ std::vector<std::string> plugin_session_t::resolve_mo2_plugins(
     const std::vector<std::string> & plugin_names,
     const mo2_resolve_context_t & context)
 {
+	const auto file_exists = [](const std::string & path) { return QFile::exists(QString::fromStdString(path)); };
+
 	std::vector<std::string> paths;
 	for (const auto & name : plugin_names)
 	{
-		const auto & resolved = resolve_single_mo2_plugin(name, context);
-		if (!resolved.empty())
-			paths.push_back(resolved);
-		else
+		const auto resolved = profile_reader_t::resolve_mo2_plugin_with_stub(
+		    name,
+		    context.overwrite_path.toStdString(),
+		    context.enabled_mods,
+		    context.mods_path.toStdString(),
+		    context.game_data_path.toStdString(),
+		    file_exists);
+		if (resolved.empty())
+		{
 			emit log_message("[warning] cannot find: " + name);
+			continue;
+		}
+
+		if (profile_reader_t::is_openmw_stub_name(name) && resolved.size() == 1)
+			emit log_message("[warning] openmw stub " + name + ": real file not found, loading stub only");
+
+		paths.insert(paths.end(), resolved.begin(), resolved.end());
 	}
 
 	if (paths.empty())
 		emit log_message("[warning] no plugins resolved from MO2 profile");
 
 	return paths;
-}
-
-std::string plugin_session_t::resolve_single_mo2_plugin(
-    const std::string & plugin_name,
-    const mo2_resolve_context_t & context)
-{
-	if (!context.overwrite_path.isEmpty())
-	{
-		const auto overwrite_candidate = context.overwrite_path + "/" + QString::fromStdString(plugin_name);
-		if (QFile::exists(overwrite_candidate))
-			return overwrite_candidate.toStdString();
-	}
-
-	for (const auto & mod_name : context.enabled_mods)
-	{
-		const auto candidate =
-		    context.mods_path + "/" + QString::fromStdString(mod_name) + "/" + QString::fromStdString(plugin_name);
-		if (QFile::exists(candidate))
-			return candidate.toStdString();
-	}
-
-	const auto game_file = context.game_data_path + "/" + QString::fromStdString(plugin_name);
-	if (QFile::exists(game_file))
-		return game_file.toStdString();
-
-	return {};
 }
 
 std::vector<std::string> plugin_session_t::parse_openmw_cfg(const QString & cfg_path)

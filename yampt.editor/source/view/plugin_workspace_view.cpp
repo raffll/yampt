@@ -3,10 +3,14 @@
 #include "../dialog/plugin_select_dialog.hpp"
 #include "../model/filter_composer.hpp"
 #include "../session/lua_scan_worker.hpp"
+#include "../session/plugin_session.hpp"
+#include <log_mirror.hpp>
 #include "count_label_format.hpp"
 #include "editor_delegates.hpp"
 #include <scanner/batch_cleaner.hpp>
+#include <scanner/merge_exclusions.hpp>
 #include <scanner/record_conflict.hpp>
+#include <utility/app_logger.hpp>
 #include <utility/string_utils.hpp>
 #include <set>
 #include <settings_store.hpp>
@@ -138,6 +142,7 @@ void plugin_workspace_view_t::setup_connections()
 		if (m_lua_scan_worker->isRunning())
 			m_lua_scan_worker->cancel_scan();
 
+		m_merge_controller->clear_copy_sources();
 		m_lua_view->clear();
 		m_record_view->clear();
 		m_nav_view->rebuild();
@@ -173,6 +178,12 @@ void plugin_workspace_view_t::setup_connections()
 		m_merge_controller->save_active_plugin();
 	});
 
+	connect(
+	    m_edit_controller,
+	    &field_edit_controller_t::locks_resynced,
+	    this,
+	    [this]() { m_merge_controller->persist_active_locks(); });
+
 	connect(m_preview, &preview_view_t::edit_committed, this, [this]() { refresh_all_views(); });
 }
 
@@ -202,24 +213,7 @@ void plugin_workspace_view_t::on_load_data_files()
 	if (dir.isEmpty())
 		return;
 
-	QDir data_dir(dir);
-	auto file_list = data_dir.entryInfoList({ "*.esm", "*.esp" }, QDir::Files, QDir::Time | QDir::Reversed);
-
-	std::vector<std::string> esms;
-	std::vector<std::string> esps;
-
-	for (const auto & fi : file_list)
-	{
-		auto path = fi.absoluteFilePath().toStdString();
-		if (fi.suffix().toLower() == "esm")
-			esms.push_back(path);
-		else
-			esps.push_back(path);
-	}
-
-	std::vector<std::string> paths;
-	paths.insert(paths.end(), esms.begin(), esms.end());
-	paths.insert(paths.end(), esps.begin(), esps.end());
+	const auto paths = plugin_session_t::list_folder_plugins(dir.toStdString());
 
 	if (paths.empty())
 	{
@@ -356,6 +350,7 @@ void plugin_workspace_view_t::on_settings_changed()
 	const auto codepage = static_cast<codepage_t>(m_settings.display_codepage());
 	m_record_view->model()->set_display_codepage(codepage);
 	m_nav_view->set_display_codepage(codepage);
+	m_nav_view->set_merge_excludes(m_settings.merge_excludes());
 
 	if (m_session->scan().plugin_count() > 0)
 		refresh_all_views();
@@ -577,6 +572,12 @@ void plugin_workspace_view_t::set_hide_duplicates(bool hide)
 		m_preview->clear();
 }
 
+void plugin_workspace_view_t::set_show_openmw_stubs(bool show)
+{
+	m_show_openmw_stubs = show;
+	m_nav_view->set_hide_openmw_stubs(!show);
+}
+
 void plugin_workspace_view_t::set_preview_scroll_sync(bool enabled)
 {
 	if (m_preview)
@@ -596,6 +597,8 @@ void plugin_workspace_view_t::on_advanced_filter()
 	dlg_state.filter_by_type = m_advanced_filter.filter_by_type;
 	dlg_state.type_set = m_advanced_filter.type_set;
 	dlg_state.filter_deleted = m_advanced_filter.filter_deleted;
+	dlg_state.filter_locked_only = m_advanced_filter.filter_locked_only;
+	dlg_state.filter_excluded_only = m_advanced_filter.filter_excluded_only;
 	dlg_state.filter_lua_severity = m_advanced_filter.filter_lua_severity;
 	dlg_state.lua_severity_set = m_advanced_filter.lua_severity_set;
 	dlg_state.filter_lua_interface = m_advanced_filter.filter_lua_interface;
@@ -614,6 +617,8 @@ void plugin_workspace_view_t::on_advanced_filter()
 	m_advanced_filter.filter_by_type = result.filter_by_type;
 	m_advanced_filter.type_set = result.type_set;
 	m_advanced_filter.filter_deleted = result.filter_deleted;
+	m_advanced_filter.filter_locked_only = result.filter_locked_only;
+	m_advanced_filter.filter_excluded_only = result.filter_excluded_only;
 	m_advanced_filter.filter_lua_severity = result.filter_lua_severity;
 	m_advanced_filter.lua_severity_set = result.lua_severity_set;
 	m_advanced_filter.filter_lua_interface = result.filter_lua_interface;
@@ -829,6 +834,7 @@ QString plugin_workspace_view_t::build_mode_prefix() const
 void plugin_workspace_view_t::log_message(const std::string & msg)
 {
 	m_messages->log(msg);
+	log_mirror_t::instance().write(msg);
 }
 
 void plugin_workspace_view_t::save_session_state()
@@ -842,6 +848,7 @@ void plugin_workspace_view_t::save_session_state()
 	settings.setValue("session/main_splitter", m_main_splitter->saveState());
 	settings.setValue("session/content_splitter", m_content_splitter->saveState());
 	settings.setValue("view/hide_duplicates", m_hide_duplicates);
+	settings.setValue("view/show_openmw_stubs", m_show_openmw_stubs);
 	settings.setValue("view/show_deleted_strikeout", m_record_view->model()->show_deleted_strikeout());
 	settings.setValue("view/show_optional_placeholders", m_record_view->model()->show_optional_placeholders());
 	settings.setValue("view/nav_header", m_nav_view->tree_widget()->header()->saveState());
@@ -866,12 +873,14 @@ void plugin_workspace_view_t::restore_session_state()
 
 	m_conflicts_only = false;
 	m_hide_duplicates = settings.value("view/hide_duplicates", false).toBool();
+	m_show_openmw_stubs = settings.value("view/show_openmw_stubs", false).toBool();
 
 	m_record_view->model()->set_show_deleted_strikeout(settings.value("view/show_deleted_strikeout", false).toBool());
 	m_nav_view->set_show_deleted_strikeout(m_record_view->model()->show_deleted_strikeout());
 	m_record_view->model()->set_show_optional_placeholders(
 	    settings.value("view/show_optional_placeholders", false).toBool());
 	m_nav_view->set_hide_duplicates(m_hide_duplicates);
+	m_nav_view->set_hide_openmw_stubs(!m_show_openmw_stubs);
 
 	auto nav_header_state = settings.value("view/nav_header").toByteArray();
 	if (!nav_header_state.isEmpty())
@@ -1037,6 +1046,14 @@ nav_tree_model_t::filter_state_t plugin_workspace_view_t::build_effective_filter
 void plugin_workspace_view_t::apply_effective_filter()
 {
 	const auto state = build_effective_filter();
+	const auto merge_excludes = m_settings.merge_excludes();
+
+	m_nav_view->set_merge_excludes(merge_excludes);
+	app_logger_t::add_log(
+	    "[debug] filter applied: locked only " + std::to_string(state.filter_locked_only) + ", excluded only " +
+	        std::to_string(state.filter_excluded_only) + ", exclusion rules " +
+	        std::to_string(merge_exclusions_t::parse(merge_excludes).size()) + "\n",
+	    true);
 
 	if (state == nav_tree_model_t::filter_state_t {})
 		m_nav_view->clear_filter();

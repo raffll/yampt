@@ -1,4 +1,6 @@
 #include "sidebar_controller.hpp"
+#include "../dialog/eet_plugin_dialog.hpp"
+#include "../editor/operation_executor.hpp"
 #include "../model/dict_document.hpp"
 #include "../model/eet_document.hpp"
 #include "../model/loc_document.hpp"
@@ -8,6 +10,7 @@
 #include "../view/log_view.hpp"
 #include "../view/sidebar_view.hpp"
 #include <creator/loc_generator.hpp>
+#include <io/eet_filename.hpp>
 #include <utility/app_logger.hpp>
 #include <utility/language_config.hpp>
 #include <utility/string_utils.hpp>
@@ -105,8 +108,8 @@ void sidebar_controller_t::on_unload_requested(const std::string & path)
 
 void sidebar_controller_t::on_delete_requested(const std::string & path)
 {
-	const auto sep = path.find_last_of("/\\");
-	const auto filename = sep != std::string::npos ? path.substr(sep + 1) : path;
+	const auto separator_index = path.find_last_of("/\\");
+	const auto filename = separator_index != std::string::npos ? path.substr(separator_index + 1) : path;
 
 	auto answer = QMessageBox::question(
 	    m_deps.parent_widget,
@@ -268,8 +271,8 @@ void sidebar_controller_t::on_remove_folder_requested(const std::string & root_p
 
 void sidebar_controller_t::on_delete_folder_requested(const std::string & folder_path)
 {
-	const auto sep = folder_path.find_last_of("/\\");
-	const auto folder_name = sep != std::string::npos ? folder_path.substr(sep + 1) : folder_path;
+	const auto separator_index = folder_path.find_last_of("/\\");
+	const auto folder_name = separator_index != std::string::npos ? folder_path.substr(separator_index + 1) : folder_path;
 
 	auto answer = QMessageBox::question(
 	    m_deps.parent_widget,
@@ -340,6 +343,34 @@ void sidebar_controller_t::on_export_eet_requested(const std::string & path)
 	scan_workspace();
 }
 
+void sidebar_controller_t::on_import_eet_requested(const std::string & path)
+{
+	const auto parts = eet_filename::parse(path);
+	const auto plugin_name = parts.has_value() ? parts->name : std::string {};
+
+	eet_plugin_dialog_t dialog(m_deps.file_list, plugin_name, m_deps.parent_widget);
+	if (dialog.exec() != QDialog::Accepted)
+		return;
+
+	const auto plugin_path = dialog.selected_plugin_path();
+	if (!plugin_path.has_value())
+		return;
+
+	const auto separator_index = path.find_last_of("/\\");
+	const auto output_dir = separator_index != std::string::npos ? path.substr(0, separator_index) : ".";
+
+	operation_executor_t executor;
+	executor.set_output_dir(output_dir);
+	const auto result = executor.import_eet_with_plugin(path, *plugin_path, m_deps.session.codepage());
+
+	m_deps.log_view.append_log("import eet", result.log_text);
+
+	if (!result.success)
+		return;
+
+	scan_workspace();
+}
+
 void sidebar_controller_t::on_generate_loc_requested(const std::string & path)
 {
 	auto * doc = m_deps.session.find(path);
@@ -352,8 +383,8 @@ void sidebar_controller_t::on_generate_loc_requested(const std::string & path)
 
 	const auto & dict = dict_doc->data();
 	const auto esm_name = loc_generator::derive_esm_name(path);
-	const auto sep = path.find_last_of("/\\");
-	const auto output_dir = sep != std::string::npos ? path.substr(0, sep) : ".";
+	const auto separator_index = path.find_last_of("/\\");
+	const auto output_dir = separator_index != std::string::npos ? path.substr(0, separator_index) : ".";
 	const auto codepage = m_deps.session.codepage();
 
 	std::string hunspell_aff;

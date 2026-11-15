@@ -4,6 +4,7 @@
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\editor_window.cpp" />
     <ClCompile Include="source\model\nav_tree_model.cpp" />
+    <ClCompile Include="source\model\editor_appearance.cpp" />
     <ClCompile Include="source\model\editable_column_set.cpp" />
     <ClCompile Include="source\model\field_binary_resolver.cpp" />
     <ClCompile Include="source\model\view_tree_model.cpp" />
@@ -16,6 +17,7 @@
     <ClCompile Include="source\model\edit_log.cpp" />
     <ClCompile Include="source\controller\view_context_menu.cpp" />
     <ClCompile Include="source\controller\merge_controller.cpp" />
+    <ClCompile Include="source\controller\save_routing.cpp" />
     <ClCompile Include="source\controller\field_edit_controller.cpp" />
     <ClCompile Include="source\patcher\plugin_cleaner.cpp" />
     <ClCompile Include="source\session\profile_file_reader.cpp" />
@@ -42,15 +44,16 @@
     <ClInclude Include="source\model\nav_tree_filter.hpp" />
     <ClInclude Include="source\model\filter_composer.hpp" />
     <ClInclude Include="source\model\editable_column_set.hpp" />
+    <ClInclude Include="source\model\editor_appearance.hpp" />
     <ClInclude Include="source\model\field_binary_resolver.hpp" />
     <ClInclude Include="source\model\edit_log.hpp" />
     <ClInclude Include="source\patcher\patch_builder.hpp" />
+    <ClInclude Include="source\controller\save_routing.hpp" />
     <ClInclude Include="source\session\merged_patch_name.hpp" />
     <ClInclude Include="source\view\type_ahead.hpp" />
     <ClInclude Include="source\view\count_label_format.hpp" />
     <ClInclude Include="source\view\record_type_name.hpp" />
     <ClInclude Include="source\view\plugin_icon.hpp" />
-    <ClInclude Include="source\view\plugin_icon_glyphs.hpp" />
     <ClInclude Include="source\view\editor_delegates.hpp" />
   </ItemGroup>
 </Project>

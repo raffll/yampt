@@ -39,9 +39,9 @@ static std::vector<std::string> discover_omwscripts(const std::string & data_pat
 		return omwscripts_files;
 
 	std::error_code iteration_error;
-	auto iterator = std::filesystem::recursive_directory_iterator(
+	auto iterator = std::filesystem::directory_iterator(
 	    normalized_root, std::filesystem::directory_options::skip_permission_denied, iteration_error);
-	const std::filesystem::recursive_directory_iterator iteration_end;
+	const std::filesystem::directory_iterator iteration_end;
 
 	for (; iterator != iteration_end; iterator.increment(iteration_error))
 	{

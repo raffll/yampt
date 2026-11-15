@@ -2,6 +2,7 @@
 
 #include "../model/plugin_op.hpp"
 #include <creator/dict_creator.hpp>
+#include <io/codepage.hpp>
 #include <utility/domain_types.hpp>
 #include <string>
 #include <vector>
@@ -33,6 +34,10 @@ public:
 	    translation_engine_t * engine = nullptr,
 	    base_mode_t mode = base_mode_t::full,
 	    const std::string & dictionary_aff_path = {});
+	result_t import_eet_with_plugin(
+	    const std::string & eet_path,
+	    const std::string & plugin_path,
+	    codepage_t codepage);
 	result_t convert(const std::string & plugin_path, const std::vector<std::string> & dict_paths);
 	result_t convert_hyperlinks(const std::string & plugin_path, const std::vector<std::string> & dict_paths);
 	result_t create_plugin(const std::string & plugin_path, const std::vector<std::string> & dict_paths);

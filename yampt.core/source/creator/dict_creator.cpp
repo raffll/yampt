@@ -4,6 +4,7 @@
 #include "creator_base.hpp"
 #include "creator_ordered.hpp"
 #include "creator_single.hpp"
+#include "info_place_values.hpp"
 #include <hunspell/hunspell.hxx>
 
 dict_creator_t::dict_creator_t(const std::string & plugin_path, const dict_t * base_dict)
@@ -58,3 +59,8 @@ dict_creator_t::dict_creator_t(
 }
 
 dict_creator_t::~dict_creator_t() = default;
+
+std::set<std::string> dict_creator_t::referenced_place_values() const
+{
+	return info_place_values::collect_from_plugin(m_ctx.esm);
+}

@@ -91,7 +91,15 @@ Each replacement is recorded individually in the edit history. To undo a replace
 
 ### EET Import
 
-Place an EET file (produced by ESP-ESM Translator) in the workspace folder. It appears in the sidebar with an orange [EET] tag. Right-click the file and select Export as Dictionary to convert it to a JSON dictionary. The exported file is saved alongside the original EET file and becomes available in the sidebar immediately. This is a one-way import — the EET file itself is not editable within yTranslator.
+Place an EET file (produced by ESP-ESM Translator) in the workspace folder. It appears in the sidebar with an orange [EET] tag. Right-clicking it offers two ways to turn it into a dictionary.
+
+Import Against Source Plugin is the one to use when you want a dictionary you can actually apply to a plugin. An EET file on its own records only the original and translated text; it does not carry the structure yTranslator needs to match a translation back to the right place in a plugin, which is why a plain conversion can only recover a limited part of the file. Choosing this action asks you for the plugin the translation was made for. yTranslator reads that plugin to learn the correct structure of every record and then fills in each entry's translation from the EET by matching it on its original text. The result is a complete dictionary in which dialogue responses, dialogue choices, and place names come through alongside item, spell, and other object names.
+
+Because the EET file names only the game and not the plugin, yTranslator tries to find the matching plugin for you by reading the plugin name out of the file name, and pre-selects it in the plugin list when it finds a match. When it cannot, you pick the plugin by hand from the list. If a translation's original text appears in more than one place in the plugin with no single correct choice, that entry is marked Ambiguous rather than guessed, so you can resolve it yourself. Cancelling the plugin selection aborts the import and changes nothing.
+
+Export as Reference Pool performs the older plain conversion. It produces a dictionary that is useful for looking up translations but cannot be applied to a plugin, because it lacks the plugin-derived structure. Use it only when you want the raw text pairs rather than an applicable dictionary.
+
+In both cases the generated dictionary is saved alongside the original EET file and becomes available in the sidebar immediately. This is a one-way import — the EET file itself is not editable within yTranslator.
 
 ## Editing
 
@@ -187,13 +195,22 @@ The context menu also lets you teach an AI provider your preferred style. Right-
 - **Outdated** — like Changed, but the entry had not been approved as Translated before the source text changed.
 - **Ambiguous** — multiple entries in the base dictionary offer different translations for the same original text. The Details panel lists all candidates. Pick the correct one and set to Translated.
 - **Reused** — the base dictionary contained a matching original text under a different key. The translation was copied from that entry.
-- **Propagated** — after you committed a translation, all entries sharing the same original text (including the committed entry itself) were updated to match. Both the source and all targets receive this status. Propagation applies even when the translation is identical to the original (a proper noun). Entries that already hold the same translation are left untouched, and an entry is skipped if its record type cannot hold the text within its byte limit (for example a long translation is not propagated to a short-limit name field).
+- **Propagated** — after you committed a translation, all entries sharing the same original text (including the committed entry itself) were updated to match. Both the source and all targets receive this status. Propagation applies even when the translation is identical to the original (a proper noun). Editing one occurrence of an already-propagated group spreads the new text to the whole group again, so the duplicates stay in sync. Entries you manually finalized with a different status are left untouched, entries that already hold the same translation are left untouched, and an entry is skipped if its record type cannot hold the text within its byte limit (for example a long translation is not propagated to a short-limit name field).
 - **Replaced** — the translation was modified by a Replace All operation. Review the result and set to Translated when satisfied.
 - **Missing** — during Make Base Dictionary, this record existed in the foreign file but no corresponding record was found in the native file. Requires manual translation.
 - **Heuristic** — during Make Base Dictionary, this cell or topic was matched by the translation engine heuristic rather than by exact record pairing. The match may be incorrect. Verify the translation and set to Translated if correct.
 - **Duplicate** — the same key appeared more than once in the source plugin. Only the first occurrence is stored.
 - **Mismatch** — during Make Base Dictionary, a record existed in the native file with no corresponding record in the foreign file. Informational; no action needed.
 - **Error** — the translation cannot be written to the plugin, either because it exceeds the maximum byte length for this sub-record type, contains a forbidden character, or contains a character not representable in the plugin's codepage. The validation line at the bottom states the specific reason. An entry with this status is not propagated to other entries. Fix the translation to clear it.
+
+## Log File and Startup Options
+
+Everything that appears in the Log tab is also written to a file named yTranslator.log in your temporary folder (the folder %TEMP% points to). The file starts fresh every time yTranslator opens, and every line carries the time it was written, so you can keep it open in a text editor, attach it to a bug report, or search it after the window is closed.
+
+You can start yTranslator from a command prompt with these options:
+
+- `--console` prints every log line to the command prompt you started yTranslator from, as it happens.
+- `--debug` adds extra diagnostic lines, marked [debug], from operations such as creating dictionaries and converting plugins. They are off by default and are only useful when you report or investigate a problem.
 
 ## Settings
 

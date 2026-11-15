@@ -47,6 +47,9 @@ editor_window_t::editor_window_t(QWidget * parent)
 
 		const QSignalBlocker blocker(m_show_optional_action);
 		m_show_optional_action->setChecked(m_plugin_workspace_view->is_show_optional_placeholders());
+
+		const QSignalBlocker stubs_blocker(m_show_stubs_action);
+		m_show_stubs_action->setChecked(m_plugin_workspace_view->is_show_openmw_stubs());
 	});
 
 	connect(
@@ -143,6 +146,17 @@ void editor_window_t::setup_menu_bar()
 	    &QAction::toggled,
 	    m_plugin_workspace_view,
 	    &plugin_workspace_view_t::set_show_optional_placeholders);
+
+	m_show_stubs_action = new QAction(tr("Show OpenMW Stubs"), this);
+	m_show_stubs_action->setCheckable(true);
+	m_show_stubs_action->setChecked(m_plugin_workspace_view->is_show_openmw_stubs());
+	m_show_stubs_action->setToolTip(tr("Show OpenMW stub placeholder plugins in the tree"));
+	view_menu->addAction(m_show_stubs_action);
+	connect(
+	    m_show_stubs_action,
+	    &QAction::toggled,
+	    m_plugin_workspace_view,
+	    &plugin_workspace_view_t::set_show_openmw_stubs);
 
 	view_menu->addSeparator();
 

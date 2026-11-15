@@ -377,19 +377,10 @@ void view_tree_model_t::set_record_info(record_context_t & context, const confli
 
 void view_tree_model_t::collect_leveled_entries(record_context_t & context, slot_build_context_t & build_ctx)
 {
-	const char * const id_type_name = leveled_item_sub_type_for(m_record_type);
-	const std::string id_type = id_type_name != nullptr ? id_type_name : std::string {};
-
-	alignment_rule_t rule;
-	rule.anchor_type = id_type;
-	rule.anchor_size = 0;
-	rule.trailing_types = { "INTV" };
-	rule.key_source = alignment_rule_t::key_from_t::anchor;
-
 	alignment_context_t align_ctx {
 		context.all_sub_records, context.col_count, build_ctx.unified_slots, build_ctx.col_type_indices
 	};
-	content_alignment_t::align(align_ctx, { rule });
+	content_alignment_t::build_occurrence_based(align_ctx);
 }
 
 void view_tree_model_t::collect_faction_entries(record_context_t & context, slot_build_context_t & build_ctx)
@@ -408,22 +399,10 @@ void view_tree_model_t::collect_faction_entries(record_context_t & context, slot
 
 void view_tree_model_t::collect_container_entries(record_context_t & context, slot_build_context_t & build_ctx)
 {
-	alignment_rule_t npco_rule;
-	npco_rule.anchor_type = "NPCO";
-	npco_rule.anchor_size = 36;
-	npco_rule.key_source = alignment_rule_t::key_from_t::offset;
-	npco_rule.key_offset = 4;
-	npco_rule.key_length = 32;
-
-	alignment_rule_t npcs_rule;
-	npcs_rule.anchor_type = "NPCS";
-	npcs_rule.anchor_size = 32;
-	npcs_rule.key_source = alignment_rule_t::key_from_t::anchor;
-
 	alignment_context_t align_ctx {
 		context.all_sub_records, context.col_count, build_ctx.unified_slots, build_ctx.col_type_indices
 	};
-	content_alignment_t::align(align_ctx, { npco_rule, npcs_rule });
+	content_alignment_t::build_occurrence_based(align_ctx);
 }
 
 void view_tree_model_t::emit_slot_rows(record_context_t & context, slot_build_context_t & build_ctx)

@@ -1,8 +1,10 @@
 #include "nav_tree_filter.hpp"
+#include <io/profile_reader.hpp>
 #include <utility/string_utils.hpp>
 #include <algorithm>
 #include <cctype>
 #include <regex>
+#include <utility>
 
 bool nav_tree_filter_t::contains_case_insensitive(const std::string & haystack, const std::string & needle)
 {
@@ -57,9 +59,24 @@ void nav_tree_filter_t::set_hide_duplicates(bool hide)
 	m_hide_duplicates = hide;
 }
 
+void nav_tree_filter_t::set_hide_openmw_stubs(bool hide)
+{
+	m_hide_openmw_stubs = hide;
+}
+
 void nav_tree_filter_t::set_patch_plugins(const std::set<std::string> * patch)
 {
 	m_patch_plugins = patch;
+}
+
+void nav_tree_filter_t::set_locked_resolver(locked_predicate_t resolver)
+{
+	m_locked_resolver = std::move(resolver);
+}
+
+void nav_tree_filter_t::set_excluded_resolver(record_predicate_t resolver)
+{
+	m_excluded_resolver = std::move(resolver);
 }
 
 bool nav_tree_filter_t::has_active_filter() const
@@ -70,6 +87,19 @@ bool nav_tree_filter_t::has_active_filter() const
 bool nav_tree_filter_t::hide_duplicates() const
 {
 	return m_hide_duplicates;
+}
+
+bool nav_tree_filter_t::hide_openmw_stubs() const
+{
+	return m_hide_openmw_stubs;
+}
+
+bool nav_tree_filter_t::show_file_node(const std::string & plugin_filename) const
+{
+	if (!m_hide_openmw_stubs)
+		return true;
+
+	return !profile_reader_t::is_openmw_stub_name(plugin_filename);
 }
 
 const std::set<std::string> * nav_tree_filter_t::patch_plugins() const
@@ -153,6 +183,18 @@ bool nav_tree_filter_t::passes(const conflict_entry_t & entry, int plugin_idx) c
 	if (m_filter.filter_deleted)
 	{
 		if (!entry.has_dele)
+			return false;
+	}
+
+	if (m_filter.filter_locked_only && m_locked_resolver)
+	{
+		if (!m_locked_resolver(entry.rec_type, entry.record_id, plugin_idx))
+			return false;
+	}
+
+	if (m_filter.filter_excluded_only && m_excluded_resolver)
+	{
+		if (!m_excluded_resolver(entry.rec_type, entry.record_id))
 			return false;
 	}
 

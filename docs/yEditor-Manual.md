@@ -10,7 +10,11 @@ Open File menu and choose one of three loading methods:
 - **Open MO2 Profile** — select a Mod Organizer 2 profile directory. The application reads loadorder.txt and modlist.txt to determine which plugins to load and in what order. Plugins are resolved through MO2's virtual filesystem (overwrite folder, mod folders).
 - **Open OpenMW Config** — select an openmw.cfg file. The application reads all `data=` and `content=` lines to build the load order.
 
+Only one location is loaded at a time. When plugins are already loaded and you open a folder, MO2 profile, or OpenMW config from a different location, the current set is unloaded first and the new selection is loaded in its place — opening a second location replaces what was loaded rather than loading several folders at once.
+
 When a merged patch is present, it is always loaded last, after every other plugin, no matter where MO2 or OpenMW places it in the sort order. This keeps its column at the far right of the record view so it always wins over the plugins it merges.
+
+Some mods that are made for OpenMW cannot be seen by Mod Organizer 2 directly, so their author ships a small empty placeholder plugin whose name carries a double extension, such as a file ending in `.omwaddon.esp` or `.omwscript.esp`. Mod Organizer 2 tracks the placeholder for load-order position while the real content lives in the matching `.omwaddon` or `.omwscript` file beside it. When you open a Mod Organizer 2 profile, the real file is now found and loaded automatically right after its placeholder, so its records are read instead of the empty stand-in. If the real file cannot be found next to the placeholder, a warning is written to the Log tab and only the placeholder is loaded. This happens for every such plugin regardless of the Show OpenMW Stubs setting described under the View menu, which only controls what the tree displays.
 
 The main window opens immediately, and a progress dialog shows how far the load has got while plugins are read into memory. The same dialog reappears at startup while the previous session is restored, so the window is visible right away instead of waiting for every plugin to load first.
 
@@ -116,6 +120,7 @@ The View menu provides display options:
 - **Show Only One Column Per Plugin** — when a plugin defines the same record more than once, collapses those versions into a single column showing only that plugin's last (winning) version, instead of one column per occurrence.
 - **Strike Out Deleted Records** — renders deleted records and cell references with strikethrough text, making them visually distinct from active content.
 - **Show Optional Fields** — adds a row for each sub-record a record can contain but currently does not, so you can see the fields that are available to add. These placeholder rows have a white background with light grey text and are empty in every plugin column. Only single-occurrence sub-records are shown this way; repeating content such as inventory items or spell effects is not. The setting is remembered between sessions.
+- **Show OpenMW Stubs** — controls whether the empty double-extension placeholder plugins (those ending in `.omwaddon.esp` or `.omwscript.esp`) appear as rows in the navigation tree. It is off by default, so the placeholders are hidden while the real OpenMW files they stand in for stay visible. Turn it on to see the placeholders as well. This affects only what the tree shows; the real files are always loaded either way. The setting is remembered between sessions.
 
 ## Toolbar Search
 
@@ -129,7 +134,7 @@ The toolbar search field filters the navigation tree by record ID or display nam
 - **.\*** — interpret the query as a regular expression.
 - **ID** — search in the record's internal ID (e.g. "iron_dagger", "balmora_guild").
 - **Name** — search in the record's display name (e.g. "Iron Dagger", "Balmora Mages Guild").
-- **Advanced Filters...** — opens the advanced filter dialog for filtering by conflict severity, per-plugin conflict status, record type, deleted status, and Lua handler criteria. The record type list uses the same readable names as the navigation tree (for example Cell, Creature, Dialogue Response), not the raw four-letter codes. OpenMW's Lua configuration records, which appear in content files made for OpenMW, are shown as "Lua Config". The dialog opens pre-populated with the advanced criteria currently in effect, so adjustments build on the existing selection rather than starting from scratch.
+- **Advanced Filters...** — opens the advanced filter dialog for filtering by conflict severity, per-plugin conflict status, record type, deleted status, and Lua handler criteria. The record type list uses the same readable names as the navigation tree (for example Cell, Creature, Dialogue Response), not the raw four-letter codes. OpenMW's Lua configuration records, which appear in content files made for OpenMW, are shown as "Lua Config". The Special group also offers Locked Only and Excluded Only. Locked Only restricts the tree to records you have locked in the merged patch, so you can review everything the next auto-merge will leave untouched. Excluded Only restricts it to records that your exclusion rules keep out of the merge, matched by record type or record ID; it does not include sub-records left out by a sub-record ignore rule. Both start off, and like every other criterion in the dialog they narrow the result together: turning on both shows only the records that are at once locked and excluded. The dialog opens pre-populated with the advanced criteria currently in effect, so adjustments build on the existing selection rather than starting from scratch.
 - **No Filters** — a checkable toggle that shows whether any filters are active. When unchecked (filters are active), clicking it clears Conflicts Only, the search field, and the advanced filter in one action, returning the navigation tree to showing every record. When already checked, clicking it does nothing.
 
 Press Escape to clear the search field and remove the text filter.
@@ -163,7 +168,9 @@ The auto-merge performs several operations:
 - **Cell merge** — a cell's settings (water, sleep, lighting, region) merge with the same three-way rules as other records. The objects placed in the cell are otherwise left to load order rather than combined, with one exception: when two plugins change the owner of the same placed object (the person or faction who gets angry if you steal it), that owner change is carried into the merged patch. Only the owner is merged this way — the object is kept exactly as the winning plugin left it in every other respect, and objects a plugin merely adds, moves, or re-locks are not pulled into the merged patch.
 - **Bug fixes** — optionally corrects known engine bugs: fog density values outside valid range, summon persistence flags, and cell name reverts.
 
-Some record types are never written to the merged patch, because their content cannot be combined field by field the way objects can: landscape (bulk terrain data), pathgrids, regions, scripts, and dialogue topics with their responses. These types still appear in the navigation tree so their conflicts remain visible, and you can still copy an individual record from any plugin into the active plugin by hand; they are simply left out of the automatic merge and handled by load order instead.
+Some record types are never written to the merged patch, because their content cannot be combined field by field the way objects can: landscape (bulk terrain data), pathgrids, and scripts. These types still appear in the navigation tree so their conflicts remain visible, and you can still copy an individual record from any plugin into the active plugin by hand; they are simply left out of the automatic merge and handled by load order instead.
+
+Merged dialogue responses are always written directly under the dialogue topic they belong to. When the merged patch does not already contain that topic, the topic is copied from the winning plugin so every response stays in its own conversation.
 
 A progress dialog shows how far the merge has got while records are processed. After auto-merge completes, the merged patch is saved automatically. The output location depends on how you loaded plugins: same folder for Open Folder, MO2 overwrite directory for Open MO2 Profile, or the OpenMW data directory for Open OpenMW Config.
 
@@ -183,7 +190,7 @@ To switch which plugin receives copies, right-click any plugin in the navigation
 
 Locking only applies to the merged patch, because a lock protects a value from being overwritten the next time the auto-merge runs. It is offered only when the merged patch is the active plugin; a hand-made plugin created with Create New Plugin has nothing to lock against, so the option does not appear there.
 
-Right-click a cell in the merged patch column and choose Lock in Merged Patch to freeze that value. You can lock a whole record, a single sub-record, a decoded field, an individual flag bit, or a group — the lock covers exactly what you right-clicked, following the same selection rules as copying. A locked cell is shown with a light blue background and blue text, and keeps the exact value it had when you locked it. When the cell you right-clicked has nothing that can be locked, the option appears greyed out.
+Right-click a cell in the merged patch column and choose Lock in Merged Patch to freeze that value. You can lock a whole record, a single sub-record, a decoded field, an individual flag bit, or a group — the lock covers exactly what you right-clicked, following the same selection rules as copying. A locked cell is shown with a light blue background and blue text, and keeps the value it had when you locked it. If you later edit a locked value, the lock pins your edited value: the change you made is what the merged patch keeps, not the value from when you first locked. When the cell you right-clicked has nothing that can be locked, the option appears greyed out.
 
 When you regenerate the merged patch, the auto-merge runs as usual and then every locked value is re-applied on top, so a lock is never overwritten by the merge. This is useful when the automatic result for one field is wrong and you want to pin your chosen value while still letting everything else re-merge. A group lock covers only the members that were in the group when you locked it; if a later merge adds a new member to the same group, the lock leaves it alone, and you can lock the new member separately if you want.
 
@@ -192,6 +199,15 @@ You can also lock an entire record straight from the navigation tree: right-clic
 Right-click a locked cell and choose Unlock in Merged Patch to remove the lock. Locks are remembered between sessions and stored alongside the merged patch itself, so each merged patch keeps its own locks — loading a different profile's merged patch shows that patch's locks, never another's.
 
 A merged patch can be created even with a single plugin loaded. With one plugin there is nothing to merge automatically, so the patch starts empty; it still gives you a column to copy records into by hand, which is a convenient way to build a small patch from one mod. The empty patch is written to disk like any other, and it gains its master references as you copy records into it.
+
+## Log File and Startup Options
+
+Everything that appears in the Log tab is also written to a file named yEditor.log in your temporary folder (the folder %TEMP% points to). The file starts fresh every time yEditor opens, and every line carries the time it was written, so you can keep it open in a text editor, attach it to a bug report, or search it after the window is closed. Messages from loading and merging plugins that do not appear in the Log tab are written there as well.
+
+You can start yEditor from a command prompt with these options:
+
+- `--console` prints every log line to the command prompt you started yEditor from, as it happens.
+- `--debug` adds extra diagnostic lines, marked [debug], describing decisions such as which exclusion rules were loaded, which filters were applied, and what kind of lock was created. They are off by default and are only useful when you report or investigate a problem.
 
 ## Settings
 

@@ -177,6 +177,7 @@
     <ClInclude Include="..\yampt.translator\source\session\session.hpp" />
     <ClInclude Include="..\yampt.translator\source\highlighter\script_tokenizer.hpp" />
     <ClInclude Include="..\yampt.translator\source\controller\editor_controller.hpp" />
+    <ClInclude Include="..\yampt.translator\source\editor\glossary_line_preparer.hpp" />
     <ClInclude Include="..\yampt.translator\source\editor\edit_history.hpp" />
     <ClInclude Include="..\yampt.translator\source\editor\byte_limit_validator.hpp" />
     <ClInclude Include="..\yampt.translator\source\editor\find_replace.hpp" />
@@ -196,6 +197,7 @@
     <ClCompile Include="source\tests.app_logger.cpp" />
     <ClCompile Include="source\tests.merge_patch_store.cpp" />
     <ClCompile Include="source\tests.plugin_icon.cpp" />
+    <ClCompile Include="source\tests.tree_source.cpp" />
     <ClCompile Include="source\tests.merged_patch_name.cpp" />
     <ClCompile Include="source\tests.header_repair.cpp" />
     <ClCompile Include="source\tests.file_list.cpp" />
@@ -218,6 +220,7 @@
     <ClCompile Include="source\tests.yaml_scalar.cpp" />
     <ClCompile Include="source\tests.script_tokenizer.cpp" />
     <ClCompile Include="source\tests.editor_controller.cpp" />
+    <ClCompile Include="source\tests.translation_request_controller.cpp" />
     <ClCompile Include="source\tests.commit_orchestrator.cpp" />
     <ClCompile Include="source\tests.display_helpers.cpp" />
     <ClCompile Include="source\tests.script_parser_rename.cpp" />
@@ -229,6 +232,9 @@
     <ClCompile Include="source\tests.script_parser_roundtrip.cpp" />
     <ClCompile Include="source\tests.script_parser_unquoted.cpp" />
     <ClCompile Include="source\tests.eet_converter.cpp" />
+    <ClCompile Include="source\tests.eet_import.cpp" />
+    <ClCompile Include="source\tests.field_edit_controller.cpp" />
+    <ClCompile Include="source\tests.info_place_values.cpp" />
     <ClCompile Include="source\tests.glossary_hyperlinks.cpp" />
     <ClCompile Include="source\tests.edit_history.cpp" />
     <ClCompile Include="source\tests.keyword_trie.cpp" />
@@ -241,6 +247,7 @@
     <ClCompile Include="source\tests.plugin_index.cpp" />
     <ClCompile Include="source\tests.determine_status.cpp" />
     <ClCompile Include="source\tests.plugin_scan_merge.cpp" />
+    <ClCompile Include="source\tests.plugin_scan_reload.cpp" />
     <ClCompile Include="source\tests.plugin_save_path.cpp" />
     <ClCompile Include="source\tests.sub_record_merge.cpp" />
     <ClCompile Include="source\tests.merge_byte_splice.cpp" />
@@ -248,6 +255,11 @@
     <ClCompile Include="source\tests.field_binary_resolver.cpp" />
     <ClCompile Include="source\tests.merge_fixers.cpp" />
     <ClCompile Include="source\tests.leveled_list_merge.cpp" />
+    <ClCompile Include="source\tests.dialogue_arranger.cpp" />
+    <ClCompile Include="source\tests.folder_plugin_order.cpp" />
+    <ClCompile Include="source\tests.settings_store_merge_keys.cpp" />
+    <ClCompile Include="source\tests.log_mirror.cpp" />
+    <ClCompile Include="source\tests.lua_scanner.cpp" />
     <ClCompile Include="source\tests.cell_ref_merge.cpp" />
     <ClCompile Include="source\tests.frmr_ref_index.cpp" />
     <ClCompile Include="source\tests.armor_slots.cpp" />
@@ -265,6 +277,8 @@
     <ClCompile Include="source\tests.highlight_applier.cpp" />
     <ClCompile Include="source\tests.patch_builder.cpp" />
     <ClCompile Include="source\tests.patch_builder_header.cpp" />
+    <ClCompile Include="source\tests.tes3_header_preserve.cpp" />
+    <ClCompile Include="source\tests.save_routing.cpp" />
     <ClCompile Include="source\tests.plugin_session.cpp" />
     <ClCompile Include="source\tests.settings_store.cpp" />
     <ClCompile Include="source\tests.path_resolver.cpp" />
@@ -315,15 +329,19 @@
     <ClCompile Include="..\yampt.translator\source\highlighter\highlight_coordinator.cpp" />
     <ClCompile Include="..\yampt.translator\source\session\workspace_watcher.cpp" />
     <ClCompile Include="..\yampt.translator\source\controller\editor_controller.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\glossary_line_preparer.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\record_table_model.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\table_columns.cpp" />
     <ClCompile Include="..\yampt.editor\source\session\profile_file_reader.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\nav_tree_filter.cpp" />
     <ClCompile Include="..\yampt.editor\source\view\type_ahead.cpp" />
     <ClCompile Include="..\yampt.editor\source\session\plugin_session.cpp" />
+    <ClCompile Include="..\yampt.editor\source\controller\field_edit_controller.cpp" />
     <ClCompile Include="..\yampt.editor\source\patcher\patch_builder.cpp" />
+    <ClCompile Include="..\yampt.editor\source\controller\save_routing.cpp" />
 
     <ClCompile Include="..\yampt.editor\source\model\nav_tree_model.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\editor_appearance.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\lua_tree_model.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\editable_column_set.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\view_tree_model.cpp" />
@@ -340,6 +358,12 @@
     <ClCompile Include="..\yampt.translator\source\translator\translation_example_ops.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="..\yampt.editor\source\controller\field_edit_controller.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include" -I"$(SolutionDir)yampt.core\source" -I"$(SolutionDir)yampt.editor\source"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
     <CustomBuild Include="..\yampt.editor\source\session\plugin_session.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include" -I"$(SolutionDir)yampt.core\source" -I"$(SolutionDir)yampt.editor\source"</Command>
@@ -379,6 +403,9 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="$(IntDir)moc_field_edit_controller.cpp">
+      <ObjectFileName>$(IntDir)moc_field_edit_controller.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="$(IntDir)moc_plugin_session.cpp">
       <ObjectFileName>$(IntDir)moc_plugin_session.obj</ObjectFileName>
     </ClCompile>

@@ -1,7 +1,9 @@
 #pragma once
 
+#include "editor_appearance.hpp"
 #include "nav_tree_filter.hpp"
 #include <io/codepage.hpp>
+#include <scanner/merge_exclusions.hpp>
 #include <scanner/plugin_scan.hpp>
 #include <conflict_types.hpp>
 #include <set>
@@ -28,7 +30,9 @@ public:
 
 	void set_filter(const filter_state_t & state);
 	void clear_filter();
+	void set_merge_excludes(const std::string & serialized);
 	void set_hide_duplicates(bool hide);
+	void set_hide_openmw_stubs(bool hide);
 	void set_show_deleted_strikeout(bool value);
 	void set_display_codepage(codepage_t codepage);
 
@@ -86,9 +90,11 @@ private:
 	bool m_show_deleted_strikeout = false;
 	codepage_t m_display_codepage = codepage_t::windows_1252;
 	const editable_column_set_t * m_editable_columns = nullptr;
+	editor_appearance_t m_appearance;
+	merge_exclusions_t m_record_exclusions;
 
-	conflict_this_t record_foreground_for_plugin(const conflict_entry_t & entry, int plugin_idx) const;
 	bool has_whole_record_lock(const std::string & rec_type, const std::string & record_id) const;
+	void install_filter_resolvers();
 
 	void build_tree();
 	void sort_records();

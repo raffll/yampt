@@ -8,6 +8,7 @@
 #include "../view/validation_view.hpp"
 #include <utility/string_utils.hpp>
 #include <theme_system.hpp>
+#include <QScrollBar>
 #include <QString>
 #include <QTextCursor>
 
@@ -62,8 +63,10 @@ void record_display_controller_t::load_record(int row, document_t * active_doc)
 	update_validation();
 
 	auto cursor = m_deps.editor_view.translation_editor()->textCursor();
-	cursor.movePosition(QTextCursor::End);
+	cursor.movePosition(QTextCursor::Start);
 	m_deps.editor_view.translation_editor()->setTextCursor(cursor);
+	m_deps.editor_view.translation_editor()->verticalScrollBar()->setValue(
+	    m_deps.editor_view.translation_editor()->verticalScrollBar()->minimum());
 
 	m_deps.editor_controller.set_loading(false);
 }

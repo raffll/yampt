@@ -2,6 +2,7 @@
 
 #include "controller/editor_controller.hpp"
 #include "controller/record_display_controller.hpp"
+#include "controller/translation_request_controller.hpp"
 #include "dialog/dict_selection_dialog.hpp"
 #include "editor/byte_limit_validator.hpp"
 #include "editor/edit_history.hpp"
@@ -261,6 +262,7 @@ private:
 	std::unique_ptr<sidebar_controller_t> m_sidebar_controller;
 	std::unique_ptr<plugin_operations_controller_t> m_plugin_ops_controller;
 	std::unique_ptr<record_display_controller_t> m_record_display_controller;
+	std::unique_ptr<translation_request_controller_t> m_translation_request_controller;
 	std::unique_ptr<dict_operations_controller_t> m_dict_ops_controller;
 	std::unique_ptr<shortcuts_controller_t> m_shortcuts_controller;
 };

@@ -31,6 +31,8 @@ public:
 		std::set<std::string> type_set;
 
 		bool filter_deleted = false;
+		bool filter_locked_only = false;
+		bool filter_excluded_only = false;
 
 		bool filter_lua_severity = false;
 		std::set<conflict_severity_t> lua_severity_set;
@@ -60,6 +62,8 @@ private:
 	QListWidget * m_lst_types = nullptr;
 
 	QCheckBox * m_chk_deleted = nullptr;
+	QCheckBox * m_chk_locked_only = nullptr;
+	QCheckBox * m_chk_excluded_only = nullptr;
 
 	QGroupBox * m_grp_lua = nullptr;
 	QCheckBox * m_chk_lua_blocking = nullptr;

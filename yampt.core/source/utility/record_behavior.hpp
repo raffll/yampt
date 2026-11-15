@@ -13,6 +13,7 @@ enum class sub_rule_flag_t : unsigned
 	skip_emit = 1 << 5,
 	merge_boundary = 1 << 6,
 	ignore_conflict = 1 << 7,
+	skip_merge = 1 << 8,
 };
 
 inline constexpr sub_rule_flag_t operator|(sub_rule_flag_t left, sub_rule_flag_t right)
@@ -154,6 +155,7 @@ merge_strategy_t merge_strategy_for(const std::string & record_type);
 bool is_enam_effect_list(const std::string & record_type);
 bool is_merge_excluded(const std::string & record_type);
 decode_mode_t decode_mode_for(const std::string & record_type);
+const char * record_type_for_decode_mode(decode_mode_t decode_mode);
 const char * leveled_item_sub_type_for(const std::string & record_type);
 const char * leveled_level_sub_type_for(const std::string & record_type);
 const char * record_id_sub_type_for(const std::string & record_type);

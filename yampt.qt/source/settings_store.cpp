@@ -501,12 +501,12 @@ void settings_store_t::set_theme(theme_t value)
 
 std::string settings_store_t::merge_excludes() const
 {
-	return m_settings.value("Merge/Excludes", "").toString().toStdString();
+	return m_settings.value("merge/excludes", "").toString().toStdString();
 }
 
 void settings_store_t::set_merge_excludes(const std::string & value)
 {
-	m_settings.setValue("Merge/Excludes", QString::fromStdString(value));
+	m_settings.setValue("merge/excludes", QString::fromStdString(value));
 }
 
 bool settings_store_t::merge_fog_fix_enabled() const

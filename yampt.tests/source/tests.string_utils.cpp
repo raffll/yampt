@@ -133,6 +133,80 @@ TEST_CASE("string_utils::utf8_byte_to_char_offset, multi-byte chars", "[u]")
 	REQUIRE(string_utils::utf8_byte_to_char_offset(polish, 6) == 3);
 }
 
+TEST_CASE("string_utils::split_utf8_characters, ascii only", "[u]")
+{
+	const auto characters = string_utils::split_utf8_characters("hello");
+	REQUIRE(characters.size() == 5);
+	REQUIRE(characters[0] == "h");
+	REQUIRE(characters[4] == "o");
+}
+
+TEST_CASE("string_utils::split_utf8_characters, multi-byte chars", "[u]")
+{
+	const std::string polish = "\xC4\x85\xC4\x87\xC4\x99";
+	const auto characters = string_utils::split_utf8_characters(polish);
+	REQUIRE(characters.size() == 3);
+	REQUIRE(characters[0] == "\xC4\x85");
+	REQUIRE(characters[1] == "\xC4\x87");
+	REQUIRE(characters[2] == "\xC4\x99");
+}
+
+TEST_CASE("string_utils::split_utf8_characters, three byte character", "[u]")
+{
+	const std::string en_dash = "a\xE2\x80\x93""b";
+	const auto characters = string_utils::split_utf8_characters(en_dash);
+	REQUIRE(characters.size() == 3);
+	REQUIRE(characters[0] == "a");
+	REQUIRE(characters[1] == "\xE2\x80\x93");
+	REQUIRE(characters[2] == "b");
+}
+
+static std::string join_units(const std::vector<std::string> & units)
+{
+	std::string joined;
+	for (const auto & unit : units)
+		joined += unit;
+
+	return joined;
+}
+
+TEST_CASE("string_utils::split_utf8_characters, lone continuation byte", "[u]")
+{
+	const std::string input = "a\x80""b";
+	const auto characters = string_utils::split_utf8_characters(input);
+
+	REQUIRE(characters.size() == 3);
+	REQUIRE(characters[1] == "\x80");
+	REQUIRE(join_units(characters) == input);
+}
+
+TEST_CASE("string_utils::split_utf8_characters, truncated multibyte tail", "[u]")
+{
+	const std::string input = "ab\xE2\x80";
+	const auto characters = string_utils::split_utf8_characters(input);
+
+	REQUIRE(characters.size() == 3);
+	REQUIRE(characters[2] == "\xE2\x80");
+	REQUIRE(join_units(characters) == input);
+}
+
+TEST_CASE("string_utils::split_utf8_characters, lead byte 0xF8 and above", "[u]")
+{
+	const std::string input = "a\xF8\xFF""b";
+	const auto characters = string_utils::split_utf8_characters(input);
+
+	REQUIRE(characters.size() == 4);
+	REQUIRE(characters[1] == "\xF8");
+	REQUIRE(characters[2] == "\xFF");
+	REQUIRE(join_units(characters) == input);
+}
+
+TEST_CASE("string_utils::split_utf8_characters, empty input", "[u]")
+{
+	const auto characters = string_utils::split_utf8_characters("");
+	REQUIRE(characters.empty());
+}
+
 TEST_CASE("string_utils::replace_non_printable_with_dot, mixed content", "[u]")
 {
 	REQUIRE(string_utils::replace_non_printable_with_dot("hello") == "hello");

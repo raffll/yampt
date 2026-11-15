@@ -1279,6 +1279,7 @@ TEST_CASE("esm_converter_t::convert_cell, round-trip random names", "[u]")
 
 TEST_CASE("esm_converter_t::convert_cell, identity unmatched random", "[u]")
 {
+	// Deterministic: rng is seeded from the fixed GENERATE index (independent of Catch2 --rng-seed); the Esm_/Dict_ prefixes guarantee no exact match and no collision.
 	const auto seed = GENERATE(range(0, 100));
 	std::mt19937 rng(static_cast<unsigned>(seed * 6991 + 83497));
 	std::uniform_int_distribution<int> len_dist(4, 25);
@@ -1323,4 +1324,29 @@ TEST_CASE("esm_converter_t::convert_cell, identity unmatched random", "[u]")
 	const auto & records = converter.get_records();
 	REQUIRE(records.size() > 1);
 	REQUIRE(records[1].modified == false);
+}
+
+TEST_CASE("esm_converter_t::convert_cell, identity unmatched fixed names", "[u]")
+{
+	auto merger = make_merger(
+	    {
+	        { rec_type_t::cell, "Dict_Fixed", "Dict_Fixed", "Translated_Dict_Fixed" },
+	    });
+
+	auto body = make_sub_record("NAME", std::string("Esm_Fixed") + '\0');
+	auto esm_content = make_tes3_record() + make_record("CELL", body);
+
+	const auto esm_path = get_temp_path("yampt_test_id_cell_fixed.esm");
+	write_esm_file(esm_content, esm_path);
+	app_logger_t::reset_log();
+
+	esm_converter_t converter(esm_path, merger, false, "", false);
+	std::filesystem::remove(esm_path);
+
+	REQUIRE(converter.is_loaded());
+
+	const auto & records = converter.get_records();
+	REQUIRE(records.size() > 1);
+	REQUIRE(records[1].modified == false);
+	REQUIRE(records[1].content.find("Esm_Fixed") != std::string::npos);
 }

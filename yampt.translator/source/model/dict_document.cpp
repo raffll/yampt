@@ -150,7 +150,7 @@ int dict_document_t::propagate(const std::string & old_text, const std::string &
 		{
 			auto & record = chapter.records[i];
 
-			if (record.status != status_t::untranslated)
+			if (record.status != status_t::untranslated && record.status != status_t::propagated)
 				continue;
 
 			if (record.new_text == new_text)

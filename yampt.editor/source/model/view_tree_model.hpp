@@ -1,5 +1,6 @@
 #pragma once
 
+#include "editor_appearance.hpp"
 #include <decoder/content_alignment.hpp>
 #include <decoder/sub_record_iter.hpp>
 #include <decoder/sub_record_schema.hpp>
@@ -256,6 +257,7 @@ private:
 	const std::set<std::string> * m_patch_plugins = nullptr;
 	const editable_column_set_t * m_editable_columns = nullptr;
 	plugin_scan_t * m_scan_for_header = nullptr;
+	editor_appearance_t m_appearance;
 	codepage_t m_display_codepage = codepage_t::windows_1252;
 	bool m_show_deleted_strikeout = false;
 	bool m_show_optional_placeholders = false;

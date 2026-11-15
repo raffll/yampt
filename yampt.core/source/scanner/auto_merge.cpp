@@ -2,6 +2,7 @@
 #include "../utility/record_behavior.hpp"
 #include "cell_name_fixer.hpp"
 #include "fog_fixer.hpp"
+#include "leveled_list_merge.hpp"
 #include "plugin_scan.hpp"
 #include "summon_fixer.hpp"
 #include <algorithm>

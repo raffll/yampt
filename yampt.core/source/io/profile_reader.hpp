@@ -50,5 +50,17 @@ public:
 	    const std::string & game_data_path,
 	    const file_exists_fn_t & file_exists);
 
+	static bool is_openmw_stub_name(const std::string & plugin_name);
+
+	static std::string real_openmw_name_from_stub(const std::string & stub_name);
+
+	static std::vector<std::string> resolve_mo2_plugin_with_stub(
+	    const std::string & plugin_name,
+	    const std::string & overwrite_path,
+	    const std::vector<std::string> & enabled_mods,
+	    const std::string & mods_path,
+	    const std::string & game_data_path,
+	    const file_exists_fn_t & file_exists);
+
 	static std::string resolve_merge_output_path(load_source_kind_t source, const std::string & base_path);
 };

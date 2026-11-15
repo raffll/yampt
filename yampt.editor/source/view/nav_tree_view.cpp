@@ -1,5 +1,6 @@
 #include "nav_tree_view.hpp"
 #include "type_ahead.hpp"
+#include <utility/app_logger.hpp>
 #include <utility/string_utils.hpp>
 #include <vector>
 #include <functional>
@@ -70,10 +71,79 @@ nav_tree_view_t::nav_tree_view_t(plugin_scan_t & scan, QWidget * parent)
 
 	m_tree->viewport()->installEventFilter(this);
 	m_tree->installEventFilter(this);
+
+	connect_debug_signals();
+}
+
+static void log_nav_debug(const std::string & message)
+{
+	if (app_logger_t::is_debug())
+		app_logger_t::add_log("[debug] nav " + message + "\n", true);
+}
+
+static std::string describe_nav_row(const QModelIndex & index, const nav_tree_model_t::node_info_t & info)
+{
+	return "row \"" + index.data().toString().toStdString() + "\" (plugin " + std::to_string(info.plugin_idx) +
+	       ", type \"" + info.rec_type + "\", id \"" + info.record_id + "\")";
+}
+
+void nav_tree_view_t::connect_debug_signals()
+{
+	connect(
+	    m_tree->selectionModel(),
+	    &QItemSelectionModel::currentChanged,
+	    this,
+	    [this](const QModelIndex & current)
+	{
+		if (app_logger_t::is_debug() && current.isValid())
+			log_nav_debug("current " + describe_nav_row(current, m_model->node_at(current)));
+	});
+
+	connect(
+	    m_tree,
+	    &QTreeView::expanded,
+	    this,
+	    [this](const QModelIndex & index)
+	{
+		if (app_logger_t::is_debug())
+			log_nav_debug(
+			    "expanded " + describe_nav_row(index, m_model->node_at(index)) + ", " +
+			    std::to_string(m_model->rowCount(index)) + " children");
+	});
+
+	connect(
+	    m_tree,
+	    &QTreeView::collapsed,
+	    this,
+	    [this](const QModelIndex & index)
+	{
+		if (app_logger_t::is_debug())
+			log_nav_debug("collapsed " + describe_nav_row(index, m_model->node_at(index)));
+	});
+
+	connect(
+	    m_tree,
+	    &QTreeView::customContextMenuRequested,
+	    this,
+	    [this](const QPoint & pos)
+	{
+		if (!app_logger_t::is_debug())
+			return;
+
+		const auto index = m_tree->indexAt(pos);
+		if (!index.isValid())
+		{
+			log_nav_debug("context menu ignored: no row under the cursor");
+			return;
+		}
+
+		log_nav_debug("context menu on " + describe_nav_row(index, m_model->node_at(index)));
+	});
 }
 
 void nav_tree_view_t::rebuild()
 {
+	log_nav_debug("rebuild (expansion not preserved)");
 	m_model->rebuild();
 }
 
@@ -86,6 +156,15 @@ void nav_tree_view_t::rebuild_preserving_state()
 	restore_expansion_state();
 
 	restore_selection(selected);
+
+	if (app_logger_t::is_debug())
+	{
+		const auto current = m_tree->currentIndex();
+		log_nav_debug(
+		    "rebuild preserving state: " + std::to_string(m_expanded_items.size()) + " expanded rows saved, " +
+		    std::to_string(m_model->rowCount(QModelIndex())) + " top rows, current " +
+		    (current.isValid() ? describe_nav_row(current, m_model->node_at(current)) : std::string("none")));
+	}
 }
 
 void nav_tree_view_t::restore_selection(const nav_tree_model_t::node_info_t & info)
@@ -119,16 +198,28 @@ void nav_tree_view_t::notify_plugin_changed(int plugin_idx)
 void nav_tree_view_t::set_filter(const nav_tree_model_t::filter_state_t & state)
 {
 	m_model->set_filter(state);
+	log_nav_debug("filter set: " + std::to_string(m_model->rowCount(QModelIndex())) + " top rows visible");
 }
 
 void nav_tree_view_t::clear_filter()
 {
 	m_model->clear_filter();
+	log_nav_debug("filter cleared: " + std::to_string(m_model->rowCount(QModelIndex())) + " top rows visible");
+}
+
+void nav_tree_view_t::set_merge_excludes(const std::string & serialized)
+{
+	m_model->set_merge_excludes(serialized);
 }
 
 void nav_tree_view_t::set_hide_duplicates(bool hide)
 {
 	m_model->set_hide_duplicates(hide);
+}
+
+void nav_tree_view_t::set_hide_openmw_stubs(bool hide)
+{
+	m_model->set_hide_openmw_stubs(hide);
 }
 
 void nav_tree_view_t::set_show_deleted_strikeout(bool value)

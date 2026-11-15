@@ -99,12 +99,16 @@
     <ClCompile Include="source\path_resolver.cpp" />
     <ClCompile Include="source\resource_paths.cpp" />
     <ClCompile Include="source\settings_store.cpp" />
+    <ClCompile Include="source\launch_options.cpp" />
+    <ClCompile Include="source\log_mirror.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\conflict_types.hpp" />
     <ClInclude Include="source\path_resolver.hpp" />
     <ClInclude Include="source\resource_paths.hpp" />
     <ClInclude Include="source\settings_store.hpp" />
+    <ClInclude Include="source\launch_options.hpp" />
+    <ClInclude Include="source\log_mirror.hpp" />
     <ClInclude Include="source\translation_example.hpp" />
   </ItemGroup>
   <ItemGroup>

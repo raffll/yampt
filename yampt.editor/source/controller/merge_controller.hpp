@@ -3,9 +3,11 @@
 #include "../model/edit_log.hpp"
 #include "../model/view_tree_model.hpp"
 #include "../patcher/patch_builder.hpp"
+#include <scanner/dialogue_arranger.hpp>
 #include <scanner/merge_patch_ops.hpp>
 #include <scanner/merge_patch_store.hpp>
 #include <functional>
+#include <map>
 #include <set>
 #include <string>
 
@@ -91,7 +93,9 @@ public:
 	bool is_active_locked(const merge_lock_t & lock) const;
 
 	void save_active_plugin();
+	void clear_copy_sources();
 	void sync_active_locks();
+	void persist_active_locks();
 
 private:
 	bool confirm_merged_patch_regeneration(int merged_idx);
@@ -106,8 +110,16 @@ private:
 	    const std::string & output_path,
 	    const std::string & author,
 	    const std::string & description);
+	bool save_loaded_plugin_to_file(const std::string & output_path);
+	bool is_editor_created_plugin(const std::string & filename) const;
+	void fill_patch_builder_from_active();
+	void log_dialogue_arrangement(const dialogue_arranger::arrange_result_t & arranged);
+	void note_copy_source(int plugin_idx);
+	std::vector<patch_builder_t::master_entry_t> collect_copy_source_masters() const;
+	patch_builder_t::master_entry_t master_entry_for_plugin(int plugin_idx) const;
 	void refresh_after_active_edit(const std::string & rec_type, const std::string & record_id);
 	void relock_after_edit(const std::string & rec_type, const std::string & record_id);
+	std::string finalize_record_content(const std::string & rec_type, const std::string & content) const;
 
 	std::string read_source_content(int plugin_idx, const std::string & rec_type, const std::string & record_id);
 	std::string ensure_active_record(
@@ -132,4 +144,5 @@ private:
 	lock_changed_fn_t m_lock_changed;
 	progress_fn_t m_progress;
 	phase_fn_t m_phase;
+	std::map<std::string, std::set<std::string>> m_copy_sources;
 };

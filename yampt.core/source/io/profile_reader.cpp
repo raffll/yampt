@@ -1,4 +1,5 @@
 #include "profile_reader.hpp"
+#include "../utility/string_utils.hpp"
 #include <algorithm>
 #include <sstream>
 
@@ -151,6 +152,60 @@ std::string profile_reader_t::resolve_mo2_plugin(
 	}
 
 	return {};
+}
+
+bool profile_reader_t::is_openmw_stub_name(const std::string & plugin_name)
+{
+	static const std::string omwaddon_suffix = ".omwaddon.esp";
+	static const std::string omwscript_suffix = ".omwscript.esp";
+
+	const auto lowered = string_utils::to_lower(plugin_name);
+
+	const auto ends_with = [&lowered](const std::string & suffix)
+	{
+		return lowered.size() >= suffix.size() &&
+		       lowered.compare(lowered.size() - suffix.size(), suffix.size(), suffix) == 0;
+	};
+
+	return ends_with(omwaddon_suffix) || ends_with(omwscript_suffix);
+}
+
+std::string profile_reader_t::real_openmw_name_from_stub(const std::string & stub_name)
+{
+	if (!is_openmw_stub_name(stub_name))
+		return {};
+
+	static const std::string esp_suffix = ".esp";
+	return stub_name.substr(0, stub_name.size() - esp_suffix.size());
+}
+
+std::vector<std::string> profile_reader_t::resolve_mo2_plugin_with_stub(
+    const std::string & plugin_name,
+    const std::string & overwrite_path,
+    const std::vector<std::string> & enabled_mods,
+    const std::string & mods_path,
+    const std::string & game_data_path,
+    const file_exists_fn_t & file_exists)
+{
+	std::vector<std::string> paths;
+
+	const auto stub_path =
+	    resolve_mo2_plugin(plugin_name, overwrite_path, enabled_mods, mods_path, game_data_path, file_exists);
+	if (stub_path.empty())
+		return paths;
+
+	paths.push_back(stub_path);
+
+	if (!is_openmw_stub_name(plugin_name))
+		return paths;
+
+	const auto real_name = real_openmw_name_from_stub(plugin_name);
+	const auto real_path =
+	    resolve_mo2_plugin(real_name, overwrite_path, enabled_mods, mods_path, game_data_path, file_exists);
+	if (!real_path.empty())
+		paths.push_back(real_path);
+
+	return paths;
 }
 
 std::string profile_reader_t::resolve_merge_output_path(load_source_kind_t source, const std::string & base_path)

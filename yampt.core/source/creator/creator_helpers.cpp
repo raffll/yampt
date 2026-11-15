@@ -42,7 +42,7 @@ void creator_helpers::insert_entry_single(
 		return;
 	}
 
-	insert_duplicate(ctx, key_text, old_text, new_text, type, status_t::untranslated);
+	insert_duplicate(ctx, key_text, old_text, new_text, type);
 }
 
 void creator_helpers::insert_entry_base(
@@ -81,7 +81,7 @@ void creator_helpers::insert_entry_base(
 		return;
 	}
 
-	insert_duplicate(ctx, key_text, old_text, new_text, type, final_status);
+	insert_duplicate(ctx, key_text, old_text, new_text, type);
 }
 
 void creator_helpers::insert_duplicate(
@@ -89,10 +89,8 @@ void creator_helpers::insert_duplicate(
     const std::string & key_text,
     const std::string & old_text,
     const std::string & new_text,
-    rec_type_t type,
-    status_t status)
+    rec_type_t type)
 {
-	(void)status;
 	auto * dup = ctx.dict.at(type).find(key_text);
 	if (!dup)
 		return;
@@ -130,7 +128,7 @@ void creator_helpers::insert_as_untranslated(
 		return;
 	}
 
-	insert_duplicate(ctx, key_text, old_text, old_text, type, status_t::untranslated);
+	insert_duplicate(ctx, key_text, old_text, old_text, type);
 }
 
 void creator_helpers::insert_with_status(
@@ -153,7 +151,7 @@ void creator_helpers::insert_with_status(
 		return;
 	}
 
-	insert_duplicate(ctx, key_text, old_text, new_text, type, status);
+	insert_duplicate(ctx, key_text, old_text, new_text, type);
 }
 
 void creator_helpers::insert_via_text_match(

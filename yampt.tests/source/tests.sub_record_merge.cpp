@@ -1,4 +1,5 @@
 #include <catch2/catch_all.hpp>
+#include <scanner/leveled_list_merge.hpp>
 #include <scanner/sub_record_merge.hpp>
 #include <utility/app_logger.hpp>
 #include <cstring>
@@ -1204,6 +1205,66 @@ TEST_CASE("sub_record_merge_t::merge, NPDT 52-byte intermediate wins over unchan
 	REQUIRE(result.changed);
 	REQUIRE(npdt_size(result.content) == 52);
 	REQUIRE(read_npdt_gold(result.content, npdt_52_gold_offset) == 500);
+}
+
+TEST_CASE("sub_record_merge_t::merge, NPDT 12 winner keeps FLAG autocalc bit cleared by plugin", "[u]")
+{
+	std::string npdt_master(52, '\0');
+	npdt_master[npdt_52_gold_offset] = 100;
+
+	std::string npdt_inter(12, '\0');
+	npdt_inter[npdt_12_gold_offset] = 40;
+
+	std::string npdt_winner(52, '\0');
+	npdt_winner[npdt_52_gold_offset] = 100;
+
+	auto subs_master = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_master) + make_npc_flag_sub(npc_flag_autocalc);
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_inter) + make_npc_flag_sub(0);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_winner) + make_npc_flag_sub(npc_flag_autocalc);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_master),
+		make_record("NPC_", subs_inter),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(npdt_size(result.content) == 12);
+	REQUIRE(read_npc_flag_sub(result.content) == 0);
+}
+
+TEST_CASE("sub_record_merge_t::merge, NPDT 52 winner keeps FLAG autocalc bit set by plugin", "[u]")
+{
+	std::string npdt_master(12, '\0');
+	npdt_master[npdt_12_gold_offset] = 30;
+
+	std::string npdt_inter(52, '\0');
+	npdt_inter[npdt_52_gold_offset] = 200;
+
+	std::string npdt_winner(12, '\0');
+	npdt_winner[npdt_12_gold_offset] = 30;
+
+	auto subs_master = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_master) + make_npc_flag_sub(0);
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_inter) + make_npc_flag_sub(npc_flag_autocalc);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_winner) + make_npc_flag_sub(0);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_master),
+		make_record("NPC_", subs_inter),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(npdt_size(result.content) == 52);
+	REQUIRE(read_npc_flag_sub(result.content) == npc_flag_autocalc);
 }
 
 TEST_CASE("sub_record_merge_t::merge, ENAM per-byte merge", "[u]")
@@ -2643,6 +2704,155 @@ TEST_CASE("sub_record_merge_t::merge, CELL FRMR different item RefNum not matche
 	REQUIRE_FALSE(result.changed);
 }
 
+static std::string make_indx_sub(uint32_t count)
+{
+	return make_sub("INDX", make_uint32(count));
+}
+
+static std::string make_levi_with_indx(
+    const std::string & list_id,
+    uint32_t stored_count,
+    const std::string & entries)
+{
+	const auto subs =
+	    make_sub("NAME", make_string(list_id)) + make_sub("DATA", make_uint32(1)) +
+	    make_sub("NNAM", std::string(1, '\0')) + make_indx_sub(stored_count) + entries;
+	return make_record("LEVI", subs);
+}
+
+static std::string levi_inam_intv(const std::string & item_id, uint16_t level)
+{
+	return make_sub("INAM", make_string(item_id)) + make_sub("INTV", make_uint16(level));
+}
+
+static std::string levc_cnam_intv(const std::string & creature_id, uint16_t level)
+{
+	return make_sub("CNAM", make_string(creature_id)) + make_sub("INTV", make_uint16(level));
+}
+
+static uint32_t read_indx_count(const std::string & content)
+{
+	const auto subs = sub_record_merge_t::parse_sub_records(content);
+	for (const auto & entry : subs)
+	{
+		if (entry.type != "INDX" || entry.data.size() < 4)
+			continue;
+
+		uint32_t value = 0;
+		std::memcpy(&value, entry.data.data(), 4);
+		return value;
+	}
+
+	return 0;
+}
+
+static size_t count_sub_records_of_type(const std::string & content, const std::string & sub_type)
+{
+	size_t count = 0;
+	for (const auto & entry : sub_record_merge_t::parse_sub_records(content))
+	{
+		if (entry.type == sub_type)
+			++count;
+	}
+
+	return count;
+}
+
+TEST_CASE("sub_record_merge_t::recompute_leveled_indx, stale count after added item is corrected", "[u]")
+{
+	auto content = make_levi_with_indx("list_id", 1, levi_inam_intv("iron_sword", 1));
+	auto subs = sub_record_merge_t::parse_sub_records(content);
+	const auto added = levi_inam_intv("steel_sword", 1);
+	for (const auto & entry : sub_record_merge_t::parse_sub_records(make_record("LEVI", added)))
+		subs.push_back(entry);
+	content = sub_record_merge_t::reconstruct_record(content, subs);
+
+	REQUIRE(read_indx_count(content) == 1);
+	REQUIRE(count_sub_records_of_type(content, "INAM") == 2);
+
+	const auto fixed = sub_record_merge_t::recompute_leveled_indx("LEVI", content);
+
+	REQUIRE(read_indx_count(fixed) == 2);
+	REQUIRE(read_indx_count(fixed) == count_sub_records_of_type(fixed, "INAM"));
+}
+
+TEST_CASE("sub_record_merge_t::recompute_leveled_indx, stale count after removed item is corrected", "[u]")
+{
+	auto content = make_levi_with_indx(
+	    "list_id", 2, levi_inam_intv("iron_sword", 1) + levi_inam_intv("steel_sword", 1));
+
+	auto subs = sub_record_merge_t::parse_sub_records(content);
+	subs.erase(subs.end() - 2, subs.end());
+	content = sub_record_merge_t::reconstruct_record(content, subs);
+
+	REQUIRE(read_indx_count(content) == 2);
+	REQUIRE(count_sub_records_of_type(content, "INAM") == 1);
+
+	const auto fixed = sub_record_merge_t::recompute_leveled_indx("LEVI", content);
+
+	REQUIRE(read_indx_count(fixed) == 1);
+	REQUIRE(read_indx_count(fixed) == count_sub_records_of_type(fixed, "INAM"));
+}
+
+TEST_CASE("sub_record_merge_t::recompute_leveled_indx, LEVC counts CNAM entries", "[u]")
+{
+	const auto subs =
+	    make_sub("NAME", make_string("crea_list")) + make_sub("DATA", make_uint32(1)) +
+	    make_sub("NNAM", std::string(1, '\0')) + make_indx_sub(1) + levc_cnam_intv("rat", 1) +
+	    levc_cnam_intv("mudcrab", 3) + levc_cnam_intv("scamp", 5);
+	const auto content = make_record("LEVC", subs);
+
+	REQUIRE(read_indx_count(content) == 1);
+
+	const auto fixed = sub_record_merge_t::recompute_leveled_indx("LEVC", content);
+
+	REQUIRE(read_indx_count(fixed) == 3);
+	REQUIRE(read_indx_count(fixed) == count_sub_records_of_type(fixed, "CNAM"));
+}
+
+TEST_CASE("sub_record_merge_t::recompute_leveled_indx, duplicate items counted individually", "[u]")
+{
+	const auto content = make_levi_with_indx(
+	    "l_b_amulets", 99,
+	    levi_inam_intv("l_n_amulet", 1) + levi_inam_intv("l_n_amulet", 1) + levi_inam_intv("l_m_amulet", 1));
+
+	const auto fixed = sub_record_merge_t::recompute_leveled_indx("LEVI", content);
+
+	REQUIRE(read_indx_count(fixed) == 3);
+}
+
+TEST_CASE("sub_record_merge_t::recompute_leveled_indx, container content returned unchanged", "[u]")
+{
+	const auto npco = std::string(32, 'a') + make_string("misc_item");
+	const auto content = make_record(
+	    "CONT",
+	    make_sub("NAME", make_string("barrel")) + make_sub("FNAM", make_string("Barrel")) +
+	        make_sub("NPCO", npco) + make_sub("NPCO", npco));
+
+	const auto fixed = sub_record_merge_t::recompute_leveled_indx("CONT", content);
+
+	REQUIRE(fixed == content);
+	REQUIRE(count_sub_records_of_type(fixed, "INDX") == 0);
+}
+
+TEST_CASE("sub_record_merge_t::reconstruct_record, container NPCO edits keep list count consistent", "[u]")
+{
+	const auto npco_a = std::string(32, 'a') + make_string("item_a");
+	const auto npco_b = std::string(32, 'b') + make_string("item_b");
+	const auto content = make_record(
+	    "CONT",
+	    make_sub("NAME", make_string("barrel")) + make_sub("FNAM", make_string("Barrel")) +
+	        make_sub("NPCO", npco_a) + make_sub("NPCO", npco_b));
+
+	REQUIRE(count_sub_records_of_type(content, "NPCO") == 2);
+
+	auto subs = sub_record_merge_t::parse_sub_records(content);
+	subs.pop_back();
+	const auto edited = sub_record_merge_t::reconstruct_record(content, subs);
+
+	REQUIRE(count_sub_records_of_type(edited, "NPCO") == 1);
+}
+
 TEST_CASE("sub_record_merge_t::merge, CELL FRMR same low index different resolved identity not merged", "[u]")
 {
 	auto subs_first = cell_header("Balmora") + frmr_group(0x00000005, "green_1000_01", "fargoth");
@@ -2666,4 +2876,119 @@ TEST_CASE("sub_record_merge_t::merge, CELL FRMR same low index different resolve
 	auto result = sub_record_merge_t::merge(input);
 
 	REQUIRE_FALSE(result.changed);
+}
+
+static std::string read_sub_string(const std::string & record, const std::string & sub_type)
+{
+	const auto pos = record.find(sub_type);
+	REQUIRE(pos != std::string::npos);
+
+	uint32_t size_val = 0;
+	std::memcpy(&size_val, record.data() + pos + 4, 4);
+	const auto data = record.substr(pos + 8, size_val);
+	const auto terminator = data.find('\0');
+	if (terminator == std::string::npos)
+		return data;
+
+	return data.substr(0, terminator);
+}
+
+static std::string make_info_version(
+    const std::string & inam,
+    const std::string & pnam,
+    const std::string & nnam,
+    const std::string & response)
+{
+	return make_record(
+	    "INFO",
+	    make_sub("INAM", make_string(inam)) + make_sub("PNAM", make_string(pnam)) +
+	        make_sub("NNAM", make_string(nnam)) + make_sub("NAME", make_string(response)));
+}
+
+TEST_CASE("sub_record_merge_t::merge, INFO PNAM/NNAM take winner value not intermediate", "[u]")
+{
+	auto first = make_info_version("info_id", "A", "C", "Hello");
+	auto inter = make_info_version("info_id", "X", "Y", "Hello");
+	auto winner = make_info_version("info_id", "A", "C", "Hello");
+
+	merge_input_t input;
+	input.rec_type = "INFO";
+	input.record_id = "info_id";
+	input.version_contents = { first, inter, winner };
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(read_sub_string(result.content, "PNAM") == "A");
+	REQUIRE(read_sub_string(result.content, "NNAM") == "C");
+}
+
+TEST_CASE("sub_record_merge_t::merge, INFO winner PNAM/NNAM change is kept over intermediate", "[u]")
+{
+	auto first = make_info_version("info_id", "A", "C", "Hello");
+	auto inter = make_info_version("info_id", "X", "Y", "Hello");
+	auto winner = make_info_version("info_id", "P", "Q", "Hello");
+
+	merge_input_t input;
+	input.rec_type = "INFO";
+	input.record_id = "info_id";
+	input.version_contents = { first, inter, winner };
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(read_sub_string(result.content, "PNAM") == "P");
+	REQUIRE(read_sub_string(result.content, "NNAM") == "Q");
+}
+
+TEST_CASE("sub_record_merge_t::merge, INFO PNAM/NNAM remain present after merge", "[u]")
+{
+	auto first = make_info_version("info_id", "A", "C", "Hello");
+	auto inter = make_info_version("info_id", "A", "C", "Changed");
+	auto winner = make_info_version("info_id", "A", "C", "Hello");
+
+	merge_input_t input;
+	input.rec_type = "INFO";
+	input.record_id = "info_id";
+	input.version_contents = { first, inter, winner };
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(count_sub_records_of_type(result.content, "PNAM") == 1);
+	REQUIRE(count_sub_records_of_type(result.content, "NNAM") == 1);
+	REQUIRE(read_sub_string(result.content, "PNAM") == "A");
+	REQUIRE(read_sub_string(result.content, "NNAM") == "C");
+}
+
+TEST_CASE("sub_record_merge_t::merge, INFO non-link sub-record still merges normally", "[u]")
+{
+	auto first = make_info_version("info_id", "A", "C", "Hello");
+	auto inter = make_info_version("info_id", "A", "C", "InterResponse");
+	auto winner = make_info_version("info_id", "A", "C", "Hello");
+
+	merge_input_t input;
+	input.rec_type = "INFO";
+	input.record_id = "info_id";
+	input.version_contents = { first, inter, winner };
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(read_sub_string(result.content, "NAME") == "InterResponse");
+}
+
+TEST_CASE("sub_record_merge_t::merge, INFO PNAM/NNAM winner value survives 4-version merge", "[u]")
+{
+	auto first = make_info_version("info_id", "A", "C", "Hello");
+	auto inter1 = make_info_version("info_id", "X", "Y", "Hello");
+	auto inter2 = make_info_version("info_id", "M", "N", "Hello");
+	auto winner = make_info_version("info_id", "A", "C", "Hello");
+
+	merge_input_t input;
+	input.rec_type = "INFO";
+	input.record_id = "info_id";
+	input.version_contents = { first, inter1, inter2, winner };
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(read_sub_string(result.content, "PNAM") == "A");
+	REQUIRE(read_sub_string(result.content, "NNAM") == "C");
 }

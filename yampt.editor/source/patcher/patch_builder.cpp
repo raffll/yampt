@@ -1,5 +1,7 @@
 #include "patch_builder.hpp"
 #include <io/binary_file_io.hpp>
+#include <scanner/header_repair.hpp>
+#include <scanner/leveled_list_merge.hpp>
 #include <scanner/sub_record_merge.hpp>
 #include <utility/app_logger.hpp>
 #include <algorithm>
@@ -120,8 +122,26 @@ bool patch_builder_t::save(
     const std::string & description,
     const std::vector<master_entry_t> & masters)
 {
-	const auto header_content = build_tes3_header(author, description, m_records.size(), masters);
+	return save_with_header(output_path, build_tes3_header(author, description, m_records.size(), masters));
+}
 
+std::optional<std::string> patch_builder_t::update_tes3_header(
+    const std::string & original_header,
+    const header_update_t & update)
+{
+	const auto counted = header_repair_t::update_record_count(original_header, update.record_count);
+	if (!counted)
+		return std::nullopt;
+
+	std::vector<header_master_t> extra_masters;
+	for (const auto & master : update.extra_masters)
+		extra_masters.push_back({ master.filename, master.file_size });
+
+	return header_repair_t::append_missing_masters(*counted, extra_masters);
+}
+
+bool patch_builder_t::save_with_header(const std::string & output_path, const std::string & header_content)
+{
 	std::vector<record_t> records;
 	records.push_back({ "TES3", header_content, header_content.size(), false });
 

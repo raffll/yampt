@@ -24,7 +24,9 @@ public:
 	void notify_plugin_changed(int plugin_idx);
 	void set_filter(const nav_tree_model_t::filter_state_t & state);
 	void clear_filter();
+	void set_merge_excludes(const std::string & serialized);
 	void set_hide_duplicates(bool hide);
+	void set_hide_openmw_stubs(bool hide);
 	void set_show_deleted_strikeout(bool value);
 	void set_patch_plugins(const std::set<std::string> * patch);
 	void set_editable_columns(const editable_column_set_t * editable);
@@ -47,6 +49,7 @@ private:
 	bool handle_type_ahead(QKeyEvent * key_event);
 	int next_matching_plugin_row(const std::string & lowered_prefix, int start_row) const;
 	bool handle_viewport_drag(QEvent * event);
+	void connect_debug_signals();
 	void save_expansion_state();
 	void restore_expansion_state();
 	void restore_selection(const nav_tree_model_t::node_info_t & info);

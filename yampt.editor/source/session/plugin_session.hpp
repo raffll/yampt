@@ -25,6 +25,7 @@ public:
 		mo2_profile
 	};
 
+	static std::vector<std::string> list_folder_plugins(const std::string & folder_path);
 	void load_from_folder(const std::vector<std::string> & paths, const std::string & base_path);
 	void load_from_mo2_profile(const QString & profile_dir);
 	void load_from_openmw_cfg(const QString & cfg_path);
@@ -76,12 +77,12 @@ private:
 	std::vector<std::string> resolve_mo2_plugins(
 	    const std::vector<std::string> & plugin_names,
 	    const mo2_resolve_context_t & context);
-	std::string resolve_single_mo2_plugin(const std::string & plugin_name, const mo2_resolve_context_t & context);
 	std::vector<std::string> resolve_openmw_content(
 	    const std::vector<std::string> & content_names,
 	    const std::vector<std::string> & data_dirs);
 	std::string resolve_single_content(const std::string & content_name, const std::vector<std::string> & data_dirs);
 	void load_plugins_internal(const std::vector<std::string> & paths);
+	void unload_if_loaded();
 	void warn_missing_masters();
 	void restore_folder_session();
 	void restore_active_plugin(const std::string & active_path);
