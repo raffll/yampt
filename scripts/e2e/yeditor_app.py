@@ -92,12 +92,15 @@ class yeditor_app_t:
         self.start_process()
 
     @staticmethod
-    def log_tail(line_count=20):
+    def log_tail(line_count=40):
+        """Last log lines, without the plugin reader's per-record [debug] noise."""
         log_path = os.path.join(os.environ.get("TEMP", "."), "yEditor.log")
         if not os.path.exists(log_path):
             return []
+        reader_noise = re.compile(r"\[debug\] (tiling ok|record_begin=)")
         with open(log_path, "r", encoding="utf-8", errors="replace") as handle:
-            return [line.rstrip("\n") for line in handle.readlines()[-line_count:]]
+            lines = [line.rstrip("\n") for line in handle if not reader_noise.search(line)]
+        return lines[-line_count:]
 
     def is_running(self):
         snapshot_folder = os.path.dirname(self.exe_path).replace("'", "''")
