@@ -257,6 +257,7 @@
     <ClCompile Include="source\tests.leveled_list_merge.cpp" />
     <ClCompile Include="source\tests.dialogue_arranger.cpp" />
     <ClCompile Include="source\tests.folder_plugin_order.cpp" />
+    <ClCompile Include="source\tests.settings_store_merge_keys.cpp" />
     <ClCompile Include="source\tests.lua_scanner.cpp" />
     <ClCompile Include="source\tests.cell_ref_merge.cpp" />
     <ClCompile Include="source\tests.frmr_ref_index.cpp" />
