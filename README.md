@@ -9,11 +9,12 @@ Qt6 GUI for viewing, comparing, and patching plugins. Similar to TES5Edit/xEdit.
 ### Viewing
 - Load and compare any number of plugins simultaneously — no hardcoded limits
 - Load plugins from folder, Mod Organizer 2 profiles, or OpenMW cfg
+- OpenMW content behind `.omwaddon.esp` / `.omwscript.esp` placeholder plugins is loaded too; the placeholders are hidden in the tree unless Show OpenMW Stubs is on
 - Navigation tree with xEdit-style conflict coloring inherited up to file level
 - Lua handler tab: scans OpenMW Lua scripts and highlights conflicting handler registrations
 - Record comparison with decoded fields aligned by content identity across plugins
 - Side-by-side text comparison panel
-- Composable filters: Conflicts Only, search by ID/name, and advanced criteria
+- Composable filters: Conflicts Only, search by ID/name, and advanced criteria, including Locked Only and Excluded Only
 
 ### Editing
 - Direct field editing — select a decoded field in the Edit panel, change its value, and press Apply
@@ -88,6 +89,7 @@ Batch tool for automated dictionary and conversion workflows.
 - Cross-platform: Windows and Linux
 - Dark mode
 - Session persistence: remembers window state between runs
+- Log file: everything in the Log tab is also written to yEditor.log / yTranslator.log in %TEMP%; start with `--console` to see it live or `--debug` for extra diagnostics
 
 ## Changelog
 
