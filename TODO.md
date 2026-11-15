@@ -8,6 +8,9 @@ Bugs take precedence over features — always fix what is broken before adding a
 - Lua scan counts `.omwscripts` files that are not in the load order: OpenMW only loads omwscripts listed as content files, but `lua_scanner_t::scan` (lua_scanner.cpp) parses every `.omwscripts` at each data-folder root, so a disabled script file can still produce Lua conflicts. Pass the load order in and skip files not in it — yEditor
 
 ## Features
+- Testability: state dump for automated checks — `--dump-state <file.json>` (or a debug hotkey) writes the navigation tree, active plugin, locks, exclusion rules and filter state as JSON, so end-to-end checks read exact state instead of the screen — yEditor
+- Testability: headless yampt CLI commands for yEditor operations — create a merged patch from a folder or MO2 profile and edit a field in a plugin without the GUI, so merge regressions (e.g. the 963-plugin POTI check) run with no UI driving — CLI
+- Testability: automation command channel — `--run steps.json` (or a local socket) that calls the controllers directly (open folder, set active, edit field, lock, create merged patch), implemented as its own controller rather than in the main window; UI driving would then only be needed for menu/widget wiring — yEditor
 - Decide whether the Locked Only filter should also match records that have only field, sub-record, or bit locks; it currently matches whole-record locks only (nav_tree_model.cpp has_whole_record_lock) — yEditor
 
 - let the user customize the colors in settings (bigger task than just adjusting defaults) — yTranslator

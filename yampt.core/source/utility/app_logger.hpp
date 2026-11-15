@@ -1,12 +1,16 @@
 #pragma once
 
+#include <functional>
 #include <iostream>
 #include <string>
 
 class app_logger_t
 {
 public:
+	using sink_fn_t = std::function<void(const std::string & entry)>;
+
 	static void add_log(const std::string & entry, bool silent = false);
+	static void set_sink(sink_fn_t sink_fn);
 	static void reset_log();
 
 	static const std::string & get_log()
@@ -39,4 +43,5 @@ private:
 	static bool m_error_flag;
 	static bool m_debug_flag;
 	static bool m_quiet_flag;
+	static sink_fn_t m_sink_fn;
 };

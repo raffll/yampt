@@ -699,6 +699,11 @@ void merge_controller_t::toggle_active_lock(const merge_lock_t & lock)
 
 		m_session.scan().add_active_lock(stored);
 		m_log("[info] locked " + lock.rec_type + ":" + lock.record_id + " in merged patch");
+		app_logger_t::add_log(
+		    "[debug] lock scope " + std::to_string(static_cast<int>(stored.scope)) + " sub \"" + stored.sub_type +
+		        "\" field " + std::to_string(stored.field_index) + " bit " + std::to_string(stored.bit_index) + ", " +
+		        std::to_string(m_session.scan().active_locks().size()) + " locks\n",
+		    true);
 	}
 
 	save_merged_patch_locks();
@@ -795,6 +800,11 @@ int merge_controller_t::create_merge_records()
 	config.fog_fix_enabled = m_settings.merge_fog_fix_enabled();
 	config.summon_fix_enabled = m_settings.merge_summon_fix_enabled();
 	config.cell_name_fix_enabled = m_settings.merge_cell_name_fix_enabled();
+	app_logger_t::add_log(
+	    "[debug] auto-merge: " + std::to_string(config.exclusions.rules().size()) + " exclusion rules, " +
+	        std::to_string(config.patch_plugins.size()) + " guard patches, " +
+	        std::to_string(m_session.scan().active_locks().size()) + " locks\n",
+	    true);
 
 	auto_merge_t merge(m_session.scan());
 	merge.set_config(config);

@@ -200,6 +200,15 @@ Right-click a locked cell and choose Unlock in Merged Patch to remove the lock. 
 
 A merged patch can be created even with a single plugin loaded. With one plugin there is nothing to merge automatically, so the patch starts empty; it still gives you a column to copy records into by hand, which is a convenient way to build a small patch from one mod. The empty patch is written to disk like any other, and it gains its master references as you copy records into it.
 
+## Log File and Startup Options
+
+Everything that appears in the Log tab is also written to a file named yEditor.log in your temporary folder (the folder %TEMP% points to). The file starts fresh every time yEditor opens, and every line carries the time it was written, so you can keep it open in a text editor, attach it to a bug report, or search it after the window is closed. Messages from loading and merging plugins that do not appear in the Log tab are written there as well.
+
+You can start yEditor from a command prompt with these options:
+
+- `--console` prints every log line to the command prompt you started yEditor from, as it happens.
+- `--debug` adds extra diagnostic lines, marked [debug], describing decisions such as which exclusion rules were loaded, which filters were applied, and what kind of lock was created. They are off by default and are only useful when you report or investigate a problem.
+
 ## Settings
 
 Open Settings via Ctrl+, or the Tools menu. Five pages are available:

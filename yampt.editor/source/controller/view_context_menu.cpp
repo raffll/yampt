@@ -6,6 +6,7 @@
 #include "merge_controller.hpp"
 #include <scanner/merge_exclusions.hpp>
 #include <scanner/record_conflict.hpp>
+#include <utility/app_logger.hpp>
 #include <utility/record_behavior.hpp>
 #include <algorithm>
 #include <settings_store.hpp>
@@ -169,6 +170,11 @@ void view_context_menu_t::add_exclude_record_action(QMenu & menu, const nav_tree
 	const auto label = excluded ? QCoreApplication::translate("yEditor", "Include Record in Merged Patch")
 	                            : QCoreApplication::translate("yEditor", "Exclude Record from Merged Patch");
 
+	app_logger_t::add_log(
+	    "[debug] exclude menu: " + info.rec_type + " \"" + info.record_id + "\" rule " +
+	        (excluded ? "present" : "absent") + ", " + std::to_string(rules.size()) + " rules loaded\n",
+	    true);
+
 	menu.addAction(
 	    label, [this, token, excluded]() { apply_record_exclusion({ exclude_kind_t::record_id, token }, !excluded); });
 }
@@ -205,6 +211,12 @@ void view_context_menu_t::apply_record_exclusion(const exclude_rule_t & rule, bo
 
 	m_settings.set_merge_excludes(merge_exclusions_t::serialize(rules));
 	m_settings.sync();
+
+	app_logger_t::add_log(
+	    "[debug] exclusion rule " + std::string(add_rule ? "added" : "removed") + ": " +
+	        merge_exclusions_t::kind_token(rule.kind) + ":" + rule.target + ", " + std::to_string(rules.size()) +
+	        " rules saved\n",
+	    true);
 }
 
 void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModelIndex & index)

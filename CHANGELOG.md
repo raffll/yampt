@@ -26,6 +26,7 @@
 - [FIX] Dialogue responses in a saved plugin now always sit under their own dialogue topic. Previously the merged patch wrote merged responses without the topic they belong to, so they were filed under whatever topic happened to come before them, or under none, and could appear in the wrong conversation or not at all. Each response is now written right after its topic, and the topic is taken from the winning plugin when the patch does not already contain it
 
 ### Both Apps
+- [NEW] Everything shown in the Log tab is also written to yEditor.log or yTranslator.log in your temporary folder, started fresh each time the app opens and with the time on every line, so it can be read after the window is closed or attached to a bug report. Starting either app from a command prompt with `--console` also prints each line there as it happens, and `--debug` adds extra diagnostic lines marked [debug]
 - [FIX] The character-level difference highlight now lines up correctly on text with accented or non-Latin characters. Previously, when a value contained letters such as Polish ł or ę, Cyrillic letters, or punctuation like an en-dash, the highlight marking what changed could be shifted by a couple of characters; it now falls exactly on the characters that differ
 
 ## [0.1264] - 2026-10-13

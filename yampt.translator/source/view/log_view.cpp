@@ -1,4 +1,5 @@
 #include "log_view.hpp"
+#include <log_mirror.hpp>
 #include <QDateTime>
 #include <QPlainTextEdit>
 #include <QScrollBar>
@@ -25,10 +26,12 @@ void log_view_t::append_log(const std::string & operation_name, const std::strin
 
 	m_text_edit->appendPlainText(QString::fromStdString(header + log_text));
 	m_text_edit->verticalScrollBar()->setValue(m_text_edit->verticalScrollBar()->maximum());
+	log_mirror_t::instance().write(header + log_text);
 }
 
 void log_view_t::append_text(const std::string & text)
 {
+	log_mirror_t::instance().write(text);
 	m_text_edit->moveCursor(QTextCursor::End);
 	m_text_edit->insertPlainText(QString::fromStdString(text));
 	m_text_edit->verticalScrollBar()->setValue(m_text_edit->verticalScrollBar()->maximum());

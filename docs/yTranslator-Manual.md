@@ -203,6 +203,15 @@ The context menu also lets you teach an AI provider your preferred style. Right-
 - **Mismatch** — during Make Base Dictionary, a record existed in the native file with no corresponding record in the foreign file. Informational; no action needed.
 - **Error** — the translation cannot be written to the plugin, either because it exceeds the maximum byte length for this sub-record type, contains a forbidden character, or contains a character not representable in the plugin's codepage. The validation line at the bottom states the specific reason. An entry with this status is not propagated to other entries. Fix the translation to clear it.
 
+## Log File and Startup Options
+
+Everything that appears in the Log tab is also written to a file named yTranslator.log in your temporary folder (the folder %TEMP% points to). The file starts fresh every time yTranslator opens, and every line carries the time it was written, so you can keep it open in a text editor, attach it to a bug report, or search it after the window is closed.
+
+You can start yTranslator from a command prompt with these options:
+
+- `--console` prints every log line to the command prompt you started yTranslator from, as it happens.
+- `--debug` adds extra diagnostic lines, marked [debug], from operations such as creating dictionaries and converting plugins. They are off by default and are only useful when you report or investigate a problem.
+
 ## Settings
 
 Open Settings via Ctrl+, or the Tools menu. Four pages are available:

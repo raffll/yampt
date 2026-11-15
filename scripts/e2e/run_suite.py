@@ -225,7 +225,7 @@ def run_scenario(app, name):
     except Exception as error:
         status, detail = "ERROR", f"{type(error).__name__}: {error} @ {traceback.format_exc(limit=-1).strip()}"
     return {"scenario": name, "status": status, "detail": detail, "seconds": round(time.time() - started, 1),
-            "screenshot": app.screenshot(name + "_failure")}
+            "screenshot": app.screenshot(name + "_failure"), "log_tail": app.log_tail()}
 
 
 def select_scenarios(arguments):

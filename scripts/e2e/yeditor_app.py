@@ -72,12 +72,16 @@ class yeditor_app_t:
                   f"Where-Object {{ $_.Path -like '{snapshot_folder}\\*' }} | Stop-Process -Force")
         subprocess.run(["powershell", "-NoProfile", "-Command", script], capture_output=True)
 
+    def start_process(self):
+        """Start yEditor with --debug so %TEMP%\\yEditor.log carries the gated [debug] lines."""
+        subprocess.Popen([self.exe_path, "--debug"], cwd=os.path.dirname(self.exe_path))
+        poll("yEditor main window", lambda: self.window(), timeout_seconds=30)
+        time.sleep(2.0)
+
     def launch(self):
         self.stop_snapshot_instances()
         time.sleep(1.0)
-        act("launch", self.exe_path, wait=3)
-        poll("yEditor main window", lambda: self.window(), timeout_seconds=30)
-        time.sleep(2.0)
+        self.start_process()
 
     def close(self):
         act("close", main_window)
@@ -85,9 +89,15 @@ class yeditor_app_t:
 
     def restart(self):
         self.close()
-        act("launch", self.exe_path, wait=3)
-        poll("yEditor main window", lambda: self.window(), timeout_seconds=30)
-        time.sleep(2.0)
+        self.start_process()
+
+    @staticmethod
+    def log_tail(line_count=20):
+        log_path = os.path.join(os.environ.get("TEMP", "."), "yEditor.log")
+        if not os.path.exists(log_path):
+            return []
+        with open(log_path, "r", encoding="utf-8", errors="replace") as handle:
+            return [line.rstrip("\n") for line in handle.readlines()[-line_count:]]
 
     def is_running(self):
         snapshot_folder = os.path.dirname(self.exe_path).replace("'", "''")
@@ -143,24 +153,18 @@ class yeditor_app_t:
         time.sleep(0.6)
 
     def expand_nav(self, title_regex):
-        """Expand a nav row through UIA's ExpandCollapse pattern (independent of keyboard focus)."""
-        item = poll(f"nav item /{title_regex}/", lambda: self.find_tree_item(nav_tree_marker, title_regex), 15)
-        item.expand()
+        """Click the row, then Right arrow (Qt ignores UIA's ExpandCollapse pattern on these rows)."""
+        self.click_nav(title_regex)
+        self.window().type_keys("{RIGHT}", set_foreground=True)
         time.sleep(0.6)
 
     def expand_all_nav(self):
-        """Expand every collapsed nav row, repeating until no new rows appear."""
-        for _ in range(4):
-            collapsed = [item for item in self.tree_items(nav_tree_marker)
-                         if item.get_expand_state() == 0]
-            if not collapsed:
-                return
-            for item in collapsed:
-                try:
-                    item.expand()
-                except Exception:
-                    continue
-            time.sleep(0.6)
+        for item in list(self.tree_items(nav_tree_marker)):
+            title = item.element_info.name or ""
+            if re.search(r"\[\d{3}\]", title):
+                self.click_nav(re.escape(title) + "$")
+                self.window().type_keys("*", set_foreground=True)
+                time.sleep(0.4)
 
     def open_record(self, plugin_regex, group_regex, record_regex):
         """Expand plugin -> record group, then click the record (rows are matched in that order)."""

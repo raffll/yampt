@@ -4,10 +4,13 @@
 #include "../model/filter_composer.hpp"
 #include "../session/lua_scan_worker.hpp"
 #include "../session/plugin_session.hpp"
+#include <log_mirror.hpp>
 #include "count_label_format.hpp"
 #include "editor_delegates.hpp"
 #include <scanner/batch_cleaner.hpp>
+#include <scanner/merge_exclusions.hpp>
 #include <scanner/record_conflict.hpp>
+#include <utility/app_logger.hpp>
 #include <utility/string_utils.hpp>
 #include <set>
 #include <settings_store.hpp>
@@ -831,6 +834,7 @@ QString plugin_workspace_view_t::build_mode_prefix() const
 void plugin_workspace_view_t::log_message(const std::string & msg)
 {
 	m_messages->log(msg);
+	log_mirror_t::instance().write(msg);
 }
 
 void plugin_workspace_view_t::save_session_state()
@@ -1042,8 +1046,14 @@ nav_tree_model_t::filter_state_t plugin_workspace_view_t::build_effective_filter
 void plugin_workspace_view_t::apply_effective_filter()
 {
 	const auto state = build_effective_filter();
+	const auto merge_excludes = m_settings.merge_excludes();
 
-	m_nav_view->set_merge_excludes(m_settings.merge_excludes());
+	m_nav_view->set_merge_excludes(merge_excludes);
+	app_logger_t::add_log(
+	    "[debug] filter applied: locked only " + std::to_string(state.filter_locked_only) + ", excluded only " +
+	        std::to_string(state.filter_excluded_only) + ", exclusion rules " +
+	        std::to_string(merge_exclusions_t::parse(merge_excludes).size()) + "\n",
+	    true);
 
 	if (state == nav_tree_model_t::filter_state_t {})
 		m_nav_view->clear_filter();
