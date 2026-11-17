@@ -14,7 +14,7 @@ Qt6 GUI for viewing, comparing, and patching plugins. Similar to TES5Edit/xEdit.
 - Lua handler tab: scans OpenMW Lua scripts and highlights conflicting handler registrations
 - Record comparison with decoded fields aligned by content identity across plugins
 - Side-by-side text comparison panel
-- Composable filters: Conflicts Only, search by ID/name, and advanced criteria, including Locked Only and Excluded Only
+- Composable filters: Conflicts Only, search by ID/name, and advanced criteria, including Locked Only and Excluded Only, combine as AND
 
 ### Editing
 - Direct field editing — select a decoded field in the Edit panel, change its value, and press Apply
