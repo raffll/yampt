@@ -46,7 +46,7 @@ apps = [
          ("Translation", [
              "Built-in offline translation engine, no API key required",
              "Web translation providers: DeepL, Google Translate, ChatGPT, Claude",
-             "Curated examples, up to twenty records, that guide the AI's translation style",
+             "Curated example records that guide the AI's translation style",
          ]),
          ("Editing", [
              "Three-panel editor: original text, adapted text, and your translation",
