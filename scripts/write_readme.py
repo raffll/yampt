@@ -19,8 +19,6 @@ apps = [
              "Guard patches: records a guard plugin overrides are not merged from plugins loaded before it",
              "One exclusion list for plugins, record IDs, record types, and sub-records, plus switchable fixes",
              "Automatic fixes for fog density, summon persistence, and reverted cell names",
-             "Copies or removes whole records, groups, or single fields between plugins",
-             "Works on the merged patch or on a plugin you create yourself",
              "Shows a topic's dialogue responses in their final in-game order, resolved the way OpenMW does it",
          ]),
          ("Viewing", [
@@ -34,7 +32,8 @@ apps = [
          ]),
          ("Editing", [
              "Edits decoded fields directly",
-             "Removes records from a plugin",
+             "Copies or removes whole records, groups, or single fields between plugins",
+             "Works on the merged patch or on a plugin you create yourself",
          ]),
          ("Maintenance", [
              "Plugin cleaning: removes evil GMSTs and junk cells in bulk",
