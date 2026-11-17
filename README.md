@@ -1,95 +1,88 @@
 # Yet Another Morrowind Plugin Toolkit
 
-A suite of tools for working with Morrowind plugins. Includes a plugin conflict editor similar to xEdit, a translation workbench, and a CLI for batch operations.
+A suite of tools for working with Morrowind plugins: a plugin conflict editor and merger, a translation workbench, and a command-line tool for batch translation work.
 
 ## yEditor.exe — Plugin Editor
 
-Qt6 GUI for viewing, comparing, and patching plugins. Similar to TES5Edit/xEdit.
-
-### Viewing
-- Load and compare any number of plugins simultaneously — no hardcoded limits
-- Load plugins from folder, Mod Organizer 2 profiles, or OpenMW cfg
-- OpenMW content behind `.omwaddon.esp` / `.omwscript.esp` placeholder plugins is loaded too; the placeholders are hidden in the tree unless Show OpenMW Stubs is on
-- Navigation tree with xEdit-style conflict coloring inherited up to file level
-- Lua handler tab: scans OpenMW Lua scripts and highlights conflicting handler registrations
-- Record comparison with decoded fields aligned by content identity across plugins
-- Side-by-side text comparison panel
-- Composable filters: Conflicts Only, search by ID/name, and advanced criteria, including Locked Only and Excluded Only, combine as AND
-
-### Editing
-- Direct field editing — select a decoded field in the Edit panel, change its value, and press Apply
-- Applying a field edit writes the change to the active plugin automatically — there is no manual save step
-- Remove a record from a plugin — right-click the record and choose Remove Record from Plugin; the record is dropped immediately
-- History tab lists the edits and record removals made during the session (not saved, resets on unload)
+Views, compares, edits, and merges plugins, in the spirit of xEdit.
 
 ### Merging
-- Automatic merged patch: leveled lists, three-way field-level merge for packed sub-records
-- Automatic fixes: fog density, summon persistence, cell name reversion
-- Guard patch: plugins before the guard are excluded from merge for records the guard overrides
-- View a dialogue topic's INFO responses in their merged order, resolved using OpenMW's ordering algorithm
-- Copy or remove records, groups, or individual fields to/from the active plugin
-- Active plugin: copy into the merged patch (default) or a hand-made plugin created with Create New Plugin; switch the target with Set as Active Plugin
-- Configurable merge: one exclude list for plugin files, record IDs, record types, and sub-records, plus fix toggles
+- Automatic merged patch: leveled lists plus three-way merging of individual fields
+- Locks records or fields so later merges leave your manual changes alone
+- Guard patches: records a guard plugin overrides are not merged from plugins loaded before it
+- One exclusion list for plugins, record IDs, record types, and sub-records, plus switchable fixes
+- Automatic fixes for fog density, summon persistence, and reverted cell names
+- Copies or removes whole records, groups, or single fields between plugins
+- Works on the merged patch or on a plugin you create yourself
+- Shows a topic's dialogue responses in their final in-game order, resolved the way OpenMW does it
+
+### Viewing
+- Compares any number of plugins at once, with no plugin limit
+- Loads plugins and OpenMW content files from a folder, a Mod Organizer 2 profile, or an OpenMW configuration
+- Shows each record's decoded fields side by side, lined up by content across plugins
+- Navigation tree with xEdit-style conflict colors that carry up to each plugin
+- Combinable filters: conflicts only, ID and name search, record type, deleted, locked, and excluded records
+- Finds conflicting OpenMW Lua handler registrations across mods
+- Side-by-side text comparison with character-level difference highlighting
+
+### Editing
+- Edits decoded fields directly
+- Removes records from a plugin
 
 ### Maintenance
-- Plugin cleaning: batch-remove evil GMSTs and junk cells
-- Header repair: update master file sizes to match actual files on disk, update plugin version to 1.3
+- Plugin cleaning: removes evil GMSTs and junk cells in bulk
+- Header repair: corrects master file sizes and updates the plugin version to 1.3
 
 ## yTranslator.exe — Translation Workbench
 
-Qt6 GUI for interactive plugin translation.
-
-### Editing
-- Sidebar with workspace folders, auto-refresh on filesystem changes
-- Record table filtered by type, sub-type, and translation status
-- Three-panel editor: original text, adapted text, editable translation
-- Inline table editing: double-click to edit single-line entries directly
-- Entry validation, status tracking, history with undo/revert
-- Find/Replace in a dedicated left-panel tab
-
-### Analysis
-- Multi-layer syntax highlighting: MWScript keywords, hyperlinks, glossary terms, forbidden characters, with per-kind toggles (hyperlink, inflection, glossary)
-- Spell checking with per-language Hunspell dictionaries
-- Annotation system: hyperlinks, gender info, glossary matches from loaded base dicts, and inflected topic forms from loaded localization files
-- Full script preview with sync scrolling between original and translation
-- Book content preview with live update
+An interactive workbench for translating plugins.
 
 ### Translation
-- Built-in offline translation engine — no API key required
-- Web translation providers: DeepL, Google Translate, ChatGPT, Claude — add more via config files
-- Pick the AI model right in the Auto Translate panel, or refresh the list from the provider
-- Curated AI examples: mark up to twenty records to guide the AI's translation style
+- Built-in offline translation engine, no API key required
+- Web translation providers: DeepL, Google Translate, ChatGPT, Claude
+- Curated examples, up to twenty records, that guide the AI's translation style
+
+### Editing
+- Three-panel editor: original text, adapted text, and your translation
+- Record table filtered by type, sub-type, and translation status
+- Entry validation, status tracking, and history with undo and revert
+- Find and replace across the dictionary
 
 ### Workflows
-- Lua l10n workflow: edit YAML localization files with auto-pairing and scaffold generation
-- EET file import: build a complete, applicable dictionary from an ESP-ESM Translator file by matching it against a chosen source plugin, or export it as a plain reference pool
-- Generate localization files (.cel, .mrk, .top) from dictionary
-- Hyperlink insertion during plugin conversion
-- Apply Topic Tags: wrap dialogue topics — and their inflected forms — in the translated text of dialogue responses so they show as clickable links in-game
-- Remove Topic Tags: strip all topic hyperlink tags from a dictionary's dialogue responses
+- Topic tags: marks dialogue topics, including inflected forms, as clickable links in translated responses
+- Inserts dialogue hyperlinks while converting plugins
+- EET import: turns an ESP-ESM Translator file into a complete, applicable dictionary using its source plugin, or into a plain reference dictionary
+- Lua localization: edits YAML localization files with automatic pairing and scaffold generation
+- Generates localization files (.cel, .mrk, .top) from a dictionary
+- Removes topic tags from a dictionary's dialogue responses
+
+### Analysis
+- Spell checking per language
+- Syntax highlighting for MWScript keywords, hyperlinks, glossary terms, and forbidden characters, each switchable
+- Annotations: hyperlinks, speaker gender, glossary matches, and inflected topic forms
+- Full script preview with synchronized scrolling between original and translation
+- Live book preview
 
 ## yampt.exe — Command Line
 
-Batch tool for automated dictionary and conversion workflows.
-
-### Dictionary
-- Create base dictionaries by pairing two language versions of a master file
-- Create dictionaries from plugins using a base dictionary
-- Merge multiple dictionaries with priority ordering
-- Apply dialogue topic tags to a dictionary's translated text
-- JSON dictionary format with status tracking
+Batch dictionary and conversion work for scripted workflows.
 
 ### Conversion
-- Convert plugins by applying translations from dictionaries
-- Create patch plugins containing only modified records
-- Converts compiled script data without recompiling in TES CS
+- Converts plugins using dictionary translations
+- Converts compiled script data without recompiling in the Construction Set
+- Creates patch plugins that contain only the changed records
+
+### Dictionary
+- Creates base dictionaries by pairing two language versions of a master file
+- Creates plugin dictionaries from a base dictionary
+- Merges dictionaries in priority order
+- Adds dialogue topic tags to translated text
 
 ## General
 
-- Cross-platform: Windows and Linux
+- Windows and Linux
 - Dark mode
-- Session persistence: remembers window state between runs
-- Log file: everything in the Log tab is also written to yEditor.log / yTranslator.log in %TEMP%; start with `--console` to see it live or `--debug` for extra diagnostics
+- Remembers window layout and session between runs
 
 ## Changelog
 
