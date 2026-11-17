@@ -51,7 +51,7 @@ An interactive workbench for translating plugins.
 - Topic tags: marks dialogue topics, including inflected forms, as clickable links in translated responses, and removes them again
 - Inserts dialogue hyperlinks while converting plugins
 - EET import: turns an ESP-ESM Translator file into a complete, applicable dictionary using its source plugin, or into a plain reference dictionary
-- Lua localization: edits YAML localization files with automatic pairing and scaffold generation
+- Lua localization: creates a translation file from an OpenMW YAML localization file and edits it side by side with the original
 - Generates localization files (.cel, .mrk, .top) from a dictionary
 
 ### Analysis
